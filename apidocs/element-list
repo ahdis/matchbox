@@ -1,0 +1,17 @@
+ch.ahdis.fhir.hapi.jpa.validation
+ch.ahdis.matchbox
+ch.ahdis.matchbox.config
+ch.ahdis.matchbox.engine
+ch.ahdis.matchbox.engine.cli
+ch.ahdis.matchbox.engine.exception
+ch.ahdis.matchbox.gazelle
+ch.ahdis.matchbox.gazelle.models.metadata
+ch.ahdis.matchbox.gazelle.models.validation
+ch.ahdis.matchbox.gazelle.utils
+ch.ahdis.matchbox.interceptor
+ch.ahdis.matchbox.mappinglanguage
+ch.ahdis.matchbox.questionnaire
+ch.ahdis.matchbox.spring
+ch.ahdis.matchbox.spring.boot.autoconfigure
+ch.ahdis.matchbox.terminology
+ch.ahdis.matchbox.util
