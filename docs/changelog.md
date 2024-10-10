@@ -1,5 +1,6 @@
 Unreleased
 - Tutorial for validation FHIR resources with [matchbox](https://ahdis.github.io/matchbox/validation-tutorial/)
+- Upgrade to 6.3.30
 
 2024/10/07 Release 3.9.3
 
