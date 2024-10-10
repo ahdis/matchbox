@@ -1,5 +1,6 @@
 Unreleased
 - Tutorial for validation FHIR resources with [matchbox](https://ahdis.github.io/matchbox/validation-tutorial/)
+- Allow validating a resource through the GUI with URL search parameters [#288](https://github.com/ahdis/matchbox/issues/288)
 
 2024/10/07 Release 3.9.3
 
