@@ -1,0 +1,1355 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+      
+      
+      
+      
+      <link rel="icon" href="../assets/favicon-96x96.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.1.21">
+    
+    
+      
+        <title>How to validate FHIR resources - Matchbox</title>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/stylesheets/main.eebd395e.min.css">
+      
+        
+        <link rel="stylesheet" href="../assets/stylesheets/palette.ecc896b0.min.css">
+      
+      
+
+    
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../stylesheets/extra.css">
+    
+    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce((e,_)=>(e<<5)-e+_.charCodeAt(0),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+    
+  </head>
+  
+  
+    
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="matchbox" data-md-color-primary="indigo" data-md-color-accent="indigo">
+  
+    
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#how-to-validate-fhir-resources" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href=".." title="Matchbox" class="md-header__button md-logo" aria-label="Matchbox" data-md-component="logo">
+      
+  <img src="../assets/matchbox_logo_color.png" alt="logo">
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3V6m0 5h18v2H3v-2m0 5h18v2H3v-2Z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            Matchbox
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              How to validate FHIR resources
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+    
+    
+    
+      <label class="md-header__button md-icon" for="__search">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5Z"/></svg>
+      </label>
+      <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5Z"/></svg>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12Z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41Z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+    
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href=".." title="Matchbox" class="md-nav__button md-logo" aria-label="Matchbox" data-md-component="logo">
+      
+  <img src="../assets/matchbox_logo_color.png" alt="logo">
+
+    </a>
+    Matchbox
+  </label>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href=".." class="md-nav__link">
+        Welcome
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../features/" class="md-nav__link">
+        Features
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../changelog/" class="md-nav__link">
+        Changelog
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../validation/" class="md-nav__link">
+        Validation of FHIR resources
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api/" class="md-nav__link">
+        API for Matchbox
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../docker/" class="md-nav__link">
+        Matchbox container
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../matchbox-engine/" class="md-nav__link">
+        Matchbox Engine
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../cda/" class="md-nav__link">
+        CDA Logical Model
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#what-does-a-validator-check" class="md-nav__link">
+    What does a validator check
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#using-matchbox-as-a-validation-tool" class="md-nav__link">
+    Using matchbox as a validation tool
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#structure-syntax-issues" class="md-nav__link">
+    Structure (Syntax) issues
+  </a>
+  
+    <nav class="md-nav" aria-label="Structure (Syntax) issues">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#common-additional-xml-structure-issues" class="md-nav__link">
+    Common additional XML Structure issues
+  </a>
+  
+    <nav class="md-nav" aria-label="Common additional XML Structure issues">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#not-providing-an-xml-namespace" class="md-nav__link">
+    Not providing an xml namespace
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#wrong-xml-element-test-not-allowed" class="md-nav__link">
+    Wrong XML element test (not allowed)
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#wrong-order-of-xml-elements" class="md-nav__link">
+    Wrong order of xml elements
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#common-json-structure-error-messages" class="md-nav__link">
+    common JSON Structure error messages
+  </a>
+  
+    <nav class="md-nav" aria-label="common JSON Structure error messages">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#json-array-for-0" class="md-nav__link">
+    JSON Array for 0..*
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#boolean-or-numbers-not-quoted" class="md-nav__link">
+    boolean or numbers not quoted
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#cardinality" class="md-nav__link">
+    Cardinality
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#value-domain" class="md-nav__link">
+    Value Domain
+  </a>
+  
+    <nav class="md-nav" aria-label="Value Domain">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#invalid-content-for-boolean" class="md-nav__link">
+    invalid content for boolean
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#semantic-validation" class="md-nav__link">
+    Semantic validation
+  </a>
+  
+    <nav class="md-nav" aria-label="Semantic validation">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#invalid-code-for-gender" class="md-nav__link">
+    invalid code for gender
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#intensional-valueset" class="md-nav__link">
+    intensional ValueSet
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#constraints-by-the-fhir-specification" class="md-nav__link">
+    Constraints by the FHIR Specification
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#constraints-by-fhir-implementation-guides" class="md-nav__link">
+    Constraints by FHIR Implementation Guides
+  </a>
+  
+    <nav class="md-nav" aria-label="Constraints by FHIR Implementation Guides">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#additional-rules-for-fhir-implementation-guides" class="md-nav__link">
+    Additional rules for FHIR implementation guides
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#slicing-in-fhir-documents" class="md-nav__link">
+    Slicing in FHIR documents
+  </a>
+  
+    <nav class="md-nav" aria-label="Slicing in FHIR documents">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#invalid-ips-document-missing-medication-section" class="md-nav__link">
+    Invalid IPS document: missing medication section
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#invalid-ips-document-missing-patientbirthdate" class="md-nav__link">
+    Invalid IPS document: missing Patient.birthDate
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+<h1 id="how-to-validate-fhir-resources">How to validate FHIR resources</h1>
+<p>This article shows, how FHIR resource can be validated and analyzed.</p>
+<p>Validation is a powerful tool to verify that you produce conformant FHIR resources, however the amount of error messages can be overwhelming if you have complex FHIR data structures like a FHIR IPS document (see validation result <a href="https://gazelle.ihe.net/evs/report.seam?oid=1.3.6.1.4.1.12559.11.11.4.17466&amp;standard=31">here</a>).</p>
+<h2 id="what-does-a-validator-check">What does a validator check</h2>
+<p>The validation tooling checks the following to verify that your FHIR resource is conformant on the following levels:</p>
+<ol>
+<li>Structure (Syntax) </li>
+<li>Semantics  </li>
+<li>Constraints by the FHIR Specification </li>
+<li>Constraints by FHIR Implementation Guides  </li>
+<li>Additional rules for FHIR implementation guides </li>
+<li>Slicing in FHIR documents</li>
+</ol>
+<p>You should fix first the structure errors, then the semantics error before you tackle the constraint errors.</p>
+<p>We will go through the different type of error messages to explain what possibilities you have to identify the errors.</p>
+<h2 id="using-matchbox-as-a-validation-tool">Using matchbox as a validation tool</h2>
+<p>You can use matchbox as a validation tool with a GUI, a test instance is located at: <a href="http://test.ahdis.ch/matchboxv3/fhir">http://test.ahdis.ch/matchboxv3/fhir</a>. Alternatively matchbox offers a $validate operation and you can call this directly with a client. In this article we will use VSCode together with the RESTClient extension to show the different validation behaviors, you can open this file locally in your VS Code instance and then you can click on <code>Send Request</code>. As an alternative here is also a link for each validation provided which triggers the validation on the matchbox test instance.  </p>
+<p>To check if you have set it up correctly, perform a first successful validation: This should validate the XML Patient resource with a family name test against the Patient profile of the FHIR specification, in the test instance, the default validation is to FHIR Release R4:</p>
+<p>Validation Request with <a href="https://test.ahdis.ch/matchboxv3/?resource=PFBhdGllbnQgeG1sbnM9Imh0dHA6Ly9obDcub3JnL2ZoaXIiPgogIDxuYW1lPgogICAgPGZhbWlseSB2YWx1ZT0iVGVzdCIvPgogIDwvbmFtZT4KPC9QYXRpZW50Pg%3D%3D&amp;profile=http%3A%2F%2Fhl7.org%2Ffhir%2FStructureDefinition%2FPatient#/validate">matchbox</a>:</p>
+<pre><code class="language-http">@host = https://test.ahdis.ch/matchboxv3/fhir
+POST {{host}}/$validate?profile=http://hl7.org/fhir/StructureDefinition/Patient HTTP/1.1
+Accept: application/fhir+json
+Content-Type: application/fhir+xml
+
+&lt;Patient xmlns=&quot;http://hl7.org/fhir&quot;&gt;
+  &lt;name&gt;
+    &lt;family value=&quot;Test&quot;/&gt;
+  &lt;/name&gt;
+&lt;/Patient&gt;
+</code></pre>
+<p>Validation response by matchbox:</p>
+<pre><code class="language-json">{
+  &quot;resourceType&quot;: &quot;OperationOutcome&quot;,
+  &quot;id&quot;: &quot;75e89102282782b6c16df8acfb99310150a261ee35eed42c3b181b14d00a051e&quot;,
+  &quot;issue&quot;: [
+    {
+      &quot;severity&quot;: &quot;information&quot;,
+      &quot;code&quot;: &quot;informational&quot;,
+      &quot;diagnostics&quot;: &quot;Validation for profile http://hl7.org/fhir/StructureDefinition/Patient|4.0.1 (2019-11-01T09:29:23+11:00). Loaded packages: hl7.fhir.r4.core#4.0.1, hl7.fhir.xver-extensions#4.0, hl7.terminology#5.4.0, hl7.fhir.uv.extensions.r4#1.0.0. Duration: 0.015s. powered by matchbox 3.9.3, hapi-fhir 7.4.0 and org.hl7.fhir.core 6.3.24. Validation parameters: CliContext{doNative=false, extensions=[any], hintAboutNonMustSupport=false, recursive=false, showMessagesFromReferences=false, doDebug=false, assumeValidRestReferences=false, canDoNative=false, noExtensibleBindingMessages=false, noUnicodeBiDiControlChars=false, noInvariants=false, displayIssuesAreWarnings=true, wantInvariantsInMessages=false, doImplicitFHIRPathStringConversion=false, htmlInMarkdownCheck=WARNING, txServer='https://test.ahdis.ch/matchboxv3/fhir', txServerCache='true', txLog='null', txUseEcosystem=true, lang='null', snomedCT='null', fhirVersion='4.0.1', ig='hl7.fhir.r4.core#4.0.1', questionnaireMode=CHECK, level=HINTS, mode=VALIDATION, securityChecks=false, crumbTrails=false, forPublication=false, allowExampleUrls=true, locale='en', locations={}, jurisdiction='urn:iso:std:iso:3166#US', igsPreloaded=[ch.fhir.ig.ch-elm#1.4.0], onlyOneEngine=false, xVersion=false, httpReadOnly=false}&quot;
+    },
+    {
+      &quot;severity&quot;: &quot;information&quot;,
+      &quot;code&quot;: &quot;informational&quot;,
+      &quot;diagnostics&quot;: &quot;No fatal or error issues detected, the validation has passed&quot;
+    }
+  ]
+}
+</code></pre>
+<p>The validation response always contains a FHIR OperationOutcome Resource, with a list of different issues encountered during validation. One issue with severity information and code information will be always present with which configuration parameters the validation has been performed. Those parameters can change by different requests. The GUI of matchbox shows the exact same information in the results. If you have no fatal or error issues you will get another information issue with "No fatal or error issues detected, the validation has passed", meaning you passed the validation according to the specified profile!</p>
+<table>
+<thead>
+<tr>
+<th>Severity</th>
+<th>Code</th>
+<th>Diagnostics</th>
+<th>Expression</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>information</td>
+<td>information</td>
+<td>No fatal or error issues detected, the validation has passed.</td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<h2 id="structure-syntax-issues">Structure (Syntax) issues</h2>
+<p>You have to provide your FHIR resource in the right structure and syntax (xml or json) and also in the right FHIR version. If the validator is not able to parse your message as a FHIR resource (or as FHIR logical model instance, e.g. a CDA instance), you will get issues with a type of severity error or fatal.</p>
+<p>e.g. you will get back the following error for requesting an <a href="https://test.ahdis.ch/matchboxv3/?resource=SGVsbG8gdmFsaWRhdG9y&amp;profile=http%3A%2F%2Fhl7.org%2Ffhir%2FStructureDefinition%2FPatient#/validate">invalid Patient xml resource validation</a> (just sending text instead):</p>
+<pre><code class="language-http">POST {{host}}/$validate?profile=http://hl7.org/fhir/StructureDefinition/Patient HTTP/1.1
+Accept: application/fhir+json
+Content-Type: application/fhir+xml
+
+Hello validator
+</code></pre>
+<table>
+<thead>
+<tr>
+<th>Severity</th>
+<th>Code</th>
+<th>Diagnostics</th>
+<th>Expression</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>fatal</td>
+<td>invalid</td>
+<td>Content is not allowed in prolog.</td>
+<td>(xml)</td>
+</tr>
+<tr>
+<td>error</td>
+<td>invalid</td>
+<td>The XML encoding is invalid (must be UTF-8)</td>
+<td>XML</td>
+</tr>
+</tbody>
+</table>
+<p>or an invalid Patient in a json validation:</p>
+<pre><code class="language-http">POST {{host}}/$validate?profile=http://hl7.org/fhir/StructureDefinition/Patient HTTP/1.1
+Accept: application/fhir+json
+Content-Type: application/fhir+json
+
+Hello validator
+</code></pre>
+<table>
+<thead>
+<tr>
+<th>Severity</th>
+<th>Code</th>
+<th>Diagnostics</th>
+<th>Expression</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>fatal</td>
+<td>invalid</td>
+<td>Error parsing JSON: Error parsing JSON source: Unexpected content at start of JSON: String at Line 1 (path=[Hello])</td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<h3 id="common-additional-xml-structure-issues">Common additional XML Structure issues</h3>
+<h4 id="not-providing-an-xml-namespace">Not providing an xml namespace</h4>
+<p><a href="https://test.ahdis.ch/matchboxv3/?resource=PFBhdGllbnQgeG1sbnM9Imh0dHA6Ly9obDcub3JnL2ZoaXIiPgogIDxnZW5kZXIgdmFsdWU9Im1hbGUiIC8%2BCiAgPG5hbWU%2BCiAgICA8ZmFtaWx5IHZhbHVlPSJUZXN0IiAvPgogIDwvbmFtZT4KPC9QYXRpZW50Pg%3D%3D&amp;profile=http%3A%2F%2Fhl7.org%2Ffhir%2FStructureDefinition%2FPatient#/validate">example no xml namespace</a></p>
+<pre><code class="language-http">POST {{host}}/$validate?profile=http://hl7.org/fhir/StructureDefinition/Patient HTTP/1.1
+Accept: application/fhir+json
+Content-Type: application/fhir+xml
+
+&lt;Patient&gt;
+  &lt;name&gt;
+    &lt;family value=&quot;Test&quot;/&gt;
+  &lt;/name&gt;
+&lt;/Patient&gt;
+</code></pre>
+<table>
+<thead>
+<tr>
+<th>Severity</th>
+<th>Code</th>
+<th>Diagnostics</th>
+<th>Expression</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>fatal</td>
+<td>structure</td>
+<td>This content cannot be parsed (unknown or unrecognized XML Root element namespace/name 'noNamespace::Patient')</td>
+<td>"Patient"</td>
+</tr>
+</tbody>
+</table>
+<h4 id="wrong-xml-element-test-not-allowed">Wrong XML element test (not allowed)</h4>
+<p><a href="https://test.ahdis.ch/matchboxv3/?resource=PFBhdGllbnQgeG1sbnM9Imh0dHA6Ly9obDcub3JnL2ZoaXIiPgogIDx0ZXN0IHZhbHVlPSJ0cnVlIiAvPgo8L1BhdGllbnQ%2B&amp;profile=http%3A%2F%2Fhl7.org%2Ffhir%2FStructureDefinition%2FPatient#/validate">example undefined xml element</a></p>
+<pre><code class="language-http">POST {{host}}/$validate?profile=http://hl7.org/fhir/StructureDefinition/Patient HTTP/1.1
+Content-Type: application/fhir+xml
+
+&lt;Patient xmlns=&quot;http://hl7.org/fhir&quot;&gt;
+  &lt;test value=&quot;true&quot; /&gt;
+&lt;/Patient&gt;
+</code></pre>
+<table>
+<thead>
+<tr>
+<th>Severity</th>
+<th>Code</th>
+<th>Diagnostics</th>
+<th>Expression</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>error</td>
+<td>structure</td>
+<td>Undefined element 'test' at /f:Patient"</td>
+<td>"f:/Patient"</td>
+</tr>
+</tbody>
+</table>
+<h4 id="wrong-order-of-xml-elements">Wrong order of xml elements</h4>
+<p><a href="https://test.ahdis.ch/matchboxv3/?resource=PFBhdGllbnQgeG1sbnM9Imh0dHA6Ly9obDcub3JnL2ZoaXIiPgogIDxnZW5kZXIgdmFsdWU9Im1hbGUiIC8%2BCiAgPG5hbWU%2BCiAgICA8ZmFtaWx5IHZhbHVlPSJUZXN0IiAvPgogIDwvbmFtZT4KPC9QYXRpZW50Pg%3D%3D&amp;profile=http%3A%2F%2Fhl7.org%2Ffhir%2FStructureDefinition%2FPatient#/validate">example wrong order</a></p>
+<pre><code class="language-http">POST {{host}}/$validate?profile=http://hl7.org/fhir/StructureDefinition/Patient HTTP/1.1
+Content-Type: application/fhir+xml
+
+&lt;Patient xmlns=&quot;http://hl7.org/fhir&quot;&gt;
+  &lt;gender value=&quot;male&quot; /&gt;
+  &lt;name&gt;
+    &lt;family value=&quot;Test&quot; /&gt;
+  &lt;/name&gt;
+&lt;/Patient&gt;
+</code></pre>
+<table>
+<thead>
+<tr>
+<th>Severity</th>
+<th>Code</th>
+<th>Diagnostics</th>
+<th>Expression</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>error</td>
+<td>invalid</td>
+<td>As specified by profile http://hl7.org/fhir/StructureDefinition/Patient</td>
+<td>4.0.1, Element 'name' is out of order (found after gender)</td>
+</tr>
+</tbody>
+</table>
+<p>the gender element must be after the name.</p>
+<h3 id="common-json-structure-error-messages">common JSON Structure error messages</h3>
+<h4 id="json-array-for-0">JSON Array for 0..*</h4>
+<p>If an element has a 0..* cardinality this needs in json representation an array. </p>
+<pre><code class="language-json">{
+  &quot;resourceType&quot;: &quot;Patient&quot;,
+  &quot;active&quot; : true,
+  &quot;name&quot;: [
+    {
+      &quot;family&quot;: &quot;Test&quot;
+    }
+  ]
+}
+</code></pre>
+<p>sending it as as a key, object will give an <a href="https://test.ahdis.ch/matchboxv3/?resource=PFBhdGllbnQgeG1sbnM9Imh0dHA6Ly9obDcub3JnL2ZoaXIiPgogIDx0ZXN0IHZhbHVlPSJ0cnVlIiAvPgo8L1BhdGllbnQ%2B&amp;profile=http%3A%2F%2Fhl7.org%2Ffhir%2FStructureDefinition%2FPatient#/validate">error</a>:</p>
+<pre><code class="language-http">POST {{host}}/$validate?profile=http://hl7.org/fhir/StructureDefinition/Patient HTTP/1.1
+Content-Type: application/fhir+json
+
+{
+    &quot;resourceType&quot;: &quot;Patient&quot;,
+    &quot;name&quot;: {
+      &quot;family&quot;: &quot;Test&quot;
+    }
+}
+</code></pre>
+<table>
+<thead>
+<tr>
+<th>Severity</th>
+<th>Code</th>
+<th>Diagnostics</th>
+<th>Expression</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>error</td>
+<td>invalid</td>
+<td>The property name must be a JSON Array, not an Object (at Patient)</td>
+<td>Patient.name</td>
+</tr>
+</tbody>
+</table>
+<h4 id="boolean-or-numbers-not-quoted">boolean or numbers not quoted</h4>
+<p>in JSON booleans or numbers must not be quoted as objects <a href="https://test.ahdis.ch/matchboxv3/?resource=ewoJInJlc291cmNlVHlwZSI6ICJQYXRpZW50IiwKCSJhY3RpdmUiIDogInRydWUiCiAgfQ%3D%3D&amp;profile=http%3A%2F%2Fhl7.org%2Ffhir%2FStructureDefinition%2FPatient#/validate">example</a>:</p>
+<pre><code class="language-http">POST {{host}}/$validate?profile=http://hl7.org/fhir/StructureDefinition/Patient HTTP/1.1
+Content-Type: application/fhir+json
+
+{
+  &quot;resourceType&quot;: &quot;Patient&quot;,
+  &quot;active&quot; : &quot;true&quot;
+}
+</code></pre>
+<table>
+<thead>
+<tr>
+<th>Severity</th>
+<th>Code</th>
+<th>Diagnostics</th>
+<th>Expression</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>error</td>
+<td>invalid</td>
+<td>Error parsing JSON: the primitive value must be a boolean</td>
+<td>Patient.active</td>
+</tr>
+</tbody>
+</table>
+<h3 id="cardinality">Cardinality</h3>
+<p>The validator checks that the cardinality of all properties are correct, there can be min &amp; max requirements, 
+e.g. Patient.communication.language is required if you provide Patient.communication <a href="https://test.ahdis.ch/matchboxv3/?resource=ewoJInJlc291cmNlVHlwZSI6ICJQYXRpZW50IiwKCSJjb21tdW5pY2F0aW9uIiA6IFsgewoJCSJwcmVmZXJyZWQiOiB0cnVlCgkgIH0KCV0KICB9&amp;profile=http%3A%2F%2Fhl7.org%2Ffhir%2FStructureDefinition%2FPatient#/validate">example</a>:</p>
+<pre><code class="language-http">POST {{host}}/$validate?profile=http://hl7.org/fhir/StructureDefinition/Patient HTTP/1.1
+Content-Type: application/fhir+json
+
+{
+  &quot;resourceType&quot;: &quot;Patient&quot;,
+  &quot;communication&quot; : [ {
+      &quot;preferred&quot;: true
+    }
+  ]
+}
+</code></pre>
+<table>
+<thead>
+<tr>
+<th>Severity</th>
+<th>Code</th>
+<th>Diagnostics</th>
+<th>Expression</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>error</td>
+<td>structure</td>
+<td>Patient.communication.language: minimum required = 1, but only found 0 (from http://hl7.org/fhir/StructureDefinition/Patient</td>
+<td>4.0.1)</td>
+</tr>
+</tbody>
+</table>
+<h3 id="value-domain">Value Domain</h3>
+<p>The validator checks that all values of all properties conform to the rules for the specified types (including checking that enumerated codes are valid).</p>
+<h4 id="invalid-content-for-boolean">invalid content for boolean</h4>
+<pre><code class="language-http">POST {{host}}/$validate?profile=http://hl7.org/fhir/StructureDefinition/Patient HTTP/1.1
+Content-Type: application/fhir+json
+
+{
+  &quot;resourceType&quot;: &quot;Patient&quot;,
+  &quot;active&quot; : trueorfalse
+}
+</code></pre>
+<table>
+<thead>
+<tr>
+<th>Severity</th>
+<th>Code</th>
+<th>Diagnostics</th>
+<th>Expression</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>error</td>
+<td>invalid</td>
+<td>The JSON property 'active' has no quotes around the value of the property 'trueorfalse'</td>
+<td>Patient</td>
+</tr>
+<tr>
+<td>error</td>
+<td>invalid</td>
+<td>Error parsing JSON: the primitive value must be a boolean</td>
+<td>Patient.active</td>
+</tr>
+<tr>
+<td>error</td>
+<td>structure</td>
+<td>Boolean values must be 'true' or 'false'</td>
+<td>Patient.active</td>
+</tr>
+</tbody>
+</table>
+<h2 id="semantic-validation">Semantic validation</h2>
+<p>The validator checks also the validity of the codes and if the codes are appropriate for the bounded elements according to the binding strength:</p>
+<h3 id="invalid-code-for-gender">invalid code for gender</h3>
+<p><a href="https://test.ahdis.ch/matchboxv3/?resource=ewoJInJlc291cmNlVHlwZSI6ICJQYXRpZW50IiwKCSJnZW5kZXIiIDogIj8iCiAgfQ%3D%3D&amp;profile=http%3A%2F%2Fhl7.org%2Ffhir%2FStructureDefinition%2FPatient#/validate">example</a></p>
+<pre><code class="language-http">POST {{host}}/$validate?profile=http://hl7.org/fhir/StructureDefinition/Patient HTTP/1.1
+Content-Type: application/fhir+json
+
+{
+  &quot;resourceType&quot;: &quot;Patient&quot;,
+  &quot;gender&quot; : &quot;?&quot;
+}
+</code></pre>
+<table>
+<thead>
+<tr>
+<th>Severity</th>
+<th>Code</th>
+<th>Diagnostics</th>
+<th>Expression</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>error</td>
+<td>code-invalid</td>
+<td>The value provided ('?') was not found in the value set 'AdministrativeGender' (http://hl7.org/fhir/ValueSet/administrative-gender</td>
+<td>4.0.1), and a code is required from this value set  (error message = The System URI could not be determined for the code '?' in the ValueSet 'http://hl7.org/fhir/ValueSet/administrative-gender</td>
+</tr>
+</tbody>
+</table>
+<h3 id="intensional-valueset">intensional ValueSet</h3>
+<p>ValueSet can be <a href="https://hl7.org/fhir/valueset.html#int-ext">intensional</a> which requires a terminology server to expand them or verify if a code is valid within. matchbox provides an internal terminology server which will has only check limited terminology capabilities, e.g. it will not validate display names. however you can select other terminology servers. </p>
+<h2 id="constraints-by-the-fhir-specification">Constraints by the FHIR Specification</h2>
+<p>FHIR adds additional constraints to resources, e.g: https://hl7.org/fhir/patient.html#invs adds a requirement that a contact should have at least a contact's details or a reference to an organization (name.exists() or telecom.exists() or address.exists() or organization.exists()). <a href="https://test.ahdis.ch/matchboxv3/?resource=ewoJInJlc291cmNlVHlwZSI6ICJQYXRpZW50IiwKICAgImNvbnRhY3QiIDogW3sKICAgICJyZWxhdGlvbnNoaXAiIDogW3sKICAgICAgImNvZGluZyIgOiBbCiAgICAgIHsKICAgICAgICAic3lzdGVtIiA6ICJodHRwOi8vdGVybWlub2xvZ3kuaGw3Lm9yZy9Db2RlU3lzdGVtL3YyLTAxMzEiLAogICAgICAgICJjb2RlIiA6ICJOIgogICAgICB9CiAgICAgIF0KICAgIH1dCiAgfV0KfQ%3D%3D&amp;profile=http%3A%2F%2Fhl7.org%2Ffhir%2FStructureDefinition%2FPatient#/validate">example</a></p>
+<pre><code class="language-http">POST {{host}}/$validate?profile=http://hl7.org/fhir/StructureDefinition/Patient HTTP/1.1
+Content-Type: application/fhir+json
+
+{
+    &quot;resourceType&quot;: &quot;Patient&quot;,
+   &quot;contact&quot; : [{
+    &quot;relationship&quot; : [{
+      &quot;coding&quot; : [
+      {
+        &quot;system&quot; : &quot;http://terminology.hl7.org/CodeSystem/v2-0131&quot;,
+        &quot;code&quot; : &quot;N&quot;
+      }
+      ]
+    }]
+  }]
+}
+</code></pre>
+<table>
+<thead>
+<tr>
+<th>Severity</th>
+<th>Code</th>
+<th>Diagnostics</th>
+<th>Expression</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>error</td>
+<td>invalid</td>
+<td>Constraint failed: pat-1: 'SHALL at least contain a contact's details or a reference to an organization'</td>
+<td>Patient.contact[0]</td>
+</tr>
+</tbody>
+</table>
+<h2 id="constraints-by-fhir-implementation-guides">Constraints by FHIR Implementation Guides</h2>
+<h3 id="additional-rules-for-fhir-implementation-guides">Additional rules for FHIR implementation guides</h3>
+<p>FHIR Implementation guides can add additional rules and you can validate if those rules are checked, by specifying the profile for the validation where the rules are defined:</p>
+<p>e.g. in FHIR CH Core it is defined that <a href="https://fhir.ch/ig/ch-core/StructureDefinition-ch-core-patient-epr.html">CH Core Patient EPR</a> is required to have at least one identifier, name and birthDate. If you <a href="https://test.ahdis.ch/matchboxv3/?resource=ewoJInJlc291cmNlVHlwZSI6ICJQYXRpZW50Igp9&amp;profile=http%3A%2F%2Fhl7.org%2Ffhir%2FStructureDefinition%2FPatient#/validate">validate</a> this against the base profile this the patient resource is fine against the patient profile:</p>
+<pre><code class="language-http">POST {{host}}/$validate?profile=http://hl7.org/fhir/StructureDefinition/Patient HTTP/1.1
+Content-Type: application/fhir+json
+
+{
+    &quot;resourceType&quot;: &quot;Patient&quot;
+}
+</code></pre>
+<table>
+<thead>
+<tr>
+<th>Severity</th>
+<th>Code</th>
+<th>Diagnostics</th>
+<th>Expression</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>information</td>
+<td>information</td>
+<td>No fatal or error issues detected, the validation has passed.</td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<p>however if you <a href="https://test.ahdis.ch/matchboxv3/?resource=ewoJInJlc291cmNlVHlwZSI6ICJQYXRpZW50Igp9&amp;profile=http%3A%2F%2Ffhir.ch%2Fig%2Fch-core%2FStructureDefinition%2Fch-core-patient-epr#/validate">validate</a> it against <a href="https://fhir.ch/ig/ch-core/StructureDefinition-ch-core-patient-epr.html">CH Core Patient EPR </a> you will get multiple errors:</p>
+<pre><code class="language-http">POST {{host}}/$validate?profile=http://fhir.ch/ig/ch-core/StructureDefinition/ch-core-patient-epr HTTP/1.1
+Content-Type: application/fhir+json
+
+{
+    &quot;resourceType&quot;: &quot;Patient&quot;
+}
+</code></pre>
+<table>
+<thead>
+<tr>
+<th>Severity</th>
+<th>Code</th>
+<th>Diagnostics</th>
+<th>Expression</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>error</td>
+<td>structure</td>
+<td>Patient.identifier: minimum required = 1, but only found 0 (from http://fhir.ch/ig/ch-core/StructureDefinition/ch-core-patient-epr</td>
+<td>5.0.0-ballot)</td>
+</tr>
+<tr>
+<td>error</td>
+<td>structure</td>
+<td>Patient.gender: minimum required = 1, but only found 0 (from http://fhir.ch/ig/ch-core/StructureDefinition/ch-core-patient-epr</td>
+<td>5.0.0-ballot)</td>
+</tr>
+<tr>
+<td>error</td>
+<td>structure</td>
+<td>Patient.birthDate: minimum required = 1, but only found 0 (from http://fhir.ch/ig/ch-core/StructureDefinition/ch-core-patient-epr</td>
+<td>5.0.0-ballot)</td>
+</tr>
+</tbody>
+</table>
+<h3 id="slicing-in-fhir-documents">Slicing in FHIR documents</h3>
+<p>One common feature of constraining FHIR documents (FHIR resource Bundle with type document) is to specify a document profile (e.g. <a href="https://hl7.org/fhir/uv/ips/StructureDefinition-Bundle-uv-ips.html">IPS</a>). The document profile will then specify the entries which are allowed to appear. </p>
+<p>In a FHIR document the first resource entry needs to be a FHIR Resource Composition, for a specific FHIR document there will be a profile for this Composition (e.g <a href="https://hl7.org/fhir/uv/ips/StructureDefinition-Composition-uv-ips.html">IPS Composition</a>, followed by other resources. </p>
+<p>This is expressed with <a href="https://hl7.org/fhir/profiling.html#slicing">slicing</a>, the Bundle.entry elements are sliced and the document profile says which resources are to be expected in this bundle.entry elements (e.g. at least that Composition defined above). Usually this slices are done on resource/profile and specifying that the Composition needs to appear. For IPS it requires also a Patient resource and defines profiles for optional resources according to the IPS requirements).</p>
+<p>A FHIR document has different sections (usually coded by a LOINC code) defined in the Composition resource, and within those sections you will have references to structured FHIR resources, which will be contained in Bundle.entry. This means that the Composition is broken into sections, slice by pattern:code. The IPS has required slices for sectionMedications, sectionAllergies and section Problems.</p>
+<p>A minimal IPS document validation looks like this:</p>
+<p><a href="https://test.ahdis.ch/matchboxv3/?resource=ewogICAgInJlc291cmNlVHlwZSI6ICJCdW5kbGUiLAogICAgImlkZW50aWZpZXIiOiB7CiAgICAgICAgInN5c3RlbSI6ICJ1cm46b2lkOjIuMTYuNzI0LjQuOC4xMC4yMDAuMTAiLAogICAgICAgICJ2YWx1ZSI6ICIyOGI5NTgxNS03NmNlLTQ1N2ItYjdhZS1hOTcyZTUyN2RiNDAiCiAgICB9LAogICAgInR5cGUiOiAiZG9jdW1lbnQiLAogICAgInRpbWVzdGFtcCI6ICIyMDIwLTEyLTExVDE0OjMwOjAwKzAxOjAwIiwKICAgICJlbnRyeSI6IFsKICAgICAgICB7CiAgICAgICAgICAgICJmdWxsVXJsIjogInVybjp1dWlkOmY0MGIwN2UzLTM3ZTgtNDhjMy1iZjFjLWFlNzBmZTEyZGFiMCIsCiAgICAgICAgICAgICJyZXNvdXJjZSI6IHsKICAgICAgICAgICAgICAgICJyZXNvdXJjZVR5cGUiOiAiQ29tcG9zaXRpb24iLAogICAgICAgICAgICAgICAgImlkIjogImY0MGIwN2UzLTM3ZTgtNDhjMy1iZjFjLWFlNzBmZTEyZGFiMCIsCiAgICAgICAgICAgICAgICAic3RhdHVzIjogImZpbmFsIiwKICAgICAgICAgICAgICAgICJ0eXBlIjogewogICAgICAgICAgICAgICAgICAgICJjb2RpbmciOiBbCiAgICAgICAgICAgICAgICAgICAgICAgIHsKICAgICAgICAgICAgICAgICAgICAgICAgICAgICJzeXN0ZW0iOiAiaHR0cDovL2xvaW5jLm9yZyIsCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAiY29kZSI6ICI2MDU5MS01IiwKICAgICAgICAgICAgICAgICAgICAgICAgICAgICJkaXNwbGF5IjogIlBhdGllbnQgc3VtbWFyeSBEb2N1bWVudCIKICAgICAgICAgICAgICAgICAgICAgICAgfQogICAgICAgICAgICAgICAgICAgIF0KICAgICAgICAgICAgICAgIH0sCiAgICAgICAgICAgICAgICAic3ViamVjdCI6IHsKICAgICAgICAgICAgICAgICAgICAicmVmZXJlbmNlIjogInVybjp1dWlkOjI0NGFkN2MzLWJlZWItNDFkMS04YTJmLWM3NmI4Y2Y3MjBhZCIKICAgICAgICAgICAgICAgIH0sCiAgICAgICAgICAgICAgICAiZGF0ZSI6ICIyMDIwLTEyLTExVDE0OjMwOjAwKzAxOjAwIiwKICAgICAgICAgICAgICAgICJhdXRob3IiOiBbCiAgICAgICAgICAgICAgICAgICAgewogICAgICAgICAgICAgICAgICAgICAgICAicmVmZXJlbmNlIjogInVybjp1dWlkOjQ1MjcxZjdmLTYzYWItNDk0Ni05NzBmLTNkYWFhYTA2NjM3ZiIKICAgICAgICAgICAgICAgICAgICB9CiAgICAgICAgICAgICAgICBdLAogICAgICAgICAgICAgICAgInRpdGxlIjogIlBhdGllbnQgU3VtbWFyeSBhcyBvZiBEZWNlbWJlciAxMSwgMjAyMCAxNDozMCIsCiAgICAgICAgICAgICAgICAiY29uZmlkZW50aWFsaXR5IjogIk4iLAogICAgICAgICAgICAgICAgInNlY3Rpb24iOiBbCiAgICAgICAgICAgICAgICAgICAgewogICAgICAgICAgICAgICAgICAgICAgICAidGl0bGUiOiAiQWN0aXZlIFByb2JsZW1zIiwKICAgICAgICAgICAgICAgICAgICAgICAgImNvZGUiOiB7CiAgICAgICAgICAgICAgICAgICAgICAgICAgICAiY29kaW5nIjogWwogICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIHsKICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgInN5c3RlbSI6ICJodHRwOi8vbG9pbmMub3JnIiwKICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgImNvZGUiOiAiMTE0NTAtNCIsCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICJkaXNwbGF5IjogIlByb2JsZW0gbGlzdCAtIFJlcG9ydGVkIgogICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIH0KICAgICAgICAgICAgICAgICAgICAgICAgICAgIF0KICAgICAgICAgICAgICAgICAgICAgICAgfSwKICAgICAgICAgICAgICAgICAgICAgICAgInRleHQiOiB7CiAgICAgICAgICAgICAgICAgICAgICAgICAgICAic3RhdHVzIjogImdlbmVyYXRlZCIsCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAiZGl2IjogIjxkaXYgeG1sbnM9XCJodHRwOi8vd3d3LnczLm9yZy8xOTk5L3hodG1sXCI%2BPHVsPjxsaT48ZGl2PjxiPkNvbmRpdGlvbiBOYW1lPC9iPjogTWVub3BhdXNhbCBGbHVzaGluZzwvZGl2PjxkaXY%2BPGI%2BQ29kZTwvYj46IDxzcGFuPjE5ODQzNjAwODwvc3Bhbj48L2Rpdj48ZGl2PjxiPlN0YXR1czwvYj46IDxzcGFuPkFjdGl2ZTwvc3Bhbj48L2Rpdj48L2xpPjwvdWw%2BPC9kaXY%2BIgogICAgICAgICAgICAgICAgICAgICAgICB9LAogICAgICAgICAgICAgICAgICAgICAgICAiZW50cnkiOiBbCiAgICAgICAgICAgICAgICAgICAgICAgICAgICB7CiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgInJlZmVyZW5jZSI6ICJ1cm46dXVpZDpkMTc5MzIxZS1jMDkxLTRjZDQtODY0Mi0zYTI3NTM3ZDUwNmQiCiAgICAgICAgICAgICAgICAgICAgICAgICAgICB9CiAgICAgICAgICAgICAgICAgICAgICAgIF0KICAgICAgICAgICAgICAgICAgICB9LAogICAgICAgICAgICAgICAgICAgIHsKICAgICAgICAgICAgICAgICAgICAgICAgInRpdGxlIjogIk1lZGljYXRpb24iLAogICAgICAgICAgICAgICAgICAgICAgICAiY29kZSI6IHsKICAgICAgICAgICAgICAgICAgICAgICAgICAgICJjb2RpbmciOiBbCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgewogICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAic3lzdGVtIjogImh0dHA6Ly9sb2luYy5vcmciLAogICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAiY29kZSI6ICIxMDE2MC0wIiwKICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgImRpc3BsYXkiOiAiSGlzdG9yeSBvZiBNZWRpY2F0aW9uIHVzZSBOYXJyYXRpdmUiCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgfQogICAgICAgICAgICAgICAgICAgICAgICAgICAgXQogICAgICAgICAgICAgICAgICAgICAgICB9LAogICAgICAgICAgICAgICAgICAgICAgICAidGV4dCI6IHsKICAgICAgICAgICAgICAgICAgICAgICAgICAgICJzdGF0dXMiOiAiZ2VuZXJhdGVkIiwKICAgICAgICAgICAgICAgICAgICAgICAgICAgICJkaXYiOiAiPGRpdiB4bWxucz1cImh0dHA6Ly93d3cudzMub3JnLzE5OTkveGh0bWxcIj48dWw%2BPGxpPjxkaXY%2BPGI%2BTWVkaWNhdGlvbiBOYW1lPC9iPjogT3JhbCBhbmFzdHJvem9sZSAxbWcgdGFibGV0PC9kaXY%2BPGRpdj48Yj5Db2RlPC9iPjogPHNwYW4%2BPC9zcGFuPjwvZGl2PjxkaXY%2BPGI%2BU3RhdHVzPC9iPjogPHNwYW4%2BQWN0aXZlLCBzdGFydGVkIE1hcmNoIDIwMTU8L3NwYW4%2BPC9kaXY%2BPGRpdj5JbnN0cnVjdGlvbnM6IFRha2UgMSB0aW1lIHBlciBkYXk8L2Rpdj48L2xpPjwvdWw%2BPC9kaXY%2BIgogICAgICAgICAgICAgICAgICAgICAgICB9LAogICAgICAgICAgICAgICAgICAgICAgICAiZW50cnkiOiBbCiAgICAgICAgICAgICAgICAgICAgICAgICAgICB7CiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgInJlZmVyZW5jZSI6ICJ1cm46dXVpZDplMTI3MWVmZC0xOGZmLTQ2NTQtOWVlNy00NWY0MDAxOWM0NTMiCiAgICAgICAgICAgICAgICAgICAgICAgICAgICB9CiAgICAgICAgICAgICAgICAgICAgICAgIF0KICAgICAgICAgICAgICAgICAgICB9LAogICAgICAgICAgICAgICAgICAgIHsKICAgICAgICAgICAgICAgICAgICAgICAgInRpdGxlIjogIkFsbGVyZ2llcyBhbmQgSW50b2xlcmFuY2VzIiwKICAgICAgICAgICAgICAgICAgICAgICAgImNvZGUiOiB7CiAgICAgICAgICAgICAgICAgICAgICAgICAgICAiY29kaW5nIjogWwogICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIHsKICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgInN5c3RlbSI6ICJodHRwOi8vbG9pbmMub3JnIiwKICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgImNvZGUiOiAiNDg3NjUtMiIsCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICJkaXNwbGF5IjogIkFsbGVyZ2llcyBhbmQgYWR2ZXJzZSByZWFjdGlvbnMgRG9jdW1lbnQiCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgfQogICAgICAgICAgICAgICAgICAgICAgICAgICAgXQogICAgICAgICAgICAgICAgICAgICAgICB9LAogICAgICAgICAgICAgICAgICAgICAgICAidGV4dCI6IHsKICAgICAgICAgICAgICAgICAgICAgICAgICAgICJzdGF0dXMiOiAiZ2VuZXJhdGVkIiwKICAgICAgICAgICAgICAgICAgICAgICAgICAgICJkaXYiOiAiPGRpdiB4bWxucz1cImh0dHA6Ly93d3cudzMub3JnLzE5OTkveGh0bWxcIj48dWw%2BPGxpPjxkaXY%2BPGI%2BQWxsZXJneSBOYW1lPC9iPjogUGVuY2lsbGluczwvZGl2PjxkaXY%2BPGI%2BVmVyaWZpY2F0aW9uIFN0YXR1czwvYj46IENvbmZpcm1lZDwvZGl2PjxkaXY%2BPGI%2BUmVhY3Rpb248L2I%2BOiA8c3Bhbj5ubyBpbmZvcm1hdGlvbjwvc3Bhbj48L2Rpdj48L2xpPjwvdWw%2BPC9kaXY%2BIgogICAgICAgICAgICAgICAgICAgICAgICB9LAogICAgICAgICAgICAgICAgICAgICAgICAiZW50cnkiOiBbCiAgICAgICAgICAgICAgICAgICAgICAgICAgICB7CiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgInJlZmVyZW5jZSI6ICJ1cm46dXVpZDo3NDg2MTMxNi1mNjlkLTQ2NTItOWZiMS04NTEyYTIwYzc5MjciCiAgICAgICAgICAgICAgICAgICAgICAgICAgICB9CiAgICAgICAgICAgICAgICAgICAgICAgIF0KICAgICAgICAgICAgICAgICAgICB9CiAgICAgICAgICAgICAgICBdCiAgICAgICAgICAgIH0KICAgICAgICB9LAogICAgICAgIHsKICAgICAgICAgICAgImZ1bGxVcmwiOiAidXJuOnV1aWQ6MjQ0YWQ3YzMtYmVlYi00MWQxLThhMmYtYzc2YjhjZjcyMGFkIiwKICAgICAgICAgICAgInJlc291cmNlIjogewogICAgICAgICAgICAgICAgInJlc291cmNlVHlwZSI6ICJQYXRpZW50IiwKICAgICAgICAgICAgICAgICJpZCI6ICIyNDRhZDdjMy1iZWViLTQxZDEtOGEyZi1jNzZiOGNmNzIwYWQiLAogICAgICAgICAgICAgICAgIm5hbWUiOiBbCiAgICAgICAgICAgICAgICAgICAgewogICAgICAgICAgICAgICAgICAgICAgICAiZmFtaWx5IjogIkRlTGFyb3NhIiwKICAgICAgICAgICAgICAgICAgICAgICAgImdpdmVuIjogWwogICAgICAgICAgICAgICAgICAgICAgICAgICAgIk1hcnRoYSIKICAgICAgICAgICAgICAgICAgICAgICAgXQogICAgICAgICAgICAgICAgICAgIH0KICAgICAgICAgICAgICAgIF0sCiAgICAgICAgICAgICAgICAiYmlydGhEYXRlIjogIjE5NzItMDUtMDEiCiAgICAgICAgICAgIH0KICAgICAgICB9LAogICAgICAgIHsKICAgICAgICAgICAgImZ1bGxVcmwiOiAidXJuOnV1aWQ6NDUyNzFmN2YtNjNhYi00OTQ2LTk3MGYtM2RhYWFhMDY2MzdmIiwKICAgICAgICAgICAgInJlc291cmNlIjogewogICAgICAgICAgICAgICAgInJlc291cmNlVHlwZSI6ICJQcmFjdGl0aW9uZXIiLAogICAgICAgICAgICAgICAgImlkIjogIjQ1MjcxZjdmLTYzYWItNDk0Ni05NzBmLTNkYWFhYTA2NjM3ZiIsCiAgICAgICAgICAgICAgICAibmFtZSI6IFsKICAgICAgICAgICAgICAgICAgICB7CiAgICAgICAgICAgICAgICAgICAgICAgICJmYW1pbHkiOiAidmFuIEh1bHAiLAogICAgICAgICAgICAgICAgICAgICAgICAiZ2l2ZW4iOiBbCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAiQmVldGplIgogICAgICAgICAgICAgICAgICAgICAgICBdCiAgICAgICAgICAgICAgICAgICAgfQogICAgICAgICAgICAgICAgXQogICAgICAgICAgICB9CiAgICAgICAgfSwKICAgICAgICB7CiAgICAgICAgICAgICJmdWxsVXJsIjogInVybjp1dWlkOmQxNzkzMjFlLWMwOTEtNGNkNC04NjQyLTNhMjc1MzdkNTA2ZCIsCiAgICAgICAgICAgICJyZXNvdXJjZSI6IHsKICAgICAgICAgICAgICAgICJyZXNvdXJjZVR5cGUiOiAiQ29uZGl0aW9uIiwKICAgICAgICAgICAgICAgICJpZCI6ICJkMTc5MzIxZS1jMDkxLTRjZDQtODY0Mi0zYTI3NTM3ZDUwNmQiLAogICAgICAgICAgICAgICAgImNvZGUiOiB7CiAgICAgICAgICAgICAgICAgICAgImNvZGluZyI6IFsKICAgICAgICAgICAgICAgICAgICAgICAgewogICAgICAgICAgICAgICAgICAgICAgICAgICAgInN5c3RlbSI6ICJodHRwOi8vc25vbWVkLmluZm8vc2N0IiwKICAgICAgICAgICAgICAgICAgICAgICAgICAgICJjb2RlIjogIjE5ODQzNjAwOCIsCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAiZGlzcGxheSI6ICJNZW5vcGF1c2FsIGZsdXNoaW5nIChmaW5kaW5nKSIKICAgICAgICAgICAgICAgICAgICAgICAgfQogICAgICAgICAgICAgICAgICAgIF0KICAgICAgICAgICAgICAgIH0sCiAgICAgICAgICAgICAgICAic3ViamVjdCI6IHsKICAgICAgICAgICAgICAgICAgICAicmVmZXJlbmNlIjogInVybjp1dWlkOjI0NGFkN2MzLWJlZWItNDFkMS04YTJmLWM3NmI4Y2Y3MjBhZCIKICAgICAgICAgICAgICAgIH0KICAgICAgICAgICAgfQogICAgICAgIH0sCiAgICAgICAgewogICAgICAgICAgICAiZnVsbFVybCI6ICJ1cm46dXVpZDplMTI3MWVmZC0xOGZmLTQ2NTQtOWVlNy00NWY0MDAxOWM0NTMiLAogICAgICAgICAgICAicmVzb3VyY2UiOiB7CiAgICAgICAgICAgICAgICAicmVzb3VyY2VUeXBlIjogIk1lZGljYXRpb25TdGF0ZW1lbnQiLAogICAgICAgICAgICAgICAgImlkIjogImUxMjcxZWZkLTE4ZmYtNDY1NC05ZWU3LTQ1ZjQwMDE5YzQ1MyIsCiAgICAgICAgICAgICAgICAic3RhdHVzIjogImFjdGl2ZSIsCiAgICAgICAgICAgICAgICAibWVkaWNhdGlvblJlZmVyZW5jZSI6IHsKICAgICAgICAgICAgICAgICAgICAicmVmZXJlbmNlIjogInVybjp1dWlkOjk1ZGI3YzkyLTU2NmEtNGRlZC04OTZiLTIyMjBhYjI0NGE5ZSIKICAgICAgICAgICAgICAgIH0sCiAgICAgICAgICAgICAgICAic3ViamVjdCI6IHsKICAgICAgICAgICAgICAgICAgICAicmVmZXJlbmNlIjogInVybjp1dWlkOjI0NGFkN2MzLWJlZWItNDFkMS04YTJmLWM3NmI4Y2Y3MjBhZCIKICAgICAgICAgICAgICAgIH0sCiAgICAgICAgICAgICAgICAiZWZmZWN0aXZlUGVyaW9kIjogewogICAgICAgICAgICAgICAgICAgICJzdGFydCI6ICIyMDE1LTAzIgogICAgICAgICAgICAgICAgfQogICAgICAgICAgICB9CiAgICAgICAgfSwKICAgICAgICB7CiAgICAgICAgICAgICJmdWxsVXJsIjogInVybjp1dWlkOjk1ZGI3YzkyLTU2NmEtNGRlZC04OTZiLTIyMjBhYjI0NGE5ZSIsCiAgICAgICAgICAgICJyZXNvdXJjZSI6IHsKICAgICAgICAgICAgICAgICJyZXNvdXJjZVR5cGUiOiAiTWVkaWNhdGlvbiIsCiAgICAgICAgICAgICAgICAiaWQiOiAiOTVkYjdjOTItNTY2YS00ZGVkLTg5NmItMjIyMGFiMjQ0YTllIiwKICAgICAgICAgICAgICAgICJjb2RlIjogewogICAgICAgICAgICAgICAgICAgICJjb2RpbmciOiBbCiAgICAgICAgICAgICAgICAgICAgICAgIHsKICAgICAgICAgICAgICAgICAgICAgICAgICAgICJzeXN0ZW0iOiAiaHR0cDovL3Nub21lZC5pbmZvL3NjdCIsCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAiY29kZSI6ICIxMDg3NzQwMDAiLAogICAgICAgICAgICAgICAgICAgICAgICAgICAgImRpc3BsYXkiOiAiUHJvZHVjdCBjb250YWluaW5nIGFuYXN0cm96b2xlIChtZWRpY2luYWwgcHJvZHVjdCkiCiAgICAgICAgICAgICAgICAgICAgICAgIH0KICAgICAgICAgICAgICAgICAgICBdCiAgICAgICAgICAgICAgICB9CiAgICAgICAgICAgIH0KICAgICAgICB9LAogICAgICAgIHsKICAgICAgICAgICAgImZ1bGxVcmwiOiAidXJuOnV1aWQ6NzQ4NjEzMTYtZjY5ZC00NjUyLTlmYjEtODUxMmEyMGM3OTI3IiwKICAgICAgICAgICAgInJlc291cmNlIjogewogICAgICAgICAgICAgICAgInJlc291cmNlVHlwZSI6ICJBbGxlcmd5SW50b2xlcmFuY2UiLAogICAgICAgICAgICAgICAgImlkIjogIjc0ODYxMzE2LWY2OWQtNDY1Mi05ZmIxLTg1MTJhMjBjNzkyNyIsCiAgICAgICAgICAgICAgICAiY2xpbmljYWxTdGF0dXMiOiB7CiAgICAgICAgICAgICAgICAgICAgImNvZGluZyI6IFsKICAgICAgICAgICAgICAgICAgICAgICAgewogICAgICAgICAgICAgICAgICAgICAgICAgICAgInN5c3RlbSI6ICJodHRwOi8vdGVybWlub2xvZ3kuaGw3Lm9yZy9Db2RlU3lzdGVtL2FsbGVyZ3lpbnRvbGVyYW5jZS1jbGluaWNhbCIsCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAiY29kZSI6ICJhY3RpdmUiCiAgICAgICAgICAgICAgICAgICAgICAgIH0KICAgICAgICAgICAgICAgICAgICBdCiAgICAgICAgICAgICAgICB9LAogICAgICAgICAgICAgICAgImNvZGUiOiB7CiAgICAgICAgICAgICAgICAgICAgImNvZGluZyI6IFsKICAgICAgICAgICAgICAgICAgICAgICAgewogICAgICAgICAgICAgICAgICAgICAgICAgICAgInN5c3RlbSI6ICJodHRwOi8vc25vbWVkLmluZm8vc2N0IiwKICAgICAgICAgICAgICAgICAgICAgICAgICAgICJjb2RlIjogIjM3MzI3MDAwNCIsCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAiZGlzcGxheSI6ICJTdWJzdGFuY2Ugd2l0aCBwZW5pY2lsbGluIHN0cnVjdHVyZSBhbmQgYW50aWJhY3RlcmlhbCBtZWNoYW5pc20gb2YgYWN0aW9uIChzdWJzdGFuY2UpIgogICAgICAgICAgICAgICAgICAgICAgICB9CiAgICAgICAgICAgICAgICAgICAgXQogICAgICAgICAgICAgICAgfSwKICAgICAgICAgICAgICAgICJwYXRpZW50IjogewogICAgICAgICAgICAgICAgICAgICJyZWZlcmVuY2UiOiAidXJuOnV1aWQ6MjQ0YWQ3YzMtYmVlYi00MWQxLThhMmYtYzc2YjhjZjcyMGFkIgogICAgICAgICAgICAgICAgfQogICAgICAgICAgICB9CiAgICAgICAgfQogICAgXQp9&amp;profile=http%3A%2F%2Fhl7.org%2Ffhir%2Fuv%2Fips%2FStructureDefinition%2FBundle-uv-ips#/validate">example</a></p>
+<pre><code class="language-http">POST {{host}}/$validate?profile=http://hl7.org/fhir/uv/ips/StructureDefinition/Bundle-uv-ips HTTP/1.1
+Content-Type: application/fhir+json
+
+{
+    &quot;resourceType&quot;: &quot;Bundle&quot;,
+    &quot;identifier&quot;: {
+        &quot;system&quot;: &quot;urn:oid:2.16.724.4.8.10.200.10&quot;,
+        &quot;value&quot;: &quot;28b95815-76ce-457b-b7ae-a972e527db40&quot;
+    },
+    &quot;type&quot;: &quot;document&quot;,
+    &quot;timestamp&quot;: &quot;2020-12-11T14:30:00+01:00&quot;,
+    &quot;entry&quot;: [
+        {
+            &quot;fullUrl&quot;: &quot;urn:uuid:f40b07e3-37e8-48c3-bf1c-ae70fe12dab0&quot;,
+            &quot;resource&quot;: {
+                &quot;resourceType&quot;: &quot;Composition&quot;,
+                &quot;id&quot;: &quot;f40b07e3-37e8-48c3-bf1c-ae70fe12dab0&quot;,
+                &quot;status&quot;: &quot;final&quot;,
+                &quot;type&quot;: {
+                    &quot;coding&quot;: [
+                        {
+                            &quot;system&quot;: &quot;http://loinc.org&quot;,
+                            &quot;code&quot;: &quot;60591-5&quot;,
+                            &quot;display&quot;: &quot;Patient summary Document&quot;
+                        }
+                    ]
+                },
+                &quot;subject&quot;: {
+                    &quot;reference&quot;: &quot;urn:uuid:244ad7c3-beeb-41d1-8a2f-c76b8cf720ad&quot;
+                },
+                &quot;date&quot;: &quot;2020-12-11T14:30:00+01:00&quot;,
+                &quot;author&quot;: [
+                    {
+                        &quot;reference&quot;: &quot;urn:uuid:45271f7f-63ab-4946-970f-3daaaa06637f&quot;
+                    }
+                ],
+                &quot;title&quot;: &quot;Patient Summary as of December 11, 2020 14:30&quot;,
+                &quot;confidentiality&quot;: &quot;N&quot;,
+                &quot;section&quot;: [
+                    {
+                        &quot;title&quot;: &quot;Active Problems&quot;,
+                        &quot;code&quot;: {
+                            &quot;coding&quot;: [
+                                {
+                                    &quot;system&quot;: &quot;http://loinc.org&quot;,
+                                    &quot;code&quot;: &quot;11450-4&quot;,
+                                    &quot;display&quot;: &quot;Problem list - Reported&quot;
+                                }
+                            ]
+                        },
+                        &quot;text&quot;: {
+                            &quot;status&quot;: &quot;generated&quot;,
+                            &quot;div&quot;: &quot;&lt;div xmlns=\&quot;http://www.w3.org/1999/xhtml\&quot;&gt;&lt;ul&gt;&lt;li&gt;&lt;div&gt;&lt;b&gt;Condition Name&lt;/b&gt;: Menopausal Flushing&lt;/div&gt;&lt;div&gt;&lt;b&gt;Code&lt;/b&gt;: &lt;span&gt;198436008&lt;/span&gt;&lt;/div&gt;&lt;div&gt;&lt;b&gt;Status&lt;/b&gt;: &lt;span&gt;Active&lt;/span&gt;&lt;/div&gt;&lt;/li&gt;&lt;/ul&gt;&lt;/div&gt;&quot;
+                        },
+                        &quot;entry&quot;: [
+                            {
+                                &quot;reference&quot;: &quot;urn:uuid:d179321e-c091-4cd4-8642-3a27537d506d&quot;
+                            }
+                        ]
+                    },
+                    {
+                        &quot;title&quot;: &quot;Medication&quot;,
+                        &quot;code&quot;: {
+                            &quot;coding&quot;: [
+                                {
+                                    &quot;system&quot;: &quot;http://loinc.org&quot;,
+                                    &quot;code&quot;: &quot;10160-0&quot;,
+                                    &quot;display&quot;: &quot;History of Medication use Narrative&quot;
+                                }
+                            ]
+                        },
+                        &quot;text&quot;: {
+                            &quot;status&quot;: &quot;generated&quot;,
+                            &quot;div&quot;: &quot;&lt;div xmlns=\&quot;http://www.w3.org/1999/xhtml\&quot;&gt;&lt;ul&gt;&lt;li&gt;&lt;div&gt;&lt;b&gt;Medication Name&lt;/b&gt;: Oral anastrozole 1mg tablet&lt;/div&gt;&lt;div&gt;&lt;b&gt;Code&lt;/b&gt;: &lt;span&gt;&lt;/span&gt;&lt;/div&gt;&lt;div&gt;&lt;b&gt;Status&lt;/b&gt;: &lt;span&gt;Active, started March 2015&lt;/span&gt;&lt;/div&gt;&lt;div&gt;Instructions: Take 1 time per day&lt;/div&gt;&lt;/li&gt;&lt;/ul&gt;&lt;/div&gt;&quot;
+                        },
+                        &quot;entry&quot;: [
+                            {
+                                &quot;reference&quot;: &quot;urn:uuid:e1271efd-18ff-4654-9ee7-45f40019c453&quot;
+                            }
+                        ]
+                    },
+                    {
+                        &quot;title&quot;: &quot;Allergies and Intolerances&quot;,
+                        &quot;code&quot;: {
+                            &quot;coding&quot;: [
+                                {
+                                    &quot;system&quot;: &quot;http://loinc.org&quot;,
+                                    &quot;code&quot;: &quot;48765-2&quot;,
+                                    &quot;display&quot;: &quot;Allergies and adverse reactions Document&quot;
+                                }
+                            ]
+                        },
+                        &quot;text&quot;: {
+                            &quot;status&quot;: &quot;generated&quot;,
+                            &quot;div&quot;: &quot;&lt;div xmlns=\&quot;http://www.w3.org/1999/xhtml\&quot;&gt;&lt;ul&gt;&lt;li&gt;&lt;div&gt;&lt;b&gt;Allergy Name&lt;/b&gt;: Pencillins&lt;/div&gt;&lt;div&gt;&lt;b&gt;Verification Status&lt;/b&gt;: Confirmed&lt;/div&gt;&lt;div&gt;&lt;b&gt;Reaction&lt;/b&gt;: &lt;span&gt;no information&lt;/span&gt;&lt;/div&gt;&lt;/li&gt;&lt;/ul&gt;&lt;/div&gt;&quot;
+                        },
+                        &quot;entry&quot;: [
+                            {
+                                &quot;reference&quot;: &quot;urn:uuid:74861316-f69d-4652-9fb1-8512a20c7927&quot;
+                            }
+                        ]
+                    }
+                ]
+            }
+        },
+        {
+            &quot;fullUrl&quot;: &quot;urn:uuid:244ad7c3-beeb-41d1-8a2f-c76b8cf720ad&quot;,
+            &quot;resource&quot;: {
+                &quot;resourceType&quot;: &quot;Patient&quot;,
+                &quot;id&quot;: &quot;244ad7c3-beeb-41d1-8a2f-c76b8cf720ad&quot;,
+                &quot;name&quot;: [
+                    {
+                        &quot;family&quot;: &quot;DeLarosa&quot;,
+                        &quot;given&quot;: [
+                            &quot;Martha&quot;
+                        ]
+                    }
+                ],
+                &quot;birthDate&quot;: &quot;1972-05-01&quot;
+            }
+        },
+        {
+            &quot;fullUrl&quot;: &quot;urn:uuid:45271f7f-63ab-4946-970f-3daaaa06637f&quot;,
+            &quot;resource&quot;: {
+                &quot;resourceType&quot;: &quot;Practitioner&quot;,
+                &quot;id&quot;: &quot;45271f7f-63ab-4946-970f-3daaaa06637f&quot;,
+                &quot;name&quot;: [
+                    {
+                        &quot;family&quot;: &quot;van Hulp&quot;,
+                        &quot;given&quot;: [
+                            &quot;Beetje&quot;
+                        ]
+                    }
+                ]
+            }
+        },
+        {
+            &quot;fullUrl&quot;: &quot;urn:uuid:d179321e-c091-4cd4-8642-3a27537d506d&quot;,
+            &quot;resource&quot;: {
+                &quot;resourceType&quot;: &quot;Condition&quot;,
+                &quot;id&quot;: &quot;d179321e-c091-4cd4-8642-3a27537d506d&quot;,
+                &quot;code&quot;: {
+                    &quot;coding&quot;: [
+                        {
+                            &quot;system&quot;: &quot;http://snomed.info/sct&quot;,
+                            &quot;code&quot;: &quot;198436008&quot;,
+                            &quot;display&quot;: &quot;Menopausal flushing (finding)&quot;
+                        }
+                    ]
+                },
+                &quot;subject&quot;: {
+                    &quot;reference&quot;: &quot;urn:uuid:244ad7c3-beeb-41d1-8a2f-c76b8cf720ad&quot;
+                }
+            }
+        },
+        {
+            &quot;fullUrl&quot;: &quot;urn:uuid:e1271efd-18ff-4654-9ee7-45f40019c453&quot;,
+            &quot;resource&quot;: {
+                &quot;resourceType&quot;: &quot;MedicationStatement&quot;,
+                &quot;id&quot;: &quot;e1271efd-18ff-4654-9ee7-45f40019c453&quot;,
+                &quot;status&quot;: &quot;active&quot;,
+                &quot;medicationReference&quot;: {
+                    &quot;reference&quot;: &quot;urn:uuid:95db7c92-566a-4ded-896b-2220ab244a9e&quot;
+                },
+                &quot;subject&quot;: {
+                    &quot;reference&quot;: &quot;urn:uuid:244ad7c3-beeb-41d1-8a2f-c76b8cf720ad&quot;
+                },
+                &quot;effectivePeriod&quot;: {
+                    &quot;start&quot;: &quot;2015-03&quot;
+                }
+            }
+        },
+        {
+            &quot;fullUrl&quot;: &quot;urn:uuid:95db7c92-566a-4ded-896b-2220ab244a9e&quot;,
+            &quot;resource&quot;: {
+                &quot;resourceType&quot;: &quot;Medication&quot;,
+                &quot;id&quot;: &quot;95db7c92-566a-4ded-896b-2220ab244a9e&quot;,
+                &quot;code&quot;: {
+                    &quot;coding&quot;: [
+                        {
+                            &quot;system&quot;: &quot;http://snomed.info/sct&quot;,
+                            &quot;code&quot;: &quot;108774000&quot;,
+                            &quot;display&quot;: &quot;Product containing anastrozole (medicinal product)&quot;
+                        }
+                    ]
+                }
+            }
+        },
+        {
+            &quot;fullUrl&quot;: &quot;urn:uuid:74861316-f69d-4652-9fb1-8512a20c7927&quot;,
+            &quot;resource&quot;: {
+                &quot;resourceType&quot;: &quot;AllergyIntolerance&quot;,
+                &quot;id&quot;: &quot;74861316-f69d-4652-9fb1-8512a20c7927&quot;,
+                &quot;clinicalStatus&quot;: {
+                    &quot;coding&quot;: [
+                        {
+                            &quot;system&quot;: &quot;http://terminology.hl7.org/CodeSystem/allergyintolerance-clinical&quot;,
+                            &quot;code&quot;: &quot;active&quot;
+                        }
+                    ]
+                },
+                &quot;code&quot;: {
+                    &quot;coding&quot;: [
+                        {
+                            &quot;system&quot;: &quot;http://snomed.info/sct&quot;,
+                            &quot;code&quot;: &quot;373270004&quot;,
+                            &quot;display&quot;: &quot;Substance with penicillin structure and antibacterial mechanism of action (substance)&quot;
+                        }
+                    ]
+                },
+                &quot;patient&quot;: {
+                    &quot;reference&quot;: &quot;urn:uuid:244ad7c3-beeb-41d1-8a2f-c76b8cf720ad&quot;
+                }
+            }
+        }
+    ]
+}
+</code></pre>
+<h4 id="invalid-ips-document-missing-medication-section">Invalid IPS document: missing medication section</h4>
+<p>If we remove the medication section and medication entries (which are required by the <a href="https://hl7.org/fhir/uv/ips/2024Sep/StructureDefinition-Composition-uv-ips.html">IPS Composition profile</a>), we get an error and additional information:</p>
+<p><a href="https://test.ahdis.ch/matchboxv3/?resource=ewogICAgInJlc291cmNlVHlwZSI6ICJCdW5kbGUiLAogICAgImlkZW50aWZpZXIiOiB7CiAgICAgICAgInN5c3RlbSI6ICJ1cm46b2lkOjIuMTYuNzI0LjQuOC4xMC4yMDAuMTAiLAogICAgICAgICJ2YWx1ZSI6ICIyOGI5NTgxNS03NmNlLTQ1N2ItYjdhZS1hOTcyZTUyN2RiNDAiCiAgICB9LAogICAgInR5cGUiOiAiZG9jdW1lbnQiLAogICAgInRpbWVzdGFtcCI6ICIyMDIwLTEyLTExVDE0OjMwOjAwKzAxOjAwIiwKICAgICJlbnRyeSI6IFsKICAgICAgICB7CiAgICAgICAgICAgICJmdWxsVXJsIjogInVybjp1dWlkOmY0MGIwN2UzLTM3ZTgtNDhjMy1iZjFjLWFlNzBmZTEyZGFiMCIsCiAgICAgICAgICAgICJyZXNvdXJjZSI6IHsKICAgICAgICAgICAgICAgICJyZXNvdXJjZVR5cGUiOiAiQ29tcG9zaXRpb24iLAogICAgICAgICAgICAgICAgImlkIjogImY0MGIwN2UzLTM3ZTgtNDhjMy1iZjFjLWFlNzBmZTEyZGFiMCIsCiAgICAgICAgICAgICAgICAic3RhdHVzIjogImZpbmFsIiwKICAgICAgICAgICAgICAgICJ0eXBlIjogewogICAgICAgICAgICAgICAgICAgICJjb2RpbmciOiBbCiAgICAgICAgICAgICAgICAgICAgICAgIHsKICAgICAgICAgICAgICAgICAgICAgICAgICAgICJzeXN0ZW0iOiAiaHR0cDovL2xvaW5jLm9yZyIsCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAiY29kZSI6ICI2MDU5MS01IiwKICAgICAgICAgICAgICAgICAgICAgICAgICAgICJkaXNwbGF5IjogIlBhdGllbnQgc3VtbWFyeSBEb2N1bWVudCIKICAgICAgICAgICAgICAgICAgICAgICAgfQogICAgICAgICAgICAgICAgICAgIF0KICAgICAgICAgICAgICAgIH0sCiAgICAgICAgICAgICAgICAic3ViamVjdCI6IHsKICAgICAgICAgICAgICAgICAgICAicmVmZXJlbmNlIjogInVybjp1dWlkOjI0NGFkN2MzLWJlZWItNDFkMS04YTJmLWM3NmI4Y2Y3MjBhZCIKICAgICAgICAgICAgICAgIH0sCiAgICAgICAgICAgICAgICAiZGF0ZSI6ICIyMDIwLTEyLTExVDE0OjMwOjAwKzAxOjAwIiwKICAgICAgICAgICAgICAgICJhdXRob3IiOiBbCiAgICAgICAgICAgICAgICAgICAgewogICAgICAgICAgICAgICAgICAgICAgICAicmVmZXJlbmNlIjogInVybjp1dWlkOjQ1MjcxZjdmLTYzYWItNDk0Ni05NzBmLTNkYWFhYTA2NjM3ZiIKICAgICAgICAgICAgICAgICAgICB9CiAgICAgICAgICAgICAgICBdLAogICAgICAgICAgICAgICAgInRpdGxlIjogIlBhdGllbnQgU3VtbWFyeSBhcyBvZiBEZWNlbWJlciAxMSwgMjAyMCAxNDozMCIsCiAgICAgICAgICAgICAgICAiY29uZmlkZW50aWFsaXR5IjogIk4iLAogICAgICAgICAgICAgICAgInNlY3Rpb24iOiBbCiAgICAgICAgICAgICAgICAgICAgewogICAgICAgICAgICAgICAgICAgICAgICAidGl0bGUiOiAiQWN0aXZlIFByb2JsZW1zIiwKICAgICAgICAgICAgICAgICAgICAgICAgImNvZGUiOiB7CiAgICAgICAgICAgICAgICAgICAgICAgICAgICAiY29kaW5nIjogWwogICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIHsKICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgInN5c3RlbSI6ICJodHRwOi8vbG9pbmMub3JnIiwKICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgImNvZGUiOiAiMTE0NTAtNCIsCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICJkaXNwbGF5IjogIlByb2JsZW0gbGlzdCAtIFJlcG9ydGVkIgogICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIH0KICAgICAgICAgICAgICAgICAgICAgICAgICAgIF0KICAgICAgICAgICAgICAgICAgICAgICAgfSwKICAgICAgICAgICAgICAgICAgICAgICAgInRleHQiOiB7CiAgICAgICAgICAgICAgICAgICAgICAgICAgICAic3RhdHVzIjogImdlbmVyYXRlZCIsCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAiZGl2IjogIjxkaXYgeG1sbnM9XCJodHRwOi8vd3d3LnczLm9yZy8xOTk5L3hodG1sXCI%2BPHVsPjxsaT48ZGl2PjxiPkNvbmRpdGlvbiBOYW1lPC9iPjogTWVub3BhdXNhbCBGbHVzaGluZzwvZGl2PjxkaXY%2BPGI%2BQ29kZTwvYj46IDxzcGFuPjE5ODQzNjAwODwvc3Bhbj48L2Rpdj48ZGl2PjxiPlN0YXR1czwvYj46IDxzcGFuPkFjdGl2ZTwvc3Bhbj48L2Rpdj48L2xpPjwvdWw%2BPC9kaXY%2BIgogICAgICAgICAgICAgICAgICAgICAgICB9LAogICAgICAgICAgICAgICAgICAgICAgICAiZW50cnkiOiBbCiAgICAgICAgICAgICAgICAgICAgICAgICAgICB7CiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgInJlZmVyZW5jZSI6ICJ1cm46dXVpZDpkMTc5MzIxZS1jMDkxLTRjZDQtODY0Mi0zYTI3NTM3ZDUwNmQiCiAgICAgICAgICAgICAgICAgICAgICAgICAgICB9CiAgICAgICAgICAgICAgICAgICAgICAgIF0KICAgICAgICAgICAgICAgICAgICB9LAogICAgICAgICAgICAgICAgICAgIHsKICAgICAgICAgICAgICAgICAgICAgICAgInRpdGxlIjogIkFsbGVyZ2llcyBhbmQgSW50b2xlcmFuY2VzIiwKICAgICAgICAgICAgICAgICAgICAgICAgImNvZGUiOiB7CiAgICAgICAgICAgICAgICAgICAgICAgICAgICAiY29kaW5nIjogWwogICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIHsKICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgInN5c3RlbSI6ICJodHRwOi8vbG9pbmMub3JnIiwKICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgImNvZGUiOiAiNDg3NjUtMiIsCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICJkaXNwbGF5IjogIkFsbGVyZ2llcyBhbmQgYWR2ZXJzZSByZWFjdGlvbnMgRG9jdW1lbnQiCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgfQogICAgICAgICAgICAgICAgICAgICAgICAgICAgXQogICAgICAgICAgICAgICAgICAgICAgICB9LAogICAgICAgICAgICAgICAgICAgICAgICAidGV4dCI6IHsKICAgICAgICAgICAgICAgICAgICAgICAgICAgICJzdGF0dXMiOiAiZ2VuZXJhdGVkIiwKICAgICAgICAgICAgICAgICAgICAgICAgICAgICJkaXYiOiAiPGRpdiB4bWxucz1cImh0dHA6Ly93d3cudzMub3JnLzE5OTkveGh0bWxcIj48dWw%2BPGxpPjxkaXY%2BPGI%2BQWxsZXJneSBOYW1lPC9iPjogUGVuY2lsbGluczwvZGl2PjxkaXY%2BPGI%2BVmVyaWZpY2F0aW9uIFN0YXR1czwvYj46IENvbmZpcm1lZDwvZGl2PjxkaXY%2BPGI%2BUmVhY3Rpb248L2I%2BOiA8c3Bhbj5ubyBpbmZvcm1hdGlvbjwvc3Bhbj48L2Rpdj48L2xpPjwvdWw%2BPC9kaXY%2BIgogICAgICAgICAgICAgICAgICAgICAgICB9LAogICAgICAgICAgICAgICAgICAgICAgICAiZW50cnkiOiBbCiAgICAgICAgICAgICAgICAgICAgICAgICAgICB7CiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgInJlZmVyZW5jZSI6ICJ1cm46dXVpZDo3NDg2MTMxNi1mNjlkLTQ2NTItOWZiMS04NTEyYTIwYzc5MjciCiAgICAgICAgICAgICAgICAgICAgICAgICAgICB9CiAgICAgICAgICAgICAgICAgICAgICAgIF0KICAgICAgICAgICAgICAgICAgICB9CiAgICAgICAgICAgICAgICBdCiAgICAgICAgICAgIH0KICAgICAgICB9LAogICAgICAgIHsKICAgICAgICAgICAgImZ1bGxVcmwiOiAidXJuOnV1aWQ6MjQ0YWQ3YzMtYmVlYi00MWQxLThhMmYtYzc2YjhjZjcyMGFkIiwKICAgICAgICAgICAgInJlc291cmNlIjogewogICAgICAgICAgICAgICAgInJlc291cmNlVHlwZSI6ICJQYXRpZW50IiwKICAgICAgICAgICAgICAgICJpZCI6ICIyNDRhZDdjMy1iZWViLTQxZDEtOGEyZi1jNzZiOGNmNzIwYWQiLAogICAgICAgICAgICAgICAgIm5hbWUiOiBbCiAgICAgICAgICAgICAgICAgICAgewogICAgICAgICAgICAgICAgICAgICAgICAiZmFtaWx5IjogIkRlTGFyb3NhIiwKICAgICAgICAgICAgICAgICAgICAgICAgImdpdmVuIjogWwogICAgICAgICAgICAgICAgICAgICAgICAgICAgIk1hcnRoYSIKICAgICAgICAgICAgICAgICAgICAgICAgXQogICAgICAgICAgICAgICAgICAgIH0KICAgICAgICAgICAgICAgIF0sCiAgICAgICAgICAgICAgICAiYmlydGhEYXRlIjogIjE5NzItMDUtMDEiCiAgICAgICAgICAgIH0KICAgICAgICB9LAogICAgICAgIHsKICAgICAgICAgICAgImZ1bGxVcmwiOiAidXJuOnV1aWQ6NDUyNzFmN2YtNjNhYi00OTQ2LTk3MGYtM2RhYWFhMDY2MzdmIiwKICAgICAgICAgICAgInJlc291cmNlIjogewogICAgICAgICAgICAgICAgInJlc291cmNlVHlwZSI6ICJQcmFjdGl0aW9uZXIiLAogICAgICAgICAgICAgICAgImlkIjogIjQ1MjcxZjdmLTYzYWItNDk0Ni05NzBmLTNkYWFhYTA2NjM3ZiIsCiAgICAgICAgICAgICAgICAibmFtZSI6IFsKICAgICAgICAgICAgICAgICAgICB7CiAgICAgICAgICAgICAgICAgICAgICAgICJmYW1pbHkiOiAidmFuIEh1bHAiLAogICAgICAgICAgICAgICAgICAgICAgICAiZ2l2ZW4iOiBbCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAiQmVldGplIgogICAgICAgICAgICAgICAgICAgICAgICBdCiAgICAgICAgICAgICAgICAgICAgfQogICAgICAgICAgICAgICAgXQogICAgICAgICAgICB9CiAgICAgICAgfSwKICAgICAgICB7CiAgICAgICAgICAgICJmdWxsVXJsIjogInVybjp1dWlkOmQxNzkzMjFlLWMwOTEtNGNkNC04NjQyLTNhMjc1MzdkNTA2ZCIsCiAgICAgICAgICAgICJyZXNvdXJjZSI6IHsKICAgICAgICAgICAgICAgICJyZXNvdXJjZVR5cGUiOiAiQ29uZGl0aW9uIiwKICAgICAgICAgICAgICAgICJpZCI6ICJkMTc5MzIxZS1jMDkxLTRjZDQtODY0Mi0zYTI3NTM3ZDUwNmQiLAogICAgICAgICAgICAgICAgImNvZGUiOiB7CiAgICAgICAgICAgICAgICAgICAgImNvZGluZyI6IFsKICAgICAgICAgICAgICAgICAgICAgICAgewogICAgICAgICAgICAgICAgICAgICAgICAgICAgInN5c3RlbSI6ICJodHRwOi8vc25vbWVkLmluZm8vc2N0IiwKICAgICAgICAgICAgICAgICAgICAgICAgICAgICJjb2RlIjogIjE5ODQzNjAwOCIsCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAiZGlzcGxheSI6ICJNZW5vcGF1c2FsIGZsdXNoaW5nIChmaW5kaW5nKSIKICAgICAgICAgICAgICAgICAgICAgICAgfQogICAgICAgICAgICAgICAgICAgIF0KICAgICAgICAgICAgICAgIH0sCiAgICAgICAgICAgICAgICAic3ViamVjdCI6IHsKICAgICAgICAgICAgICAgICAgICAicmVmZXJlbmNlIjogInVybjp1dWlkOjI0NGFkN2MzLWJlZWItNDFkMS04YTJmLWM3NmI4Y2Y3MjBhZCIKICAgICAgICAgICAgICAgIH0KICAgICAgICAgICAgfQogICAgICAgIH0sCiAgICAgICAgewogICAgICAgICAgICAiZnVsbFVybCI6ICJ1cm46dXVpZDo3NDg2MTMxNi1mNjlkLTQ2NTItOWZiMS04NTEyYTIwYzc5MjciLAogICAgICAgICAgICAicmVzb3VyY2UiOiB7CiAgICAgICAgICAgICAgICAicmVzb3VyY2VUeXBlIjogIkFsbGVyZ3lJbnRvbGVyYW5jZSIsCiAgICAgICAgICAgICAgICAiaWQiOiAiNzQ4NjEzMTYtZjY5ZC00NjUyLTlmYjEtODUxMmEyMGM3OTI3IiwKICAgICAgICAgICAgICAgICJjbGluaWNhbFN0YXR1cyI6IHsKICAgICAgICAgICAgICAgICAgICAiY29kaW5nIjogWwogICAgICAgICAgICAgICAgICAgICAgICB7CiAgICAgICAgICAgICAgICAgICAgICAgICAgICAic3lzdGVtIjogImh0dHA6Ly90ZXJtaW5vbG9neS5obDcub3JnL0NvZGVTeXN0ZW0vYWxsZXJneWludG9sZXJhbmNlLWNsaW5pY2FsIiwKICAgICAgICAgICAgICAgICAgICAgICAgICAgICJjb2RlIjogImFjdGl2ZSIKICAgICAgICAgICAgICAgICAgICAgICAgfQogICAgICAgICAgICAgICAgICAgIF0KICAgICAgICAgICAgICAgIH0sCiAgICAgICAgICAgICAgICAiY29kZSI6IHsKICAgICAgICAgICAgICAgICAgICAiY29kaW5nIjogWwogICAgICAgICAgICAgICAgICAgICAgICB7CiAgICAgICAgICAgICAgICAgICAgICAgICAgICAic3lzdGVtIjogImh0dHA6Ly9zbm9tZWQuaW5mby9zY3QiLAogICAgICAgICAgICAgICAgICAgICAgICAgICAgImNvZGUiOiAiMzczMjcwMDA0IiwKICAgICAgICAgICAgICAgICAgICAgICAgICAgICJkaXNwbGF5IjogIlN1YnN0YW5jZSB3aXRoIHBlbmljaWxsaW4gc3RydWN0dXJlIGFuZCBhbnRpYmFjdGVyaWFsIG1lY2hhbmlzbSBvZiBhY3Rpb24gKHN1YnN0YW5jZSkiCiAgICAgICAgICAgICAgICAgICAgICAgIH0KICAgICAgICAgICAgICAgICAgICBdCiAgICAgICAgICAgICAgICB9LAogICAgICAgICAgICAgICAgInBhdGllbnQiOiB7CiAgICAgICAgICAgICAgICAgICAgInJlZmVyZW5jZSI6ICJ1cm46dXVpZDoyNDRhZDdjMy1iZWViLTQxZDEtOGEyZi1jNzZiOGNmNzIwYWQiCiAgICAgICAgICAgICAgICB9CiAgICAgICAgICAgIH0KICAgICAgICB9CiAgICBdCn0%3D&amp;profile=http%3A%2F%2Fhl7.org%2Ffhir%2Fuv%2Fips%2FStructureDefinition%2FBundle-uv-ips#/validate">example</a></p>
+<blockquote>
+<p>error [structure]: line 1, column 2, in Bundle:
+Slice 'Bundle.entry:composition': a matching slice is required, but not found (from http://hl7.org/fhir/uv/ips/StructureDefinition/Bundle-uv-ips|2.0.0-ballot). Note that other slices are allowed in addition to this required slice</p>
+</blockquote>
+<p>This error says that the IPS composition could not be found, we have to look for further information why this was not found: </p>
+<blockquote>
+<p>information [informational]: line 10, column 10, in Bundle.entry[0]:
+This element does not match any known slice defined in the profile http://hl7.org/fhir/uv/ips/StructureDefinition/Bundle-uv-ips|2.0.0-ballot (this may not be a problem, but you should check that it's not intended to match a slice)
+1. Bundle.entry[0]: Bundle.entry[0].resource: Composition.section: minimum required = 3, but only found 2 (from http://hl7.org/fhir/uv/ips/StructureDefinition/Composition-uv-ips|2.0.0-ballot)
+2. Bundle.entry[0]: Bundle.entry[0].resource: Slice 'Composition.section:sectionMedications': a matching slice is required, but not found (from http://hl7.org/fhir/uv/ips/StructureDefinition/Composition-uv-ips|2.0.0-ballot). Note that other slices are allowed in addition to this required slice</p>
+</blockquote>
+<p>The information indicates that the slicing conditions (minimum 3 sections are not met) and that the sectionMedications is required but not found.</p>
+<h4 id="invalid-ips-document-missing-patientbirthdate">Invalid IPS document: missing Patient.birthDate</h4>
+<p><a href="https://test.ahdis.ch/matchboxv3/?resource=ewogICAgInJlc291cmNlVHlwZSI6ICJCdW5kbGUiLAogICAgImlkZW50aWZpZXIiOiB7CiAgICAgICAgInN5c3RlbSI6ICJ1cm46b2lkOjIuMTYuNzI0LjQuOC4xMC4yMDAuMTAiLAogICAgICAgICJ2YWx1ZSI6ICIyOGI5NTgxNS03NmNlLTQ1N2ItYjdhZS1hOTcyZTUyN2RiNDAiCiAgICB9LAogICAgInR5cGUiOiAiZG9jdW1lbnQiLAogICAgInRpbWVzdGFtcCI6ICIyMDIwLTEyLTExVDE0OjMwOjAwKzAxOjAwIiwKICAgICJlbnRyeSI6IFsKICAgICAgICB7CiAgICAgICAgICAgICJmdWxsVXJsIjogInVybjp1dWlkOmY0MGIwN2UzLTM3ZTgtNDhjMy1iZjFjLWFlNzBmZTEyZGFiMCIsCiAgICAgICAgICAgICJyZXNvdXJjZSI6IHsKICAgICAgICAgICAgICAgICJyZXNvdXJjZVR5cGUiOiAiQ29tcG9zaXRpb24iLAogICAgICAgICAgICAgICAgImlkIjogImY0MGIwN2UzLTM3ZTgtNDhjMy1iZjFjLWFlNzBmZTEyZGFiMCIsCiAgICAgICAgICAgICAgICAic3RhdHVzIjogImZpbmFsIiwKICAgICAgICAgICAgICAgICJ0eXBlIjogewogICAgICAgICAgICAgICAgICAgICJjb2RpbmciOiBbCiAgICAgICAgICAgICAgICAgICAgICAgIHsKICAgICAgICAgICAgICAgICAgICAgICAgICAgICJzeXN0ZW0iOiAiaHR0cDovL2xvaW5jLm9yZyIsCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAiY29kZSI6ICI2MDU5MS01IiwKICAgICAgICAgICAgICAgICAgICAgICAgICAgICJkaXNwbGF5IjogIlBhdGllbnQgc3VtbWFyeSBEb2N1bWVudCIKICAgICAgICAgICAgICAgICAgICAgICAgfQogICAgICAgICAgICAgICAgICAgIF0KICAgICAgICAgICAgICAgIH0sCiAgICAgICAgICAgICAgICAic3ViamVjdCI6IHsKICAgICAgICAgICAgICAgICAgICAicmVmZXJlbmNlIjogInVybjp1dWlkOjI0NGFkN2MzLWJlZWItNDFkMS04YTJmLWM3NmI4Y2Y3MjBhZCIKICAgICAgICAgICAgICAgIH0sCiAgICAgICAgICAgICAgICAiZGF0ZSI6ICIyMDIwLTEyLTExVDE0OjMwOjAwKzAxOjAwIiwKICAgICAgICAgICAgICAgICJhdXRob3IiOiBbCiAgICAgICAgICAgICAgICAgICAgewogICAgICAgICAgICAgICAgICAgICAgICAicmVmZXJlbmNlIjogInVybjp1dWlkOjQ1MjcxZjdmLTYzYWItNDk0Ni05NzBmLTNkYWFhYTA2NjM3ZiIKICAgICAgICAgICAgICAgICAgICB9CiAgICAgICAgICAgICAgICBdLAogICAgICAgICAgICAgICAgInRpdGxlIjogIlBhdGllbnQgU3VtbWFyeSBhcyBvZiBEZWNlbWJlciAxMSwgMjAyMCAxNDozMCIsCiAgICAgICAgICAgICAgICAiY29uZmlkZW50aWFsaXR5IjogIk4iLAogICAgICAgICAgICAgICAgInNlY3Rpb24iOiBbCiAgICAgICAgICAgICAgICAgICAgewogICAgICAgICAgICAgICAgICAgICAgICAidGl0bGUiOiAiQWN0aXZlIFByb2JsZW1zIiwKICAgICAgICAgICAgICAgICAgICAgICAgImNvZGUiOiB7CiAgICAgICAgICAgICAgICAgICAgICAgICAgICAiY29kaW5nIjogWwogICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIHsKICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgInN5c3RlbSI6ICJodHRwOi8vbG9pbmMub3JnIiwKICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgImNvZGUiOiAiMTE0NTAtNCIsCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICJkaXNwbGF5IjogIlByb2JsZW0gbGlzdCAtIFJlcG9ydGVkIgogICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIH0KICAgICAgICAgICAgICAgICAgICAgICAgICAgIF0KICAgICAgICAgICAgICAgICAgICAgICAgfSwKICAgICAgICAgICAgICAgICAgICAgICAgInRleHQiOiB7CiAgICAgICAgICAgICAgICAgICAgICAgICAgICAic3RhdHVzIjogImdlbmVyYXRlZCIsCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAiZGl2IjogIjxkaXYgeG1sbnM9XCJodHRwOi8vd3d3LnczLm9yZy8xOTk5L3hodG1sXCI%2BPHVsPjxsaT48ZGl2PjxiPkNvbmRpdGlvbiBOYW1lPC9iPjogTWVub3BhdXNhbCBGbHVzaGluZzwvZGl2PjxkaXY%2BPGI%2BQ29kZTwvYj46IDxzcGFuPjE5ODQzNjAwODwvc3Bhbj48L2Rpdj48ZGl2PjxiPlN0YXR1czwvYj46IDxzcGFuPkFjdGl2ZTwvc3Bhbj48L2Rpdj48L2xpPjwvdWw%2BPC9kaXY%2BIgogICAgICAgICAgICAgICAgICAgICAgICB9LAogICAgICAgICAgICAgICAgICAgICAgICAiZW50cnkiOiBbCiAgICAgICAgICAgICAgICAgICAgICAgICAgICB7CiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgInJlZmVyZW5jZSI6ICJ1cm46dXVpZDpkMTc5MzIxZS1jMDkxLTRjZDQtODY0Mi0zYTI3NTM3ZDUwNmQiCiAgICAgICAgICAgICAgICAgICAgICAgICAgICB9CiAgICAgICAgICAgICAgICAgICAgICAgIF0KICAgICAgICAgICAgICAgICAgICB9LAogICAgICAgICAgICAgICAgICAgIHsKICAgICAgICAgICAgICAgICAgICAgICAgInRpdGxlIjogIk1lZGljYXRpb24iLAogICAgICAgICAgICAgICAgICAgICAgICAiY29kZSI6IHsKICAgICAgICAgICAgICAgICAgICAgICAgICAgICJjb2RpbmciOiBbCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgewogICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAic3lzdGVtIjogImh0dHA6Ly9sb2luYy5vcmciLAogICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAiY29kZSI6ICIxMDE2MC0wIiwKICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgImRpc3BsYXkiOiAiSGlzdG9yeSBvZiBNZWRpY2F0aW9uIHVzZSBOYXJyYXRpdmUiCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgfQogICAgICAgICAgICAgICAgICAgICAgICAgICAgXQogICAgICAgICAgICAgICAgICAgICAgICB9LAogICAgICAgICAgICAgICAgICAgICAgICAidGV4dCI6IHsKICAgICAgICAgICAgICAgICAgICAgICAgICAgICJzdGF0dXMiOiAiZ2VuZXJhdGVkIiwKICAgICAgICAgICAgICAgICAgICAgICAgICAgICJkaXYiOiAiPGRpdiB4bWxucz1cImh0dHA6Ly93d3cudzMub3JnLzE5OTkveGh0bWxcIj48dWw%2BPGxpPjxkaXY%2BPGI%2BTWVkaWNhdGlvbiBOYW1lPC9iPjogT3JhbCBhbmFzdHJvem9sZSAxbWcgdGFibGV0PC9kaXY%2BPGRpdj48Yj5Db2RlPC9iPjogPHNwYW4%2BPC9zcGFuPjwvZGl2PjxkaXY%2BPGI%2BU3RhdHVzPC9iPjogPHNwYW4%2BQWN0aXZlLCBzdGFydGVkIE1hcmNoIDIwMTU8L3NwYW4%2BPC9kaXY%2BPGRpdj5JbnN0cnVjdGlvbnM6IFRha2UgMSB0aW1lIHBlciBkYXk8L2Rpdj48L2xpPjwvdWw%2BPC9kaXY%2BIgogICAgICAgICAgICAgICAgICAgICAgICB9LAogICAgICAgICAgICAgICAgICAgICAgICAiZW50cnkiOiBbCiAgICAgICAgICAgICAgICAgICAgICAgICAgICB7CiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgInJlZmVyZW5jZSI6ICJ1cm46dXVpZDplMTI3MWVmZC0xOGZmLTQ2NTQtOWVlNy00NWY0MDAxOWM0NTMiCiAgICAgICAgICAgICAgICAgICAgICAgICAgICB9CiAgICAgICAgICAgICAgICAgICAgICAgIF0KICAgICAgICAgICAgICAgICAgICB9LAogICAgICAgICAgICAgICAgICAgIHsKICAgICAgICAgICAgICAgICAgICAgICAgInRpdGxlIjogIkFsbGVyZ2llcyBhbmQgSW50b2xlcmFuY2VzIiwKICAgICAgICAgICAgICAgICAgICAgICAgImNvZGUiOiB7CiAgICAgICAgICAgICAgICAgICAgICAgICAgICAiY29kaW5nIjogWwogICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIHsKICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgInN5c3RlbSI6ICJodHRwOi8vbG9pbmMub3JnIiwKICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgImNvZGUiOiAiNDg3NjUtMiIsCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICJkaXNwbGF5IjogIkFsbGVyZ2llcyBhbmQgYWR2ZXJzZSByZWFjdGlvbnMgRG9jdW1lbnQiCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgfQogICAgICAgICAgICAgICAgICAgICAgICAgICAgXQogICAgICAgICAgICAgICAgICAgICAgICB9LAogICAgICAgICAgICAgICAgICAgICAgICAidGV4dCI6IHsKICAgICAgICAgICAgICAgICAgICAgICAgICAgICJzdGF0dXMiOiAiZ2VuZXJhdGVkIiwKICAgICAgICAgICAgICAgICAgICAgICAgICAgICJkaXYiOiAiPGRpdiB4bWxucz1cImh0dHA6Ly93d3cudzMub3JnLzE5OTkveGh0bWxcIj48dWw%2BPGxpPjxkaXY%2BPGI%2BQWxsZXJneSBOYW1lPC9iPjogUGVuY2lsbGluczwvZGl2PjxkaXY%2BPGI%2BVmVyaWZpY2F0aW9uIFN0YXR1czwvYj46IENvbmZpcm1lZDwvZGl2PjxkaXY%2BPGI%2BUmVhY3Rpb248L2I%2BOiA8c3Bhbj5ubyBpbmZvcm1hdGlvbjwvc3Bhbj48L2Rpdj48L2xpPjwvdWw%2BPC9kaXY%2BIgogICAgICAgICAgICAgICAgICAgICAgICB9LAogICAgICAgICAgICAgICAgICAgICAgICAiZW50cnkiOiBbCiAgICAgICAgICAgICAgICAgICAgICAgICAgICB7CiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgInJlZmVyZW5jZSI6ICJ1cm46dXVpZDo3NDg2MTMxNi1mNjlkLTQ2NTItOWZiMS04NTEyYTIwYzc5MjciCiAgICAgICAgICAgICAgICAgICAgICAgICAgICB9CiAgICAgICAgICAgICAgICAgICAgICAgIF0KICAgICAgICAgICAgICAgICAgICB9CiAgICAgICAgICAgICAgICBdCiAgICAgICAgICAgIH0KICAgICAgICB9LAogICAgICAgIHsKICAgICAgICAgICAgImZ1bGxVcmwiOiAidXJuOnV1aWQ6MjQ0YWQ3YzMtYmVlYi00MWQxLThhMmYtYzc2YjhjZjcyMGFkIiwKICAgICAgICAgICAgInJlc291cmNlIjogewogICAgICAgICAgICAgICAgInJlc291cmNlVHlwZSI6ICJQYXRpZW50IiwKICAgICAgICAgICAgICAgICJpZCI6ICIyNDRhZDdjMy1iZWViLTQxZDEtOGEyZi1jNzZiOGNmNzIwYWQiLAogICAgICAgICAgICAgICAgIm5hbWUiOiBbCiAgICAgICAgICAgICAgICAgICAgewogICAgICAgICAgICAgICAgICAgICAgICAiZmFtaWx5IjogIkRlTGFyb3NhIiwKICAgICAgICAgICAgICAgICAgICAgICAgImdpdmVuIjogWwogICAgICAgICAgICAgICAgICAgICAgICAgICAgIk1hcnRoYSIKICAgICAgICAgICAgICAgICAgICAgICAgXQogICAgICAgICAgICAgICAgICAgIH0KICAgICAgICAgICAgICAgIF0KICAgICAgICAgICAgfQogICAgICAgIH0sCiAgICAgICAgewogICAgICAgICAgICAiZnVsbFVybCI6ICJ1cm46dXVpZDo0NTI3MWY3Zi02M2FiLTQ5NDYtOTcwZi0zZGFhYWEwNjYzN2YiLAogICAgICAgICAgICAicmVzb3VyY2UiOiB7CiAgICAgICAgICAgICAgICAicmVzb3VyY2VUeXBlIjogIlByYWN0aXRpb25lciIsCiAgICAgICAgICAgICAgICAiaWQiOiAiNDUyNzFmN2YtNjNhYi00OTQ2LTk3MGYtM2RhYWFhMDY2MzdmIiwKICAgICAgICAgICAgICAgICJuYW1lIjogWwogICAgICAgICAgICAgICAgICAgIHsKICAgICAgICAgICAgICAgICAgICAgICAgImZhbWlseSI6ICJ2YW4gSHVscCIsCiAgICAgICAgICAgICAgICAgICAgICAgICJnaXZlbiI6IFsKICAgICAgICAgICAgICAgICAgICAgICAgICAgICJCZWV0amUiCiAgICAgICAgICAgICAgICAgICAgICAgIF0KICAgICAgICAgICAgICAgICAgICB9CiAgICAgICAgICAgICAgICBdCiAgICAgICAgICAgIH0KICAgICAgICB9LAogICAgICAgIHsKICAgICAgICAgICAgImZ1bGxVcmwiOiAidXJuOnV1aWQ6ZDE3OTMyMWUtYzA5MS00Y2Q0LTg2NDItM2EyNzUzN2Q1MDZkIiwKICAgICAgICAgICAgInJlc291cmNlIjogewogICAgICAgICAgICAgICAgInJlc291cmNlVHlwZSI6ICJDb25kaXRpb24iLAogICAgICAgICAgICAgICAgImlkIjogImQxNzkzMjFlLWMwOTEtNGNkNC04NjQyLTNhMjc1MzdkNTA2ZCIsCiAgICAgICAgICAgICAgICAiY29kZSI6IHsKICAgICAgICAgICAgICAgICAgICAiY29kaW5nIjogWwogICAgICAgICAgICAgICAgICAgICAgICB7CiAgICAgICAgICAgICAgICAgICAgICAgICAgICAic3lzdGVtIjogImh0dHA6Ly9zbm9tZWQuaW5mby9zY3QiLAogICAgICAgICAgICAgICAgICAgICAgICAgICAgImNvZGUiOiAiMTk4NDM2MDA4IiwKICAgICAgICAgICAgICAgICAgICAgICAgICAgICJkaXNwbGF5IjogIk1lbm9wYXVzYWwgZmx1c2hpbmcgKGZpbmRpbmcpIgogICAgICAgICAgICAgICAgICAgICAgICB9CiAgICAgICAgICAgICAgICAgICAgXQogICAgICAgICAgICAgICAgfSwKICAgICAgICAgICAgICAgICJzdWJqZWN0IjogewogICAgICAgICAgICAgICAgICAgICJyZWZlcmVuY2UiOiAidXJuOnV1aWQ6MjQ0YWQ3YzMtYmVlYi00MWQxLThhMmYtYzc2YjhjZjcyMGFkIgogICAgICAgICAgICAgICAgfQogICAgICAgICAgICB9CiAgICAgICAgfSwKICAgICAgICB7CiAgICAgICAgICAgICJmdWxsVXJsIjogInVybjp1dWlkOmUxMjcxZWZkLTE4ZmYtNDY1NC05ZWU3LTQ1ZjQwMDE5YzQ1MyIsCiAgICAgICAgICAgICJyZXNvdXJjZSI6IHsKICAgICAgICAgICAgICAgICJyZXNvdXJjZVR5cGUiOiAiTWVkaWNhdGlvblN0YXRlbWVudCIsCiAgICAgICAgICAgICAgICAiaWQiOiAiZTEyNzFlZmQtMThmZi00NjU0LTllZTctNDVmNDAwMTljNDUzIiwKICAgICAgICAgICAgICAgICJzdGF0dXMiOiAiYWN0aXZlIiwKICAgICAgICAgICAgICAgICJtZWRpY2F0aW9uUmVmZXJlbmNlIjogewogICAgICAgICAgICAgICAgICAgICJyZWZlcmVuY2UiOiAidXJuOnV1aWQ6OTVkYjdjOTItNTY2YS00ZGVkLTg5NmItMjIyMGFiMjQ0YTllIgogICAgICAgICAgICAgICAgfSwKICAgICAgICAgICAgICAgICJzdWJqZWN0IjogewogICAgICAgICAgICAgICAgICAgICJyZWZlcmVuY2UiOiAidXJuOnV1aWQ6MjQ0YWQ3YzMtYmVlYi00MWQxLThhMmYtYzc2YjhjZjcyMGFkIgogICAgICAgICAgICAgICAgfSwKICAgICAgICAgICAgICAgICJlZmZlY3RpdmVQZXJpb2QiOiB7CiAgICAgICAgICAgICAgICAgICAgInN0YXJ0IjogIjIwMTUtMDMiCiAgICAgICAgICAgICAgICB9CiAgICAgICAgICAgIH0KICAgICAgICB9LAogICAgICAgIHsKICAgICAgICAgICAgImZ1bGxVcmwiOiAidXJuOnV1aWQ6OTVkYjdjOTItNTY2YS00ZGVkLTg5NmItMjIyMGFiMjQ0YTllIiwKICAgICAgICAgICAgInJlc291cmNlIjogewogICAgICAgICAgICAgICAgInJlc291cmNlVHlwZSI6ICJNZWRpY2F0aW9uIiwKICAgICAgICAgICAgICAgICJpZCI6ICI5NWRiN2M5Mi01NjZhLTRkZWQtODk2Yi0yMjIwYWIyNDRhOWUiLAogICAgICAgICAgICAgICAgImNvZGUiOiB7CiAgICAgICAgICAgICAgICAgICAgImNvZGluZyI6IFsKICAgICAgICAgICAgICAgICAgICAgICAgewogICAgICAgICAgICAgICAgICAgICAgICAgICAgInN5c3RlbSI6ICJodHRwOi8vc25vbWVkLmluZm8vc2N0IiwKICAgICAgICAgICAgICAgICAgICAgICAgICAgICJjb2RlIjogIjEwODc3NDAwMCIsCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAiZGlzcGxheSI6ICJQcm9kdWN0IGNvbnRhaW5pbmcgYW5hc3Ryb3pvbGUgKG1lZGljaW5hbCBwcm9kdWN0KSIKICAgICAgICAgICAgICAgICAgICAgICAgfQogICAgICAgICAgICAgICAgICAgIF0KICAgICAgICAgICAgICAgIH0KICAgICAgICAgICAgfQogICAgICAgIH0sCiAgICAgICAgewogICAgICAgICAgICAiZnVsbFVybCI6ICJ1cm46dXVpZDo3NDg2MTMxNi1mNjlkLTQ2NTItOWZiMS04NTEyYTIwYzc5MjciLAogICAgICAgICAgICAicmVzb3VyY2UiOiB7CiAgICAgICAgICAgICAgICAicmVzb3VyY2VUeXBlIjogIkFsbGVyZ3lJbnRvbGVyYW5jZSIsCiAgICAgICAgICAgICAgICAiaWQiOiAiNzQ4NjEzMTYtZjY5ZC00NjUyLTlmYjEtODUxMmEyMGM3OTI3IiwKICAgICAgICAgICAgICAgICJjbGluaWNhbFN0YXR1cyI6IHsKICAgICAgICAgICAgICAgICAgICAiY29kaW5nIjogWwogICAgICAgICAgICAgICAgICAgICAgICB7CiAgICAgICAgICAgICAgICAgICAgICAgICAgICAic3lzdGVtIjogImh0dHA6Ly90ZXJtaW5vbG9neS5obDcub3JnL0NvZGVTeXN0ZW0vYWxsZXJneWludG9sZXJhbmNlLWNsaW5pY2FsIiwKICAgICAgICAgICAgICAgICAgICAgICAgICAgICJjb2RlIjogImFjdGl2ZSIKICAgICAgICAgICAgICAgICAgICAgICAgfQogICAgICAgICAgICAgICAgICAgIF0KICAgICAgICAgICAgICAgIH0sCiAgICAgICAgICAgICAgICAiY29kZSI6IHsKICAgICAgICAgICAgICAgICAgICAiY29kaW5nIjogWwogICAgICAgICAgICAgICAgICAgICAgICB7CiAgICAgICAgICAgICAgICAgICAgICAgICAgICAic3lzdGVtIjogImh0dHA6Ly9zbm9tZWQuaW5mby9zY3QiLAogICAgICAgICAgICAgICAgICAgICAgICAgICAgImNvZGUiOiAiMzczMjcwMDA0IiwKICAgICAgICAgICAgICAgICAgICAgICAgICAgICJkaXNwbGF5IjogIlN1YnN0YW5jZSB3aXRoIHBlbmljaWxsaW4gc3RydWN0dXJlIGFuZCBhbnRpYmFjdGVyaWFsIG1lY2hhbmlzbSBvZiBhY3Rpb24gKHN1YnN0YW5jZSkiCiAgICAgICAgICAgICAgICAgICAgICAgIH0KICAgICAgICAgICAgICAgICAgICBdCiAgICAgICAgICAgICAgICB9LAogICAgICAgICAgICAgICAgInBhdGllbnQiOiB7CiAgICAgICAgICAgICAgICAgICAgInJlZmVyZW5jZSI6ICJ1cm46dXVpZDoyNDRhZDdjMy1iZWViLTQxZDEtOGEyZi1jNzZiOGNmNzIwYWQiCiAgICAgICAgICAgICAgICB9CiAgICAgICAgICAgIH0KICAgICAgICB9CiAgICBdCn0%3D&amp;profile=http%3A%2F%2Fhl7.org%2Ffhir%2Fuv%2Fips%2FStructureDefinition%2FBundle-uv-ips#/validate">example</a></p>
+<p>If we remove the patient birhtDate (which is required by the <a href="https://hl7.org/fhir/uv/ips/2024Sep/StructureDefinition-Patient-uv-ips.html">IPS Patient profile</a>), we get two errors and a huge list of information issues:</p>
+<blockquote>
+<p>error [structure]: line 1, column 2, in Bundle:
+Slice 'Bundle.entry:composition': a matching slice is required, but not found (from http://hl7.org/fhir/uv/ips/StructureDefinition/Bundle-uv-ips|2.0.0-ballot). Note that other slices are allowed in addition to this required slice</p>
+</blockquote>
+<p>This error says that the IPS composition could not be found, we have to look for further information why this was not found. </p>
+<blockquote>
+<p>error [structure]: line 1, column 2, in Bundle:
+Slice 'Bundle.entry:patient': a matching slice is required, but not found (from http://hl7.org/fhir/uv/ips/StructureDefinition/Bundle-uv-ips|2.0.0-ballot). Note that other slices are allowed in addition to this required slice</p>
+</blockquote>
+<p>This indicates that the validator did not find a corresponding patient but we have to look further why this is not the case.</p>
+<blockquote>
+<p>information [informational]: line 10, column 10, in Bundle.entry[0]:
+This element does not match any known slice defined in the profile http://hl7.org/fhir/uv/ips/StructureDefinition/Bundle-uv-ips|2.0.0-ballot (this may not be a problem, but you should check that it's not intended to match a slice)
+1. Bundle.entry[0]: Bundle.entry[0].resource.subject: Bundle.entry[1].resource/<em>Patient/244ad7c3-beeb-41d1-8a2f-c76b8cf720ad</em>/: Patient.birthDate: minimum required = 1, but only found 0 (from http://hl7.org/fhir/uv/ips/StructureDefinition/Patient-uv-ips|2.0.0-ballot)
+2. Bundle.entry[0]: Bundle.entry[0].resource.section[0].entry[0]: Bundle.entry[0].resource.section[0].entry[0]: Bundle.entry[3].resource.subject: Bundle.entry[1].resource/<em>Patient/244ad7c3-beeb-41d1-8a2f-c76b8cf720ad</em>/: Patient.birthDate: minimum required = 1, but only found 0 (from http://hl7.org/fhir/uv/ips/StructureDefinition/Patient-uv-ips|2.0.0-ballot)
+3. Bundle.entry[0]: Bundle.entry[0].resource.section[1].entry[0]: Bundle.entry[0].resource.section[1].entry[0]: Bundle.entry[4].resource.subject: Bundle.entry[1].resource/<em>Patient/244ad7c3-beeb-41d1-8a2f-c76b8cf720ad</em>/: Patient.birthDate: minimum required = 1, but only found 0 (from http://hl7.org/fhir/uv/ips/StructureDefinition/Patient-uv-ips|2.0.0-ballot)
+4. Bundle.entry[0]: Bundle.entry[0].resource.section[2].entry[0]: Bundle.entry[0].resource.section[2].entry[0]: Bundle.entry[6].resource.patient: Bundle.entry[1].resource/<em>Patient/244ad7c3-beeb-41d1-8a2f-c76b8cf720ad</em>/: Patient.birthDate: minimum required = 1, but only found 0 (from http://hl7.org/fhir/uv/ips/StructureDefinition/Patient-uv-ips|2.0.0-ballot)</p>
+</blockquote>
+<p>Here we see why the Composition did not match the slice, Composition.subject points to Patient, where the birthDate is not provided, in additions also in the referenced resources out of the sections have references to the patient which is not conforming to the IPS Patient profile.</p>
+<blockquote>
+<p>information [informational]: line 103, column 10, in Bundle.entry[1]:
+This element does not match any known slice defined in the profile http://hl7.org/fhir/uv/ips/StructureDefinition/Bundle-uv-ips|2.0.0-ballot (this may not be a problem, but you should check that it's not intended to match a slice)
+1. Bundle.entry[1]: Bundle.entry[1].resource/<em>Patient/244ad7c3-beeb-41d1-8a2f-c76b8cf720ad</em>/: Patient.birthDate: minimum required = 1, but only found 0 (from http://hl7.org/fhir/uv/ips/StructureDefinition/Patient-uv-ips|2.0.0-ballot)</p>
+</blockquote>
+<p>Here we see that the Patient would need to have birthDate that is missing to conform to the profile.</p>
+<blockquote>
+<p>information [informational]: line 133, column 10, in Bundle.entry[3]:
+This element does not match any known slice defined in the profile http://hl7.org/fhir/uv/ips/StructureDefinition/Bundle-uv-ips|2.0.0-ballot (this may not be a problem, but you should check that it's not intended to match a slice)
+1. Bundle.entry[3]: Bundle.entry[3].resource.subject: Bundle.entry[1].resource/<em>Patient/244ad7c3-beeb-41d1-8a2f-c76b8cf720ad</em>/: Patient.birthDate: minimum required = 1, but only found 0 (from http://hl7.org/fhir/uv/ips/StructureDefinition/Patient-uv-ips|2.0.0-ballot)</p>
+<p>information [informational]: line 152, column 10, in Bundle.entry[4]:
+This element does not match any known slice defined in the profile http://hl7.org/fhir/uv/ips/StructureDefinition/Bundle-uv-ips|2.0.0-ballot (this may not be a problem, but you should check that it's not intended to match a slice)
+1. Bundle.entry[4]: Bundle.entry[4].resource.subject: Bundle.entry[1].resource/<em>Patient/244ad7c3-beeb-41d1-8a2f-c76b8cf720ad</em>/: Patient.birthDate: minimum required = 1, but only found 0 (from http://hl7.org/fhir/uv/ips/StructureDefinition/Patient-uv-ips|2.0.0-ballot)</p>
+<p>information [informational]: line 185, column 10, in Bundle.entry[6]:
+This element does not match any known slice defined in the profile http://hl7.org/fhir/uv/ips/StructureDefinition/Bundle-uv-ips|2.0.0-ballot (this may not be a problem, but you should check that it's not intended to match a slice)
+1. Bundle.entry[6]: Bundle.entry[6].resource.patient: Bundle.entry[1].resource/<em>Patient/244ad7c3-beeb-41d1-8a2f-c76b8cf720ad</em>/: Patient.birthDate: minimum required = 1, but only found 0 (from http://hl7.org/fhir/uv/ips/StructureDefinition/Patient-uv-ips|2.0.0-ballot)</p>
+</blockquote>
+<p>The validator can us not tell directly that Patient.birthDate is missing, it could have other Patient in the Bundle. The validator tells us that a Composition and a Patient according to the IPS definitions could not be found and we have to figure out ourself why they did not match.</p>
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    <script id="__config" type="application/json">{"base": "..", "features": [], "search": "../assets/javascripts/workers/search.74e28a9f.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}}</script>
+    
+    
+      <script src="../assets/javascripts/bundle.220ee61c.min.js"></script>
+      
+    
+  </body>
+</html>
