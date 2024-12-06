@@ -1,3 +1,12 @@
+Unreleased
+
+- Upgrade org.hl7.fhir.core to 6.4.4 and hapi-fhir to 7.6.0
+- Remove the `devMode` configuration parameter, it is now enabled when `httpReadOnly` is not [#315](https://github.com/ahdis/matchbox/issues/315)
+- Remove the `autoInstallMissingIgs` configuration parameter, it is now enabled when `httpReadOnly` is not [#315](https://github.com/ahdis/matchbox/issues/315)
+- Improve the Matchbox server documentation [#315](https://github.com/ahdis/matchbox/issues/315)
+- Respect the 'onlyOneEngine' mode in MappingLanguageInterceptor [#316](https://github.com/ahdis/matchbox/issues/316)
+- Use the proper encoding when returning a transformed resource [#318](https://github.com/ahdis/matchbox/issues/318)
+
 2024/11/25 Release 3.9.8
 
 - Allow providing map and models in the StructureMap $transform operation [#305](https://github.com/ahdis/matchbox/issues/305)
