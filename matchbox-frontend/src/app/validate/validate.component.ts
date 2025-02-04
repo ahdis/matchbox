@@ -13,6 +13,7 @@ import { FormControl, Validators } from '@angular/forms';
 import { StructureDefinition } from './structure-definition';
 import { ToastrService } from 'ngx-toastr';
 import {ValidationCodeEditor} from "./validation-code-editor";
+import { HttpClient } from '@angular/common/http';
 
 const INDENT_SPACES = 2;
 
@@ -58,6 +59,7 @@ export class ValidateComponent implements AfterViewInit {
     data: FhirConfigService,
     private cd: ChangeDetectorRef,
     private toastr: ToastrService,
+    private httpClient: HttpClient,
   ) {
     this.client = data.getFhirClient();
 
@@ -364,6 +366,21 @@ export class ValidateComponent implements AfterViewInit {
   }
 
   /**
+   * Event handler for the click on the "AI Analyze" button.
+   */
+  onAiButtonClick() {
+    const formData = new FormData();
+    formData.append("inputResource", this.currentResource.content);
+    formData.append("inputOperationOutcome", JSON.stringify(this.selectedEntry.result.operationOutcome));
+
+    // send HTTP request for AI analysis
+    this.httpClient.post('http://localhost:8080/validate', formData, {responseType: 'text'})
+      .subscribe(response => {
+        // TODO update code editor
+      })
+  }
+
+  /**
    * Toggle the display of the settings pane.
    */
   toggleSettings() {
@@ -575,4 +592,5 @@ class UploadedFile {
 export enum CodeEditorContent {
   RESOURCE_CONTENT,
   OPERATION_OUTCOME,
+  MATCHSPARK_RESULT,
 }
