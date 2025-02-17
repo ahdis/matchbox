@@ -211,6 +211,8 @@ public class CliContext {
   @JsonProperty("disableDefaultResourceFetcher")
   private boolean disableDefaultResourceFetcher = true;
 
+  @JsonProperty("analyzeOutcomeWithAI")
+  private boolean analyzeOutcomeWithAI = false;
 
   @Autowired
   public CliContext(Environment environment) {
@@ -686,6 +688,16 @@ public class CliContext {
     this.disableDefaultResourceFetcher = disableDefaultResourceFetcher;
   }
 
+  @JsonProperty("analyzeOutcomeWithAI")
+  public boolean getAnalyzeOutcomeWithAI() {
+    return analyzeOutcomeWithAI;
+  }
+
+  @JsonProperty("analyzeOutcomeWithAI")
+  public void setAnalyzeOutcomeWithAI(boolean analyzeOutcomeWithAI) {
+    this.analyzeOutcomeWithAI = analyzeOutcomeWithAI;
+  }
+
 
   @Override
   public boolean equals(final Object o) {
@@ -735,7 +747,8 @@ public class CliContext {
         && Arrays.equals(igsPreloaded, that.igsPreloaded)
         && checkReferences == that.checkReferences
         && Objects.equals(resolutionContext, that.resolutionContext)
-        && disableDefaultResourceFetcher == that.disableDefaultResourceFetcher;
+        && disableDefaultResourceFetcher == that.disableDefaultResourceFetcher
+        && analyzeOutcomeWithAI == that.analyzeOutcomeWithAI;
   }
 
   @Override
@@ -781,7 +794,8 @@ public class CliContext {
         xVersion,
         checkReferences,
         resolutionContext,
-        disableDefaultResourceFetcher);
+        disableDefaultResourceFetcher,
+        analyzeOutcomeWithAI);
     result = 31 * result + Arrays.hashCode(igsPreloaded);
     return result;
   }
@@ -832,6 +846,7 @@ public class CliContext {
         ", checkReferences=" + checkReferences +
         ", resolutionContext=" + resolutionContext +
         ", disableDefaultResourceFetcher=" + disableDefaultResourceFetcher +
+        ", analyzeOutcomeWithAI=" + analyzeOutcomeWithAI +
         '}';
   }
 
@@ -887,6 +902,7 @@ public class CliContext {
 	addExtension(ext, "check-references", new BooleanType(this.checkReferences));
 	addExtension(ext, "resolution-context", new StringType(this.resolutionContext));
 	addExtension(ext, "disableDefaultResourceFetcher", new BooleanType(this.disableDefaultResourceFetcher));
+  addExtension(ext, "analyzeOutcomeWithAI", new BooleanType(this.analyzeOutcomeWithAI));
   for( var extension : this.extensions) {
     addExtension(ext, "extensions", new StringType(extension));
   }
