@@ -367,25 +367,6 @@ export class ValidateComponent implements AfterViewInit {
   }
 
   /**
-   * Event handler for the click on the "AI Analyze" button.
-   */
-  onAiButtonClick() {
-    let entry = new ValidationEntry(
-      this.currentResource.filename,
-      this.currentResource.content,
-      this.currentResource.contentType,
-      [this.selectedProfile],
-      this.getCurrentValidationSettings()
-    );
-    if (this.selectedIg != this.AUTO_IG_SELECTION) {
-      entry.ig = this.selectedIg;
-    }
-    this.validationEntries.unshift(entry);
-    this.show(entry);
-    this.runValidation(entry);
-  }
-
-  /**
    * Toggle the display of the settings pane.
    */
   toggleSettings() {
@@ -597,5 +578,4 @@ class UploadedFile {
 export enum CodeEditorContent {
   RESOURCE_CONTENT,
   OPERATION_OUTCOME,
-  MATCHSPARK_RESULT,
 }
