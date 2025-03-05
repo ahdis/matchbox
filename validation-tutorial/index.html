@@ -1,0 +1,1796 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+      
+      
+      
+        <link rel="prev" href="../cda/">
+      
+      
+      
+      <link rel="icon" href="../assets/favicon-96x96.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.5.50">
+    
+    
+      
+        <title>Tutorial: validation - Matchbox</title>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/stylesheets/main.a40c8224.min.css">
+      
+        
+        <link rel="stylesheet" href="../assets/stylesheets/palette.06af60db.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../stylesheets/extra.css">
+    
+    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+    
+  </head>
+  
+  
+    
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="matchbox" data-md-color-primary="indigo" data-md-color-accent="indigo">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#how-to-validate-fhir-resources" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href=".." title="Matchbox" class="md-header__button md-logo" aria-label="Matchbox" data-md-component="logo">
+      
+  <img src="../assets/matchbox_logo_color.png" alt="logo">
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            Matchbox
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Tutorial: validation
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+    
+    
+    
+    
+      <label class="md-header__button md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+      </label>
+      <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+    
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href=".." title="Matchbox" class="md-nav__button md-logo" aria-label="Matchbox" data-md-component="logo">
+      
+  <img src="../assets/matchbox_logo_color.png" alt="logo">
+
+    </a>
+    Matchbox
+  </label>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href=".." class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Welcome
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../features/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Features
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../changelog/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Changelog
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../matchbox-engine/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Matchbox Engine
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../matchbox-server/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Matchbox Server
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    API for Matchbox
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../validation/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Validation of FHIR resources
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../docker/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Docker container
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../cda/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    CDA Logical Model
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  <span class="md-ellipsis">
+    Tutorial: validation
+  </span>
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  <span class="md-ellipsis">
+    Tutorial: validation
+  </span>
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#what-does-a-validator-check" class="md-nav__link">
+    <span class="md-ellipsis">
+      What does a validator check
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#using-matchbox-as-a-validation-tool" class="md-nav__link">
+    <span class="md-ellipsis">
+      Using matchbox as a validation tool
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#structure-syntax-issues" class="md-nav__link">
+    <span class="md-ellipsis">
+      Structure (Syntax) issues
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Structure (Syntax) issues">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#common-additional-xml-structure-issues" class="md-nav__link">
+    <span class="md-ellipsis">
+      Common additional XML Structure issues
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Common additional XML Structure issues">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#not-providing-an-xml-namespace" class="md-nav__link">
+    <span class="md-ellipsis">
+      Not providing an xml namespace
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#wrong-xml-element-test-not-allowed" class="md-nav__link">
+    <span class="md-ellipsis">
+      Wrong XML element test (not allowed)
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#wrong-order-of-xml-elements" class="md-nav__link">
+    <span class="md-ellipsis">
+      Wrong order of xml elements
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#common-json-structure-error-messages" class="md-nav__link">
+    <span class="md-ellipsis">
+      common JSON Structure error messages
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="common JSON Structure error messages">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#json-array-for-0" class="md-nav__link">
+    <span class="md-ellipsis">
+      JSON Array for 0..*
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#boolean-or-numbers-not-quoted" class="md-nav__link">
+    <span class="md-ellipsis">
+      boolean or numbers not quoted
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#cardinality" class="md-nav__link">
+    <span class="md-ellipsis">
+      Cardinality
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#value-domain" class="md-nav__link">
+    <span class="md-ellipsis">
+      Value Domain
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Value Domain">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#invalid-content-for-boolean" class="md-nav__link">
+    <span class="md-ellipsis">
+      invalid content for boolean
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#semantic-validation" class="md-nav__link">
+    <span class="md-ellipsis">
+      Semantic validation
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Semantic validation">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#invalid-code-for-gender" class="md-nav__link">
+    <span class="md-ellipsis">
+      invalid code for gender
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#intensional-valueset" class="md-nav__link">
+    <span class="md-ellipsis">
+      intensional ValueSet
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#constraints-by-the-fhir-specification" class="md-nav__link">
+    <span class="md-ellipsis">
+      Constraints by the FHIR Specification
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#constraints-by-fhir-implementation-guides" class="md-nav__link">
+    <span class="md-ellipsis">
+      Constraints by FHIR Implementation Guides
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Constraints by FHIR Implementation Guides">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#additional-rules-for-fhir-implementation-guides" class="md-nav__link">
+    <span class="md-ellipsis">
+      Additional rules for FHIR implementation guides
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#slicing-in-fhir-documents" class="md-nav__link">
+    <span class="md-ellipsis">
+      Slicing in FHIR documents
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Slicing in FHIR documents">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#invalid-ips-document-missing-medication-section" class="md-nav__link">
+    <span class="md-ellipsis">
+      Invalid IPS document: missing medication section
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#invalid-ips-document-missing-patientbirthdate" class="md-nav__link">
+    <span class="md-ellipsis">
+      Invalid IPS document: missing Patient.birthDate
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#what-does-a-validator-check" class="md-nav__link">
+    <span class="md-ellipsis">
+      What does a validator check
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#using-matchbox-as-a-validation-tool" class="md-nav__link">
+    <span class="md-ellipsis">
+      Using matchbox as a validation tool
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#structure-syntax-issues" class="md-nav__link">
+    <span class="md-ellipsis">
+      Structure (Syntax) issues
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Structure (Syntax) issues">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#common-additional-xml-structure-issues" class="md-nav__link">
+    <span class="md-ellipsis">
+      Common additional XML Structure issues
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Common additional XML Structure issues">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#not-providing-an-xml-namespace" class="md-nav__link">
+    <span class="md-ellipsis">
+      Not providing an xml namespace
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#wrong-xml-element-test-not-allowed" class="md-nav__link">
+    <span class="md-ellipsis">
+      Wrong XML element test (not allowed)
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#wrong-order-of-xml-elements" class="md-nav__link">
+    <span class="md-ellipsis">
+      Wrong order of xml elements
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#common-json-structure-error-messages" class="md-nav__link">
+    <span class="md-ellipsis">
+      common JSON Structure error messages
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="common JSON Structure error messages">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#json-array-for-0" class="md-nav__link">
+    <span class="md-ellipsis">
+      JSON Array for 0..*
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#boolean-or-numbers-not-quoted" class="md-nav__link">
+    <span class="md-ellipsis">
+      boolean or numbers not quoted
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#cardinality" class="md-nav__link">
+    <span class="md-ellipsis">
+      Cardinality
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#value-domain" class="md-nav__link">
+    <span class="md-ellipsis">
+      Value Domain
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Value Domain">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#invalid-content-for-boolean" class="md-nav__link">
+    <span class="md-ellipsis">
+      invalid content for boolean
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#semantic-validation" class="md-nav__link">
+    <span class="md-ellipsis">
+      Semantic validation
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Semantic validation">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#invalid-code-for-gender" class="md-nav__link">
+    <span class="md-ellipsis">
+      invalid code for gender
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#intensional-valueset" class="md-nav__link">
+    <span class="md-ellipsis">
+      intensional ValueSet
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#constraints-by-the-fhir-specification" class="md-nav__link">
+    <span class="md-ellipsis">
+      Constraints by the FHIR Specification
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#constraints-by-fhir-implementation-guides" class="md-nav__link">
+    <span class="md-ellipsis">
+      Constraints by FHIR Implementation Guides
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Constraints by FHIR Implementation Guides">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#additional-rules-for-fhir-implementation-guides" class="md-nav__link">
+    <span class="md-ellipsis">
+      Additional rules for FHIR implementation guides
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#slicing-in-fhir-documents" class="md-nav__link">
+    <span class="md-ellipsis">
+      Slicing in FHIR documents
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Slicing in FHIR documents">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#invalid-ips-document-missing-medication-section" class="md-nav__link">
+    <span class="md-ellipsis">
+      Invalid IPS document: missing medication section
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#invalid-ips-document-missing-patientbirthdate" class="md-nav__link">
+    <span class="md-ellipsis">
+      Invalid IPS document: missing Patient.birthDate
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+<h1 id="how-to-validate-fhir-resources">How to validate FHIR resources</h1>
+<p>This article shows, how FHIR resource can be validated and analyzed.</p>
+<p>Validation is a powerful tool to verify that you produce conformant FHIR resources, however the amount of error messages can be overwhelming if you have complex FHIR data structures like a FHIR IPS document (see validation result <a href="https://gazelle.ihe.net/evs/report.seam?oid=1.3.6.1.4.1.12559.11.11.4.17466&amp;standard=31">here</a>).</p>
+<h2 id="what-does-a-validator-check">What does a validator check</h2>
+<p>The validation tooling checks the following to verify that your FHIR resource is conformant on the following levels:</p>
+<ol>
+<li>Structure (Syntax) </li>
+<li>Semantics  </li>
+<li>Constraints by the FHIR Specification </li>
+<li>Constraints by FHIR Implementation Guides  </li>
+<li>Additional rules for FHIR implementation guides </li>
+<li>Slicing in FHIR documents</li>
+</ol>
+<p>You should fix first the structure errors, then the semantics error before you tackle the constraint errors.</p>
+<p>We will go through the different type of error messages to explain what possibilities you have to identify the errors.</p>
+<h2 id="using-matchbox-as-a-validation-tool">Using matchbox as a validation tool</h2>
+<p>You can use matchbox as a validation tool with a GUI, a test instance is located at: <a href="http://test.ahdis.ch/matchboxv3/fhir">http://test.ahdis.ch/matchboxv3/fhir</a>. Alternatively matchbox offers a $validate operation and you can call this directly with a client. In this article we will use VSCode together with the RESTClient extension to show the different validation behaviors, you can open this file locally in your VS Code instance and then you can click on <code>Send Request</code>. As an alternative here is also a link for each validation provided which triggers the validation on the matchbox test instance.  </p>
+<p>To check if you have set it up correctly, perform a first successful validation: This should validate the XML Patient resource with a family name test against the Patient profile of the FHIR specification, in the test instance, the default validation is to FHIR Release R4:</p>
+<p>Validation Request with <a href="https://test.ahdis.ch/matchboxv3/validate#resource=PFBhdGllbnQgeG1sbnM9Imh0dHA6Ly9obDcub3JnL2ZoaXIiPgogIDxuYW1lPgogICAgPGZhbWlseSB2YWx1ZT0iVGVzdCIvPgogIDwvbmFtZT4KPC9QYXRpZW50Pg%3D%3D&amp;profile=http%3A%2F%2Fhl7.org%2Ffhir%2FStructureDefinition%2FPatient">matchbox</a>:
+<div class="language-http highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="err">@host = https://test.ahdis.ch/matchboxv3/fhir</span>
+</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="nf">POST</span> <span class="nn">{{host}}/$validate?profile=http://hl7.org/fhir/StructureDefinition/Patient</span> <span class="kr">HTTP</span><span class="o">/</span><span class="m">1.1</span>
+</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="na">Accept</span><span class="o">:</span> <span class="l">application/fhir+json</span>
+</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="na">Content-Type</span><span class="o">:</span> <span class="l">application/fhir+xml</span>
+</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>
+</span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a><span class="nt">&lt;Patient</span><span class="w"> </span><span class="na">xmlns=</span><span class="s">&quot;http://hl7.org/fhir&quot;</span><span class="nt">&gt;</span>
+</span><span id="__span-0-7"><a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a><span class="w">  </span><span class="nt">&lt;name&gt;</span>
+</span><span id="__span-0-8"><a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a><span class="w">    </span><span class="nt">&lt;family</span><span class="w"> </span><span class="na">value=</span><span class="s">&quot;Test&quot;</span><span class="nt">/&gt;</span>
+</span><span id="__span-0-9"><a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a><span class="w">  </span><span class="nt">&lt;/name&gt;</span>
+</span><span id="__span-0-10"><a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a><span class="nt">&lt;/Patient&gt;</span>
+</span></code></pre></div></p>
+<p>Validation response by matchbox:
+<div class="language-json highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="p">{</span>
+</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="w">  </span><span class="nt">&quot;resourceType&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;OperationOutcome&quot;</span><span class="p">,</span>
+</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="w">  </span><span class="nt">&quot;id&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;75e89102282782b6c16df8acfb99310150a261ee35eed42c3b181b14d00a051e&quot;</span><span class="p">,</span>
+</span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a><span class="w">  </span><span class="nt">&quot;issue&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+</span><span id="__span-1-5"><a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a><span class="w">    </span><span class="p">{</span>
+</span><span id="__span-1-6"><a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a><span class="w">      </span><span class="nt">&quot;severity&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;information&quot;</span><span class="p">,</span>
+</span><span id="__span-1-7"><a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a><span class="w">      </span><span class="nt">&quot;code&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;informational&quot;</span><span class="p">,</span>
+</span><span id="__span-1-8"><a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a><span class="w">      </span><span class="nt">&quot;diagnostics&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Validation for profile http://hl7.org/fhir/StructureDefinition/Patient|4.0.1 (2019-11-01T09:29:23+11:00). Loaded packages: hl7.fhir.r4.core#4.0.1, hl7.fhir.xver-extensions#4.0, hl7.terminology#5.4.0, hl7.fhir.uv.extensions.r4#1.0.0. Duration: 0.015s. powered by matchbox 3.9.3, hapi-fhir 7.4.0 and org.hl7.fhir.core 6.3.24. Validation parameters: CliContext{doNative=false, extensions=[any], hintAboutNonMustSupport=false, recursive=false, showMessagesFromReferences=false, doDebug=false, assumeValidRestReferences=false, canDoNative=false, noExtensibleBindingMessages=false, noUnicodeBiDiControlChars=false, noInvariants=false, displayIssuesAreWarnings=true, wantInvariantsInMessages=false, doImplicitFHIRPathStringConversion=false, htmlInMarkdownCheck=WARNING, txServer=&#39;https://test.ahdis.ch/matchboxv3/fhir&#39;, txServerCache=&#39;true&#39;, txLog=&#39;null&#39;, txUseEcosystem=true, lang=&#39;null&#39;, snomedCT=&#39;null&#39;, fhirVersion=&#39;4.0.1&#39;, ig=&#39;hl7.fhir.r4.core#4.0.1&#39;, questionnaireMode=CHECK, level=HINTS, mode=VALIDATION, securityChecks=false, crumbTrails=false, forPublication=false, allowExampleUrls=true, locale=&#39;en&#39;, locations={}, jurisdiction=&#39;urn:iso:std:iso:3166#US&#39;, igsPreloaded=[ch.fhir.ig.ch-elm#1.4.0], onlyOneEngine=false, xVersion=false, httpReadOnly=false}&quot;</span>
+</span><span id="__span-1-9"><a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a><span class="w">    </span><span class="p">},</span>
+</span><span id="__span-1-10"><a id="__codelineno-1-10" name="__codelineno-1-10" href="#__codelineno-1-10"></a><span class="w">    </span><span class="p">{</span>
+</span><span id="__span-1-11"><a id="__codelineno-1-11" name="__codelineno-1-11" href="#__codelineno-1-11"></a><span class="w">      </span><span class="nt">&quot;severity&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;information&quot;</span><span class="p">,</span>
+</span><span id="__span-1-12"><a id="__codelineno-1-12" name="__codelineno-1-12" href="#__codelineno-1-12"></a><span class="w">      </span><span class="nt">&quot;code&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;informational&quot;</span><span class="p">,</span>
+</span><span id="__span-1-13"><a id="__codelineno-1-13" name="__codelineno-1-13" href="#__codelineno-1-13"></a><span class="w">      </span><span class="nt">&quot;diagnostics&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;No fatal or error issues detected, the validation has passed&quot;</span>
+</span><span id="__span-1-14"><a id="__codelineno-1-14" name="__codelineno-1-14" href="#__codelineno-1-14"></a><span class="w">    </span><span class="p">}</span>
+</span><span id="__span-1-15"><a id="__codelineno-1-15" name="__codelineno-1-15" href="#__codelineno-1-15"></a><span class="w">  </span><span class="p">]</span>
+</span><span id="__span-1-16"><a id="__codelineno-1-16" name="__codelineno-1-16" href="#__codelineno-1-16"></a><span class="p">}</span>
+</span></code></pre></div></p>
+<p>The validation response always contains a FHIR OperationOutcome Resource, with a list of different issues encountered during validation. One issue with severity information and code information will be always present with which configuration parameters the validation has been performed. Those parameters can change by different requests. The GUI of matchbox shows the exact same information in the results. If you have no fatal or error issues you will get another information issue with "No fatal or error issues detected, the validation has passed", meaning you passed the validation according to the specified profile!</p>
+<table>
+<thead>
+<tr>
+<th>Severity</th>
+<th>Code</th>
+<th>Diagnostics</th>
+<th>Expression</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>information</td>
+<td>information</td>
+<td>No fatal or error issues detected, the validation has passed.</td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<h2 id="structure-syntax-issues">Structure (Syntax) issues</h2>
+<p>You have to provide your FHIR resource in the right structure and syntax (xml or json) and also in the right FHIR version. If the validator is not able to parse your message as a FHIR resource (or as FHIR logical model instance, e.g. a CDA instance), you will get issues with a type of severity error or fatal.</p>
+<p>e.g. you will get back the following error for requesting an <a href="https://test.ahdis.ch/matchboxv3/validate#resource=SGVsbG8gdmFsaWRhdG9y&amp;profile=http%3A%2F%2Fhl7.org%2Ffhir%2FStructureDefinition%2FPatient">invalid Patient xml resource validation</a> (just sending text instead):</p>
+<div class="language-http highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="nf">POST</span> <span class="nn">{{host}}/$validate?profile=http://hl7.org/fhir/StructureDefinition/Patient</span> <span class="kr">HTTP</span><span class="o">/</span><span class="m">1.1</span>
+</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="na">Accept</span><span class="o">:</span> <span class="l">application/fhir+json</span>
+</span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="na">Content-Type</span><span class="o">:</span> <span class="l">application/fhir+xml</span>
+</span><span id="__span-2-4"><a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a>
+</span><span id="__span-2-5"><a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a>Hello<span class="w"> </span>validator
+</span></code></pre></div>
+<table>
+<thead>
+<tr>
+<th>Severity</th>
+<th>Code</th>
+<th>Diagnostics</th>
+<th>Expression</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>fatal</td>
+<td>invalid</td>
+<td>Content is not allowed in prolog.</td>
+<td>(xml)</td>
+</tr>
+<tr>
+<td>error</td>
+<td>invalid</td>
+<td>The XML encoding is invalid (must be UTF-8)</td>
+<td>XML</td>
+</tr>
+</tbody>
+</table>
+<p>or an invalid Patient in a json validation:</p>
+<div class="language-http highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="nf">POST</span> <span class="nn">{{host}}/$validate?profile=http://hl7.org/fhir/StructureDefinition/Patient</span> <span class="kr">HTTP</span><span class="o">/</span><span class="m">1.1</span>
+</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="na">Accept</span><span class="o">:</span> <span class="l">application/fhir+json</span>
+</span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="na">Content-Type</span><span class="o">:</span> <span class="l">application/fhir+json</span>
+</span><span id="__span-3-4"><a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a>
+</span><span id="__span-3-5"><a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a><span class="err">Hello</span><span class="w"> </span><span class="err">valida</span><span class="kc">t</span><span class="err">or</span>
+</span></code></pre></div>
+<table>
+<thead>
+<tr>
+<th>Severity</th>
+<th>Code</th>
+<th>Diagnostics</th>
+<th>Expression</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>fatal</td>
+<td>invalid</td>
+<td>Error parsing JSON: Error parsing JSON source: Unexpected content at start of JSON: String at Line 1 (path=[Hello])</td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<h3 id="common-additional-xml-structure-issues">Common additional XML Structure issues</h3>
+<h4 id="not-providing-an-xml-namespace">Not providing an xml namespace</h4>
+<p><a href="https://test.ahdis.ch/matchboxv3/validate#resource=PFBhdGllbnQgeG1sbnM9Imh0dHA6Ly9obDcub3JnL2ZoaXIiPgogIDxnZW5kZXIgdmFsdWU9Im1hbGUiIC8%2BCiAgPG5hbWU%2BCiAgICA8ZmFtaWx5IHZhbHVlPSJUZXN0IiAvPgogIDwvbmFtZT4KPC9QYXRpZW50Pg%3D%3D&amp;profile=http%3A%2F%2Fhl7.org%2Ffhir%2FStructureDefinition%2FPatient">example no xml namespace</a></p>
+<div class="language-http highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="nf">POST</span> <span class="nn">{{host}}/$validate?profile=http://hl7.org/fhir/StructureDefinition/Patient</span> <span class="kr">HTTP</span><span class="o">/</span><span class="m">1.1</span>
+</span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="na">Accept</span><span class="o">:</span> <span class="l">application/fhir+json</span>
+</span><span id="__span-4-3"><a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a><span class="na">Content-Type</span><span class="o">:</span> <span class="l">application/fhir+xml</span>
+</span><span id="__span-4-4"><a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a>
+</span><span id="__span-4-5"><a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a><span class="nt">&lt;Patient&gt;</span>
+</span><span id="__span-4-6"><a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a><span class="w">  </span><span class="nt">&lt;name&gt;</span>
+</span><span id="__span-4-7"><a id="__codelineno-4-7" name="__codelineno-4-7" href="#__codelineno-4-7"></a><span class="w">    </span><span class="nt">&lt;family</span><span class="w"> </span><span class="na">value=</span><span class="s">&quot;Test&quot;</span><span class="nt">/&gt;</span>
+</span><span id="__span-4-8"><a id="__codelineno-4-8" name="__codelineno-4-8" href="#__codelineno-4-8"></a><span class="w">  </span><span class="nt">&lt;/name&gt;</span>
+</span><span id="__span-4-9"><a id="__codelineno-4-9" name="__codelineno-4-9" href="#__codelineno-4-9"></a><span class="nt">&lt;/Patient&gt;</span>
+</span></code></pre></div>
+<table>
+<thead>
+<tr>
+<th>Severity</th>
+<th>Code</th>
+<th>Diagnostics</th>
+<th>Expression</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>fatal</td>
+<td>structure</td>
+<td>This content cannot be parsed (unknown or unrecognized XML Root element namespace/name 'noNamespace::Patient')</td>
+<td>"Patient"</td>
+</tr>
+</tbody>
+</table>
+<h4 id="wrong-xml-element-test-not-allowed">Wrong XML element test (not allowed)</h4>
+<p><a href="https://test.ahdis.ch/matchboxv3/validate#resource=PFBhdGllbnQgeG1sbnM9Imh0dHA6Ly9obDcub3JnL2ZoaXIiPgogIDx0ZXN0IHZhbHVlPSJ0cnVlIiAvPgo8L1BhdGllbnQ%2B&amp;profile=http%3A%2F%2Fhl7.org%2Ffhir%2FStructureDefinition%2FPatient">example undefined xml element</a>
+<div class="language-http highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="nf">POST</span> <span class="nn">{{host}}/$validate?profile=http://hl7.org/fhir/StructureDefinition/Patient</span> <span class="kr">HTTP</span><span class="o">/</span><span class="m">1.1</span>
+</span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a><span class="na">Content-Type</span><span class="o">:</span> <span class="l">application/fhir+xml</span>
+</span><span id="__span-5-3"><a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a>
+</span><span id="__span-5-4"><a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a><span class="nt">&lt;Patient</span><span class="w"> </span><span class="na">xmlns=</span><span class="s">&quot;http://hl7.org/fhir&quot;</span><span class="nt">&gt;</span>
+</span><span id="__span-5-5"><a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a><span class="w">  </span><span class="nt">&lt;test</span><span class="w"> </span><span class="na">value=</span><span class="s">&quot;true&quot;</span><span class="w"> </span><span class="nt">/&gt;</span>
+</span><span id="__span-5-6"><a id="__codelineno-5-6" name="__codelineno-5-6" href="#__codelineno-5-6"></a><span class="nt">&lt;/Patient&gt;</span>
+</span></code></pre></div>
+| Severity | Code       | Diagnostics                             | Expression   |
+|----------|------------|-----------------------------------------|--------------|
+| error    | structure  | Undefined element 'test' at /f:Patient" | "f:/Patient" |</p>
+<h4 id="wrong-order-of-xml-elements">Wrong order of xml elements</h4>
+<p><a href="https://test.ahdis.ch/matchboxv3/validate#resource=PFBhdGllbnQgeG1sbnM9Imh0dHA6Ly9obDcub3JnL2ZoaXIiPgogIDxnZW5kZXIgdmFsdWU9Im1hbGUiIC8%2BCiAgPG5hbWU%2BCiAgICA8ZmFtaWx5IHZhbHVlPSJUZXN0IiAvPgogIDwvbmFtZT4KPC9QYXRpZW50Pg%3D%3D&amp;profile=http%3A%2F%2Fhl7.org%2Ffhir%2FStructureDefinition%2FPatient">example wrong order</a>
+<div class="language-http highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="nf">POST</span> <span class="nn">{{host}}/$validate?profile=http://hl7.org/fhir/StructureDefinition/Patient</span> <span class="kr">HTTP</span><span class="o">/</span><span class="m">1.1</span>
+</span><span id="__span-6-2"><a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a><span class="na">Content-Type</span><span class="o">:</span> <span class="l">application/fhir+xml</span>
+</span><span id="__span-6-3"><a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a>
+</span><span id="__span-6-4"><a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a><span class="nt">&lt;Patient</span><span class="w"> </span><span class="na">xmlns=</span><span class="s">&quot;http://hl7.org/fhir&quot;</span><span class="nt">&gt;</span>
+</span><span id="__span-6-5"><a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a><span class="w">  </span><span class="nt">&lt;gender</span><span class="w"> </span><span class="na">value=</span><span class="s">&quot;male&quot;</span><span class="w"> </span><span class="nt">/&gt;</span>
+</span><span id="__span-6-6"><a id="__codelineno-6-6" name="__codelineno-6-6" href="#__codelineno-6-6"></a><span class="w">  </span><span class="nt">&lt;name&gt;</span>
+</span><span id="__span-6-7"><a id="__codelineno-6-7" name="__codelineno-6-7" href="#__codelineno-6-7"></a><span class="w">    </span><span class="nt">&lt;family</span><span class="w"> </span><span class="na">value=</span><span class="s">&quot;Test&quot;</span><span class="w"> </span><span class="nt">/&gt;</span>
+</span><span id="__span-6-8"><a id="__codelineno-6-8" name="__codelineno-6-8" href="#__codelineno-6-8"></a><span class="w">  </span><span class="nt">&lt;/name&gt;</span>
+</span><span id="__span-6-9"><a id="__codelineno-6-9" name="__codelineno-6-9" href="#__codelineno-6-9"></a><span class="nt">&lt;/Patient&gt;</span>
+</span></code></pre></div></p>
+<table>
+<thead>
+<tr>
+<th>Severity</th>
+<th>Code</th>
+<th>Diagnostics</th>
+<th>Expression</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>error</td>
+<td>invalid</td>
+<td>As specified by profile http://hl7.org/fhir/StructureDefinition/Patient|4.0.1, Element 'name' is out of order (found after gender)</td>
+<td>Patient.name[0]</td>
+</tr>
+</tbody>
+</table>
+<p>the gender element must be after the name.</p>
+<h3 id="common-json-structure-error-messages">common JSON Structure error messages</h3>
+<h4 id="json-array-for-0">JSON Array for 0..*</h4>
+<p>If an element has a 0..* cardinality this needs in json representation an array. </p>
+<div class="language-json highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="p">{</span>
+</span><span id="__span-7-2"><a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a><span class="w">  </span><span class="nt">&quot;resourceType&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Patient&quot;</span><span class="p">,</span>
+</span><span id="__span-7-3"><a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a><span class="w">  </span><span class="nt">&quot;active&quot;</span><span class="w"> </span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span>
+</span><span id="__span-7-4"><a id="__codelineno-7-4" name="__codelineno-7-4" href="#__codelineno-7-4"></a><span class="w">  </span><span class="nt">&quot;name&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+</span><span id="__span-7-5"><a id="__codelineno-7-5" name="__codelineno-7-5" href="#__codelineno-7-5"></a><span class="w">    </span><span class="p">{</span>
+</span><span id="__span-7-6"><a id="__codelineno-7-6" name="__codelineno-7-6" href="#__codelineno-7-6"></a><span class="w">      </span><span class="nt">&quot;family&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Test&quot;</span>
+</span><span id="__span-7-7"><a id="__codelineno-7-7" name="__codelineno-7-7" href="#__codelineno-7-7"></a><span class="w">    </span><span class="p">}</span>
+</span><span id="__span-7-8"><a id="__codelineno-7-8" name="__codelineno-7-8" href="#__codelineno-7-8"></a><span class="w">  </span><span class="p">]</span>
+</span><span id="__span-7-9"><a id="__codelineno-7-9" name="__codelineno-7-9" href="#__codelineno-7-9"></a><span class="p">}</span>
+</span></code></pre></div>
+<p>sending it as as a key, object will give an <a href="https://test.ahdis.ch/matchboxv3/validate#resource=PFBhdGllbnQgeG1sbnM9Imh0dHA6Ly9obDcub3JnL2ZoaXIiPgogIDx0ZXN0IHZhbHVlPSJ0cnVlIiAvPgo8L1BhdGllbnQ%2B&amp;profile=http%3A%2F%2Fhl7.org%2Ffhir%2FStructureDefinition%2FPatient">error</a>:</p>
+<div class="language-http highlight"><pre><span></span><code><span id="__span-8-1"><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a><span class="nf">POST</span> <span class="nn">{{host}}/$validate?profile=http://hl7.org/fhir/StructureDefinition/Patient</span> <span class="kr">HTTP</span><span class="o">/</span><span class="m">1.1</span>
+</span><span id="__span-8-2"><a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a><span class="na">Content-Type</span><span class="o">:</span> <span class="l">application/fhir+json</span>
+</span><span id="__span-8-3"><a id="__codelineno-8-3" name="__codelineno-8-3" href="#__codelineno-8-3"></a>
+</span><span id="__span-8-4"><a id="__codelineno-8-4" name="__codelineno-8-4" href="#__codelineno-8-4"></a><span class="p">{</span>
+</span><span id="__span-8-5"><a id="__codelineno-8-5" name="__codelineno-8-5" href="#__codelineno-8-5"></a><span class="w">    </span><span class="nt">&quot;resourceType&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Patient&quot;</span><span class="p">,</span>
+</span><span id="__span-8-6"><a id="__codelineno-8-6" name="__codelineno-8-6" href="#__codelineno-8-6"></a><span class="w">    </span><span class="nt">&quot;name&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-8-7"><a id="__codelineno-8-7" name="__codelineno-8-7" href="#__codelineno-8-7"></a><span class="w">      </span><span class="nt">&quot;family&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Test&quot;</span>
+</span><span id="__span-8-8"><a id="__codelineno-8-8" name="__codelineno-8-8" href="#__codelineno-8-8"></a><span class="w">    </span><span class="p">}</span>
+</span><span id="__span-8-9"><a id="__codelineno-8-9" name="__codelineno-8-9" href="#__codelineno-8-9"></a><span class="p">}</span>
+</span></code></pre></div>
+<table>
+<thead>
+<tr>
+<th>Severity</th>
+<th>Code</th>
+<th>Diagnostics</th>
+<th>Expression</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>error</td>
+<td>invalid</td>
+<td>The property name must be a JSON Array, not an Object (at Patient)</td>
+<td>Patient.name</td>
+</tr>
+</tbody>
+</table>
+<h4 id="boolean-or-numbers-not-quoted">boolean or numbers not quoted</h4>
+<p>in JSON booleans or numbers must not be quoted as objects <a href="https://test.ahdis.ch/matchboxv3/validate#resource=ewoJInJlc291cmNlVHlwZSI6ICJQYXRpZW50IiwKCSJhY3RpdmUiIDogInRydWUiCiAgfQ%3D%3D&amp;profile=http%3A%2F%2Fhl7.org%2Ffhir%2FStructureDefinition%2FPatient">example</a>:</p>
+<div class="language-http highlight"><pre><span></span><code><span id="__span-9-1"><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a><span class="nf">POST</span> <span class="nn">{{host}}/$validate?profile=http://hl7.org/fhir/StructureDefinition/Patient</span> <span class="kr">HTTP</span><span class="o">/</span><span class="m">1.1</span>
+</span><span id="__span-9-2"><a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a><span class="na">Content-Type</span><span class="o">:</span> <span class="l">application/fhir+json</span>
+</span><span id="__span-9-3"><a id="__codelineno-9-3" name="__codelineno-9-3" href="#__codelineno-9-3"></a>
+</span><span id="__span-9-4"><a id="__codelineno-9-4" name="__codelineno-9-4" href="#__codelineno-9-4"></a><span class="p">{</span>
+</span><span id="__span-9-5"><a id="__codelineno-9-5" name="__codelineno-9-5" href="#__codelineno-9-5"></a><span class="w">  </span><span class="nt">&quot;resourceType&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Patient&quot;</span><span class="p">,</span>
+</span><span id="__span-9-6"><a id="__codelineno-9-6" name="__codelineno-9-6" href="#__codelineno-9-6"></a><span class="w">  </span><span class="nt">&quot;active&quot;</span><span class="w"> </span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;true&quot;</span>
+</span><span id="__span-9-7"><a id="__codelineno-9-7" name="__codelineno-9-7" href="#__codelineno-9-7"></a><span class="p">}</span>
+</span></code></pre></div>
+<table>
+<thead>
+<tr>
+<th>Severity</th>
+<th>Code</th>
+<th>Diagnostics</th>
+<th>Expression</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>error</td>
+<td>invalid</td>
+<td>Error parsing JSON: the primitive value must be a boolean</td>
+<td>Patient.active</td>
+</tr>
+</tbody>
+</table>
+<h3 id="cardinality">Cardinality</h3>
+<p>The validator checks that the cardinality of all properties are correct, there can be min &amp; max requirements, 
+e.g. Patient.communication.language is required if you provide Patient.communication <a href="https://test.ahdis.ch/matchboxv3/validate#resource=ewoJInJlc291cmNlVHlwZSI6ICJQYXRpZW50IiwKCSJjb21tdW5pY2F0aW9uIiA6IFsgewoJCSJwcmVmZXJyZWQiOiB0cnVlCgkgIH0KCV0KICB9&amp;profile=http%3A%2F%2Fhl7.org%2Ffhir%2FStructureDefinition%2FPatient">example</a>:</p>
+<div class="language-http highlight"><pre><span></span><code><span id="__span-10-1"><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a><span class="nf">POST</span> <span class="nn">{{host}}/$validate?profile=http://hl7.org/fhir/StructureDefinition/Patient</span> <span class="kr">HTTP</span><span class="o">/</span><span class="m">1.1</span>
+</span><span id="__span-10-2"><a id="__codelineno-10-2" name="__codelineno-10-2" href="#__codelineno-10-2"></a><span class="na">Content-Type</span><span class="o">:</span> <span class="l">application/fhir+json</span>
+</span><span id="__span-10-3"><a id="__codelineno-10-3" name="__codelineno-10-3" href="#__codelineno-10-3"></a>
+</span><span id="__span-10-4"><a id="__codelineno-10-4" name="__codelineno-10-4" href="#__codelineno-10-4"></a><span class="p">{</span>
+</span><span id="__span-10-5"><a id="__codelineno-10-5" name="__codelineno-10-5" href="#__codelineno-10-5"></a><span class="w">  </span><span class="nt">&quot;resourceType&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Patient&quot;</span><span class="p">,</span>
+</span><span id="__span-10-6"><a id="__codelineno-10-6" name="__codelineno-10-6" href="#__codelineno-10-6"></a><span class="w">  </span><span class="nt">&quot;communication&quot;</span><span class="w"> </span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-10-7"><a id="__codelineno-10-7" name="__codelineno-10-7" href="#__codelineno-10-7"></a><span class="w">      </span><span class="nt">&quot;preferred&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span>
+</span><span id="__span-10-8"><a id="__codelineno-10-8" name="__codelineno-10-8" href="#__codelineno-10-8"></a><span class="w">    </span><span class="p">}</span>
+</span><span id="__span-10-9"><a id="__codelineno-10-9" name="__codelineno-10-9" href="#__codelineno-10-9"></a><span class="w">  </span><span class="p">]</span>
+</span><span id="__span-10-10"><a id="__codelineno-10-10" name="__codelineno-10-10" href="#__codelineno-10-10"></a><span class="p">}</span>
+</span></code></pre></div>
+<table>
+<thead>
+<tr>
+<th>Severity</th>
+<th>Code</th>
+<th>Diagnostics</th>
+<th>Expression</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>error</td>
+<td>structure</td>
+<td>Patient.communication.language: minimum required = 1, but only found 0 (from http://hl7.org/fhir/StructureDefinition/Patient| 4.0.1)</td>
+<td>communication[0]</td>
+</tr>
+</tbody>
+</table>
+<h3 id="value-domain">Value Domain</h3>
+<p>The validator checks that all values of all properties conform to the rules for the specified types (including checking that enumerated codes are valid).</p>
+<h4 id="invalid-content-for-boolean">invalid content for boolean</h4>
+<div class="language-http highlight"><pre><span></span><code><span id="__span-11-1"><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a><span class="nf">POST</span> <span class="nn">{{host}}/$validate?profile=http://hl7.org/fhir/StructureDefinition/Patient</span> <span class="kr">HTTP</span><span class="o">/</span><span class="m">1.1</span>
+</span><span id="__span-11-2"><a id="__codelineno-11-2" name="__codelineno-11-2" href="#__codelineno-11-2"></a><span class="na">Content-Type</span><span class="o">:</span> <span class="l">application/fhir+json</span>
+</span><span id="__span-11-3"><a id="__codelineno-11-3" name="__codelineno-11-3" href="#__codelineno-11-3"></a>
+</span><span id="__span-11-4"><a id="__codelineno-11-4" name="__codelineno-11-4" href="#__codelineno-11-4"></a><span class="p">{</span>
+</span><span id="__span-11-5"><a id="__codelineno-11-5" name="__codelineno-11-5" href="#__codelineno-11-5"></a><span class="w">  </span><span class="nt">&quot;resourceType&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Patient&quot;</span><span class="p">,</span>
+</span><span id="__span-11-6"><a id="__codelineno-11-6" name="__codelineno-11-6" href="#__codelineno-11-6"></a><span class="w">  </span><span class="nt">&quot;active&quot;</span><span class="w"> </span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="err">or</span><span class="kc">false</span>
+</span><span id="__span-11-7"><a id="__codelineno-11-7" name="__codelineno-11-7" href="#__codelineno-11-7"></a><span class="p">}</span>
+</span></code></pre></div>
+<table>
+<thead>
+<tr>
+<th>Severity</th>
+<th>Code</th>
+<th>Diagnostics</th>
+<th>Expression</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>error</td>
+<td>invalid</td>
+<td>The JSON property 'active' has no quotes around the value of the property 'trueorfalse'</td>
+<td>Patient</td>
+</tr>
+<tr>
+<td>error</td>
+<td>invalid</td>
+<td>Error parsing JSON: the primitive value must be a boolean</td>
+<td>Patient.active</td>
+</tr>
+<tr>
+<td>error</td>
+<td>invalid</td>
+<td>Boolean values must be 'true' or 'false'</td>
+<td>Patient.active</td>
+</tr>
+</tbody>
+</table>
+<h2 id="semantic-validation">Semantic validation</h2>
+<p>The validator checks also the validity of the codes and if the codes are appropriate for the bounded ValueSet according to the binding strength.
+For this a validator needs the support of a terminology server which provides a <a href="https://hl7.org/fhir/terminology-service.html#4.7">terminology service</a>. </p>
+<p>matchbox can use different terminology severs:
+- tx.fhir.org which is the default terminology sever used by the FHIR validator
+- Ontoserver as of version 6.15.0 
+- matchbox provides an internal terminology server, but this internal terminology server has only limited terminology capabilities, e.g. it will not validate display names or it can't expand intensional ValueSets.</p>
+<h3 id="invalid-code-for-gender">invalid code for gender</h3>
+<p><a href="https://test.ahdis.ch/matchboxv3/validate#resource=ewoJInJlc291cmNlVHlwZSI6ICJQYXRpZW50IiwKCSJnZW5kZXIiIDogIj8iCiAgfQ%3D%3D&amp;profile=http%3A%2F%2Fhl7.org%2Ffhir%2FStructureDefinition%2FPatient">example</a>
+<div class="language-http highlight"><pre><span></span><code><span id="__span-12-1"><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a><span class="nf">POST</span> <span class="nn">{{host}}/$validate?profile=http://hl7.org/fhir/StructureDefinition/Patient</span> <span class="kr">HTTP</span><span class="o">/</span><span class="m">1.1</span>
+</span><span id="__span-12-2"><a id="__codelineno-12-2" name="__codelineno-12-2" href="#__codelineno-12-2"></a><span class="na">Content-Type</span><span class="o">:</span> <span class="l">application/fhir+json</span>
+</span><span id="__span-12-3"><a id="__codelineno-12-3" name="__codelineno-12-3" href="#__codelineno-12-3"></a>
+</span><span id="__span-12-4"><a id="__codelineno-12-4" name="__codelineno-12-4" href="#__codelineno-12-4"></a><span class="p">{</span>
+</span><span id="__span-12-5"><a id="__codelineno-12-5" name="__codelineno-12-5" href="#__codelineno-12-5"></a><span class="w">  </span><span class="nt">&quot;resourceType&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Patient&quot;</span><span class="p">,</span>
+</span><span id="__span-12-6"><a id="__codelineno-12-6" name="__codelineno-12-6" href="#__codelineno-12-6"></a><span class="w">  </span><span class="nt">&quot;gender&quot;</span><span class="w"> </span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;?&quot;</span>
+</span><span id="__span-12-7"><a id="__codelineno-12-7" name="__codelineno-12-7" href="#__codelineno-12-7"></a><span class="p">}</span>
+</span></code></pre></div></p>
+<table>
+<thead>
+<tr>
+<th>Severity</th>
+<th>Code</th>
+<th>Diagnostics</th>
+<th>Expression</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>error</td>
+<td>code-invalid</td>
+<td>The value provided ('?') was not found in the value set 'AdministrativeGender' (http://hl7.org/fhir/ValueSet/administrative-gender|4.0.1), and a code is required from this value set  (error message = The System URI could not be determined for the code '?' in the ValueSet 'http://hl7.org/fhir/ValueSet/administrative-gender|4.0.1'; The provided code '#?' was not found in the value set 'http://hl7.org/fhir/ValueSet/administrative-gender|4.0.1')</td>
+<td>Patient.gender</td>
+</tr>
+</tbody>
+</table>
+<h3 id="intensional-valueset">intensional ValueSet</h3>
+<p>ValueSets can be <a href="https://hl7.org/fhir/valueset.html#int-ext">intensional</a> which requires a terminology server to expand them or verify if a code is valid within. E.g. see <a href="https://fhir.ch/ig/ch-rad-order/ValueSet-ch-rad-order-caveat-condition.html">Caveat Condition</a> where the ValueSet includes codes from http://snomed.info/sct where concept is-a 397578001 (Device in situ (finding)).</p>
+<p>validation with <a href="https://test.ahdis.ch/matchboxv3/validate#resource=ew0KICAicmVzb3VyY2VUeXBlIiA6ICJDb25kaXRpb24iLA0KICAiaWQiIDogIkNhdmVhdERldmljZUNhcmRpYWNQYWNlbWFrZXIiLA0KICAibWV0YSIgOiB7DQogICAgInByb2ZpbGUiIDogWyJodHRwOi8vZmhpci5jaC9pZy9jaC1yYWQtb3JkZXIvU3RydWN0dXJlRGVmaW5pdGlvbi9jaC1yYWQtb3JkZXItY2F2ZWF0LWNvbmRpdGlvbiJdDQogIH0sDQogICJ0ZXh0IiA6IHsNCiAgICAic3RhdHVzIiA6ICJleHRlbnNpb25zIiwNCiAgICAiZGl2IiA6ICI8ZGl2IHhtbG5zPVwiaHR0cDovL3d3dy53My5vcmcvMTk5OS94aHRtbFwiPjxwPjxiPkdlbmVyYXRlZCBOYXJyYXRpdmU6IENvbmRpdGlvbjwvYj48YSBuYW1lPVwiQ2F2ZWF0RGV2aWNlQ2FyZGlhY1BhY2VtYWtlclwiPiA8L2E%2BPGEgbmFtZT1cImhjQ2F2ZWF0RGV2aWNlQ2FyZGlhY1BhY2VtYWtlclwiPiA8L2E%2BPC9wPjxkaXYgc3R5bGU9XCJkaXNwbGF5OiBpbmxpbmUtYmxvY2s7IGJhY2tncm91bmQtY29sb3I6ICNkOWUwZTc7IHBhZGRpbmc6IDZweDsgbWFyZ2luOiA0cHg7IGJvcmRlcjogMXB4IHNvbGlkICM4ZGExYjQ7IGJvcmRlci1yYWRpdXM6IDVweDsgbGluZS1oZWlnaHQ6IDYwJVwiPjxwIHN0eWxlPVwibWFyZ2luLWJvdHRvbTogMHB4XCI%2BUmVzb3VyY2VDb25kaXRpb24gJnF1b3Q7Q2F2ZWF0RGV2aWNlQ2FyZGlhY1BhY2VtYWtlciZxdW90OyA8L3A%2BPHAgc3R5bGU9XCJtYXJnaW4tYm90dG9tOiAwcHhcIj5Qcm9maWxlOiA8YSBocmVmPVwiU3RydWN0dXJlRGVmaW5pdGlvbi1jaC1yYWQtb3JkZXItY2F2ZWF0LWNvbmRpdGlvbi5odG1sXCI%2BQ0ggUkFELU9yZGVyIENhdmVhdCBDb25kaXRpb248L2E%2BPC9wPjwvZGl2PjxwPjxiPkNIIFJBRC1PcmRlciBDYXZlYXQgVHlwZTwvYj46IERldmljZSBpbiBzaXR1IChmaW5kaW5nKSAoRGV0YWlsczogU05PV01FRCBDVCBjb2RlIDM5NzU3ODAwMSA9ICdEZXZpY2UgaW4gc2l0dSAoZmluZGluZyknLCBzdGF0ZWQgYXMgJ0RldmljZSBpbiBzaXR1IChmaW5kaW5nKScpPC9wPjxwPjxiPkNIIFJBRC1PcmRlciBDYXZlYXQgVHlwZTwvYj46IFByZXNlbnQgKHF1YWxpZmllciB2YWx1ZSkgKERldGFpbHM6IFNOT1dNRUQgQ1QgY29kZSA1MjEwMTAwNCA9ICdQcmVzZW50Jywgc3RhdGVkIGFzICdQcmVzZW50IChxdWFsaWZpZXIgdmFsdWUpJyk8L3A%2BPHA%2BPGI%2BY2xpbmljYWxTdGF0dXM8L2I%2BOiBBY3RpdmUgPHNwYW4gc3R5bGU9XCJiYWNrZ3JvdW5kOiBMaWdodEdvbGRlblJvZFllbGxvdzsgbWFyZ2luOiA0cHg7IGJvcmRlcjogMXB4IHNvbGlkIGtoYWtpXCI%2BICg8YSBocmVmPVwiaHR0cDovL3Rlcm1pbm9sb2d5LmhsNy5vcmcvNS41LjAvQ29kZVN5c3RlbS1jb25kaXRpb24tY2xpbmljYWwuaHRtbFwiPkNvbmRpdGlvbiBDbGluaWNhbCBTdGF0dXMgQ29kZXM8L2E%2BI2FjdGl2ZSk8L3NwYW4%2BPC9wPjxwPjxiPmNhdGVnb3J5PC9iPjogUHJvYmxlbSBMaXN0IEl0ZW0gPHNwYW4gc3R5bGU9XCJiYWNrZ3JvdW5kOiBMaWdodEdvbGRlblJvZFllbGxvdzsgbWFyZ2luOiA0cHg7IGJvcmRlcjogMXB4IHNvbGlkIGtoYWtpXCI%2BICg8YSBocmVmPVwiaHR0cDovL3Rlcm1pbm9sb2d5LmhsNy5vcmcvNS41LjAvQ29kZVN5c3RlbS1jb25kaXRpb24tY2F0ZWdvcnkuaHRtbFwiPkNvbmRpdGlvbiBDYXRlZ29yeSBDb2RlczwvYT4jcHJvYmxlbS1saXN0LWl0ZW0pPC9zcGFuPjwvcD48cD48Yj5jb2RlPC9iPjogQ2FyZGlhYyBwYWNlbWFrZXIgaW4gc2l0dSA8c3BhbiBzdHlsZT1cImJhY2tncm91bmQ6IExpZ2h0R29sZGVuUm9kWWVsbG93OyBtYXJnaW46IDRweDsgYm9yZGVyOiAxcHggc29saWQga2hha2lcIj4gKDxhIGhyZWY9XCJodHRwczovL2Jyb3dzZXIuaWh0c2RvdG9vbHMub3JnL1wiPlNOT1dNRUQgQ1Q8L2E%2BIzQ0MTUwOTAwMik8L3NwYW4%2BPC9wPjxwPjxiPnN1YmplY3Q8L2I%2BOiA8YSBocmVmPVwiUGF0aWVudC1TVWZmZXJlci5odG1sXCI%2BUGF0aWVudC9TVWZmZXJlcjwvYT4gJnF1b3Q7IFVGRkVSRVImcXVvdDs8L3A%2BPC9kaXY%2BIg0KICB9LA0KICAiZXh0ZW5zaW9uIiA6IFt7DQogICAgInVybCIgOiAiaHR0cDovL2ZoaXIuY2gvaWcvY2gtcmFkLW9yZGVyL1N0cnVjdHVyZURlZmluaXRpb24vY2gtcmFkLW9yZGVyLWNhdmVhdC10eXBlIiwNCiAgICAidmFsdWVDb2RpbmciIDogew0KICAgICAgInN5c3RlbSIgOiAiaHR0cDovL3Nub21lZC5pbmZvL3NjdCIsDQogICAgICAiY29kZSIgOiAiMzk3NTc4MDAxIiwNCiAgICAgICJkaXNwbGF5IiA6ICJEZXZpY2UgaW4gc2l0dSAoZmluZGluZykiDQogICAgfQ0KICB9LA0KICB7DQogICAgInVybCIgOiAiaHR0cDovL2ZoaXIuY2gvaWcvY2gtcmFkLW9yZGVyL1N0cnVjdHVyZURlZmluaXRpb24vY2gtcmFkLW9yZGVyLXF1YWxpZmllci12YWx1ZSIsDQogICAgInZhbHVlQ29kaW5nIiA6IHsNCiAgICAgICJzeXN0ZW0iIDogImh0dHA6Ly9zbm9tZWQuaW5mby9zY3QiLA0KICAgICAgImNvZGUiIDogIjUyMTAxMDA0IiwNCiAgICAgICJkaXNwbGF5IiA6ICJQcmVzZW50IChxdWFsaWZpZXIgdmFsdWUpIg0KICAgIH0NCiAgfV0sDQogICJjbGluaWNhbFN0YXR1cyIgOiB7DQogICAgImNvZGluZyIgOiBbew0KICAgICAgInN5c3RlbSIgOiAiaHR0cDovL3Rlcm1pbm9sb2d5LmhsNy5vcmcvQ29kZVN5c3RlbS9jb25kaXRpb24tY2xpbmljYWwiLA0KICAgICAgImNvZGUiIDogImFjdGl2ZSINCiAgICB9XQ0KICB9LA0KICAiY2F0ZWdvcnkiIDogW3sNCiAgICAiY29kaW5nIiA6IFt7DQogICAgICAic3lzdGVtIiA6ICJodHRwOi8vdGVybWlub2xvZ3kuaGw3Lm9yZy9Db2RlU3lzdGVtL2NvbmRpdGlvbi1jYXRlZ29yeSIsDQogICAgICAiY29kZSIgOiAicHJvYmxlbS1saXN0LWl0ZW0iLA0KICAgICAgImRpc3BsYXkiIDogIlByb2JsZW0gTGlzdCBJdGVtIg0KICAgIH1dDQogIH1dLA0KICAiY29kZSIgOiB7DQogICAgImNvZGluZyIgOiBbew0KICAgICAgInN5c3RlbSIgOiAiaHR0cDovL3Nub21lZC5pbmZvL3NjdCIsDQogICAgICAiY29kZSIgOiAiNDQ0NDQ0NDQ0IiwNCiAgICAgICJkaXNwbGF5IiA6ICJub3RpbnZhbHVlc2V0Ig0KICAgIH1dDQogIH0sDQogICJzdWJqZWN0IiA6IHsNCiAgICAicmVmZXJlbmNlIiA6ICJQYXRpZW50L1NVZmZlcmVyIg0KICB9DQp9&amp;profile=http%3A%2F%2Ffhir.ch%2Fig%2Fch-rad-order%2FStructureDefinition%2Fch-rad-order-caveat-condition&amp;txServer=http%3A%2F%2Ftx.fhir.org">tx.fhir.org</a>:</p>
+<table>
+<thead>
+<tr>
+<th>Severity</th>
+<th>Code</th>
+<th>Diagnostics</th>
+<th>Expression</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>error</td>
+<td>code-invalid</td>
+<td>Unknown code '444444444' in the CodeSystem 'http://snomed.info/sct' version 'http://snomed.info/sct/900000000000207008/version/20240801'</td>
+<td>Condition.code.coding[0].code</td>
+</tr>
+<tr>
+<td>error</td>
+<td>code-invalid</td>
+<td>None of the codings provided are in the value set 'Caveat Condition' (http://fhir.ch/ig/ch-rad-order/ValueSet/ch-rad-order-caveat-condition|2.0.0-ballot), and a coding from this value set is required) (codes = http://snomed.info/sct#444444444)"</td>
+<td>Condition.code</td>
+</tr>
+</tbody>
+</table>
+<p>validation with matchbox's internal terminology server will not return an error, because the intensional ValueSet will be <a href="https://test.ahdis.ch/matchboxv3/validate#resource=ew0KICAicmVzb3VyY2VUeXBlIiA6ICJDb25kaXRpb24iLA0KICAiaWQiIDogIkNhdmVhdERldmljZUNhcmRpYWNQYWNlbWFrZXIiLA0KICAibWV0YSIgOiB7DQogICAgInByb2ZpbGUiIDogWyJodHRwOi8vZmhpci5jaC9pZy9jaC1yYWQtb3JkZXIvU3RydWN0dXJlRGVmaW5pdGlvbi9jaC1yYWQtb3JkZXItY2F2ZWF0LWNvbmRpdGlvbiJdDQogIH0sDQogICJ0ZXh0IiA6IHsNCiAgICAic3RhdHVzIiA6ICJleHRlbnNpb25zIiwNCiAgICAiZGl2IiA6ICI8ZGl2IHhtbG5zPVwiaHR0cDovL3d3dy53My5vcmcvMTk5OS94aHRtbFwiPjxwPjxiPkdlbmVyYXRlZCBOYXJyYXRpdmU6IENvbmRpdGlvbjwvYj48YSBuYW1lPVwiQ2F2ZWF0RGV2aWNlQ2FyZGlhY1BhY2VtYWtlclwiPiA8L2E%2BPGEgbmFtZT1cImhjQ2F2ZWF0RGV2aWNlQ2FyZGlhY1BhY2VtYWtlclwiPiA8L2E%2BPC9wPjxkaXYgc3R5bGU9XCJkaXNwbGF5OiBpbmxpbmUtYmxvY2s7IGJhY2tncm91bmQtY29sb3I6ICNkOWUwZTc7IHBhZGRpbmc6IDZweDsgbWFyZ2luOiA0cHg7IGJvcmRlcjogMXB4IHNvbGlkICM4ZGExYjQ7IGJvcmRlci1yYWRpdXM6IDVweDsgbGluZS1oZWlnaHQ6IDYwJVwiPjxwIHN0eWxlPVwibWFyZ2luLWJvdHRvbTogMHB4XCI%2BUmVzb3VyY2VDb25kaXRpb24gJnF1b3Q7Q2F2ZWF0RGV2aWNlQ2FyZGlhY1BhY2VtYWtlciZxdW90OyA8L3A%2BPHAgc3R5bGU9XCJtYXJnaW4tYm90dG9tOiAwcHhcIj5Qcm9maWxlOiA8YSBocmVmPVwiU3RydWN0dXJlRGVmaW5pdGlvbi1jaC1yYWQtb3JkZXItY2F2ZWF0LWNvbmRpdGlvbi5odG1sXCI%2BQ0ggUkFELU9yZGVyIENhdmVhdCBDb25kaXRpb248L2E%2BPC9wPjwvZGl2PjxwPjxiPkNIIFJBRC1PcmRlciBDYXZlYXQgVHlwZTwvYj46IERldmljZSBpbiBzaXR1IChmaW5kaW5nKSAoRGV0YWlsczogU05PV01FRCBDVCBjb2RlIDM5NzU3ODAwMSA9ICdEZXZpY2UgaW4gc2l0dSAoZmluZGluZyknLCBzdGF0ZWQgYXMgJ0RldmljZSBpbiBzaXR1IChmaW5kaW5nKScpPC9wPjxwPjxiPkNIIFJBRC1PcmRlciBDYXZlYXQgVHlwZTwvYj46IFByZXNlbnQgKHF1YWxpZmllciB2YWx1ZSkgKERldGFpbHM6IFNOT1dNRUQgQ1QgY29kZSA1MjEwMTAwNCA9ICdQcmVzZW50Jywgc3RhdGVkIGFzICdQcmVzZW50IChxdWFsaWZpZXIgdmFsdWUpJyk8L3A%2BPHA%2BPGI%2BY2xpbmljYWxTdGF0dXM8L2I%2BOiBBY3RpdmUgPHNwYW4gc3R5bGU9XCJiYWNrZ3JvdW5kOiBMaWdodEdvbGRlblJvZFllbGxvdzsgbWFyZ2luOiA0cHg7IGJvcmRlcjogMXB4IHNvbGlkIGtoYWtpXCI%2BICg8YSBocmVmPVwiaHR0cDovL3Rlcm1pbm9sb2d5LmhsNy5vcmcvNS41LjAvQ29kZVN5c3RlbS1jb25kaXRpb24tY2xpbmljYWwuaHRtbFwiPkNvbmRpdGlvbiBDbGluaWNhbCBTdGF0dXMgQ29kZXM8L2E%2BI2FjdGl2ZSk8L3NwYW4%2BPC9wPjxwPjxiPmNhdGVnb3J5PC9iPjogUHJvYmxlbSBMaXN0IEl0ZW0gPHNwYW4gc3R5bGU9XCJiYWNrZ3JvdW5kOiBMaWdodEdvbGRlblJvZFllbGxvdzsgbWFyZ2luOiA0cHg7IGJvcmRlcjogMXB4IHNvbGlkIGtoYWtpXCI%2BICg8YSBocmVmPVwiaHR0cDovL3Rlcm1pbm9sb2d5LmhsNy5vcmcvNS41LjAvQ29kZVN5c3RlbS1jb25kaXRpb24tY2F0ZWdvcnkuaHRtbFwiPkNvbmRpdGlvbiBDYXRlZ29yeSBDb2RlczwvYT4jcHJvYmxlbS1saXN0LWl0ZW0pPC9zcGFuPjwvcD48cD48Yj5jb2RlPC9iPjogQ2FyZGlhYyBwYWNlbWFrZXIgaW4gc2l0dSA8c3BhbiBzdHlsZT1cImJhY2tncm91bmQ6IExpZ2h0R29sZGVuUm9kWWVsbG93OyBtYXJnaW46IDRweDsgYm9yZGVyOiAxcHggc29saWQga2hha2lcIj4gKDxhIGhyZWY9XCJodHRwczovL2Jyb3dzZXIuaWh0c2RvdG9vbHMub3JnL1wiPlNOT1dNRUQgQ1Q8L2E%2BIzQ0MTUwOTAwMik8L3NwYW4%2BPC9wPjxwPjxiPnN1YmplY3Q8L2I%2BOiA8YSBocmVmPVwiUGF0aWVudC1TVWZmZXJlci5odG1sXCI%2BUGF0aWVudC9TVWZmZXJlcjwvYT4gJnF1b3Q7IFVGRkVSRVImcXVvdDs8L3A%2BPC9kaXY%2BIg0KICB9LA0KICAiZXh0ZW5zaW9uIiA6IFt7DQogICAgInVybCIgOiAiaHR0cDovL2ZoaXIuY2gvaWcvY2gtcmFkLW9yZGVyL1N0cnVjdHVyZURlZmluaXRpb24vY2gtcmFkLW9yZGVyLWNhdmVhdC10eXBlIiwNCiAgICAidmFsdWVDb2RpbmciIDogew0KICAgICAgInN5c3RlbSIgOiAiaHR0cDovL3Nub21lZC5pbmZvL3NjdCIsDQogICAgICAiY29kZSIgOiAiMzk3NTc4MDAxIiwNCiAgICAgICJkaXNwbGF5IiA6ICJEZXZpY2UgaW4gc2l0dSAoZmluZGluZykiDQogICAgfQ0KICB9LA0KICB7DQogICAgInVybCIgOiAiaHR0cDovL2ZoaXIuY2gvaWcvY2gtcmFkLW9yZGVyL1N0cnVjdHVyZURlZmluaXRpb24vY2gtcmFkLW9yZGVyLXF1YWxpZmllci12YWx1ZSIsDQogICAgInZhbHVlQ29kaW5nIiA6IHsNCiAgICAgICJzeXN0ZW0iIDogImh0dHA6Ly9zbm9tZWQuaW5mby9zY3QiLA0KICAgICAgImNvZGUiIDogIjUyMTAxMDA0IiwNCiAgICAgICJkaXNwbGF5IiA6ICJQcmVzZW50IChxdWFsaWZpZXIgdmFsdWUpIg0KICAgIH0NCiAgfV0sDQogICJjbGluaWNhbFN0YXR1cyIgOiB7DQogICAgImNvZGluZyIgOiBbew0KICAgICAgInN5c3RlbSIgOiAiaHR0cDovL3Rlcm1pbm9sb2d5LmhsNy5vcmcvQ29kZVN5c3RlbS9jb25kaXRpb24tY2xpbmljYWwiLA0KICAgICAgImNvZGUiIDogImFjdGl2ZSINCiAgICB9XQ0KICB9LA0KICAiY2F0ZWdvcnkiIDogW3sNCiAgICAiY29kaW5nIiA6IFt7DQogICAgICAic3lzdGVtIiA6ICJodHRwOi8vdGVybWlub2xvZ3kuaGw3Lm9yZy9Db2RlU3lzdGVtL2NvbmRpdGlvbi1jYXRlZ29yeSIsDQogICAgICAiY29kZSIgOiAicHJvYmxlbS1saXN0LWl0ZW0iLA0KICAgICAgImRpc3BsYXkiIDogIlByb2JsZW0gTGlzdCBJdGVtIg0KICAgIH1dDQogIH1dLA0KICAiY29kZSIgOiB7DQogICAgImNvZGluZyIgOiBbew0KICAgICAgInN5c3RlbSIgOiAiaHR0cDovL3Nub21lZC5pbmZvL3NjdCIsDQogICAgICAiY29kZSIgOiAiNDQ0NDQ0NDQ0IiwNCiAgICAgICJkaXNwbGF5IiA6ICJub3RpbnZhbHVlc2V0Ig0KICAgIH1dDQogIH0sDQogICJzdWJqZWN0IiA6IHsNCiAgICAicmVmZXJlbmNlIiA6ICJQYXRpZW50L1NVZmZlcmVyIg0KICB9DQp9&amp;profile=http%3A%2F%2Ffhir.ch%2Fig%2Fch-rad-order%2FStructureDefinition%2Fch-rad-order-caveat-condition&amp;txServer=http%3A%2F%2Flocalhost%3A8080%2Fmatchboxv3%2Ffhir">ignored</a> and there is no validation of codes from SNOMED CT or LOINC (CodeSystems not provided directly through the HL7 FHIR ecosystem).</p>
+<h2 id="constraints-by-the-fhir-specification">Constraints by the FHIR Specification</h2>
+<p>FHIR adds additional constraints to resources, e.g: https://hl7.org/fhir/patient.html#invs adds a requirement that a contact should have at least a contact's details or a reference to an organization (name.exists() or telecom.exists() or address.exists() or organization.exists()). <a href="https://test.ahdis.ch/matchboxv3/validate#resource=ewoJInJlc291cmNlVHlwZSI6ICJQYXRpZW50IiwKICAgImNvbnRhY3QiIDogW3sKICAgICJyZWxhdGlvbnNoaXAiIDogW3sKICAgICAgImNvZGluZyIgOiBbCiAgICAgIHsKICAgICAgICAic3lzdGVtIiA6ICJodHRwOi8vdGVybWlub2xvZ3kuaGw3Lm9yZy9Db2RlU3lzdGVtL3YyLTAxMzEiLAogICAgICAgICJjb2RlIiA6ICJOIgogICAgICB9CiAgICAgIF0KICAgIH1dCiAgfV0KfQ%3D%3D&amp;profile=http%3A%2F%2Fhl7.org%2Ffhir%2FStructureDefinition%2FPatient">example</a></p>
+<div class="language-http highlight"><pre><span></span><code><span id="__span-13-1"><a id="__codelineno-13-1" name="__codelineno-13-1" href="#__codelineno-13-1"></a><span class="nf">POST</span> <span class="nn">{{host}}/$validate?profile=http://hl7.org/fhir/StructureDefinition/Patient</span> <span class="kr">HTTP</span><span class="o">/</span><span class="m">1.1</span>
+</span><span id="__span-13-2"><a id="__codelineno-13-2" name="__codelineno-13-2" href="#__codelineno-13-2"></a><span class="na">Content-Type</span><span class="o">:</span> <span class="l">application/fhir+json</span>
+</span><span id="__span-13-3"><a id="__codelineno-13-3" name="__codelineno-13-3" href="#__codelineno-13-3"></a>
+</span><span id="__span-13-4"><a id="__codelineno-13-4" name="__codelineno-13-4" href="#__codelineno-13-4"></a><span class="p">{</span>
+</span><span id="__span-13-5"><a id="__codelineno-13-5" name="__codelineno-13-5" href="#__codelineno-13-5"></a><span class="w">    </span><span class="nt">&quot;resourceType&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Patient&quot;</span><span class="p">,</span>
+</span><span id="__span-13-6"><a id="__codelineno-13-6" name="__codelineno-13-6" href="#__codelineno-13-6"></a><span class="w">   </span><span class="nt">&quot;contact&quot;</span><span class="w"> </span><span class="p">:</span><span class="w"> </span><span class="p">[{</span>
+</span><span id="__span-13-7"><a id="__codelineno-13-7" name="__codelineno-13-7" href="#__codelineno-13-7"></a><span class="w">    </span><span class="nt">&quot;relationship&quot;</span><span class="w"> </span><span class="p">:</span><span class="w"> </span><span class="p">[{</span>
+</span><span id="__span-13-8"><a id="__codelineno-13-8" name="__codelineno-13-8" href="#__codelineno-13-8"></a><span class="w">      </span><span class="nt">&quot;coding&quot;</span><span class="w"> </span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+</span><span id="__span-13-9"><a id="__codelineno-13-9" name="__codelineno-13-9" href="#__codelineno-13-9"></a><span class="w">      </span><span class="p">{</span>
+</span><span id="__span-13-10"><a id="__codelineno-13-10" name="__codelineno-13-10" href="#__codelineno-13-10"></a><span class="w">        </span><span class="nt">&quot;system&quot;</span><span class="w"> </span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;http://terminology.hl7.org/CodeSystem/v2-0131&quot;</span><span class="p">,</span>
+</span><span id="__span-13-11"><a id="__codelineno-13-11" name="__codelineno-13-11" href="#__codelineno-13-11"></a><span class="w">        </span><span class="nt">&quot;code&quot;</span><span class="w"> </span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;N&quot;</span>
+</span><span id="__span-13-12"><a id="__codelineno-13-12" name="__codelineno-13-12" href="#__codelineno-13-12"></a><span class="w">      </span><span class="p">}</span>
+</span><span id="__span-13-13"><a id="__codelineno-13-13" name="__codelineno-13-13" href="#__codelineno-13-13"></a><span class="w">      </span><span class="p">]</span>
+</span><span id="__span-13-14"><a id="__codelineno-13-14" name="__codelineno-13-14" href="#__codelineno-13-14"></a><span class="w">    </span><span class="p">}]</span>
+</span><span id="__span-13-15"><a id="__codelineno-13-15" name="__codelineno-13-15" href="#__codelineno-13-15"></a><span class="w">  </span><span class="p">}]</span>
+</span><span id="__span-13-16"><a id="__codelineno-13-16" name="__codelineno-13-16" href="#__codelineno-13-16"></a><span class="p">}</span>
+</span></code></pre></div>
+<table>
+<thead>
+<tr>
+<th>Severity</th>
+<th>Code</th>
+<th>Diagnostics</th>
+<th>Expression</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>error</td>
+<td>invariant</td>
+<td>Constraint failed: pat-1: 'SHALL at least contain a contact's details or a reference to an organization'</td>
+<td>Patient.contact[0]</td>
+</tr>
+</tbody>
+</table>
+<h2 id="constraints-by-fhir-implementation-guides">Constraints by FHIR Implementation Guides</h2>
+<h3 id="additional-rules-for-fhir-implementation-guides">Additional rules for FHIR implementation guides</h3>
+<p>FHIR Implementation guides can add additional rules and you can validate if those rules are checked, by specifying the profile for the validation where the rules are defined:</p>
+<p>e.g. in FHIR CH Core it is defined that <a href="https://fhir.ch/ig/ch-core/StructureDefinition-ch-core-patient-epr.html">CH Core Patient EPR</a> is required to have at least one identifier, name and birthDate. If you <a href="https://test.ahdis.ch/matchboxv3/validate#resource=ewoJInJlc291cmNlVHlwZSI6ICJQYXRpZW50Igp9&amp;profile=http%3A%2F%2Fhl7.org%2Ffhir%2FStructureDefinition%2FPatient">validate</a> an empty patient resource against the base profile you wont get any errors:</p>
+<div class="language-http highlight"><pre><span></span><code><span id="__span-14-1"><a id="__codelineno-14-1" name="__codelineno-14-1" href="#__codelineno-14-1"></a><span class="nf">POST</span> <span class="nn">{{host}}/$validate?profile=http://hl7.org/fhir/StructureDefinition/Patient</span> <span class="kr">HTTP</span><span class="o">/</span><span class="m">1.1</span>
+</span><span id="__span-14-2"><a id="__codelineno-14-2" name="__codelineno-14-2" href="#__codelineno-14-2"></a><span class="na">Content-Type</span><span class="o">:</span> <span class="l">application/fhir+json</span>
+</span><span id="__span-14-3"><a id="__codelineno-14-3" name="__codelineno-14-3" href="#__codelineno-14-3"></a>
+</span><span id="__span-14-4"><a id="__codelineno-14-4" name="__codelineno-14-4" href="#__codelineno-14-4"></a><span class="p">{</span>
+</span><span id="__span-14-5"><a id="__codelineno-14-5" name="__codelineno-14-5" href="#__codelineno-14-5"></a><span class="w">    </span><span class="nt">&quot;resourceType&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Patient&quot;</span>
+</span><span id="__span-14-6"><a id="__codelineno-14-6" name="__codelineno-14-6" href="#__codelineno-14-6"></a><span class="p">}</span>
+</span></code></pre></div>
+<table>
+<thead>
+<tr>
+<th>Severity</th>
+<th>Code</th>
+<th>Diagnostics</th>
+<th>Expression</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>information</td>
+<td>information</td>
+<td>No fatal or error issues detected, the validation has passed.</td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<p>however if you <a href="https://test.ahdis.ch/matchboxv3/validate#resource=ewoJInJlc291cmNlVHlwZSI6ICJQYXRpZW50Igp9&amp;profile=http%3A%2F%2Ffhir.ch%2Fig%2Fch-core%2FStructureDefinition%2Fch-core-patient-epr">validate</a> it against <a href="https://fhir.ch/ig/ch-core/StructureDefinition-ch-core-patient-epr.html">CH Core Patient EPR </a> you will get multiple errors:</p>
+<div class="language-http highlight"><pre><span></span><code><span id="__span-15-1"><a id="__codelineno-15-1" name="__codelineno-15-1" href="#__codelineno-15-1"></a><span class="nf">POST</span> <span class="nn">{{host}}/$validate?profile=http://fhir.ch/ig/ch-core/StructureDefinition/ch-core-patient-epr</span> <span class="kr">HTTP</span><span class="o">/</span><span class="m">1.1</span>
+</span><span id="__span-15-2"><a id="__codelineno-15-2" name="__codelineno-15-2" href="#__codelineno-15-2"></a><span class="na">Content-Type</span><span class="o">:</span> <span class="l">application/fhir+json</span>
+</span><span id="__span-15-3"><a id="__codelineno-15-3" name="__codelineno-15-3" href="#__codelineno-15-3"></a>
+</span><span id="__span-15-4"><a id="__codelineno-15-4" name="__codelineno-15-4" href="#__codelineno-15-4"></a><span class="p">{</span>
+</span><span id="__span-15-5"><a id="__codelineno-15-5" name="__codelineno-15-5" href="#__codelineno-15-5"></a><span class="w">    </span><span class="nt">&quot;resourceType&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Patient&quot;</span>
+</span><span id="__span-15-6"><a id="__codelineno-15-6" name="__codelineno-15-6" href="#__codelineno-15-6"></a><span class="p">}</span>
+</span></code></pre></div>
+<table>
+<thead>
+<tr>
+<th>Severity</th>
+<th>Code</th>
+<th>Diagnostics</th>
+<th>Expression</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>error</td>
+<td>structure</td>
+<td>Patient.identifier: minimum required = 1, but only found 0 (from http://fhir.ch/ig/ch-core/StructureDefinition/ch-core-patient-epr|5.0.0-ballot)</td>
+<td>Patient</td>
+</tr>
+<tr>
+<td>error</td>
+<td>structure</td>
+<td>Patient.gender: minimum required = 1, but only found 0 (from http://fhir.ch/ig/ch-core/StructureDefinition/ch-core-patient-epr|5.0.0-ballot)</td>
+<td>Patient</td>
+</tr>
+<tr>
+<td>error</td>
+<td>structure</td>
+<td>Patient.birthDate: minimum required = 1, but only found 0 (from http://fhir.ch/ig/ch-core/StructureDefinition/ch-core-patient-epr|5.0.0-ballot)</td>
+<td>Patient</td>
+</tr>
+</tbody>
+</table>
+<h3 id="slicing-in-fhir-documents">Slicing in FHIR documents</h3>
+<p>One common feature of constraining FHIR documents (FHIR resource Bundle with type document) is to specify a document profile (e.g. <a href="https://hl7.org/fhir/uv/ips/StructureDefinition-Bundle-uv-ips.html">IPS</a>). The document profile will then specify the entries which are allowed to appear. </p>
+<p>In a FHIR document the first resource entry needs to be a FHIR Resource Composition, for a specific FHIR document there will be a profile for this Composition (e.g <a href="https://hl7.org/fhir/uv/ips/StructureDefinition-Composition-uv-ips.html">IPS Composition</a>, followed by other resources. </p>
+<p>This is expressed with <a href="https://hl7.org/fhir/profiling.html#slicing">slicing</a>, the Bundle.entry elements are sliced and the document profile says which resources are to be expected in this bundle.entry elements (e.g. at least that Composition defined above). Usually this slices are done on resource/profile and specifying that the Composition needs to appear. For IPS it requires also a Patient resource and defines profiles for optional resources according to the IPS requirements).</p>
+<p>A FHIR document has different sections (usually coded by a LOINC code) defined in the Composition resource, and within those sections you will have references to structured FHIR resources, which will be contained in Bundle.entry. This means that the Composition is broken into sections, slice by pattern:code. The IPS has required slices for sectionMedications, sectionAllergies and section Problems.</p>
+<p>A minimal IPS document validation looks like this:</p>
+<p><a href="https://test.ahdis.ch/matchboxv3/validate#resource=ewogICAgInJlc291cmNlVHlwZSI6ICJCdW5kbGUiLAogICAgImlkZW50aWZpZXIiOiB7CiAgICAgICAgInN5c3RlbSI6ICJ1cm46b2lkOjIuMTYuNzI0LjQuOC4xMC4yMDAuMTAiLAogICAgICAgICJ2YWx1ZSI6ICIyOGI5NTgxNS03NmNlLTQ1N2ItYjdhZS1hOTcyZTUyN2RiNDAiCiAgICB9LAogICAgInR5cGUiOiAiZG9jdW1lbnQiLAogICAgInRpbWVzdGFtcCI6ICIyMDIwLTEyLTExVDE0OjMwOjAwKzAxOjAwIiwKICAgICJlbnRyeSI6IFsKICAgICAgICB7CiAgICAgICAgICAgICJmdWxsVXJsIjogInVybjp1dWlkOmY0MGIwN2UzLTM3ZTgtNDhjMy1iZjFjLWFlNzBmZTEyZGFiMCIsCiAgICAgICAgICAgICJyZXNvdXJjZSI6IHsKICAgICAgICAgICAgICAgICJyZXNvdXJjZVR5cGUiOiAiQ29tcG9zaXRpb24iLAogICAgICAgICAgICAgICAgImlkIjogImY0MGIwN2UzLTM3ZTgtNDhjMy1iZjFjLWFlNzBmZTEyZGFiMCIsCiAgICAgICAgICAgICAgICAic3RhdHVzIjogImZpbmFsIiwKICAgICAgICAgICAgICAgICJ0eXBlIjogewogICAgICAgICAgICAgICAgICAgICJjb2RpbmciOiBbCiAgICAgICAgICAgICAgICAgICAgICAgIHsKICAgICAgICAgICAgICAgICAgICAgICAgICAgICJzeXN0ZW0iOiAiaHR0cDovL2xvaW5jLm9yZyIsCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAiY29kZSI6ICI2MDU5MS01IiwKICAgICAgICAgICAgICAgICAgICAgICAgICAgICJkaXNwbGF5IjogIlBhdGllbnQgc3VtbWFyeSBEb2N1bWVudCIKICAgICAgICAgICAgICAgICAgICAgICAgfQogICAgICAgICAgICAgICAgICAgIF0KICAgICAgICAgICAgICAgIH0sCiAgICAgICAgICAgICAgICAic3ViamVjdCI6IHsKICAgICAgICAgICAgICAgICAgICAicmVmZXJlbmNlIjogInVybjp1dWlkOjI0NGFkN2MzLWJlZWItNDFkMS04YTJmLWM3NmI4Y2Y3MjBhZCIKICAgICAgICAgICAgICAgIH0sCiAgICAgICAgICAgICAgICAiZGF0ZSI6ICIyMDIwLTEyLTExVDE0OjMwOjAwKzAxOjAwIiwKICAgICAgICAgICAgICAgICJhdXRob3IiOiBbCiAgICAgICAgICAgICAgICAgICAgewogICAgICAgICAgICAgICAgICAgICAgICAicmVmZXJlbmNlIjogInVybjp1dWlkOjQ1MjcxZjdmLTYzYWItNDk0Ni05NzBmLTNkYWFhYTA2NjM3ZiIKICAgICAgICAgICAgICAgICAgICB9CiAgICAgICAgICAgICAgICBdLAogICAgICAgICAgICAgICAgInRpdGxlIjogIlBhdGllbnQgU3VtbWFyeSBhcyBvZiBEZWNlbWJlciAxMSwgMjAyMCAxNDozMCIsCiAgICAgICAgICAgICAgICAiY29uZmlkZW50aWFsaXR5IjogIk4iLAogICAgICAgICAgICAgICAgInNlY3Rpb24iOiBbCiAgICAgICAgICAgICAgICAgICAgewogICAgICAgICAgICAgICAgICAgICAgICAidGl0bGUiOiAiQWN0aXZlIFByb2JsZW1zIiwKICAgICAgICAgICAgICAgICAgICAgICAgImNvZGUiOiB7CiAgICAgICAgICAgICAgICAgICAgICAgICAgICAiY29kaW5nIjogWwogICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIHsKICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgInN5c3RlbSI6ICJodHRwOi8vbG9pbmMub3JnIiwKICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgImNvZGUiOiAiMTE0NTAtNCIsCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICJkaXNwbGF5IjogIlByb2JsZW0gbGlzdCAtIFJlcG9ydGVkIgogICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIH0KICAgICAgICAgICAgICAgICAgICAgICAgICAgIF0KICAgICAgICAgICAgICAgICAgICAgICAgfSwKICAgICAgICAgICAgICAgICAgICAgICAgInRleHQiOiB7CiAgICAgICAgICAgICAgICAgICAgICAgICAgICAic3RhdHVzIjogImdlbmVyYXRlZCIsCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAiZGl2IjogIjxkaXYgeG1sbnM9XCJodHRwOi8vd3d3LnczLm9yZy8xOTk5L3hodG1sXCI%2BPHVsPjxsaT48ZGl2PjxiPkNvbmRpdGlvbiBOYW1lPC9iPjogTWVub3BhdXNhbCBGbHVzaGluZzwvZGl2PjxkaXY%2BPGI%2BQ29kZTwvYj46IDxzcGFuPjE5ODQzNjAwODwvc3Bhbj48L2Rpdj48ZGl2PjxiPlN0YXR1czwvYj46IDxzcGFuPkFjdGl2ZTwvc3Bhbj48L2Rpdj48L2xpPjwvdWw%2BPC9kaXY%2BIgogICAgICAgICAgICAgICAgICAgICAgICB9LAogICAgICAgICAgICAgICAgICAgICAgICAiZW50cnkiOiBbCiAgICAgICAgICAgICAgICAgICAgICAgICAgICB7CiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgInJlZmVyZW5jZSI6ICJ1cm46dXVpZDpkMTc5MzIxZS1jMDkxLTRjZDQtODY0Mi0zYTI3NTM3ZDUwNmQiCiAgICAgICAgICAgICAgICAgICAgICAgICAgICB9CiAgICAgICAgICAgICAgICAgICAgICAgIF0KICAgICAgICAgICAgICAgICAgICB9LAogICAgICAgICAgICAgICAgICAgIHsKICAgICAgICAgICAgICAgICAgICAgICAgInRpdGxlIjogIk1lZGljYXRpb24iLAogICAgICAgICAgICAgICAgICAgICAgICAiY29kZSI6IHsKICAgICAgICAgICAgICAgICAgICAgICAgICAgICJjb2RpbmciOiBbCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgewogICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAic3lzdGVtIjogImh0dHA6Ly9sb2luYy5vcmciLAogICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAiY29kZSI6ICIxMDE2MC0wIiwKICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgImRpc3BsYXkiOiAiSGlzdG9yeSBvZiBNZWRpY2F0aW9uIHVzZSBOYXJyYXRpdmUiCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgfQogICAgICAgICAgICAgICAgICAgICAgICAgICAgXQogICAgICAgICAgICAgICAgICAgICAgICB9LAogICAgICAgICAgICAgICAgICAgICAgICAidGV4dCI6IHsKICAgICAgICAgICAgICAgICAgICAgICAgICAgICJzdGF0dXMiOiAiZ2VuZXJhdGVkIiwKICAgICAgICAgICAgICAgICAgICAgICAgICAgICJkaXYiOiAiPGRpdiB4bWxucz1cImh0dHA6Ly93d3cudzMub3JnLzE5OTkveGh0bWxcIj48dWw%2BPGxpPjxkaXY%2BPGI%2BTWVkaWNhdGlvbiBOYW1lPC9iPjogT3JhbCBhbmFzdHJvem9sZSAxbWcgdGFibGV0PC9kaXY%2BPGRpdj48Yj5Db2RlPC9iPjogPHNwYW4%2BPC9zcGFuPjwvZGl2PjxkaXY%2BPGI%2BU3RhdHVzPC9iPjogPHNwYW4%2BQWN0aXZlLCBzdGFydGVkIE1hcmNoIDIwMTU8L3NwYW4%2BPC9kaXY%2BPGRpdj5JbnN0cnVjdGlvbnM6IFRha2UgMSB0aW1lIHBlciBkYXk8L2Rpdj48L2xpPjwvdWw%2BPC9kaXY%2BIgogICAgICAgICAgICAgICAgICAgICAgICB9LAogICAgICAgICAgICAgICAgICAgICAgICAiZW50cnkiOiBbCiAgICAgICAgICAgICAgICAgICAgICAgICAgICB7CiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgInJlZmVyZW5jZSI6ICJ1cm46dXVpZDplMTI3MWVmZC0xOGZmLTQ2NTQtOWVlNy00NWY0MDAxOWM0NTMiCiAgICAgICAgICAgICAgICAgICAgICAgICAgICB9CiAgICAgICAgICAgICAgICAgICAgICAgIF0KICAgICAgICAgICAgICAgICAgICB9LAogICAgICAgICAgICAgICAgICAgIHsKICAgICAgICAgICAgICAgICAgICAgICAgInRpdGxlIjogIkFsbGVyZ2llcyBhbmQgSW50b2xlcmFuY2VzIiwKICAgICAgICAgICAgICAgICAgICAgICAgImNvZGUiOiB7CiAgICAgICAgICAgICAgICAgICAgICAgICAgICAiY29kaW5nIjogWwogICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIHsKICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgInN5c3RlbSI6ICJodHRwOi8vbG9pbmMub3JnIiwKICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgImNvZGUiOiAiNDg3NjUtMiIsCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICJkaXNwbGF5IjogIkFsbGVyZ2llcyBhbmQgYWR2ZXJzZSByZWFjdGlvbnMgRG9jdW1lbnQiCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgfQogICAgICAgICAgICAgICAgICAgICAgICAgICAgXQogICAgICAgICAgICAgICAgICAgICAgICB9LAogICAgICAgICAgICAgICAgICAgICAgICAidGV4dCI6IHsKICAgICAgICAgICAgICAgICAgICAgICAgICAgICJzdGF0dXMiOiAiZ2VuZXJhdGVkIiwKICAgICAgICAgICAgICAgICAgICAgICAgICAgICJkaXYiOiAiPGRpdiB4bWxucz1cImh0dHA6Ly93d3cudzMub3JnLzE5OTkveGh0bWxcIj48dWw%2BPGxpPjxkaXY%2BPGI%2BQWxsZXJneSBOYW1lPC9iPjogUGVuY2lsbGluczwvZGl2PjxkaXY%2BPGI%2BVmVyaWZpY2F0aW9uIFN0YXR1czwvYj46IENvbmZpcm1lZDwvZGl2PjxkaXY%2BPGI%2BUmVhY3Rpb248L2I%2BOiA8c3Bhbj5ubyBpbmZvcm1hdGlvbjwvc3Bhbj48L2Rpdj48L2xpPjwvdWw%2BPC9kaXY%2BIgogICAgICAgICAgICAgICAgICAgICAgICB9LAogICAgICAgICAgICAgICAgICAgICAgICAiZW50cnkiOiBbCiAgICAgICAgICAgICAgICAgICAgICAgICAgICB7CiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgInJlZmVyZW5jZSI6ICJ1cm46dXVpZDo3NDg2MTMxNi1mNjlkLTQ2NTItOWZiMS04NTEyYTIwYzc5MjciCiAgICAgICAgICAgICAgICAgICAgICAgICAgICB9CiAgICAgICAgICAgICAgICAgICAgICAgIF0KICAgICAgICAgICAgICAgICAgICB9CiAgICAgICAgICAgICAgICBdCiAgICAgICAgICAgIH0KICAgICAgICB9LAogICAgICAgIHsKICAgICAgICAgICAgImZ1bGxVcmwiOiAidXJuOnV1aWQ6MjQ0YWQ3YzMtYmVlYi00MWQxLThhMmYtYzc2YjhjZjcyMGFkIiwKICAgICAgICAgICAgInJlc291cmNlIjogewogICAgICAgICAgICAgICAgInJlc291cmNlVHlwZSI6ICJQYXRpZW50IiwKICAgICAgICAgICAgICAgICJpZCI6ICIyNDRhZDdjMy1iZWViLTQxZDEtOGEyZi1jNzZiOGNmNzIwYWQiLAogICAgICAgICAgICAgICAgIm5hbWUiOiBbCiAgICAgICAgICAgICAgICAgICAgewogICAgICAgICAgICAgICAgICAgICAgICAiZmFtaWx5IjogIkRlTGFyb3NhIiwKICAgICAgICAgICAgICAgICAgICAgICAgImdpdmVuIjogWwogICAgICAgICAgICAgICAgICAgICAgICAgICAgIk1hcnRoYSIKICAgICAgICAgICAgICAgICAgICAgICAgXQogICAgICAgICAgICAgICAgICAgIH0KICAgICAgICAgICAgICAgIF0sCiAgICAgICAgICAgICAgICAiYmlydGhEYXRlIjogIjE5NzItMDUtMDEiCiAgICAgICAgICAgIH0KICAgICAgICB9LAogICAgICAgIHsKICAgICAgICAgICAgImZ1bGxVcmwiOiAidXJuOnV1aWQ6NDUyNzFmN2YtNjNhYi00OTQ2LTk3MGYtM2RhYWFhMDY2MzdmIiwKICAgICAgICAgICAgInJlc291cmNlIjogewogICAgICAgICAgICAgICAgInJlc291cmNlVHlwZSI6ICJQcmFjdGl0aW9uZXIiLAogICAgICAgICAgICAgICAgImlkIjogIjQ1MjcxZjdmLTYzYWItNDk0Ni05NzBmLTNkYWFhYTA2NjM3ZiIsCiAgICAgICAgICAgICAgICAibmFtZSI6IFsKICAgICAgICAgICAgICAgICAgICB7CiAgICAgICAgICAgICAgICAgICAgICAgICJmYW1pbHkiOiAidmFuIEh1bHAiLAogICAgICAgICAgICAgICAgICAgICAgICAiZ2l2ZW4iOiBbCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAiQmVldGplIgogICAgICAgICAgICAgICAgICAgICAgICBdCiAgICAgICAgICAgICAgICAgICAgfQogICAgICAgICAgICAgICAgXQogICAgICAgICAgICB9CiAgICAgICAgfSwKICAgICAgICB7CiAgICAgICAgICAgICJmdWxsVXJsIjogInVybjp1dWlkOmQxNzkzMjFlLWMwOTEtNGNkNC04NjQyLTNhMjc1MzdkNTA2ZCIsCiAgICAgICAgICAgICJyZXNvdXJjZSI6IHsKICAgICAgICAgICAgICAgICJyZXNvdXJjZVR5cGUiOiAiQ29uZGl0aW9uIiwKICAgICAgICAgICAgICAgICJpZCI6ICJkMTc5MzIxZS1jMDkxLTRjZDQtODY0Mi0zYTI3NTM3ZDUwNmQiLAogICAgICAgICAgICAgICAgImNvZGUiOiB7CiAgICAgICAgICAgICAgICAgICAgImNvZGluZyI6IFsKICAgICAgICAgICAgICAgICAgICAgICAgewogICAgICAgICAgICAgICAgICAgICAgICAgICAgInN5c3RlbSI6ICJodHRwOi8vc25vbWVkLmluZm8vc2N0IiwKICAgICAgICAgICAgICAgICAgICAgICAgICAgICJjb2RlIjogIjE5ODQzNjAwOCIsCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAiZGlzcGxheSI6ICJNZW5vcGF1c2FsIGZsdXNoaW5nIChmaW5kaW5nKSIKICAgICAgICAgICAgICAgICAgICAgICAgfQogICAgICAgICAgICAgICAgICAgIF0KICAgICAgICAgICAgICAgIH0sCiAgICAgICAgICAgICAgICAic3ViamVjdCI6IHsKICAgICAgICAgICAgICAgICAgICAicmVmZXJlbmNlIjogInVybjp1dWlkOjI0NGFkN2MzLWJlZWItNDFkMS04YTJmLWM3NmI4Y2Y3MjBhZCIKICAgICAgICAgICAgICAgIH0KICAgICAgICAgICAgfQogICAgICAgIH0sCiAgICAgICAgewogICAgICAgICAgICAiZnVsbFVybCI6ICJ1cm46dXVpZDplMTI3MWVmZC0xOGZmLTQ2NTQtOWVlNy00NWY0MDAxOWM0NTMiLAogICAgICAgICAgICAicmVzb3VyY2UiOiB7CiAgICAgICAgICAgICAgICAicmVzb3VyY2VUeXBlIjogIk1lZGljYXRpb25TdGF0ZW1lbnQiLAogICAgICAgICAgICAgICAgImlkIjogImUxMjcxZWZkLTE4ZmYtNDY1NC05ZWU3LTQ1ZjQwMDE5YzQ1MyIsCiAgICAgICAgICAgICAgICAic3RhdHVzIjogImFjdGl2ZSIsCiAgICAgICAgICAgICAgICAibWVkaWNhdGlvblJlZmVyZW5jZSI6IHsKICAgICAgICAgICAgICAgICAgICAicmVmZXJlbmNlIjogInVybjp1dWlkOjk1ZGI3YzkyLTU2NmEtNGRlZC04OTZiLTIyMjBhYjI0NGE5ZSIKICAgICAgICAgICAgICAgIH0sCiAgICAgICAgICAgICAgICAic3ViamVjdCI6IHsKICAgICAgICAgICAgICAgICAgICAicmVmZXJlbmNlIjogInVybjp1dWlkOjI0NGFkN2MzLWJlZWItNDFkMS04YTJmLWM3NmI4Y2Y3MjBhZCIKICAgICAgICAgICAgICAgIH0sCiAgICAgICAgICAgICAgICAiZWZmZWN0aXZlUGVyaW9kIjogewogICAgICAgICAgICAgICAgICAgICJzdGFydCI6ICIyMDE1LTAzIgogICAgICAgICAgICAgICAgfQogICAgICAgICAgICB9CiAgICAgICAgfSwKICAgICAgICB7CiAgICAgICAgICAgICJmdWxsVXJsIjogInVybjp1dWlkOjk1ZGI3YzkyLTU2NmEtNGRlZC04OTZiLTIyMjBhYjI0NGE5ZSIsCiAgICAgICAgICAgICJyZXNvdXJjZSI6IHsKICAgICAgICAgICAgICAgICJyZXNvdXJjZVR5cGUiOiAiTWVkaWNhdGlvbiIsCiAgICAgICAgICAgICAgICAiaWQiOiAiOTVkYjdjOTItNTY2YS00ZGVkLTg5NmItMjIyMGFiMjQ0YTllIiwKICAgICAgICAgICAgICAgICJjb2RlIjogewogICAgICAgICAgICAgICAgICAgICJjb2RpbmciOiBbCiAgICAgICAgICAgICAgICAgICAgICAgIHsKICAgICAgICAgICAgICAgICAgICAgICAgICAgICJzeXN0ZW0iOiAiaHR0cDovL3Nub21lZC5pbmZvL3NjdCIsCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAiY29kZSI6ICIxMDg3NzQwMDAiLAogICAgICAgICAgICAgICAgICAgICAgICAgICAgImRpc3BsYXkiOiAiUHJvZHVjdCBjb250YWluaW5nIGFuYXN0cm96b2xlIChtZWRpY2luYWwgcHJvZHVjdCkiCiAgICAgICAgICAgICAgICAgICAgICAgIH0KICAgICAgICAgICAgICAgICAgICBdCiAgICAgICAgICAgICAgICB9CiAgICAgICAgICAgIH0KICAgICAgICB9LAogICAgICAgIHsKICAgICAgICAgICAgImZ1bGxVcmwiOiAidXJuOnV1aWQ6NzQ4NjEzMTYtZjY5ZC00NjUyLTlmYjEtODUxMmEyMGM3OTI3IiwKICAgICAgICAgICAgInJlc291cmNlIjogewogICAgICAgICAgICAgICAgInJlc291cmNlVHlwZSI6ICJBbGxlcmd5SW50b2xlcmFuY2UiLAogICAgICAgICAgICAgICAgImlkIjogIjc0ODYxMzE2LWY2OWQtNDY1Mi05ZmIxLTg1MTJhMjBjNzkyNyIsCiAgICAgICAgICAgICAgICAiY2xpbmljYWxTdGF0dXMiOiB7CiAgICAgICAgICAgICAgICAgICAgImNvZGluZyI6IFsKICAgICAgICAgICAgICAgICAgICAgICAgewogICAgICAgICAgICAgICAgICAgICAgICAgICAgInN5c3RlbSI6ICJodHRwOi8vdGVybWlub2xvZ3kuaGw3Lm9yZy9Db2RlU3lzdGVtL2FsbGVyZ3lpbnRvbGVyYW5jZS1jbGluaWNhbCIsCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAiY29kZSI6ICJhY3RpdmUiCiAgICAgICAgICAgICAgICAgICAgICAgIH0KICAgICAgICAgICAgICAgICAgICBdCiAgICAgICAgICAgICAgICB9LAogICAgICAgICAgICAgICAgImNvZGUiOiB7CiAgICAgICAgICAgICAgICAgICAgImNvZGluZyI6IFsKICAgICAgICAgICAgICAgICAgICAgICAgewogICAgICAgICAgICAgICAgICAgICAgICAgICAgInN5c3RlbSI6ICJodHRwOi8vc25vbWVkLmluZm8vc2N0IiwKICAgICAgICAgICAgICAgICAgICAgICAgICAgICJjb2RlIjogIjM3MzI3MDAwNCIsCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAiZGlzcGxheSI6ICJTdWJzdGFuY2Ugd2l0aCBwZW5pY2lsbGluIHN0cnVjdHVyZSBhbmQgYW50aWJhY3RlcmlhbCBtZWNoYW5pc20gb2YgYWN0aW9uIChzdWJzdGFuY2UpIgogICAgICAgICAgICAgICAgICAgICAgICB9CiAgICAgICAgICAgICAgICAgICAgXQogICAgICAgICAgICAgICAgfSwKICAgICAgICAgICAgICAgICJwYXRpZW50IjogewogICAgICAgICAgICAgICAgICAgICJyZWZlcmVuY2UiOiAidXJuOnV1aWQ6MjQ0YWQ3YzMtYmVlYi00MWQxLThhMmYtYzc2YjhjZjcyMGFkIgogICAgICAgICAgICAgICAgfQogICAgICAgICAgICB9CiAgICAgICAgfQogICAgXQp9&amp;profile=http%3A%2F%2Fhl7.org%2Ffhir%2Fuv%2Fips%2FStructureDefinition%2FBundle-uv-ips">example</a>
+<div class="language-http highlight"><pre><span></span><code><span id="__span-16-1"><a id="__codelineno-16-1" name="__codelineno-16-1" href="#__codelineno-16-1"></a><span class="nf">POST</span> <span class="nn">{{host}}/$validate?profile=http://hl7.org/fhir/uv/ips/StructureDefinition/Bundle-uv-ips</span> <span class="kr">HTTP</span><span class="o">/</span><span class="m">1.1</span>
+</span><span id="__span-16-2"><a id="__codelineno-16-2" name="__codelineno-16-2" href="#__codelineno-16-2"></a><span class="na">Content-Type</span><span class="o">:</span> <span class="l">application/fhir+json</span>
+</span><span id="__span-16-3"><a id="__codelineno-16-3" name="__codelineno-16-3" href="#__codelineno-16-3"></a>
+</span><span id="__span-16-4"><a id="__codelineno-16-4" name="__codelineno-16-4" href="#__codelineno-16-4"></a><span class="p">{</span>
+</span><span id="__span-16-5"><a id="__codelineno-16-5" name="__codelineno-16-5" href="#__codelineno-16-5"></a><span class="w">    </span><span class="nt">&quot;resourceType&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Bundle&quot;</span><span class="p">,</span>
+</span><span id="__span-16-6"><a id="__codelineno-16-6" name="__codelineno-16-6" href="#__codelineno-16-6"></a><span class="w">    </span><span class="nt">&quot;identifier&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-16-7"><a id="__codelineno-16-7" name="__codelineno-16-7" href="#__codelineno-16-7"></a><span class="w">        </span><span class="nt">&quot;system&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;urn:oid:2.16.724.4.8.10.200.10&quot;</span><span class="p">,</span>
+</span><span id="__span-16-8"><a id="__codelineno-16-8" name="__codelineno-16-8" href="#__codelineno-16-8"></a><span class="w">        </span><span class="nt">&quot;value&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;28b95815-76ce-457b-b7ae-a972e527db40&quot;</span>
+</span><span id="__span-16-9"><a id="__codelineno-16-9" name="__codelineno-16-9" href="#__codelineno-16-9"></a><span class="w">    </span><span class="p">},</span>
+</span><span id="__span-16-10"><a id="__codelineno-16-10" name="__codelineno-16-10" href="#__codelineno-16-10"></a><span class="w">    </span><span class="nt">&quot;type&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;document&quot;</span><span class="p">,</span>
+</span><span id="__span-16-11"><a id="__codelineno-16-11" name="__codelineno-16-11" href="#__codelineno-16-11"></a><span class="w">    </span><span class="nt">&quot;timestamp&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;2020-12-11T14:30:00+01:00&quot;</span><span class="p">,</span>
+</span><span id="__span-16-12"><a id="__codelineno-16-12" name="__codelineno-16-12" href="#__codelineno-16-12"></a><span class="w">    </span><span class="nt">&quot;entry&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+</span><span id="__span-16-13"><a id="__codelineno-16-13" name="__codelineno-16-13" href="#__codelineno-16-13"></a><span class="w">        </span><span class="p">{</span>
+</span><span id="__span-16-14"><a id="__codelineno-16-14" name="__codelineno-16-14" href="#__codelineno-16-14"></a><span class="w">            </span><span class="nt">&quot;fullUrl&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;urn:uuid:f40b07e3-37e8-48c3-bf1c-ae70fe12dab0&quot;</span><span class="p">,</span>
+</span><span id="__span-16-15"><a id="__codelineno-16-15" name="__codelineno-16-15" href="#__codelineno-16-15"></a><span class="w">            </span><span class="nt">&quot;resource&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-16-16"><a id="__codelineno-16-16" name="__codelineno-16-16" href="#__codelineno-16-16"></a><span class="w">                </span><span class="nt">&quot;resourceType&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Composition&quot;</span><span class="p">,</span>
+</span><span id="__span-16-17"><a id="__codelineno-16-17" name="__codelineno-16-17" href="#__codelineno-16-17"></a><span class="w">                </span><span class="nt">&quot;id&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;f40b07e3-37e8-48c3-bf1c-ae70fe12dab0&quot;</span><span class="p">,</span>
+</span><span id="__span-16-18"><a id="__codelineno-16-18" name="__codelineno-16-18" href="#__codelineno-16-18"></a><span class="w">                </span><span class="nt">&quot;status&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;final&quot;</span><span class="p">,</span>
+</span><span id="__span-16-19"><a id="__codelineno-16-19" name="__codelineno-16-19" href="#__codelineno-16-19"></a><span class="w">                </span><span class="nt">&quot;type&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-16-20"><a id="__codelineno-16-20" name="__codelineno-16-20" href="#__codelineno-16-20"></a><span class="w">                    </span><span class="nt">&quot;coding&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+</span><span id="__span-16-21"><a id="__codelineno-16-21" name="__codelineno-16-21" href="#__codelineno-16-21"></a><span class="w">                        </span><span class="p">{</span>
+</span><span id="__span-16-22"><a id="__codelineno-16-22" name="__codelineno-16-22" href="#__codelineno-16-22"></a><span class="w">                            </span><span class="nt">&quot;system&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;http://loinc.org&quot;</span><span class="p">,</span>
+</span><span id="__span-16-23"><a id="__codelineno-16-23" name="__codelineno-16-23" href="#__codelineno-16-23"></a><span class="w">                            </span><span class="nt">&quot;code&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;60591-5&quot;</span><span class="p">,</span>
+</span><span id="__span-16-24"><a id="__codelineno-16-24" name="__codelineno-16-24" href="#__codelineno-16-24"></a><span class="w">                            </span><span class="nt">&quot;display&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Patient summary Document&quot;</span>
+</span><span id="__span-16-25"><a id="__codelineno-16-25" name="__codelineno-16-25" href="#__codelineno-16-25"></a><span class="w">                        </span><span class="p">}</span>
+</span><span id="__span-16-26"><a id="__codelineno-16-26" name="__codelineno-16-26" href="#__codelineno-16-26"></a><span class="w">                    </span><span class="p">]</span>
+</span><span id="__span-16-27"><a id="__codelineno-16-27" name="__codelineno-16-27" href="#__codelineno-16-27"></a><span class="w">                </span><span class="p">},</span>
+</span><span id="__span-16-28"><a id="__codelineno-16-28" name="__codelineno-16-28" href="#__codelineno-16-28"></a><span class="w">                </span><span class="nt">&quot;subject&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-16-29"><a id="__codelineno-16-29" name="__codelineno-16-29" href="#__codelineno-16-29"></a><span class="w">                    </span><span class="nt">&quot;reference&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;urn:uuid:244ad7c3-beeb-41d1-8a2f-c76b8cf720ad&quot;</span>
+</span><span id="__span-16-30"><a id="__codelineno-16-30" name="__codelineno-16-30" href="#__codelineno-16-30"></a><span class="w">                </span><span class="p">},</span>
+</span><span id="__span-16-31"><a id="__codelineno-16-31" name="__codelineno-16-31" href="#__codelineno-16-31"></a><span class="w">                </span><span class="nt">&quot;date&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;2020-12-11T14:30:00+01:00&quot;</span><span class="p">,</span>
+</span><span id="__span-16-32"><a id="__codelineno-16-32" name="__codelineno-16-32" href="#__codelineno-16-32"></a><span class="w">                </span><span class="nt">&quot;author&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+</span><span id="__span-16-33"><a id="__codelineno-16-33" name="__codelineno-16-33" href="#__codelineno-16-33"></a><span class="w">                    </span><span class="p">{</span>
+</span><span id="__span-16-34"><a id="__codelineno-16-34" name="__codelineno-16-34" href="#__codelineno-16-34"></a><span class="w">                        </span><span class="nt">&quot;reference&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;urn:uuid:45271f7f-63ab-4946-970f-3daaaa06637f&quot;</span>
+</span><span id="__span-16-35"><a id="__codelineno-16-35" name="__codelineno-16-35" href="#__codelineno-16-35"></a><span class="w">                    </span><span class="p">}</span>
+</span><span id="__span-16-36"><a id="__codelineno-16-36" name="__codelineno-16-36" href="#__codelineno-16-36"></a><span class="w">                </span><span class="p">],</span>
+</span><span id="__span-16-37"><a id="__codelineno-16-37" name="__codelineno-16-37" href="#__codelineno-16-37"></a><span class="w">                </span><span class="nt">&quot;title&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Patient Summary as of December 11, 2020 14:30&quot;</span><span class="p">,</span>
+</span><span id="__span-16-38"><a id="__codelineno-16-38" name="__codelineno-16-38" href="#__codelineno-16-38"></a><span class="w">                </span><span class="nt">&quot;confidentiality&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;N&quot;</span><span class="p">,</span>
+</span><span id="__span-16-39"><a id="__codelineno-16-39" name="__codelineno-16-39" href="#__codelineno-16-39"></a><span class="w">                </span><span class="nt">&quot;section&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+</span><span id="__span-16-40"><a id="__codelineno-16-40" name="__codelineno-16-40" href="#__codelineno-16-40"></a><span class="w">                    </span><span class="p">{</span>
+</span><span id="__span-16-41"><a id="__codelineno-16-41" name="__codelineno-16-41" href="#__codelineno-16-41"></a><span class="w">                        </span><span class="nt">&quot;title&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Active Problems&quot;</span><span class="p">,</span>
+</span><span id="__span-16-42"><a id="__codelineno-16-42" name="__codelineno-16-42" href="#__codelineno-16-42"></a><span class="w">                        </span><span class="nt">&quot;code&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-16-43"><a id="__codelineno-16-43" name="__codelineno-16-43" href="#__codelineno-16-43"></a><span class="w">                            </span><span class="nt">&quot;coding&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+</span><span id="__span-16-44"><a id="__codelineno-16-44" name="__codelineno-16-44" href="#__codelineno-16-44"></a><span class="w">                                </span><span class="p">{</span>
+</span><span id="__span-16-45"><a id="__codelineno-16-45" name="__codelineno-16-45" href="#__codelineno-16-45"></a><span class="w">                                    </span><span class="nt">&quot;system&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;http://loinc.org&quot;</span><span class="p">,</span>
+</span><span id="__span-16-46"><a id="__codelineno-16-46" name="__codelineno-16-46" href="#__codelineno-16-46"></a><span class="w">                                    </span><span class="nt">&quot;code&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;11450-4&quot;</span><span class="p">,</span>
+</span><span id="__span-16-47"><a id="__codelineno-16-47" name="__codelineno-16-47" href="#__codelineno-16-47"></a><span class="w">                                    </span><span class="nt">&quot;display&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Problem list - Reported&quot;</span>
+</span><span id="__span-16-48"><a id="__codelineno-16-48" name="__codelineno-16-48" href="#__codelineno-16-48"></a><span class="w">                                </span><span class="p">}</span>
+</span><span id="__span-16-49"><a id="__codelineno-16-49" name="__codelineno-16-49" href="#__codelineno-16-49"></a><span class="w">                            </span><span class="p">]</span>
+</span><span id="__span-16-50"><a id="__codelineno-16-50" name="__codelineno-16-50" href="#__codelineno-16-50"></a><span class="w">                        </span><span class="p">},</span>
+</span><span id="__span-16-51"><a id="__codelineno-16-51" name="__codelineno-16-51" href="#__codelineno-16-51"></a><span class="w">                        </span><span class="nt">&quot;text&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-16-52"><a id="__codelineno-16-52" name="__codelineno-16-52" href="#__codelineno-16-52"></a><span class="w">                            </span><span class="nt">&quot;status&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;generated&quot;</span><span class="p">,</span>
+</span><span id="__span-16-53"><a id="__codelineno-16-53" name="__codelineno-16-53" href="#__codelineno-16-53"></a><span class="w">                            </span><span class="nt">&quot;div&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;&lt;div xmlns=\&quot;http://www.w3.org/1999/xhtml\&quot;&gt;&lt;ul&gt;&lt;li&gt;&lt;div&gt;&lt;b&gt;Condition Name&lt;/b&gt;: Menopausal Flushing&lt;/div&gt;&lt;div&gt;&lt;b&gt;Code&lt;/b&gt;: &lt;span&gt;198436008&lt;/span&gt;&lt;/div&gt;&lt;div&gt;&lt;b&gt;Status&lt;/b&gt;: &lt;span&gt;Active&lt;/span&gt;&lt;/div&gt;&lt;/li&gt;&lt;/ul&gt;&lt;/div&gt;&quot;</span>
+</span><span id="__span-16-54"><a id="__codelineno-16-54" name="__codelineno-16-54" href="#__codelineno-16-54"></a><span class="w">                        </span><span class="p">},</span>
+</span><span id="__span-16-55"><a id="__codelineno-16-55" name="__codelineno-16-55" href="#__codelineno-16-55"></a><span class="w">                        </span><span class="nt">&quot;entry&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+</span><span id="__span-16-56"><a id="__codelineno-16-56" name="__codelineno-16-56" href="#__codelineno-16-56"></a><span class="w">                            </span><span class="p">{</span>
+</span><span id="__span-16-57"><a id="__codelineno-16-57" name="__codelineno-16-57" href="#__codelineno-16-57"></a><span class="w">                                </span><span class="nt">&quot;reference&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;urn:uuid:d179321e-c091-4cd4-8642-3a27537d506d&quot;</span>
+</span><span id="__span-16-58"><a id="__codelineno-16-58" name="__codelineno-16-58" href="#__codelineno-16-58"></a><span class="w">                            </span><span class="p">}</span>
+</span><span id="__span-16-59"><a id="__codelineno-16-59" name="__codelineno-16-59" href="#__codelineno-16-59"></a><span class="w">                        </span><span class="p">]</span>
+</span><span id="__span-16-60"><a id="__codelineno-16-60" name="__codelineno-16-60" href="#__codelineno-16-60"></a><span class="w">                    </span><span class="p">},</span>
+</span><span id="__span-16-61"><a id="__codelineno-16-61" name="__codelineno-16-61" href="#__codelineno-16-61"></a><span class="w">                    </span><span class="p">{</span>
+</span><span id="__span-16-62"><a id="__codelineno-16-62" name="__codelineno-16-62" href="#__codelineno-16-62"></a><span class="w">                        </span><span class="nt">&quot;title&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Medication&quot;</span><span class="p">,</span>
+</span><span id="__span-16-63"><a id="__codelineno-16-63" name="__codelineno-16-63" href="#__codelineno-16-63"></a><span class="w">                        </span><span class="nt">&quot;code&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-16-64"><a id="__codelineno-16-64" name="__codelineno-16-64" href="#__codelineno-16-64"></a><span class="w">                            </span><span class="nt">&quot;coding&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+</span><span id="__span-16-65"><a id="__codelineno-16-65" name="__codelineno-16-65" href="#__codelineno-16-65"></a><span class="w">                                </span><span class="p">{</span>
+</span><span id="__span-16-66"><a id="__codelineno-16-66" name="__codelineno-16-66" href="#__codelineno-16-66"></a><span class="w">                                    </span><span class="nt">&quot;system&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;http://loinc.org&quot;</span><span class="p">,</span>
+</span><span id="__span-16-67"><a id="__codelineno-16-67" name="__codelineno-16-67" href="#__codelineno-16-67"></a><span class="w">                                    </span><span class="nt">&quot;code&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;10160-0&quot;</span><span class="p">,</span>
+</span><span id="__span-16-68"><a id="__codelineno-16-68" name="__codelineno-16-68" href="#__codelineno-16-68"></a><span class="w">                                    </span><span class="nt">&quot;display&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;History of Medication use Narrative&quot;</span>
+</span><span id="__span-16-69"><a id="__codelineno-16-69" name="__codelineno-16-69" href="#__codelineno-16-69"></a><span class="w">                                </span><span class="p">}</span>
+</span><span id="__span-16-70"><a id="__codelineno-16-70" name="__codelineno-16-70" href="#__codelineno-16-70"></a><span class="w">                            </span><span class="p">]</span>
+</span><span id="__span-16-71"><a id="__codelineno-16-71" name="__codelineno-16-71" href="#__codelineno-16-71"></a><span class="w">                        </span><span class="p">},</span>
+</span><span id="__span-16-72"><a id="__codelineno-16-72" name="__codelineno-16-72" href="#__codelineno-16-72"></a><span class="w">                        </span><span class="nt">&quot;text&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-16-73"><a id="__codelineno-16-73" name="__codelineno-16-73" href="#__codelineno-16-73"></a><span class="w">                            </span><span class="nt">&quot;status&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;generated&quot;</span><span class="p">,</span>
+</span><span id="__span-16-74"><a id="__codelineno-16-74" name="__codelineno-16-74" href="#__codelineno-16-74"></a><span class="w">                            </span><span class="nt">&quot;div&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;&lt;div xmlns=\&quot;http://www.w3.org/1999/xhtml\&quot;&gt;&lt;ul&gt;&lt;li&gt;&lt;div&gt;&lt;b&gt;Medication Name&lt;/b&gt;: Oral anastrozole 1mg tablet&lt;/div&gt;&lt;div&gt;&lt;b&gt;Code&lt;/b&gt;: &lt;span&gt;&lt;/span&gt;&lt;/div&gt;&lt;div&gt;&lt;b&gt;Status&lt;/b&gt;: &lt;span&gt;Active, started March 2015&lt;/span&gt;&lt;/div&gt;&lt;div&gt;Instructions: Take 1 time per day&lt;/div&gt;&lt;/li&gt;&lt;/ul&gt;&lt;/div&gt;&quot;</span>
+</span><span id="__span-16-75"><a id="__codelineno-16-75" name="__codelineno-16-75" href="#__codelineno-16-75"></a><span class="w">                        </span><span class="p">},</span>
+</span><span id="__span-16-76"><a id="__codelineno-16-76" name="__codelineno-16-76" href="#__codelineno-16-76"></a><span class="w">                        </span><span class="nt">&quot;entry&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+</span><span id="__span-16-77"><a id="__codelineno-16-77" name="__codelineno-16-77" href="#__codelineno-16-77"></a><span class="w">                            </span><span class="p">{</span>
+</span><span id="__span-16-78"><a id="__codelineno-16-78" name="__codelineno-16-78" href="#__codelineno-16-78"></a><span class="w">                                </span><span class="nt">&quot;reference&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;urn:uuid:e1271efd-18ff-4654-9ee7-45f40019c453&quot;</span>
+</span><span id="__span-16-79"><a id="__codelineno-16-79" name="__codelineno-16-79" href="#__codelineno-16-79"></a><span class="w">                            </span><span class="p">}</span>
+</span><span id="__span-16-80"><a id="__codelineno-16-80" name="__codelineno-16-80" href="#__codelineno-16-80"></a><span class="w">                        </span><span class="p">]</span>
+</span><span id="__span-16-81"><a id="__codelineno-16-81" name="__codelineno-16-81" href="#__codelineno-16-81"></a><span class="w">                    </span><span class="p">},</span>
+</span><span id="__span-16-82"><a id="__codelineno-16-82" name="__codelineno-16-82" href="#__codelineno-16-82"></a><span class="w">                    </span><span class="p">{</span>
+</span><span id="__span-16-83"><a id="__codelineno-16-83" name="__codelineno-16-83" href="#__codelineno-16-83"></a><span class="w">                        </span><span class="nt">&quot;title&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Allergies and Intolerances&quot;</span><span class="p">,</span>
+</span><span id="__span-16-84"><a id="__codelineno-16-84" name="__codelineno-16-84" href="#__codelineno-16-84"></a><span class="w">                        </span><span class="nt">&quot;code&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-16-85"><a id="__codelineno-16-85" name="__codelineno-16-85" href="#__codelineno-16-85"></a><span class="w">                            </span><span class="nt">&quot;coding&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+</span><span id="__span-16-86"><a id="__codelineno-16-86" name="__codelineno-16-86" href="#__codelineno-16-86"></a><span class="w">                                </span><span class="p">{</span>
+</span><span id="__span-16-87"><a id="__codelineno-16-87" name="__codelineno-16-87" href="#__codelineno-16-87"></a><span class="w">                                    </span><span class="nt">&quot;system&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;http://loinc.org&quot;</span><span class="p">,</span>
+</span><span id="__span-16-88"><a id="__codelineno-16-88" name="__codelineno-16-88" href="#__codelineno-16-88"></a><span class="w">                                    </span><span class="nt">&quot;code&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;48765-2&quot;</span><span class="p">,</span>
+</span><span id="__span-16-89"><a id="__codelineno-16-89" name="__codelineno-16-89" href="#__codelineno-16-89"></a><span class="w">                                    </span><span class="nt">&quot;display&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Allergies and adverse reactions Document&quot;</span>
+</span><span id="__span-16-90"><a id="__codelineno-16-90" name="__codelineno-16-90" href="#__codelineno-16-90"></a><span class="w">                                </span><span class="p">}</span>
+</span><span id="__span-16-91"><a id="__codelineno-16-91" name="__codelineno-16-91" href="#__codelineno-16-91"></a><span class="w">                            </span><span class="p">]</span>
+</span><span id="__span-16-92"><a id="__codelineno-16-92" name="__codelineno-16-92" href="#__codelineno-16-92"></a><span class="w">                        </span><span class="p">},</span>
+</span><span id="__span-16-93"><a id="__codelineno-16-93" name="__codelineno-16-93" href="#__codelineno-16-93"></a><span class="w">                        </span><span class="nt">&quot;text&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-16-94"><a id="__codelineno-16-94" name="__codelineno-16-94" href="#__codelineno-16-94"></a><span class="w">                            </span><span class="nt">&quot;status&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;generated&quot;</span><span class="p">,</span>
+</span><span id="__span-16-95"><a id="__codelineno-16-95" name="__codelineno-16-95" href="#__codelineno-16-95"></a><span class="w">                            </span><span class="nt">&quot;div&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;&lt;div xmlns=\&quot;http://www.w3.org/1999/xhtml\&quot;&gt;&lt;ul&gt;&lt;li&gt;&lt;div&gt;&lt;b&gt;Allergy Name&lt;/b&gt;: Pencillins&lt;/div&gt;&lt;div&gt;&lt;b&gt;Verification Status&lt;/b&gt;: Confirmed&lt;/div&gt;&lt;div&gt;&lt;b&gt;Reaction&lt;/b&gt;: &lt;span&gt;no information&lt;/span&gt;&lt;/div&gt;&lt;/li&gt;&lt;/ul&gt;&lt;/div&gt;&quot;</span>
+</span><span id="__span-16-96"><a id="__codelineno-16-96" name="__codelineno-16-96" href="#__codelineno-16-96"></a><span class="w">                        </span><span class="p">},</span>
+</span><span id="__span-16-97"><a id="__codelineno-16-97" name="__codelineno-16-97" href="#__codelineno-16-97"></a><span class="w">                        </span><span class="nt">&quot;entry&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+</span><span id="__span-16-98"><a id="__codelineno-16-98" name="__codelineno-16-98" href="#__codelineno-16-98"></a><span class="w">                            </span><span class="p">{</span>
+</span><span id="__span-16-99"><a id="__codelineno-16-99" name="__codelineno-16-99" href="#__codelineno-16-99"></a><span class="w">                                </span><span class="nt">&quot;reference&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;urn:uuid:74861316-f69d-4652-9fb1-8512a20c7927&quot;</span>
+</span><span id="__span-16-100"><a id="__codelineno-16-100" name="__codelineno-16-100" href="#__codelineno-16-100"></a><span class="w">                            </span><span class="p">}</span>
+</span><span id="__span-16-101"><a id="__codelineno-16-101" name="__codelineno-16-101" href="#__codelineno-16-101"></a><span class="w">                        </span><span class="p">]</span>
+</span><span id="__span-16-102"><a id="__codelineno-16-102" name="__codelineno-16-102" href="#__codelineno-16-102"></a><span class="w">                    </span><span class="p">}</span>
+</span><span id="__span-16-103"><a id="__codelineno-16-103" name="__codelineno-16-103" href="#__codelineno-16-103"></a><span class="w">                </span><span class="p">]</span>
+</span><span id="__span-16-104"><a id="__codelineno-16-104" name="__codelineno-16-104" href="#__codelineno-16-104"></a><span class="w">            </span><span class="p">}</span>
+</span><span id="__span-16-105"><a id="__codelineno-16-105" name="__codelineno-16-105" href="#__codelineno-16-105"></a><span class="w">        </span><span class="p">},</span>
+</span><span id="__span-16-106"><a id="__codelineno-16-106" name="__codelineno-16-106" href="#__codelineno-16-106"></a><span class="w">        </span><span class="p">{</span>
+</span><span id="__span-16-107"><a id="__codelineno-16-107" name="__codelineno-16-107" href="#__codelineno-16-107"></a><span class="w">            </span><span class="nt">&quot;fullUrl&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;urn:uuid:244ad7c3-beeb-41d1-8a2f-c76b8cf720ad&quot;</span><span class="p">,</span>
+</span><span id="__span-16-108"><a id="__codelineno-16-108" name="__codelineno-16-108" href="#__codelineno-16-108"></a><span class="w">            </span><span class="nt">&quot;resource&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-16-109"><a id="__codelineno-16-109" name="__codelineno-16-109" href="#__codelineno-16-109"></a><span class="w">                </span><span class="nt">&quot;resourceType&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Patient&quot;</span><span class="p">,</span>
+</span><span id="__span-16-110"><a id="__codelineno-16-110" name="__codelineno-16-110" href="#__codelineno-16-110"></a><span class="w">                </span><span class="nt">&quot;id&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;244ad7c3-beeb-41d1-8a2f-c76b8cf720ad&quot;</span><span class="p">,</span>
+</span><span id="__span-16-111"><a id="__codelineno-16-111" name="__codelineno-16-111" href="#__codelineno-16-111"></a><span class="w">                </span><span class="nt">&quot;name&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+</span><span id="__span-16-112"><a id="__codelineno-16-112" name="__codelineno-16-112" href="#__codelineno-16-112"></a><span class="w">                    </span><span class="p">{</span>
+</span><span id="__span-16-113"><a id="__codelineno-16-113" name="__codelineno-16-113" href="#__codelineno-16-113"></a><span class="w">                        </span><span class="nt">&quot;family&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;DeLarosa&quot;</span><span class="p">,</span>
+</span><span id="__span-16-114"><a id="__codelineno-16-114" name="__codelineno-16-114" href="#__codelineno-16-114"></a><span class="w">                        </span><span class="nt">&quot;given&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+</span><span id="__span-16-115"><a id="__codelineno-16-115" name="__codelineno-16-115" href="#__codelineno-16-115"></a><span class="w">                            </span><span class="s2">&quot;Martha&quot;</span>
+</span><span id="__span-16-116"><a id="__codelineno-16-116" name="__codelineno-16-116" href="#__codelineno-16-116"></a><span class="w">                        </span><span class="p">]</span>
+</span><span id="__span-16-117"><a id="__codelineno-16-117" name="__codelineno-16-117" href="#__codelineno-16-117"></a><span class="w">                    </span><span class="p">}</span>
+</span><span id="__span-16-118"><a id="__codelineno-16-118" name="__codelineno-16-118" href="#__codelineno-16-118"></a><span class="w">                </span><span class="p">],</span>
+</span><span id="__span-16-119"><a id="__codelineno-16-119" name="__codelineno-16-119" href="#__codelineno-16-119"></a><span class="w">                </span><span class="nt">&quot;birthDate&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;1972-05-01&quot;</span>
+</span><span id="__span-16-120"><a id="__codelineno-16-120" name="__codelineno-16-120" href="#__codelineno-16-120"></a><span class="w">            </span><span class="p">}</span>
+</span><span id="__span-16-121"><a id="__codelineno-16-121" name="__codelineno-16-121" href="#__codelineno-16-121"></a><span class="w">        </span><span class="p">},</span>
+</span><span id="__span-16-122"><a id="__codelineno-16-122" name="__codelineno-16-122" href="#__codelineno-16-122"></a><span class="w">        </span><span class="p">{</span>
+</span><span id="__span-16-123"><a id="__codelineno-16-123" name="__codelineno-16-123" href="#__codelineno-16-123"></a><span class="w">            </span><span class="nt">&quot;fullUrl&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;urn:uuid:45271f7f-63ab-4946-970f-3daaaa06637f&quot;</span><span class="p">,</span>
+</span><span id="__span-16-124"><a id="__codelineno-16-124" name="__codelineno-16-124" href="#__codelineno-16-124"></a><span class="w">            </span><span class="nt">&quot;resource&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-16-125"><a id="__codelineno-16-125" name="__codelineno-16-125" href="#__codelineno-16-125"></a><span class="w">                </span><span class="nt">&quot;resourceType&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Practitioner&quot;</span><span class="p">,</span>
+</span><span id="__span-16-126"><a id="__codelineno-16-126" name="__codelineno-16-126" href="#__codelineno-16-126"></a><span class="w">                </span><span class="nt">&quot;id&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;45271f7f-63ab-4946-970f-3daaaa06637f&quot;</span><span class="p">,</span>
+</span><span id="__span-16-127"><a id="__codelineno-16-127" name="__codelineno-16-127" href="#__codelineno-16-127"></a><span class="w">                </span><span class="nt">&quot;name&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+</span><span id="__span-16-128"><a id="__codelineno-16-128" name="__codelineno-16-128" href="#__codelineno-16-128"></a><span class="w">                    </span><span class="p">{</span>
+</span><span id="__span-16-129"><a id="__codelineno-16-129" name="__codelineno-16-129" href="#__codelineno-16-129"></a><span class="w">                        </span><span class="nt">&quot;family&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;van Hulp&quot;</span><span class="p">,</span>
+</span><span id="__span-16-130"><a id="__codelineno-16-130" name="__codelineno-16-130" href="#__codelineno-16-130"></a><span class="w">                        </span><span class="nt">&quot;given&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+</span><span id="__span-16-131"><a id="__codelineno-16-131" name="__codelineno-16-131" href="#__codelineno-16-131"></a><span class="w">                            </span><span class="s2">&quot;Beetje&quot;</span>
+</span><span id="__span-16-132"><a id="__codelineno-16-132" name="__codelineno-16-132" href="#__codelineno-16-132"></a><span class="w">                        </span><span class="p">]</span>
+</span><span id="__span-16-133"><a id="__codelineno-16-133" name="__codelineno-16-133" href="#__codelineno-16-133"></a><span class="w">                    </span><span class="p">}</span>
+</span><span id="__span-16-134"><a id="__codelineno-16-134" name="__codelineno-16-134" href="#__codelineno-16-134"></a><span class="w">                </span><span class="p">]</span>
+</span><span id="__span-16-135"><a id="__codelineno-16-135" name="__codelineno-16-135" href="#__codelineno-16-135"></a><span class="w">            </span><span class="p">}</span>
+</span><span id="__span-16-136"><a id="__codelineno-16-136" name="__codelineno-16-136" href="#__codelineno-16-136"></a><span class="w">        </span><span class="p">},</span>
+</span><span id="__span-16-137"><a id="__codelineno-16-137" name="__codelineno-16-137" href="#__codelineno-16-137"></a><span class="w">        </span><span class="p">{</span>
+</span><span id="__span-16-138"><a id="__codelineno-16-138" name="__codelineno-16-138" href="#__codelineno-16-138"></a><span class="w">            </span><span class="nt">&quot;fullUrl&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;urn:uuid:d179321e-c091-4cd4-8642-3a27537d506d&quot;</span><span class="p">,</span>
+</span><span id="__span-16-139"><a id="__codelineno-16-139" name="__codelineno-16-139" href="#__codelineno-16-139"></a><span class="w">            </span><span class="nt">&quot;resource&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-16-140"><a id="__codelineno-16-140" name="__codelineno-16-140" href="#__codelineno-16-140"></a><span class="w">                </span><span class="nt">&quot;resourceType&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Condition&quot;</span><span class="p">,</span>
+</span><span id="__span-16-141"><a id="__codelineno-16-141" name="__codelineno-16-141" href="#__codelineno-16-141"></a><span class="w">                </span><span class="nt">&quot;id&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;d179321e-c091-4cd4-8642-3a27537d506d&quot;</span><span class="p">,</span>
+</span><span id="__span-16-142"><a id="__codelineno-16-142" name="__codelineno-16-142" href="#__codelineno-16-142"></a><span class="w">                </span><span class="nt">&quot;code&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-16-143"><a id="__codelineno-16-143" name="__codelineno-16-143" href="#__codelineno-16-143"></a><span class="w">                    </span><span class="nt">&quot;coding&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+</span><span id="__span-16-144"><a id="__codelineno-16-144" name="__codelineno-16-144" href="#__codelineno-16-144"></a><span class="w">                        </span><span class="p">{</span>
+</span><span id="__span-16-145"><a id="__codelineno-16-145" name="__codelineno-16-145" href="#__codelineno-16-145"></a><span class="w">                            </span><span class="nt">&quot;system&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;http://snomed.info/sct&quot;</span><span class="p">,</span>
+</span><span id="__span-16-146"><a id="__codelineno-16-146" name="__codelineno-16-146" href="#__codelineno-16-146"></a><span class="w">                            </span><span class="nt">&quot;code&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;198436008&quot;</span><span class="p">,</span>
+</span><span id="__span-16-147"><a id="__codelineno-16-147" name="__codelineno-16-147" href="#__codelineno-16-147"></a><span class="w">                            </span><span class="nt">&quot;display&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Menopausal flushing (finding)&quot;</span>
+</span><span id="__span-16-148"><a id="__codelineno-16-148" name="__codelineno-16-148" href="#__codelineno-16-148"></a><span class="w">                        </span><span class="p">}</span>
+</span><span id="__span-16-149"><a id="__codelineno-16-149" name="__codelineno-16-149" href="#__codelineno-16-149"></a><span class="w">                    </span><span class="p">]</span>
+</span><span id="__span-16-150"><a id="__codelineno-16-150" name="__codelineno-16-150" href="#__codelineno-16-150"></a><span class="w">                </span><span class="p">},</span>
+</span><span id="__span-16-151"><a id="__codelineno-16-151" name="__codelineno-16-151" href="#__codelineno-16-151"></a><span class="w">                </span><span class="nt">&quot;subject&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-16-152"><a id="__codelineno-16-152" name="__codelineno-16-152" href="#__codelineno-16-152"></a><span class="w">                    </span><span class="nt">&quot;reference&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;urn:uuid:244ad7c3-beeb-41d1-8a2f-c76b8cf720ad&quot;</span>
+</span><span id="__span-16-153"><a id="__codelineno-16-153" name="__codelineno-16-153" href="#__codelineno-16-153"></a><span class="w">                </span><span class="p">}</span>
+</span><span id="__span-16-154"><a id="__codelineno-16-154" name="__codelineno-16-154" href="#__codelineno-16-154"></a><span class="w">            </span><span class="p">}</span>
+</span><span id="__span-16-155"><a id="__codelineno-16-155" name="__codelineno-16-155" href="#__codelineno-16-155"></a><span class="w">        </span><span class="p">},</span>
+</span><span id="__span-16-156"><a id="__codelineno-16-156" name="__codelineno-16-156" href="#__codelineno-16-156"></a><span class="w">        </span><span class="p">{</span>
+</span><span id="__span-16-157"><a id="__codelineno-16-157" name="__codelineno-16-157" href="#__codelineno-16-157"></a><span class="w">            </span><span class="nt">&quot;fullUrl&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;urn:uuid:e1271efd-18ff-4654-9ee7-45f40019c453&quot;</span><span class="p">,</span>
+</span><span id="__span-16-158"><a id="__codelineno-16-158" name="__codelineno-16-158" href="#__codelineno-16-158"></a><span class="w">            </span><span class="nt">&quot;resource&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-16-159"><a id="__codelineno-16-159" name="__codelineno-16-159" href="#__codelineno-16-159"></a><span class="w">                </span><span class="nt">&quot;resourceType&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;MedicationStatement&quot;</span><span class="p">,</span>
+</span><span id="__span-16-160"><a id="__codelineno-16-160" name="__codelineno-16-160" href="#__codelineno-16-160"></a><span class="w">                </span><span class="nt">&quot;id&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;e1271efd-18ff-4654-9ee7-45f40019c453&quot;</span><span class="p">,</span>
+</span><span id="__span-16-161"><a id="__codelineno-16-161" name="__codelineno-16-161" href="#__codelineno-16-161"></a><span class="w">                </span><span class="nt">&quot;status&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;active&quot;</span><span class="p">,</span>
+</span><span id="__span-16-162"><a id="__codelineno-16-162" name="__codelineno-16-162" href="#__codelineno-16-162"></a><span class="w">                </span><span class="nt">&quot;medicationReference&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-16-163"><a id="__codelineno-16-163" name="__codelineno-16-163" href="#__codelineno-16-163"></a><span class="w">                    </span><span class="nt">&quot;reference&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;urn:uuid:95db7c92-566a-4ded-896b-2220ab244a9e&quot;</span>
+</span><span id="__span-16-164"><a id="__codelineno-16-164" name="__codelineno-16-164" href="#__codelineno-16-164"></a><span class="w">                </span><span class="p">},</span>
+</span><span id="__span-16-165"><a id="__codelineno-16-165" name="__codelineno-16-165" href="#__codelineno-16-165"></a><span class="w">                </span><span class="nt">&quot;subject&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-16-166"><a id="__codelineno-16-166" name="__codelineno-16-166" href="#__codelineno-16-166"></a><span class="w">                    </span><span class="nt">&quot;reference&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;urn:uuid:244ad7c3-beeb-41d1-8a2f-c76b8cf720ad&quot;</span>
+</span><span id="__span-16-167"><a id="__codelineno-16-167" name="__codelineno-16-167" href="#__codelineno-16-167"></a><span class="w">                </span><span class="p">},</span>
+</span><span id="__span-16-168"><a id="__codelineno-16-168" name="__codelineno-16-168" href="#__codelineno-16-168"></a><span class="w">                </span><span class="nt">&quot;effectivePeriod&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-16-169"><a id="__codelineno-16-169" name="__codelineno-16-169" href="#__codelineno-16-169"></a><span class="w">                    </span><span class="nt">&quot;start&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;2015-03&quot;</span>
+</span><span id="__span-16-170"><a id="__codelineno-16-170" name="__codelineno-16-170" href="#__codelineno-16-170"></a><span class="w">                </span><span class="p">}</span>
+</span><span id="__span-16-171"><a id="__codelineno-16-171" name="__codelineno-16-171" href="#__codelineno-16-171"></a><span class="w">            </span><span class="p">}</span>
+</span><span id="__span-16-172"><a id="__codelineno-16-172" name="__codelineno-16-172" href="#__codelineno-16-172"></a><span class="w">        </span><span class="p">},</span>
+</span><span id="__span-16-173"><a id="__codelineno-16-173" name="__codelineno-16-173" href="#__codelineno-16-173"></a><span class="w">        </span><span class="p">{</span>
+</span><span id="__span-16-174"><a id="__codelineno-16-174" name="__codelineno-16-174" href="#__codelineno-16-174"></a><span class="w">            </span><span class="nt">&quot;fullUrl&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;urn:uuid:95db7c92-566a-4ded-896b-2220ab244a9e&quot;</span><span class="p">,</span>
+</span><span id="__span-16-175"><a id="__codelineno-16-175" name="__codelineno-16-175" href="#__codelineno-16-175"></a><span class="w">            </span><span class="nt">&quot;resource&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-16-176"><a id="__codelineno-16-176" name="__codelineno-16-176" href="#__codelineno-16-176"></a><span class="w">                </span><span class="nt">&quot;resourceType&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Medication&quot;</span><span class="p">,</span>
+</span><span id="__span-16-177"><a id="__codelineno-16-177" name="__codelineno-16-177" href="#__codelineno-16-177"></a><span class="w">                </span><span class="nt">&quot;id&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;95db7c92-566a-4ded-896b-2220ab244a9e&quot;</span><span class="p">,</span>
+</span><span id="__span-16-178"><a id="__codelineno-16-178" name="__codelineno-16-178" href="#__codelineno-16-178"></a><span class="w">                </span><span class="nt">&quot;code&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-16-179"><a id="__codelineno-16-179" name="__codelineno-16-179" href="#__codelineno-16-179"></a><span class="w">                    </span><span class="nt">&quot;coding&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+</span><span id="__span-16-180"><a id="__codelineno-16-180" name="__codelineno-16-180" href="#__codelineno-16-180"></a><span class="w">                        </span><span class="p">{</span>
+</span><span id="__span-16-181"><a id="__codelineno-16-181" name="__codelineno-16-181" href="#__codelineno-16-181"></a><span class="w">                            </span><span class="nt">&quot;system&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;http://snomed.info/sct&quot;</span><span class="p">,</span>
+</span><span id="__span-16-182"><a id="__codelineno-16-182" name="__codelineno-16-182" href="#__codelineno-16-182"></a><span class="w">                            </span><span class="nt">&quot;code&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;108774000&quot;</span><span class="p">,</span>
+</span><span id="__span-16-183"><a id="__codelineno-16-183" name="__codelineno-16-183" href="#__codelineno-16-183"></a><span class="w">                            </span><span class="nt">&quot;display&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Product containing anastrozole (medicinal product)&quot;</span>
+</span><span id="__span-16-184"><a id="__codelineno-16-184" name="__codelineno-16-184" href="#__codelineno-16-184"></a><span class="w">                        </span><span class="p">}</span>
+</span><span id="__span-16-185"><a id="__codelineno-16-185" name="__codelineno-16-185" href="#__codelineno-16-185"></a><span class="w">                    </span><span class="p">]</span>
+</span><span id="__span-16-186"><a id="__codelineno-16-186" name="__codelineno-16-186" href="#__codelineno-16-186"></a><span class="w">                </span><span class="p">}</span>
+</span><span id="__span-16-187"><a id="__codelineno-16-187" name="__codelineno-16-187" href="#__codelineno-16-187"></a><span class="w">            </span><span class="p">}</span>
+</span><span id="__span-16-188"><a id="__codelineno-16-188" name="__codelineno-16-188" href="#__codelineno-16-188"></a><span class="w">        </span><span class="p">},</span>
+</span><span id="__span-16-189"><a id="__codelineno-16-189" name="__codelineno-16-189" href="#__codelineno-16-189"></a><span class="w">        </span><span class="p">{</span>
+</span><span id="__span-16-190"><a id="__codelineno-16-190" name="__codelineno-16-190" href="#__codelineno-16-190"></a><span class="w">            </span><span class="nt">&quot;fullUrl&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;urn:uuid:74861316-f69d-4652-9fb1-8512a20c7927&quot;</span><span class="p">,</span>
+</span><span id="__span-16-191"><a id="__codelineno-16-191" name="__codelineno-16-191" href="#__codelineno-16-191"></a><span class="w">            </span><span class="nt">&quot;resource&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-16-192"><a id="__codelineno-16-192" name="__codelineno-16-192" href="#__codelineno-16-192"></a><span class="w">                </span><span class="nt">&quot;resourceType&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;AllergyIntolerance&quot;</span><span class="p">,</span>
+</span><span id="__span-16-193"><a id="__codelineno-16-193" name="__codelineno-16-193" href="#__codelineno-16-193"></a><span class="w">                </span><span class="nt">&quot;id&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;74861316-f69d-4652-9fb1-8512a20c7927&quot;</span><span class="p">,</span>
+</span><span id="__span-16-194"><a id="__codelineno-16-194" name="__codelineno-16-194" href="#__codelineno-16-194"></a><span class="w">                </span><span class="nt">&quot;clinicalStatus&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-16-195"><a id="__codelineno-16-195" name="__codelineno-16-195" href="#__codelineno-16-195"></a><span class="w">                    </span><span class="nt">&quot;coding&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+</span><span id="__span-16-196"><a id="__codelineno-16-196" name="__codelineno-16-196" href="#__codelineno-16-196"></a><span class="w">                        </span><span class="p">{</span>
+</span><span id="__span-16-197"><a id="__codelineno-16-197" name="__codelineno-16-197" href="#__codelineno-16-197"></a><span class="w">                            </span><span class="nt">&quot;system&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;http://terminology.hl7.org/CodeSystem/allergyintolerance-clinical&quot;</span><span class="p">,</span>
+</span><span id="__span-16-198"><a id="__codelineno-16-198" name="__codelineno-16-198" href="#__codelineno-16-198"></a><span class="w">                            </span><span class="nt">&quot;code&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;active&quot;</span>
+</span><span id="__span-16-199"><a id="__codelineno-16-199" name="__codelineno-16-199" href="#__codelineno-16-199"></a><span class="w">                        </span><span class="p">}</span>
+</span><span id="__span-16-200"><a id="__codelineno-16-200" name="__codelineno-16-200" href="#__codelineno-16-200"></a><span class="w">                    </span><span class="p">]</span>
+</span><span id="__span-16-201"><a id="__codelineno-16-201" name="__codelineno-16-201" href="#__codelineno-16-201"></a><span class="w">                </span><span class="p">},</span>
+</span><span id="__span-16-202"><a id="__codelineno-16-202" name="__codelineno-16-202" href="#__codelineno-16-202"></a><span class="w">                </span><span class="nt">&quot;code&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-16-203"><a id="__codelineno-16-203" name="__codelineno-16-203" href="#__codelineno-16-203"></a><span class="w">                    </span><span class="nt">&quot;coding&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+</span><span id="__span-16-204"><a id="__codelineno-16-204" name="__codelineno-16-204" href="#__codelineno-16-204"></a><span class="w">                        </span><span class="p">{</span>
+</span><span id="__span-16-205"><a id="__codelineno-16-205" name="__codelineno-16-205" href="#__codelineno-16-205"></a><span class="w">                            </span><span class="nt">&quot;system&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;http://snomed.info/sct&quot;</span><span class="p">,</span>
+</span><span id="__span-16-206"><a id="__codelineno-16-206" name="__codelineno-16-206" href="#__codelineno-16-206"></a><span class="w">                            </span><span class="nt">&quot;code&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;373270004&quot;</span><span class="p">,</span>
+</span><span id="__span-16-207"><a id="__codelineno-16-207" name="__codelineno-16-207" href="#__codelineno-16-207"></a><span class="w">                            </span><span class="nt">&quot;display&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Substance with penicillin structure and antibacterial mechanism of action (substance)&quot;</span>
+</span><span id="__span-16-208"><a id="__codelineno-16-208" name="__codelineno-16-208" href="#__codelineno-16-208"></a><span class="w">                        </span><span class="p">}</span>
+</span><span id="__span-16-209"><a id="__codelineno-16-209" name="__codelineno-16-209" href="#__codelineno-16-209"></a><span class="w">                    </span><span class="p">]</span>
+</span><span id="__span-16-210"><a id="__codelineno-16-210" name="__codelineno-16-210" href="#__codelineno-16-210"></a><span class="w">                </span><span class="p">},</span>
+</span><span id="__span-16-211"><a id="__codelineno-16-211" name="__codelineno-16-211" href="#__codelineno-16-211"></a><span class="w">                </span><span class="nt">&quot;patient&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-16-212"><a id="__codelineno-16-212" name="__codelineno-16-212" href="#__codelineno-16-212"></a><span class="w">                    </span><span class="nt">&quot;reference&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;urn:uuid:244ad7c3-beeb-41d1-8a2f-c76b8cf720ad&quot;</span>
+</span><span id="__span-16-213"><a id="__codelineno-16-213" name="__codelineno-16-213" href="#__codelineno-16-213"></a><span class="w">                </span><span class="p">}</span>
+</span><span id="__span-16-214"><a id="__codelineno-16-214" name="__codelineno-16-214" href="#__codelineno-16-214"></a><span class="w">            </span><span class="p">}</span>
+</span><span id="__span-16-215"><a id="__codelineno-16-215" name="__codelineno-16-215" href="#__codelineno-16-215"></a><span class="w">        </span><span class="p">}</span>
+</span><span id="__span-16-216"><a id="__codelineno-16-216" name="__codelineno-16-216" href="#__codelineno-16-216"></a><span class="w">    </span><span class="p">]</span>
+</span><span id="__span-16-217"><a id="__codelineno-16-217" name="__codelineno-16-217" href="#__codelineno-16-217"></a><span class="p">}</span>
+</span></code></pre></div></p>
+<h4 id="invalid-ips-document-missing-medication-section">Invalid IPS document: missing medication section</h4>
+<p>If we remove the medication section and medication entries (which are required by the <a href="https://hl7.org/fhir/uv/ips/2024Sep/StructureDefinition-Composition-uv-ips.html">IPS Composition profile</a>), we get an error and additional information:</p>
+<p><a href="https://test.ahdis.ch/matchboxv3/validate#resource=ewogICAgInJlc291cmNlVHlwZSI6ICJCdW5kbGUiLAogICAgImlkZW50aWZpZXIiOiB7CiAgICAgICAgInN5c3RlbSI6ICJ1cm46b2lkOjIuMTYuNzI0LjQuOC4xMC4yMDAuMTAiLAogICAgICAgICJ2YWx1ZSI6ICIyOGI5NTgxNS03NmNlLTQ1N2ItYjdhZS1hOTcyZTUyN2RiNDAiCiAgICB9LAogICAgInR5cGUiOiAiZG9jdW1lbnQiLAogICAgInRpbWVzdGFtcCI6ICIyMDIwLTEyLTExVDE0OjMwOjAwKzAxOjAwIiwKICAgICJlbnRyeSI6IFsKICAgICAgICB7CiAgICAgICAgICAgICJmdWxsVXJsIjogInVybjp1dWlkOmY0MGIwN2UzLTM3ZTgtNDhjMy1iZjFjLWFlNzBmZTEyZGFiMCIsCiAgICAgICAgICAgICJyZXNvdXJjZSI6IHsKICAgICAgICAgICAgICAgICJyZXNvdXJjZVR5cGUiOiAiQ29tcG9zaXRpb24iLAogICAgICAgICAgICAgICAgImlkIjogImY0MGIwN2UzLTM3ZTgtNDhjMy1iZjFjLWFlNzBmZTEyZGFiMCIsCiAgICAgICAgICAgICAgICAic3RhdHVzIjogImZpbmFsIiwKICAgICAgICAgICAgICAgICJ0eXBlIjogewogICAgICAgICAgICAgICAgICAgICJjb2RpbmciOiBbCiAgICAgICAgICAgICAgICAgICAgICAgIHsKICAgICAgICAgICAgICAgICAgICAgICAgICAgICJzeXN0ZW0iOiAiaHR0cDovL2xvaW5jLm9yZyIsCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAiY29kZSI6ICI2MDU5MS01IiwKICAgICAgICAgICAgICAgICAgICAgICAgICAgICJkaXNwbGF5IjogIlBhdGllbnQgc3VtbWFyeSBEb2N1bWVudCIKICAgICAgICAgICAgICAgICAgICAgICAgfQogICAgICAgICAgICAgICAgICAgIF0KICAgICAgICAgICAgICAgIH0sCiAgICAgICAgICAgICAgICAic3ViamVjdCI6IHsKICAgICAgICAgICAgICAgICAgICAicmVmZXJlbmNlIjogInVybjp1dWlkOjI0NGFkN2MzLWJlZWItNDFkMS04YTJmLWM3NmI4Y2Y3MjBhZCIKICAgICAgICAgICAgICAgIH0sCiAgICAgICAgICAgICAgICAiZGF0ZSI6ICIyMDIwLTEyLTExVDE0OjMwOjAwKzAxOjAwIiwKICAgICAgICAgICAgICAgICJhdXRob3IiOiBbCiAgICAgICAgICAgICAgICAgICAgewogICAgICAgICAgICAgICAgICAgICAgICAicmVmZXJlbmNlIjogInVybjp1dWlkOjQ1MjcxZjdmLTYzYWItNDk0Ni05NzBmLTNkYWFhYTA2NjM3ZiIKICAgICAgICAgICAgICAgICAgICB9CiAgICAgICAgICAgICAgICBdLAogICAgICAgICAgICAgICAgInRpdGxlIjogIlBhdGllbnQgU3VtbWFyeSBhcyBvZiBEZWNlbWJlciAxMSwgMjAyMCAxNDozMCIsCiAgICAgICAgICAgICAgICAiY29uZmlkZW50aWFsaXR5IjogIk4iLAogICAgICAgICAgICAgICAgInNlY3Rpb24iOiBbCiAgICAgICAgICAgICAgICAgICAgewogICAgICAgICAgICAgICAgICAgICAgICAidGl0bGUiOiAiQWN0aXZlIFByb2JsZW1zIiwKICAgICAgICAgICAgICAgICAgICAgICAgImNvZGUiOiB7CiAgICAgICAgICAgICAgICAgICAgICAgICAgICAiY29kaW5nIjogWwogICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIHsKICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgInN5c3RlbSI6ICJodHRwOi8vbG9pbmMub3JnIiwKICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgImNvZGUiOiAiMTE0NTAtNCIsCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICJkaXNwbGF5IjogIlByb2JsZW0gbGlzdCAtIFJlcG9ydGVkIgogICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIH0KICAgICAgICAgICAgICAgICAgICAgICAgICAgIF0KICAgICAgICAgICAgICAgICAgICAgICAgfSwKICAgICAgICAgICAgICAgICAgICAgICAgInRleHQiOiB7CiAgICAgICAgICAgICAgICAgICAgICAgICAgICAic3RhdHVzIjogImdlbmVyYXRlZCIsCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAiZGl2IjogIjxkaXYgeG1sbnM9XCJodHRwOi8vd3d3LnczLm9yZy8xOTk5L3hodG1sXCI%2BPHVsPjxsaT48ZGl2PjxiPkNvbmRpdGlvbiBOYW1lPC9iPjogTWVub3BhdXNhbCBGbHVzaGluZzwvZGl2PjxkaXY%2BPGI%2BQ29kZTwvYj46IDxzcGFuPjE5ODQzNjAwODwvc3Bhbj48L2Rpdj48ZGl2PjxiPlN0YXR1czwvYj46IDxzcGFuPkFjdGl2ZTwvc3Bhbj48L2Rpdj48L2xpPjwvdWw%2BPC9kaXY%2BIgogICAgICAgICAgICAgICAgICAgICAgICB9LAogICAgICAgICAgICAgICAgICAgICAgICAiZW50cnkiOiBbCiAgICAgICAgICAgICAgICAgICAgICAgICAgICB7CiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgInJlZmVyZW5jZSI6ICJ1cm46dXVpZDpkMTc5MzIxZS1jMDkxLTRjZDQtODY0Mi0zYTI3NTM3ZDUwNmQiCiAgICAgICAgICAgICAgICAgICAgICAgICAgICB9CiAgICAgICAgICAgICAgICAgICAgICAgIF0KICAgICAgICAgICAgICAgICAgICB9LAogICAgICAgICAgICAgICAgICAgIHsKICAgICAgICAgICAgICAgICAgICAgICAgInRpdGxlIjogIkFsbGVyZ2llcyBhbmQgSW50b2xlcmFuY2VzIiwKICAgICAgICAgICAgICAgICAgICAgICAgImNvZGUiOiB7CiAgICAgICAgICAgICAgICAgICAgICAgICAgICAiY29kaW5nIjogWwogICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIHsKICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgInN5c3RlbSI6ICJodHRwOi8vbG9pbmMub3JnIiwKICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgImNvZGUiOiAiNDg3NjUtMiIsCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICJkaXNwbGF5IjogIkFsbGVyZ2llcyBhbmQgYWR2ZXJzZSByZWFjdGlvbnMgRG9jdW1lbnQiCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgfQogICAgICAgICAgICAgICAgICAgICAgICAgICAgXQogICAgICAgICAgICAgICAgICAgICAgICB9LAogICAgICAgICAgICAgICAgICAgICAgICAidGV4dCI6IHsKICAgICAgICAgICAgICAgICAgICAgICAgICAgICJzdGF0dXMiOiAiZ2VuZXJhdGVkIiwKICAgICAgICAgICAgICAgICAgICAgICAgICAgICJkaXYiOiAiPGRpdiB4bWxucz1cImh0dHA6Ly93d3cudzMub3JnLzE5OTkveGh0bWxcIj48dWw%2BPGxpPjxkaXY%2BPGI%2BQWxsZXJneSBOYW1lPC9iPjogUGVuY2lsbGluczwvZGl2PjxkaXY%2BPGI%2BVmVyaWZpY2F0aW9uIFN0YXR1czwvYj46IENvbmZpcm1lZDwvZGl2PjxkaXY%2BPGI%2BUmVhY3Rpb248L2I%2BOiA8c3Bhbj5ubyBpbmZvcm1hdGlvbjwvc3Bhbj48L2Rpdj48L2xpPjwvdWw%2BPC9kaXY%2BIgogICAgICAgICAgICAgICAgICAgICAgICB9LAogICAgICAgICAgICAgICAgICAgICAgICAiZW50cnkiOiBbCiAgICAgICAgICAgICAgICAgICAgICAgICAgICB7CiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgInJlZmVyZW5jZSI6ICJ1cm46dXVpZDo3NDg2MTMxNi1mNjlkLTQ2NTItOWZiMS04NTEyYTIwYzc5MjciCiAgICAgICAgICAgICAgICAgICAgICAgICAgICB9CiAgICAgICAgICAgICAgICAgICAgICAgIF0KICAgICAgICAgICAgICAgICAgICB9CiAgICAgICAgICAgICAgICBdCiAgICAgICAgICAgIH0KICAgICAgICB9LAogICAgICAgIHsKICAgICAgICAgICAgImZ1bGxVcmwiOiAidXJuOnV1aWQ6MjQ0YWQ3YzMtYmVlYi00MWQxLThhMmYtYzc2YjhjZjcyMGFkIiwKICAgICAgICAgICAgInJlc291cmNlIjogewogICAgICAgICAgICAgICAgInJlc291cmNlVHlwZSI6ICJQYXRpZW50IiwKICAgICAgICAgICAgICAgICJpZCI6ICIyNDRhZDdjMy1iZWViLTQxZDEtOGEyZi1jNzZiOGNmNzIwYWQiLAogICAgICAgICAgICAgICAgIm5hbWUiOiBbCiAgICAgICAgICAgICAgICAgICAgewogICAgICAgICAgICAgICAgICAgICAgICAiZmFtaWx5IjogIkRlTGFyb3NhIiwKICAgICAgICAgICAgICAgICAgICAgICAgImdpdmVuIjogWwogICAgICAgICAgICAgICAgICAgICAgICAgICAgIk1hcnRoYSIKICAgICAgICAgICAgICAgICAgICAgICAgXQogICAgICAgICAgICAgICAgICAgIH0KICAgICAgICAgICAgICAgIF0sCiAgICAgICAgICAgICAgICAiYmlydGhEYXRlIjogIjE5NzItMDUtMDEiCiAgICAgICAgICAgIH0KICAgICAgICB9LAogICAgICAgIHsKICAgICAgICAgICAgImZ1bGxVcmwiOiAidXJuOnV1aWQ6NDUyNzFmN2YtNjNhYi00OTQ2LTk3MGYtM2RhYWFhMDY2MzdmIiwKICAgICAgICAgICAgInJlc291cmNlIjogewogICAgICAgICAgICAgICAgInJlc291cmNlVHlwZSI6ICJQcmFjdGl0aW9uZXIiLAogICAgICAgICAgICAgICAgImlkIjogIjQ1MjcxZjdmLTYzYWItNDk0Ni05NzBmLTNkYWFhYTA2NjM3ZiIsCiAgICAgICAgICAgICAgICAibmFtZSI6IFsKICAgICAgICAgICAgICAgICAgICB7CiAgICAgICAgICAgICAgICAgICAgICAgICJmYW1pbHkiOiAidmFuIEh1bHAiLAogICAgICAgICAgICAgICAgICAgICAgICAiZ2l2ZW4iOiBbCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAiQmVldGplIgogICAgICAgICAgICAgICAgICAgICAgICBdCiAgICAgICAgICAgICAgICAgICAgfQogICAgICAgICAgICAgICAgXQogICAgICAgICAgICB9CiAgICAgICAgfSwKICAgICAgICB7CiAgICAgICAgICAgICJmdWxsVXJsIjogInVybjp1dWlkOmQxNzkzMjFlLWMwOTEtNGNkNC04NjQyLTNhMjc1MzdkNTA2ZCIsCiAgICAgICAgICAgICJyZXNvdXJjZSI6IHsKICAgICAgICAgICAgICAgICJyZXNvdXJjZVR5cGUiOiAiQ29uZGl0aW9uIiwKICAgICAgICAgICAgICAgICJpZCI6ICJkMTc5MzIxZS1jMDkxLTRjZDQtODY0Mi0zYTI3NTM3ZDUwNmQiLAogICAgICAgICAgICAgICAgImNvZGUiOiB7CiAgICAgICAgICAgICAgICAgICAgImNvZGluZyI6IFsKICAgICAgICAgICAgICAgICAgICAgICAgewogICAgICAgICAgICAgICAgICAgICAgICAgICAgInN5c3RlbSI6ICJodHRwOi8vc25vbWVkLmluZm8vc2N0IiwKICAgICAgICAgICAgICAgICAgICAgICAgICAgICJjb2RlIjogIjE5ODQzNjAwOCIsCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAiZGlzcGxheSI6ICJNZW5vcGF1c2FsIGZsdXNoaW5nIChmaW5kaW5nKSIKICAgICAgICAgICAgICAgICAgICAgICAgfQogICAgICAgICAgICAgICAgICAgIF0KICAgICAgICAgICAgICAgIH0sCiAgICAgICAgICAgICAgICAic3ViamVjdCI6IHsKICAgICAgICAgICAgICAgICAgICAicmVmZXJlbmNlIjogInVybjp1dWlkOjI0NGFkN2MzLWJlZWItNDFkMS04YTJmLWM3NmI4Y2Y3MjBhZCIKICAgICAgICAgICAgICAgIH0KICAgICAgICAgICAgfQogICAgICAgIH0sCiAgICAgICAgewogICAgICAgICAgICAiZnVsbFVybCI6ICJ1cm46dXVpZDo3NDg2MTMxNi1mNjlkLTQ2NTItOWZiMS04NTEyYTIwYzc5MjciLAogICAgICAgICAgICAicmVzb3VyY2UiOiB7CiAgICAgICAgICAgICAgICAicmVzb3VyY2VUeXBlIjogIkFsbGVyZ3lJbnRvbGVyYW5jZSIsCiAgICAgICAgICAgICAgICAiaWQiOiAiNzQ4NjEzMTYtZjY5ZC00NjUyLTlmYjEtODUxMmEyMGM3OTI3IiwKICAgICAgICAgICAgICAgICJjbGluaWNhbFN0YXR1cyI6IHsKICAgICAgICAgICAgICAgICAgICAiY29kaW5nIjogWwogICAgICAgICAgICAgICAgICAgICAgICB7CiAgICAgICAgICAgICAgICAgICAgICAgICAgICAic3lzdGVtIjogImh0dHA6Ly90ZXJtaW5vbG9neS5obDcub3JnL0NvZGVTeXN0ZW0vYWxsZXJneWludG9sZXJhbmNlLWNsaW5pY2FsIiwKICAgICAgICAgICAgICAgICAgICAgICAgICAgICJjb2RlIjogImFjdGl2ZSIKICAgICAgICAgICAgICAgICAgICAgICAgfQogICAgICAgICAgICAgICAgICAgIF0KICAgICAgICAgICAgICAgIH0sCiAgICAgICAgICAgICAgICAiY29kZSI6IHsKICAgICAgICAgICAgICAgICAgICAiY29kaW5nIjogWwogICAgICAgICAgICAgICAgICAgICAgICB7CiAgICAgICAgICAgICAgICAgICAgICAgICAgICAic3lzdGVtIjogImh0dHA6Ly9zbm9tZWQuaW5mby9zY3QiLAogICAgICAgICAgICAgICAgICAgICAgICAgICAgImNvZGUiOiAiMzczMjcwMDA0IiwKICAgICAgICAgICAgICAgICAgICAgICAgICAgICJkaXNwbGF5IjogIlN1YnN0YW5jZSB3aXRoIHBlbmljaWxsaW4gc3RydWN0dXJlIGFuZCBhbnRpYmFjdGVyaWFsIG1lY2hhbmlzbSBvZiBhY3Rpb24gKHN1YnN0YW5jZSkiCiAgICAgICAgICAgICAgICAgICAgICAgIH0KICAgICAgICAgICAgICAgICAgICBdCiAgICAgICAgICAgICAgICB9LAogICAgICAgICAgICAgICAgInBhdGllbnQiOiB7CiAgICAgICAgICAgICAgICAgICAgInJlZmVyZW5jZSI6ICJ1cm46dXVpZDoyNDRhZDdjMy1iZWViLTQxZDEtOGEyZi1jNzZiOGNmNzIwYWQiCiAgICAgICAgICAgICAgICB9CiAgICAgICAgICAgIH0KICAgICAgICB9CiAgICBdCn0%3D&amp;profile=http%3A%2F%2Fhl7.org%2Ffhir%2Fuv%2Fips%2FStructureDefinition%2FBundle-uv-ips">example</a></p>
+<blockquote>
+<p>error [structure]: line 1, column 2, in Bundle:
+Slice 'Bundle.entry:composition': a matching slice is required, but not found (from http://hl7.org/fhir/uv/ips/StructureDefinition/Bundle-uv-ips|2.0.0-ballot). Note that other slices are allowed in addition to this required slice</p>
+</blockquote>
+<p>This error says that the IPS composition could not be found, we have to look for further information why this was not found: </p>
+<blockquote>
+<p>information [informational]: line 10, column 10, in Bundle.entry[0]:
+This element does not match any known slice defined in the profile http://hl7.org/fhir/uv/ips/StructureDefinition/Bundle-uv-ips|2.0.0-ballot (this may not be a problem, but you should check that it's not intended to match a slice)
+1. Bundle.entry[0]: Bundle.entry[0].resource: Composition.section: minimum required = 3, but only found 2 (from http://hl7.org/fhir/uv/ips/StructureDefinition/Composition-uv-ips|2.0.0-ballot)
+2. Bundle.entry[0]: Bundle.entry[0].resource: Slice 'Composition.section:sectionMedications': a matching slice is required, but not found (from http://hl7.org/fhir/uv/ips/StructureDefinition/Composition-uv-ips|2.0.0-ballot). Note that other slices are allowed in addition to this required slice</p>
+</blockquote>
+<p>The information indicates that the slicing conditions (minimum 3 sections are not met) and that the sectionMedications is required but not found.</p>
+<h4 id="invalid-ips-document-missing-patientbirthdate">Invalid IPS document: missing Patient.birthDate</h4>
+<p><a href="https://test.ahdis.ch/matchboxv3/validate#resource=ewogICAgInJlc291cmNlVHlwZSI6ICJCdW5kbGUiLAogICAgImlkZW50aWZpZXIiOiB7CiAgICAgICAgInN5c3RlbSI6ICJ1cm46b2lkOjIuMTYuNzI0LjQuOC4xMC4yMDAuMTAiLAogICAgICAgICJ2YWx1ZSI6ICIyOGI5NTgxNS03NmNlLTQ1N2ItYjdhZS1hOTcyZTUyN2RiNDAiCiAgICB9LAogICAgInR5cGUiOiAiZG9jdW1lbnQiLAogICAgInRpbWVzdGFtcCI6ICIyMDIwLTEyLTExVDE0OjMwOjAwKzAxOjAwIiwKICAgICJlbnRyeSI6IFsKICAgICAgICB7CiAgICAgICAgICAgICJmdWxsVXJsIjogInVybjp1dWlkOmY0MGIwN2UzLTM3ZTgtNDhjMy1iZjFjLWFlNzBmZTEyZGFiMCIsCiAgICAgICAgICAgICJyZXNvdXJjZSI6IHsKICAgICAgICAgICAgICAgICJyZXNvdXJjZVR5cGUiOiAiQ29tcG9zaXRpb24iLAogICAgICAgICAgICAgICAgImlkIjogImY0MGIwN2UzLTM3ZTgtNDhjMy1iZjFjLWFlNzBmZTEyZGFiMCIsCiAgICAgICAgICAgICAgICAic3RhdHVzIjogImZpbmFsIiwKICAgICAgICAgICAgICAgICJ0eXBlIjogewogICAgICAgICAgICAgICAgICAgICJjb2RpbmciOiBbCiAgICAgICAgICAgICAgICAgICAgICAgIHsKICAgICAgICAgICAgICAgICAgICAgICAgICAgICJzeXN0ZW0iOiAiaHR0cDovL2xvaW5jLm9yZyIsCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAiY29kZSI6ICI2MDU5MS01IiwKICAgICAgICAgICAgICAgICAgICAgICAgICAgICJkaXNwbGF5IjogIlBhdGllbnQgc3VtbWFyeSBEb2N1bWVudCIKICAgICAgICAgICAgICAgICAgICAgICAgfQogICAgICAgICAgICAgICAgICAgIF0KICAgICAgICAgICAgICAgIH0sCiAgICAgICAgICAgICAgICAic3ViamVjdCI6IHsKICAgICAgICAgICAgICAgICAgICAicmVmZXJlbmNlIjogInVybjp1dWlkOjI0NGFkN2MzLWJlZWItNDFkMS04YTJmLWM3NmI4Y2Y3MjBhZCIKICAgICAgICAgICAgICAgIH0sCiAgICAgICAgICAgICAgICAiZGF0ZSI6ICIyMDIwLTEyLTExVDE0OjMwOjAwKzAxOjAwIiwKICAgICAgICAgICAgICAgICJhdXRob3IiOiBbCiAgICAgICAgICAgICAgICAgICAgewogICAgICAgICAgICAgICAgICAgICAgICAicmVmZXJlbmNlIjogInVybjp1dWlkOjQ1MjcxZjdmLTYzYWItNDk0Ni05NzBmLTNkYWFhYTA2NjM3ZiIKICAgICAgICAgICAgICAgICAgICB9CiAgICAgICAgICAgICAgICBdLAogICAgICAgICAgICAgICAgInRpdGxlIjogIlBhdGllbnQgU3VtbWFyeSBhcyBvZiBEZWNlbWJlciAxMSwgMjAyMCAxNDozMCIsCiAgICAgICAgICAgICAgICAiY29uZmlkZW50aWFsaXR5IjogIk4iLAogICAgICAgICAgICAgICAgInNlY3Rpb24iOiBbCiAgICAgICAgICAgICAgICAgICAgewogICAgICAgICAgICAgICAgICAgICAgICAidGl0bGUiOiAiQWN0aXZlIFByb2JsZW1zIiwKICAgICAgICAgICAgICAgICAgICAgICAgImNvZGUiOiB7CiAgICAgICAgICAgICAgICAgICAgICAgICAgICAiY29kaW5nIjogWwogICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIHsKICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgInN5c3RlbSI6ICJodHRwOi8vbG9pbmMub3JnIiwKICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgImNvZGUiOiAiMTE0NTAtNCIsCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICJkaXNwbGF5IjogIlByb2JsZW0gbGlzdCAtIFJlcG9ydGVkIgogICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIH0KICAgICAgICAgICAgICAgICAgICAgICAgICAgIF0KICAgICAgICAgICAgICAgICAgICAgICAgfSwKICAgICAgICAgICAgICAgICAgICAgICAgInRleHQiOiB7CiAgICAgICAgICAgICAgICAgICAgICAgICAgICAic3RhdHVzIjogImdlbmVyYXRlZCIsCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAiZGl2IjogIjxkaXYgeG1sbnM9XCJodHRwOi8vd3d3LnczLm9yZy8xOTk5L3hodG1sXCI%2BPHVsPjxsaT48ZGl2PjxiPkNvbmRpdGlvbiBOYW1lPC9iPjogTWVub3BhdXNhbCBGbHVzaGluZzwvZGl2PjxkaXY%2BPGI%2BQ29kZTwvYj46IDxzcGFuPjE5ODQzNjAwODwvc3Bhbj48L2Rpdj48ZGl2PjxiPlN0YXR1czwvYj46IDxzcGFuPkFjdGl2ZTwvc3Bhbj48L2Rpdj48L2xpPjwvdWw%2BPC9kaXY%2BIgogICAgICAgICAgICAgICAgICAgICAgICB9LAogICAgICAgICAgICAgICAgICAgICAgICAiZW50cnkiOiBbCiAgICAgICAgICAgICAgICAgICAgICAgICAgICB7CiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgInJlZmVyZW5jZSI6ICJ1cm46dXVpZDpkMTc5MzIxZS1jMDkxLTRjZDQtODY0Mi0zYTI3NTM3ZDUwNmQiCiAgICAgICAgICAgICAgICAgICAgICAgICAgICB9CiAgICAgICAgICAgICAgICAgICAgICAgIF0KICAgICAgICAgICAgICAgICAgICB9LAogICAgICAgICAgICAgICAgICAgIHsKICAgICAgICAgICAgICAgICAgICAgICAgInRpdGxlIjogIk1lZGljYXRpb24iLAogICAgICAgICAgICAgICAgICAgICAgICAiY29kZSI6IHsKICAgICAgICAgICAgICAgICAgICAgICAgICAgICJjb2RpbmciOiBbCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgewogICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAic3lzdGVtIjogImh0dHA6Ly9sb2luYy5vcmciLAogICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAiY29kZSI6ICIxMDE2MC0wIiwKICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgImRpc3BsYXkiOiAiSGlzdG9yeSBvZiBNZWRpY2F0aW9uIHVzZSBOYXJyYXRpdmUiCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgfQogICAgICAgICAgICAgICAgICAgICAgICAgICAgXQogICAgICAgICAgICAgICAgICAgICAgICB9LAogICAgICAgICAgICAgICAgICAgICAgICAidGV4dCI6IHsKICAgICAgICAgICAgICAgICAgICAgICAgICAgICJzdGF0dXMiOiAiZ2VuZXJhdGVkIiwKICAgICAgICAgICAgICAgICAgICAgICAgICAgICJkaXYiOiAiPGRpdiB4bWxucz1cImh0dHA6Ly93d3cudzMub3JnLzE5OTkveGh0bWxcIj48dWw%2BPGxpPjxkaXY%2BPGI%2BTWVkaWNhdGlvbiBOYW1lPC9iPjogT3JhbCBhbmFzdHJvem9sZSAxbWcgdGFibGV0PC9kaXY%2BPGRpdj48Yj5Db2RlPC9iPjogPHNwYW4%2BPC9zcGFuPjwvZGl2PjxkaXY%2BPGI%2BU3RhdHVzPC9iPjogPHNwYW4%2BQWN0aXZlLCBzdGFydGVkIE1hcmNoIDIwMTU8L3NwYW4%2BPC9kaXY%2BPGRpdj5JbnN0cnVjdGlvbnM6IFRha2UgMSB0aW1lIHBlciBkYXk8L2Rpdj48L2xpPjwvdWw%2BPC9kaXY%2BIgogICAgICAgICAgICAgICAgICAgICAgICB9LAogICAgICAgICAgICAgICAgICAgICAgICAiZW50cnkiOiBbCiAgICAgICAgICAgICAgICAgICAgICAgICAgICB7CiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgInJlZmVyZW5jZSI6ICJ1cm46dXVpZDplMTI3MWVmZC0xOGZmLTQ2NTQtOWVlNy00NWY0MDAxOWM0NTMiCiAgICAgICAgICAgICAgICAgICAgICAgICAgICB9CiAgICAgICAgICAgICAgICAgICAgICAgIF0KICAgICAgICAgICAgICAgICAgICB9LAogICAgICAgICAgICAgICAgICAgIHsKICAgICAgICAgICAgICAgICAgICAgICAgInRpdGxlIjogIkFsbGVyZ2llcyBhbmQgSW50b2xlcmFuY2VzIiwKICAgICAgICAgICAgICAgICAgICAgICAgImNvZGUiOiB7CiAgICAgICAgICAgICAgICAgICAgICAgICAgICAiY29kaW5nIjogWwogICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIHsKICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgInN5c3RlbSI6ICJodHRwOi8vbG9pbmMub3JnIiwKICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgImNvZGUiOiAiNDg3NjUtMiIsCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICJkaXNwbGF5IjogIkFsbGVyZ2llcyBhbmQgYWR2ZXJzZSByZWFjdGlvbnMgRG9jdW1lbnQiCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgfQogICAgICAgICAgICAgICAgICAgICAgICAgICAgXQogICAgICAgICAgICAgICAgICAgICAgICB9LAogICAgICAgICAgICAgICAgICAgICAgICAidGV4dCI6IHsKICAgICAgICAgICAgICAgICAgICAgICAgICAgICJzdGF0dXMiOiAiZ2VuZXJhdGVkIiwKICAgICAgICAgICAgICAgICAgICAgICAgICAgICJkaXYiOiAiPGRpdiB4bWxucz1cImh0dHA6Ly93d3cudzMub3JnLzE5OTkveGh0bWxcIj48dWw%2BPGxpPjxkaXY%2BPGI%2BQWxsZXJneSBOYW1lPC9iPjogUGVuY2lsbGluczwvZGl2PjxkaXY%2BPGI%2BVmVyaWZpY2F0aW9uIFN0YXR1czwvYj46IENvbmZpcm1lZDwvZGl2PjxkaXY%2BPGI%2BUmVhY3Rpb248L2I%2BOiA8c3Bhbj5ubyBpbmZvcm1hdGlvbjwvc3Bhbj48L2Rpdj48L2xpPjwvdWw%2BPC9kaXY%2BIgogICAgICAgICAgICAgICAgICAgICAgICB9LAogICAgICAgICAgICAgICAgICAgICAgICAiZW50cnkiOiBbCiAgICAgICAgICAgICAgICAgICAgICAgICAgICB7CiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgInJlZmVyZW5jZSI6ICJ1cm46dXVpZDo3NDg2MTMxNi1mNjlkLTQ2NTItOWZiMS04NTEyYTIwYzc5MjciCiAgICAgICAgICAgICAgICAgICAgICAgICAgICB9CiAgICAgICAgICAgICAgICAgICAgICAgIF0KICAgICAgICAgICAgICAgICAgICB9CiAgICAgICAgICAgICAgICBdCiAgICAgICAgICAgIH0KICAgICAgICB9LAogICAgICAgIHsKICAgICAgICAgICAgImZ1bGxVcmwiOiAidXJuOnV1aWQ6MjQ0YWQ3YzMtYmVlYi00MWQxLThhMmYtYzc2YjhjZjcyMGFkIiwKICAgICAgICAgICAgInJlc291cmNlIjogewogICAgICAgICAgICAgICAgInJlc291cmNlVHlwZSI6ICJQYXRpZW50IiwKICAgICAgICAgICAgICAgICJpZCI6ICIyNDRhZDdjMy1iZWViLTQxZDEtOGEyZi1jNzZiOGNmNzIwYWQiLAogICAgICAgICAgICAgICAgIm5hbWUiOiBbCiAgICAgICAgICAgICAgICAgICAgewogICAgICAgICAgICAgICAgICAgICAgICAiZmFtaWx5IjogIkRlTGFyb3NhIiwKICAgICAgICAgICAgICAgICAgICAgICAgImdpdmVuIjogWwogICAgICAgICAgICAgICAgICAgICAgICAgICAgIk1hcnRoYSIKICAgICAgICAgICAgICAgICAgICAgICAgXQogICAgICAgICAgICAgICAgICAgIH0KICAgICAgICAgICAgICAgIF0KICAgICAgICAgICAgfQogICAgICAgIH0sCiAgICAgICAgewogICAgICAgICAgICAiZnVsbFVybCI6ICJ1cm46dXVpZDo0NTI3MWY3Zi02M2FiLTQ5NDYtOTcwZi0zZGFhYWEwNjYzN2YiLAogICAgICAgICAgICAicmVzb3VyY2UiOiB7CiAgICAgICAgICAgICAgICAicmVzb3VyY2VUeXBlIjogIlByYWN0aXRpb25lciIsCiAgICAgICAgICAgICAgICAiaWQiOiAiNDUyNzFmN2YtNjNhYi00OTQ2LTk3MGYtM2RhYWFhMDY2MzdmIiwKICAgICAgICAgICAgICAgICJuYW1lIjogWwogICAgICAgICAgICAgICAgICAgIHsKICAgICAgICAgICAgICAgICAgICAgICAgImZhbWlseSI6ICJ2YW4gSHVscCIsCiAgICAgICAgICAgICAgICAgICAgICAgICJnaXZlbiI6IFsKICAgICAgICAgICAgICAgICAgICAgICAgICAgICJCZWV0amUiCiAgICAgICAgICAgICAgICAgICAgICAgIF0KICAgICAgICAgICAgICAgICAgICB9CiAgICAgICAgICAgICAgICBdCiAgICAgICAgICAgIH0KICAgICAgICB9LAogICAgICAgIHsKICAgICAgICAgICAgImZ1bGxVcmwiOiAidXJuOnV1aWQ6ZDE3OTMyMWUtYzA5MS00Y2Q0LTg2NDItM2EyNzUzN2Q1MDZkIiwKICAgICAgICAgICAgInJlc291cmNlIjogewogICAgICAgICAgICAgICAgInJlc291cmNlVHlwZSI6ICJDb25kaXRpb24iLAogICAgICAgICAgICAgICAgImlkIjogImQxNzkzMjFlLWMwOTEtNGNkNC04NjQyLTNhMjc1MzdkNTA2ZCIsCiAgICAgICAgICAgICAgICAiY29kZSI6IHsKICAgICAgICAgICAgICAgICAgICAiY29kaW5nIjogWwogICAgICAgICAgICAgICAgICAgICAgICB7CiAgICAgICAgICAgICAgICAgICAgICAgICAgICAic3lzdGVtIjogImh0dHA6Ly9zbm9tZWQuaW5mby9zY3QiLAogICAgICAgICAgICAgICAgICAgICAgICAgICAgImNvZGUiOiAiMTk4NDM2MDA4IiwKICAgICAgICAgICAgICAgICAgICAgICAgICAgICJkaXNwbGF5IjogIk1lbm9wYXVzYWwgZmx1c2hpbmcgKGZpbmRpbmcpIgogICAgICAgICAgICAgICAgICAgICAgICB9CiAgICAgICAgICAgICAgICAgICAgXQogICAgICAgICAgICAgICAgfSwKICAgICAgICAgICAgICAgICJzdWJqZWN0IjogewogICAgICAgICAgICAgICAgICAgICJyZWZlcmVuY2UiOiAidXJuOnV1aWQ6MjQ0YWQ3YzMtYmVlYi00MWQxLThhMmYtYzc2YjhjZjcyMGFkIgogICAgICAgICAgICAgICAgfQogICAgICAgICAgICB9CiAgICAgICAgfSwKICAgICAgICB7CiAgICAgICAgICAgICJmdWxsVXJsIjogInVybjp1dWlkOmUxMjcxZWZkLTE4ZmYtNDY1NC05ZWU3LTQ1ZjQwMDE5YzQ1MyIsCiAgICAgICAgICAgICJyZXNvdXJjZSI6IHsKICAgICAgICAgICAgICAgICJyZXNvdXJjZVR5cGUiOiAiTWVkaWNhdGlvblN0YXRlbWVudCIsCiAgICAgICAgICAgICAgICAiaWQiOiAiZTEyNzFlZmQtMThmZi00NjU0LTllZTctNDVmNDAwMTljNDUzIiwKICAgICAgICAgICAgICAgICJzdGF0dXMiOiAiYWN0aXZlIiwKICAgICAgICAgICAgICAgICJtZWRpY2F0aW9uUmVmZXJlbmNlIjogewogICAgICAgICAgICAgICAgICAgICJyZWZlcmVuY2UiOiAidXJuOnV1aWQ6OTVkYjdjOTItNTY2YS00ZGVkLTg5NmItMjIyMGFiMjQ0YTllIgogICAgICAgICAgICAgICAgfSwKICAgICAgICAgICAgICAgICJzdWJqZWN0IjogewogICAgICAgICAgICAgICAgICAgICJyZWZlcmVuY2UiOiAidXJuOnV1aWQ6MjQ0YWQ3YzMtYmVlYi00MWQxLThhMmYtYzc2YjhjZjcyMGFkIgogICAgICAgICAgICAgICAgfSwKICAgICAgICAgICAgICAgICJlZmZlY3RpdmVQZXJpb2QiOiB7CiAgICAgICAgICAgICAgICAgICAgInN0YXJ0IjogIjIwMTUtMDMiCiAgICAgICAgICAgICAgICB9CiAgICAgICAgICAgIH0KICAgICAgICB9LAogICAgICAgIHsKICAgICAgICAgICAgImZ1bGxVcmwiOiAidXJuOnV1aWQ6OTVkYjdjOTItNTY2YS00ZGVkLTg5NmItMjIyMGFiMjQ0YTllIiwKICAgICAgICAgICAgInJlc291cmNlIjogewogICAgICAgICAgICAgICAgInJlc291cmNlVHlwZSI6ICJNZWRpY2F0aW9uIiwKICAgICAgICAgICAgICAgICJpZCI6ICI5NWRiN2M5Mi01NjZhLTRkZWQtODk2Yi0yMjIwYWIyNDRhOWUiLAogICAgICAgICAgICAgICAgImNvZGUiOiB7CiAgICAgICAgICAgICAgICAgICAgImNvZGluZyI6IFsKICAgICAgICAgICAgICAgICAgICAgICAgewogICAgICAgICAgICAgICAgICAgICAgICAgICAgInN5c3RlbSI6ICJodHRwOi8vc25vbWVkLmluZm8vc2N0IiwKICAgICAgICAgICAgICAgICAgICAgICAgICAgICJjb2RlIjogIjEwODc3NDAwMCIsCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAiZGlzcGxheSI6ICJQcm9kdWN0IGNvbnRhaW5pbmcgYW5hc3Ryb3pvbGUgKG1lZGljaW5hbCBwcm9kdWN0KSIKICAgICAgICAgICAgICAgICAgICAgICAgfQogICAgICAgICAgICAgICAgICAgIF0KICAgICAgICAgICAgICAgIH0KICAgICAgICAgICAgfQogICAgICAgIH0sCiAgICAgICAgewogICAgICAgICAgICAiZnVsbFVybCI6ICJ1cm46dXVpZDo3NDg2MTMxNi1mNjlkLTQ2NTItOWZiMS04NTEyYTIwYzc5MjciLAogICAgICAgICAgICAicmVzb3VyY2UiOiB7CiAgICAgICAgICAgICAgICAicmVzb3VyY2VUeXBlIjogIkFsbGVyZ3lJbnRvbGVyYW5jZSIsCiAgICAgICAgICAgICAgICAiaWQiOiAiNzQ4NjEzMTYtZjY5ZC00NjUyLTlmYjEtODUxMmEyMGM3OTI3IiwKICAgICAgICAgICAgICAgICJjbGluaWNhbFN0YXR1cyI6IHsKICAgICAgICAgICAgICAgICAgICAiY29kaW5nIjogWwogICAgICAgICAgICAgICAgICAgICAgICB7CiAgICAgICAgICAgICAgICAgICAgICAgICAgICAic3lzdGVtIjogImh0dHA6Ly90ZXJtaW5vbG9neS5obDcub3JnL0NvZGVTeXN0ZW0vYWxsZXJneWludG9sZXJhbmNlLWNsaW5pY2FsIiwKICAgICAgICAgICAgICAgICAgICAgICAgICAgICJjb2RlIjogImFjdGl2ZSIKICAgICAgICAgICAgICAgICAgICAgICAgfQogICAgICAgICAgICAgICAgICAgIF0KICAgICAgICAgICAgICAgIH0sCiAgICAgICAgICAgICAgICAiY29kZSI6IHsKICAgICAgICAgICAgICAgICAgICAiY29kaW5nIjogWwogICAgICAgICAgICAgICAgICAgICAgICB7CiAgICAgICAgICAgICAgICAgICAgICAgICAgICAic3lzdGVtIjogImh0dHA6Ly9zbm9tZWQuaW5mby9zY3QiLAogICAgICAgICAgICAgICAgICAgICAgICAgICAgImNvZGUiOiAiMzczMjcwMDA0IiwKICAgICAgICAgICAgICAgICAgICAgICAgICAgICJkaXNwbGF5IjogIlN1YnN0YW5jZSB3aXRoIHBlbmljaWxsaW4gc3RydWN0dXJlIGFuZCBhbnRpYmFjdGVyaWFsIG1lY2hhbmlzbSBvZiBhY3Rpb24gKHN1YnN0YW5jZSkiCiAgICAgICAgICAgICAgICAgICAgICAgIH0KICAgICAgICAgICAgICAgICAgICBdCiAgICAgICAgICAgICAgICB9LAogICAgICAgICAgICAgICAgInBhdGllbnQiOiB7CiAgICAgICAgICAgICAgICAgICAgInJlZmVyZW5jZSI6ICJ1cm46dXVpZDoyNDRhZDdjMy1iZWViLTQxZDEtOGEyZi1jNzZiOGNmNzIwYWQiCiAgICAgICAgICAgICAgICB9CiAgICAgICAgICAgIH0KICAgICAgICB9CiAgICBdCn0%3D&amp;profile=http%3A%2F%2Fhl7.org%2Ffhir%2Fuv%2Fips%2FStructureDefinition%2FBundle-uv-ips">example</a></p>
+<p>If we remove the patient birhtDate (which is required by the <a href="https://hl7.org/fhir/uv/ips/2024Sep/StructureDefinition-Patient-uv-ips.html">IPS Patient profile</a>), we get two errors and a huge list of information issues:</p>
+<blockquote>
+<p>error [structure]: line 1, column 2, in Bundle:
+Slice 'Bundle.entry:composition': a matching slice is required, but not found (from http://hl7.org/fhir/uv/ips/StructureDefinition/Bundle-uv-ips|2.0.0-ballot). Note that other slices are allowed in addition to this required slice</p>
+</blockquote>
+<p>This error says that the IPS composition could not be found, we have to look for further information why this was not found. </p>
+<blockquote>
+<p>error [structure]: line 1, column 2, in Bundle:
+Slice 'Bundle.entry:patient': a matching slice is required, but not found (from http://hl7.org/fhir/uv/ips/StructureDefinition/Bundle-uv-ips|2.0.0-ballot). Note that other slices are allowed in addition to this required slice</p>
+</blockquote>
+<p>This indicates that the validator did not find a corresponding patient but we have to look further why this is not the case.</p>
+<blockquote>
+<p>information [informational]: line 10, column 10, in Bundle.entry[0]:
+This element does not match any known slice defined in the profile http://hl7.org/fhir/uv/ips/StructureDefinition/Bundle-uv-ips|2.0.0-ballot (this may not be a problem, but you should check that it's not intended to match a slice)
+1. Bundle.entry[0]: Bundle.entry[0].resource.subject: Bundle.entry[1].resource/<em>Patient/244ad7c3-beeb-41d1-8a2f-c76b8cf720ad</em>/: Patient.birthDate: minimum required = 1, but only found 0 (from http://hl7.org/fhir/uv/ips/StructureDefinition/Patient-uv-ips|2.0.0-ballot)
+2. Bundle.entry[0]: Bundle.entry[0].resource.section[0].entry[0]: Bundle.entry[0].resource.section[0].entry[0]: Bundle.entry[3].resource.subject: Bundle.entry[1].resource/<em>Patient/244ad7c3-beeb-41d1-8a2f-c76b8cf720ad</em>/: Patient.birthDate: minimum required = 1, but only found 0 (from http://hl7.org/fhir/uv/ips/StructureDefinition/Patient-uv-ips|2.0.0-ballot)
+3. Bundle.entry[0]: Bundle.entry[0].resource.section[1].entry[0]: Bundle.entry[0].resource.section[1].entry[0]: Bundle.entry[4].resource.subject: Bundle.entry[1].resource/<em>Patient/244ad7c3-beeb-41d1-8a2f-c76b8cf720ad</em>/: Patient.birthDate: minimum required = 1, but only found 0 (from http://hl7.org/fhir/uv/ips/StructureDefinition/Patient-uv-ips|2.0.0-ballot)
+4. Bundle.entry[0]: Bundle.entry[0].resource.section[2].entry[0]: Bundle.entry[0].resource.section[2].entry[0]: Bundle.entry[6].resource.patient: Bundle.entry[1].resource/<em>Patient/244ad7c3-beeb-41d1-8a2f-c76b8cf720ad</em>/: Patient.birthDate: minimum required = 1, but only found 0 (from http://hl7.org/fhir/uv/ips/StructureDefinition/Patient-uv-ips|2.0.0-ballot)</p>
+</blockquote>
+<p>Here we see why the Composition did not match the slice, Composition.subject points to Patient, where the birthDate is not provided, in additions also in the referenced resources out of the sections have references to the patient which is not conforming to the IPS Patient profile.</p>
+<blockquote>
+<p>information [informational]: line 103, column 10, in Bundle.entry[1]:
+This element does not match any known slice defined in the profile http://hl7.org/fhir/uv/ips/StructureDefinition/Bundle-uv-ips|2.0.0-ballot (this may not be a problem, but you should check that it's not intended to match a slice)
+1. Bundle.entry[1]: Bundle.entry[1].resource/<em>Patient/244ad7c3-beeb-41d1-8a2f-c76b8cf720ad</em>/: Patient.birthDate: minimum required = 1, but only found 0 (from http://hl7.org/fhir/uv/ips/StructureDefinition/Patient-uv-ips|2.0.0-ballot)</p>
+</blockquote>
+<p>Here we see that the Patient would need to have birthDate that is missing to conform to the profile.</p>
+<blockquote>
+<p>information [informational]: line 133, column 10, in Bundle.entry[3]:
+This element does not match any known slice defined in the profile http://hl7.org/fhir/uv/ips/StructureDefinition/Bundle-uv-ips|2.0.0-ballot (this may not be a problem, but you should check that it's not intended to match a slice)
+1. Bundle.entry[3]: Bundle.entry[3].resource.subject: Bundle.entry[1].resource/<em>Patient/244ad7c3-beeb-41d1-8a2f-c76b8cf720ad</em>/: Patient.birthDate: minimum required = 1, but only found 0 (from http://hl7.org/fhir/uv/ips/StructureDefinition/Patient-uv-ips|2.0.0-ballot)</p>
+<p>information [informational]: line 152, column 10, in Bundle.entry[4]:
+This element does not match any known slice defined in the profile http://hl7.org/fhir/uv/ips/StructureDefinition/Bundle-uv-ips|2.0.0-ballot (this may not be a problem, but you should check that it's not intended to match a slice)
+1. Bundle.entry[4]: Bundle.entry[4].resource.subject: Bundle.entry[1].resource/<em>Patient/244ad7c3-beeb-41d1-8a2f-c76b8cf720ad</em>/: Patient.birthDate: minimum required = 1, but only found 0 (from http://hl7.org/fhir/uv/ips/StructureDefinition/Patient-uv-ips|2.0.0-ballot)</p>
+<p>information [informational]: line 185, column 10, in Bundle.entry[6]:
+This element does not match any known slice defined in the profile http://hl7.org/fhir/uv/ips/StructureDefinition/Bundle-uv-ips|2.0.0-ballot (this may not be a problem, but you should check that it's not intended to match a slice)
+1. Bundle.entry[6]: Bundle.entry[6].resource.patient: Bundle.entry[1].resource/<em>Patient/244ad7c3-beeb-41d1-8a2f-c76b8cf720ad</em>/: Patient.birthDate: minimum required = 1, but only found 0 (from http://hl7.org/fhir/uv/ips/StructureDefinition/Patient-uv-ips|2.0.0-ballot)</p>
+</blockquote>
+<p>The validator can us not tell directly that Patient.birthDate is missing, it could have other Patient in the Bundle. The validator tells us that a Composition and a Patient according to the IPS definitions could not be found and we have to figure out ourself why they did not match.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    <script id="__config" type="application/json">{"base": "..", "features": [], "search": "../assets/javascripts/workers/search.f8cc74c7.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}}</script>
+    
+    
+      <script src="../assets/javascripts/bundle.60a45f97.min.js"></script>
+      
+    
+  </body>
+</html>
