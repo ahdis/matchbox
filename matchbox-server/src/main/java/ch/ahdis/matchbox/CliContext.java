@@ -202,6 +202,25 @@ public class CliContext {
   public boolean getXVersion() {
     return xVersion;
   }
+
+  @JsonProperty("llmProvider")
+  private String llmProvider;
+
+  public String getLlmProvider() {
+    return llmProvider;
+  }
+
+  private String modelName;
+
+  public String getModelName() {
+    return modelName;
+  }
+
+  private String apiKey;
+
+  public String getApiKey() {
+    return apiKey;
+  }
   
   @JsonProperty("check-references")
   private boolean checkReferences = false;
@@ -215,6 +234,8 @@ public class CliContext {
   @JsonProperty("disableDefaultResourceFetcher")
   private boolean disableDefaultResourceFetcher = true;
 
+  @JsonProperty("analyzeOutcomeWithAI")
+  private boolean analyzeOutcomeWithAI = false;
 
   @Autowired
   public CliContext(Environment environment) {
@@ -244,6 +265,10 @@ public class CliContext {
     this.httpReadOnly = environment.getProperty("matchbox.fhir.context.httpReadOnly", Boolean.class, false);
     this.extensions = Arrays.asList(environment.getProperty("matchbox.fhir.context.extensions", String[].class, new String[]{"any"}));
     this.xVersion = environment.getProperty("matchbox.fhir.context.xVersion", Boolean.class, false);
+    this.analyzeOutcomeWithAI = environment.getProperty("matchbox.fhir.context.analyzeOutcomeWithAI", Boolean.class, false);
+    this.llmProvider = environment.getProperty("matchbox.fhir.context.llm.provider", String.class);
+    this.modelName = environment.getProperty("matchbox.fhir.context.llm.modelName", String.class);
+    this.apiKey = environment.getProperty("matchbox.fhir.context.llm.apiKey", String.class);
   }
 
   public CliContext(CliContext other) {
@@ -264,6 +289,9 @@ public class CliContext {
     this.httpReadOnly = other.httpReadOnly;
     this.extensions = other.extensions;
     this.xVersion = other.xVersion;
+    this.llmProvider = other.llmProvider;
+    this.modelName = other.modelName;
+    this.apiKey = other.apiKey;
   }
 
   @JsonProperty("ig")
@@ -689,7 +717,7 @@ public class CliContext {
   public void setDisableDefaultResourceFetcher(boolean disableDefaultResourceFetcher) {
     this.disableDefaultResourceFetcher = disableDefaultResourceFetcher;
   }
-
+  
   public boolean isCheckIpsCodes() {
     return this.checkIpsCodes;
   }
@@ -706,6 +734,16 @@ public class CliContext {
   @JsonProperty("bundle")
   public void setBundle(String bundle) {
     this.bundle = bundle;
+  }
+
+  @JsonProperty("analyzeOutcomeWithAI")
+  public boolean getAnalyzeOutcomeWithAI() {
+    return analyzeOutcomeWithAI;
+  }
+
+  @JsonProperty("analyzeOutcomeWithAI")
+  public void setAnalyzeOutcomeWithAI(boolean analyzeOutcomeWithAI) {
+    this.analyzeOutcomeWithAI = analyzeOutcomeWithAI;
   }
 
   @Override
@@ -757,6 +795,10 @@ public class CliContext {
         && checkReferences == that.checkReferences
         && Objects.equals(resolutionContext, that.resolutionContext)
         && disableDefaultResourceFetcher == that.disableDefaultResourceFetcher
+        && analyzeOutcomeWithAI == that.analyzeOutcomeWithAI
+        && Objects.equals(llmProvider, that.llmProvider)
+        && Objects.equals(modelName, that.modelName)
+        && Objects.equals(apiKey, that.apiKey)
         && checkIpsCodes == that.checkIpsCodes
         && Objects.equals(bundle, that.bundle);
   }
@@ -805,6 +847,10 @@ public class CliContext {
         checkReferences,
         resolutionContext,
         disableDefaultResourceFetcher,
+        analyzeOutcomeWithAI,
+        llmProvider,
+        modelName,
+        apiKey,
         checkIpsCodes,
         bundle);
     result = 31 * result + Arrays.hashCode(igsPreloaded);
@@ -857,6 +903,9 @@ public class CliContext {
         ", checkReferences=" + checkReferences +
         ", resolutionContext=" + resolutionContext +
         ", disableDefaultResourceFetcher=" + disableDefaultResourceFetcher +
+        ", analyzeOutcomeWithAI=" + analyzeOutcomeWithAI +
+        ", llmProvider='" + llmProvider + '\'' +
+        ", modelName='" + modelName + '\'' +
         ", checkIpsCodes=" + checkIpsCodes +
         ", bundle=" + bundle +
         '}';
@@ -914,6 +963,9 @@ public class CliContext {
 	addExtension(ext, "check-references", new BooleanType(this.checkReferences));
 	addExtension(ext, "resolution-context", new StringType(this.resolutionContext));
 	addExtension(ext, "disableDefaultResourceFetcher", new BooleanType(this.disableDefaultResourceFetcher));
+  addExtension(ext, "analyzeOutcomeWithAI", new BooleanType(this.analyzeOutcomeWithAI));
+  addExtension(ext, "llmProvider", new StringType(this.llmProvider));
+  addExtension(ext, "modelName", new StringType(this.modelName));
 	addExtension(ext, "check-ips-codes", new BooleanType(this.checkIpsCodes));
 	addExtension(ext, "bundle", new StringType(this.bundle));
   for( var extension : this.extensions) {

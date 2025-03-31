@@ -13,6 +13,7 @@ import { FormControl, Validators } from '@angular/forms';
 import { StructureDefinition } from './structure-definition';
 import { ToastrService } from 'ngx-toastr';
 import {ValidationCodeEditor} from "./validation-code-editor";
+import { HttpClient } from '@angular/common/http';
 
 const INDENT_SPACES = 2;
 
@@ -52,12 +53,15 @@ export class ValidateComponent implements AfterViewInit {
   showSettings: boolean = false;
   currentResource: UploadedFile | null = null;
 
+  showAIAnalyzeButton: boolean = false;
+
   package: ArrayBuffer;
 
   constructor(
     data: FhirConfigService,
     private cd: ChangeDetectorRef,
     private toastr: ToastrService,
+    private httpClient: HttpClient,
   ) {
     this.client = data.getFhirClient();
 
@@ -379,6 +383,25 @@ export class ValidateComponent implements AfterViewInit {
     this.runValidation(entry);
   }
 
+  onAiAnalyzeButtonClick() {
+    let aiAnalyzeSetting = {name: "analyzeOutcomeWithAI", value: "true"};
+    let settings = this.getCurrentValidationSettings()
+    settings.push(aiAnalyzeSetting);
+    let entry = new ValidationEntry(
+      this.currentResource.filename,
+      this.currentResource.content,
+      this.currentResource.contentType,
+      [this.selectedProfile],
+      settings
+    );
+    if (this.selectedIg != this.AUTO_IG_SELECTION) {
+      entry.ig = this.selectedIg;
+    }
+    this.validationEntries.unshift(entry);
+    this.show(entry);
+    this.runValidation(entry);
+  }
+
   /**
    * Toggle the display of the settings pane.
    */
@@ -470,8 +493,8 @@ export class ValidateComponent implements AfterViewInit {
   private getCurrentValidationSettings(): ValidationParameter[] {
     const parameters: ValidationParameter[] = [];
     for (const [_, setting] of this.validatorSettings) {
-      if (setting.formControl.value != null && setting.formControl.value.length > 0) {
-        parameters.push(new ValidationParameter(setting.param.name, setting.formControl.value));
+      if (setting.formControl.value != null && setting.formControl.value.toString().length > 0) {
+        parameters.push(new ValidationParameter(setting.param.name, setting.formControl.value.toString()));
       }
     }
     return parameters;
@@ -516,9 +539,12 @@ export class ValidateComponent implements AfterViewInit {
         });
         this.updateProfileFilter();
       }
+      if (parameter.name == 'llmProvider' && parameter.extension) {
+        this.showAIAnalyzeButton = true;
+      }
     });
     od.parameter
-      .filter((f) => f.use == 'in' && f.name != 'resource' && f.name != 'profile' && f.name != 'ig')
+      .filter((f) => f.use == 'in' && f.name != 'resource' && f.name != 'profile' && f.name != 'ig' && f.name != 'llmProvider')
       .forEach((parameter: fhir.r4.OperationDefinitionParameter) => {
         this.validatorSettings.set(parameter.name, new ValidationParameterDefinition(parameter));
       });

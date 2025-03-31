@@ -28,6 +28,7 @@ import ca.uhn.fhir.rest.api.EncodingEnum;
 import ca.uhn.fhir.util.StopWatch;
 import ch.ahdis.matchbox.CliContext;
 import ch.ahdis.matchbox.util.MatchboxEngineSupport;
+import ch.ahdis.matchbox.validation.matchspark.LLMConnector;
 import ch.ahdis.matchbox.engine.MatchboxEngine;
 import ch.ahdis.matchbox.engine.cli.VersionUtil;
 import ch.ahdis.matchbox.engine.exception.MatchboxUnsupportedFhirVersionException;
@@ -45,6 +46,7 @@ import org.hl7.fhir.convertors.factory.VersionConvertorFactory_40_50;
 import org.hl7.fhir.convertors.factory.VersionConvertorFactory_43_50;
 import org.hl7.fhir.instance.model.api.IBase;
 import org.hl7.fhir.instance.model.api.IBaseResource;
+import org.hl7.fhir.r5.model.CodeableConcept;
 import org.hl7.fhir.r5.elementmodel.Manager.FhirFormat;
 import org.hl7.fhir.r5.model.Duration;
 import org.hl7.fhir.r5.model.OperationOutcome;
@@ -166,6 +168,9 @@ public class ValidationProvider {
 		}
 		String profile = theRequest.getParameter("profile");
 
+		// Check if AI parameter is set
+		boolean aiAnalyze = cliContext.getAnalyzeOutcomeWithAI();
+
 		boolean reload = false;
 		if (theRequest.getParameter("reload") != null) {
 			reload = theRequest.getParameter("reload").equals("true");
@@ -228,7 +233,27 @@ public class ValidationProvider {
 		long millis = sw.getMillis();
 		log.debug("Validation time: {}", sw);
 
-		return this.getOperationOutcome(sha3Hex, messages, profile, engine, millis, cliContext);
+		var oo = this.getOperationOutcome(sha3Hex, messages, profile, engine, millis, cliContext);
+		if (aiAnalyze) {
+			try {
+				LLMConnector openAIConnector = LLMConnector.getConnector(cliContext);
+				String json = FhirContext.forR5().newJsonParser().setPrettyPrint(true).encodeResourceToString(oo);
+				String aiResult = openAIConnector.interpretWithMatchbox(contentString, json);
+				oo = this.addAIIssueToOperationOutcome(oo, aiResult);
+			} catch (Exception e) {
+				log.error("Error during AI analysis", e);
+				return this.getOoForError("Error during AI analysis: %s".formatted(e.getMessage()));
+			}
+		}
+
+		
+		return switch (this.myContext.getVersion().getVersion()) {
+			case R4 -> VersionConvertorFactory_40_50.convertResource((OperationOutcome) oo);
+			case R4B -> VersionConvertorFactory_43_50.convertResource((OperationOutcome) oo);
+			case R5 -> oo;
+			default -> throw new MatchboxUnsupportedFhirVersionException("ValidationProvider",
+																							 this.myContext.getVersion().getVersion());
+		};
 	}
 
 	private IBaseResource getOperationOutcome(final String id,
@@ -321,13 +346,7 @@ public class ValidationProvider {
 			issue.setDiagnostics("No fatal or error issues detected, the validation has passed");
 		}
 
-		return switch (this.myContext.getVersion().getVersion()) {
-			case R4 -> VersionConvertorFactory_40_50.convertResource(oo);
-			case R4B -> VersionConvertorFactory_43_50.convertResource(oo);
-			case R5 -> oo;
-			default -> throw new MatchboxUnsupportedFhirVersionException("ValidationProvider",
-																							 this.myContext.getVersion().getVersion());
-		};
+		return oo;
 	}
 
 	private IBaseResource getOoForError(final @NonNull String message) {
@@ -455,5 +474,23 @@ public class ValidationProvider {
 			messages.add(m);
 		} 
 		return messages;
+	}
+
+	public IBaseResource addAIIssueToOperationOutcome(IBaseResource resource, String aiResponse) {
+		if (resource instanceof OperationOutcome) {
+			var outcome = (OperationOutcome) resource;
+			
+			var issue = outcome.addIssue();
+			issue.setSeverity(OperationOutcome.IssueSeverity.INFORMATION);
+			issue.setCode(OperationOutcome.IssueType.INFORMATIONAL);
+			issue.setDiagnostics(aiResponse);
+			issue.addExtension().setUrl("http://hl7.org/fhir/StructureDefinition/rendering-style").setValue(new StringType("markdown"));
+			CodeableConcept details = new CodeableConcept();
+        	details.setText("AI Analyze of the Operation Outcome");
+			issue.setDetails(details);
+	
+			return outcome;
+		}
+		throw new IllegalArgumentException("Provided resource is not an OperationOutcome.");
 	}
 }

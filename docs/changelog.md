@@ -2,6 +2,7 @@
 
 - Fix handling of UTF-8 content in the validator GUI [#363](https://github.com/ahdis/matchbox/issues/363)
 - FML: support resolve() for source thx to @mrunibe 
+- Add AI Analyze feature to validator [#350](https://github.com/ahdis/matchbox/issues/350)
 
 2025/03/19 Release 4.0.0
 

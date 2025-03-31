@@ -64,16 +64,21 @@
           <mat-hint>A specific IG version may be specified.</mat-hint>
         </mat-form-field>
       </div>
-
-      <button color="primary" mat-raised-button (click)="onValidationButtonClick()">Validate</button>
+      <div class="button-row">
+        <button color="primary" mat-raised-button (click)="onValidationButtonClick()">Validate</button>
+        <button *ngIf="showAIAnalyzeButton" color="primary" mat-raised-button (click)="onAiAnalyzeButtonClick()">Analyze Operation Outcome with AI</button>
+      </div>
     </ng-container>
 
     <ng-container *ngIf="showSettings">
       <div *ngFor="let setting of validatorSettings.values()" class="form-field-group">
-        <mat-form-field class="column50">
+        <mat-form-field class="column50" *ngIf="setting.param.type !== 'boolean'">
           <mat-label>{{ setting.param.name }}</mat-label>
           <input [formControl]="setting.formControl" matInput/>
         </mat-form-field>
+        <mat-checkbox *ngIf="setting.param.type === 'boolean'" [formControl]="setting.formControl">
+          {{ setting.param.name }}
+        </mat-checkbox>
       </div>
     </ng-container>
   </div>
