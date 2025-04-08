@@ -1,27 +1,28 @@
-import { AfterViewInit, ChangeDetectorRef, Component } from '@angular/core';
-import { FhirConfigService } from '../fhirConfig.service';
+import {AfterViewInit, ChangeDetectorRef, Component} from '@angular/core';
+import {FhirConfigService} from '../fhirConfig.service';
 import FhirClient from 'fhir-kit-client';
 import pako from 'pako';
 import untar from 'js-untar';
-import { IDroppedBlob } from '../upload/upload.component';
+import {IDroppedBlob} from '../upload/upload.component';
 import ace from 'ace-builds';
-import { ValidationEntry } from './validation-entry';
+import {ValidationEntry} from './validation-entry';
 import {ValidationParameter, ValidationParameterDefinition} from './validation-parameter';
-import { ITarEntry } from './tar-entry';
-import { Issue, OperationResult } from '../util/operation-result';
-import { FormControl, Validators } from '@angular/forms';
-import { StructureDefinition } from './structure-definition';
-import { ToastrService } from 'ngx-toastr';
+import {ITarEntry} from './tar-entry';
+import {Issue, OperationResult} from '../util/operation-result';
+import {FormControl, Validators} from '@angular/forms';
+import {StructureDefinition} from './structure-definition';
+import {ToastrService} from 'ngx-toastr';
 import {ValidationCodeEditor} from "./validation-code-editor";
 import { HttpClient } from '@angular/common/http';
+import {Base64} from 'js-base64';
 
 const INDENT_SPACES = 2;
 
 @Component({
-    selector: 'app-validate',
-    templateUrl: './validate.component.html',
-    styleUrls: ['./validate.component.scss'],
-    standalone: false
+  selector: 'app-validate',
+  templateUrl: './validate.component.html',
+  styleUrls: ['./validate.component.scss'],
+  standalone: false
 })
 export class ValidateComponent implements AfterViewInit {
   readonly AUTO_IG_SELECTION = 'AUTOMATIC';
@@ -66,7 +67,7 @@ export class ValidateComponent implements AfterViewInit {
     this.client = data.getFhirClient();
 
     const validateOperationDefinitionPromise = this.client
-          .read({ resourceType: 'OperationDefinition', id: '-s-validate' });
+      .read({resourceType: 'OperationDefinition', id: '-s-validate'});
 
     const implementationGuidesPromise = this.client
       .search({
@@ -440,28 +441,32 @@ export class ValidateComponent implements AfterViewInit {
 
   getDirectLink(entry: ValidationEntry): string {
     const url = new URL(document.location.href);
+    // Remove all search params
     url.searchParams.forEach((name: string) => {
       url.searchParams.delete(name);
     });
 
-    url.searchParams.set('resource', this.base64Encode(entry.resource));
-    url.searchParams.set('profile', entry.selectedProfile);
+    const hashParams = new URLSearchParams();
+    hashParams.set('resource', Base64.encodeURI(entry.resource));
+    hashParams.set('profile', entry.selectedProfile);
     if (entry.ig) {
-      url.searchParams.set('ig', entry.ig);
+      hashParams.set('ig', entry.ig);
     }
 
     for (const param of entry.validationParameters) {
-      url.searchParams.set(param.name, param.value);
+      hashParams.set(param.name, param.value);
     }
 
+    url.hash = hashParams.toString();
     return url.toString();
   }
 
-  copyDirectLink(event: MouseEvent,entry: ValidationEntry) {
+  copyDirectLink(event: MouseEvent, entry: ValidationEntry) {
     if ('clipboard' in navigator) {
       event.preventDefault();
       const url = this.getDirectLink(entry);
-      navigator.clipboard.writeText(url).then(() => {});
+      navigator.clipboard.writeText(url).then(() => {
+      });
     }
   }
 
@@ -574,7 +579,7 @@ export class ValidateComponent implements AfterViewInit {
         }
       }
 
-      const resource = this.base64Encode(searchParams.get('resource'));
+      const resource = Base64.decode(searchParams.get('resource'));
       let contentType = 'application/fhir+json';
       if (resource.startsWith('<')) {
         contentType = 'application/fhir+xml';
@@ -597,16 +602,6 @@ export class ValidateComponent implements AfterViewInit {
       });
     }
   }
-
-  // Never use btoa() on UTF-8 directly
-  // https://developer.mozilla.org/en-US/docs/Web/API/Window/btoa
-  private base64Encode(str: string): string {
-    return window.btoa(
-      String.fromCharCode(
-        ...new TextEncoder().encode(str)
-      )
-    );
-  }
 }
 
 /**
@@ -618,7 +613,8 @@ class UploadedFile {
     public contentType: string,
     public content: string,
     public resourceType: string
-  ) {}
+  ) {
+  }
 }
 
 /**
