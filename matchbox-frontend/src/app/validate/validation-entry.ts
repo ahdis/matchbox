@@ -8,6 +8,7 @@ export class ValidationEntry {
   resourceId: string;
   readonly mimetype: string;
   result: OperationResult | undefined;
+  aiRecommendation: string;
   readonly profiles: string[] = [];
   selectedProfile: string;
   ig?: string;
@@ -72,6 +73,10 @@ export class ValidationEntry {
 
   setOperationOutcome(operationOutcome: fhir.r4.OperationOutcome): void {
     this.result = OperationResult.fromOperationOutcome(operationOutcome);
+  }
+
+  setAiRecommendation(operationOutcome: fhir.r4.OperationOutcome): void {
+    this.aiRecommendation = operationOutcome.text.div
   }
 
   extractJsonInfo(): void {
