@@ -9,6 +9,8 @@ import ca.uhn.fhir.context.support.IValidationSupport;
 import ca.uhn.fhir.jpa.config.JpaConfig;
 import ch.ahdis.matchbox.CliContext;
 import ch.ahdis.matchbox.interceptors.*;
+import ch.ahdis.matchbox.packages.MatchboxJpaPackageCache;
+import ca.uhn.fhir.jpa.dao.data.MbInstalledStructureDefinitionRepository;
 import ch.ahdis.matchbox.mappinglanguage.StructureMapListProvider;
 import ch.ahdis.matchbox.packages.*;
 import ch.ahdis.matchbox.providers.*;
@@ -66,7 +68,6 @@ import ca.uhn.fhir.jpa.search.DatabaseBackedPagingProvider;
 import ca.uhn.fhir.jpa.searchparam.MatchUrlService;
 import ca.uhn.fhir.jpa.starter.AppProperties;
 import ca.uhn.fhir.jpa.starter.common.StarterJpaConfig;
-import ca.uhn.fhir.jpa.validation.JpaValidationSupportChain;
 import ca.uhn.fhir.mdm.provider.MdmProviderLoader;
 import ca.uhn.fhir.rest.server.RestfulServer;
 import ca.uhn.fhir.rest.server.exceptions.InvalidRequestException;
@@ -166,6 +167,9 @@ public class MatchboxJpaConfig extends StarterJpaConfig {
 	@Autowired
 	private ValueSetCodeValidationProvider valueSetCodeValidationProvider;
 
+	@Autowired
+	private MbInstalledStructureDefinitionRepository installedStructureDefinitionRepository;
+
 	// removed GraphQlProvider
 	// removed IVAldiationSupport
 	
@@ -246,7 +250,11 @@ public class MatchboxJpaConfig extends StarterJpaConfig {
 																      "implementationGuideResourceProvider");
 		}
 
-		fhirServer.setServerConformanceProvider(new MatchboxCapabilityStatementProvider(this.myFhirContext,fhirServer, structureDefinitionProvider, getCliContext()));
+		fhirServer.setServerConformanceProvider(new MatchboxCapabilityStatementProvider(this.myFhirContext,
+																												  fhirServer,
+																												  this.structureDefinitionProvider,
+																												  getCliContext(),
+																												  this.installedStructureDefinitionRepository));
 
 		return fhirServer;
 	}
@@ -420,5 +428,10 @@ public class MatchboxJpaConfig extends StarterJpaConfig {
 	@Bean
 	public InstallNpmPackageProvider installNpmPackageOperationProvider(final MatchboxPackageInstallerImpl packageInstallerSvc) {
 		return new InstallNpmPackageProvider(packageInstallerSvc);
+	}
+
+	@Bean
+	public MatchboxJpaPackageCache matchboxJpaPackageCache(final MbInstalledStructureDefinitionRepository installedStructureDefinitionRepository) {
+		return new MatchboxJpaPackageCache(installedStructureDefinitionRepository);
 	}
 }

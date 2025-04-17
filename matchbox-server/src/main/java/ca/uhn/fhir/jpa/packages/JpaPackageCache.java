@@ -138,6 +138,9 @@ public class JpaPackageCache extends BasePackageCacheManager implements IHapiPac
 
 	@Autowired(required = false) // It is possible that some implementers will not create such a bean.
 	private IBinaryStorageSvc myBinaryStorageSvc;
+  
+  @Autowired
+  private MatchboxJpaPackageCache matchboxJpaPackageCache;
 
 	@Override
 	public void addPackageServer(@Nonnull PackageServer thePackageServer) {
@@ -416,7 +419,7 @@ public class JpaPackageCache extends BasePackageCacheManager implements IHapiPac
 						resourceEntity.setCanonicalVersion(version);
 					}
           // PATCH MATCHBOX: the next line is our customization hook: https://github.com/ahdis/matchbox/issues/341
-          MatchboxJpaPackageCache.customizeNpmPackageVersionResourceEntity(resourceEntity, resource);
+          matchboxJpaPackageCache.interceptEntityBeforeSaving(resourceEntity, resource);
 					myPackageVersionResourceDao.save(resourceEntity);
 
 					String resType = packageContext.getResourceType(resource);

@@ -29,7 +29,6 @@ import ca.uhn.fhir.jpa.api.dao.DaoRegistry;
 import ca.uhn.fhir.jpa.binary.api.IBinaryStorageSvc;
 import ca.uhn.fhir.jpa.dao.data.INpmPackageVersionResourceDao;
 import ca.uhn.fhir.jpa.model.entity.NpmPackageVersionResourceEntity;
-import ca.uhn.fhir.jpa.starter.AppProperties;
 import ca.uhn.fhir.model.api.Include;
 import ca.uhn.fhir.model.api.annotation.Description;
 import ca.uhn.fhir.rest.annotation.ConditionalUrlParam;
@@ -57,16 +56,11 @@ import ch.ahdis.matchbox.engine.MatchboxEngine;
 import ca.uhn.fhir.rest.api.MethodOutcome;
 import ca.uhn.fhir.rest.server.IResourceProvider;
 
-import static ch.ahdis.matchbox.util.MatchboxServerUtils.addExtension;
-
 @DisallowConcurrentExecution
 public class ConformancePackageResourceProvider<R4 extends MetadataResource, R4B extends org.hl7.fhir.r4b.model.CanonicalResource, R5 extends org.hl7.fhir.r5.model.CanonicalResource> implements IResourceProvider {
 
 	@Autowired
 	protected MatchboxEngineSupport matchboxEngineSupport;
-
-	@Autowired
-	AppProperties appProperties;
 
 	@Autowired
 	private INpmPackageVersionResourceDao myPackageVersionResourceDao;
@@ -198,67 +192,6 @@ public class ConformancePackageResourceProvider<R4 extends MetadataResource, R4B
 			}
 		}
 		return null;
-	}
-
-	/**
-	 * Returns the list of installed StructureDefinitions, as a list of R5 CanonicalTypes.
-	 */
-	public List<org.hl7.fhir.r5.model.CanonicalType> getCanonicalsR5() {
-		return new TransactionTemplate(myTxManager).execute(tx -> {
-			final var page = PageRequest.of(0, 2147483646);
-
-			// Find the IDs of the current StructureDefinitions.
-			final var currentEntityIds =
-				this.myPackageVersionResourceDao.findCurrentByResourceType(page, this.resourceType)
-					.stream()
-					.map(NpmPackageVersionResourceEntity::getId)
-					.collect(Collectors.toUnmodifiableSet());
-
-			return this.myPackageVersionResourceDao.findByResourceType(page, this.resourceType)
-				.stream()
-				.peek(entity -> {
-					// NB: getCanonicalVersion() may be null is rare cases, but getPackageVersion().getVersionId() should not
-					if (entity.getCanonicalVersion() == null) {
-						entity.setCanonicalVersion(entity.getPackageVersion().getVersionId());
-					}
-				})
-				// Sort the StructureDefinitions by canonical URL first, and then by version
-				.sorted(Comparator
-							  .comparing(NpmPackageVersionResourceEntity::getCanonicalUrl)
-							  .thenComparing(NpmPackageVersionResourceEntity::getCanonicalVersion))
-				.map(entity -> {
-					final var canonical = new org.hl7.fhir.r5.model.CanonicalType(entity.getCanonicalUrl());
-					// Add custom extensions to the CanonicalType to store additional information
-					addExtension(canonical, "ig-id",
-									 new org.hl7.fhir.r5.model.StringType(entity.getPackageVersion().getPackageId()));
-					addExtension(canonical, "ig-version",
-									 new org.hl7.fhir.r5.model.StringType(entity.getCanonicalVersion()));
-					addExtension(canonical, "ig-current",
-									 new org.hl7.fhir.r5.model.BooleanType(currentEntityIds.contains(entity.getId())));
-					addExtension(canonical, "sd-canonical", new org.hl7.fhir.r5.model.StringType(entity.getCanonicalUrl()));
-					if (entity.getFilename() != null && !entity.getFilename().isBlank()) {
-						addExtension(canonical, "sd-title", new org.hl7.fhir.r5.model.StringType(entity.getFilename()));
-					} else {
-						addExtension(canonical, "sd-title", new org.hl7.fhir.r5.model.StringType(entity.getCanonicalUrl()));
-					}
-					return canonical;
-				})
-				.toList();
-		});
-	}
-
-	public List<NpmPackageVersionResourceEntity> getPackageResources() {
-		return new TransactionTemplate(this.myTxManager).execute(tx -> {
-			return myPackageVersionResourceDao
-				.findByResourceType(PageRequest.of(0, 2147483646), resourceType).stream().toList();
-		});
-	}
-
-	public List<NpmPackageVersionResourceEntity> getCurrentPackageResources() {
-		return new TransactionTemplate(this.myTxManager).execute(tx -> {
-			return myPackageVersionResourceDao
-				.findCurrentByResourceType(PageRequest.of(0, 2147483646), resourceType).stream().toList();
-		});
 	}
 
 	protected IBaseResource loadPackageEntityAdjustId(NpmPackageVersionResourceEntity contents) {

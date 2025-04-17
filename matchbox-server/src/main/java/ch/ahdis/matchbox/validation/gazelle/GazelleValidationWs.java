@@ -1,12 +1,12 @@
 package ch.ahdis.matchbox.validation.gazelle;
 
-import ca.uhn.fhir.jpa.model.entity.NpmPackageVersionResourceEntity;
+import ca.uhn.fhir.jpa.dao.data.MbInstalledStructureDefinitionRepository;
+import ca.uhn.fhir.jpa.model.entity.MbInstalledStructureDefinitionEntity;
 import ca.uhn.fhir.rest.api.EncodingEnum;
 import ca.uhn.fhir.util.StopWatch;
 import ch.ahdis.matchbox.validation.ValidationProvider;
 import ch.ahdis.matchbox.CliContext;
 import ch.ahdis.matchbox.util.MatchboxEngineSupport;
-import ch.ahdis.matchbox.providers.StructureDefinitionResourceProvider;
 import ch.ahdis.matchbox.engine.MatchboxEngine;
 import ch.ahdis.matchbox.engine.cli.VersionUtil;
 import ch.ahdis.matchbox.engine.exception.MatchboxEngineCreationException;
@@ -28,8 +28,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
-import static ch.ahdis.matchbox.packages.MatchboxJpaPackageCache.structureDefinitionIsValidatable;
-
 /**
  * The WebService for validation with the new Gazelle Validation API.
  *
@@ -49,17 +47,17 @@ public class GazelleValidationWs {
 
 	private final MatchboxEngineSupport matchboxEngineSupport;
 
-	private final StructureDefinitionResourceProvider structureDefinitionProvider;
+	private final MbInstalledStructureDefinitionRepository installedStructureDefinitionRepository;
 
 	// The base CLI context, with the default parameters
 	private final CliContext baseCliContext;
 
 	public GazelleValidationWs(final MatchboxEngineSupport matchboxEngineSupport,
 										final CliContext baseCliContext,
-										final StructureDefinitionResourceProvider structureDefinitionProvider) {
+										final MbInstalledStructureDefinitionRepository installedStructureDefinitionRepository) {
 		this.matchboxEngineSupport = Objects.requireNonNull(matchboxEngineSupport);
 		this.baseCliContext = Objects.requireNonNull(baseCliContext);
-		this.structureDefinitionProvider = Objects.requireNonNull(structureDefinitionProvider);
+		this.installedStructureDefinitionRepository = Objects.requireNonNull(installedStructureDefinitionRepository);
 	}
 
 	/**
@@ -97,28 +95,24 @@ public class GazelleValidationWs {
 	@GetMapping(path = PROFILES_PATH, produces = MediaType.APPLICATION_JSON_VALUE)
 	public List<ValidationProfile> getProfiles() {
 		// Filter the extensions, because they won't be validated directly
-		final List<NpmPackageVersionResourceEntity> entities =
-			this.structureDefinitionProvider.getPackageResources().stream()
-			.filter(packageVersionResource -> structureDefinitionIsValidatable(packageVersionResource.getFilename()))
-			.toList();
+		final List<MbInstalledStructureDefinitionEntity> entities =
+			this.installedStructureDefinitionRepository.findAllValidatable();
 
 		final var profiles = new ArrayList<ValidationProfile>(entities.size()*2);
-		entities.forEach(packageVersionResource -> {
+		entities.forEach(installedStructDef -> {
 				final var profile = new ValidationProfile();
-				final var version = packageVersionResource.getCanonicalVersion();
-				profile.setProfileID("%s|%s".formatted(packageVersionResource.getCanonicalUrl(), version));
-				// PATCHed: filename contains the StructureDefinition title.
-				profile.setProfileName("%s (%s)".formatted(packageVersionResource.getFilename(), version));
-				profile.setDomain(packageVersionResource.getPackageVersion().getPackageId());
+				final var version = installedStructDef.getPackageVersion();
+				profile.setProfileID("%s|%s".formatted(installedStructDef.getCanonicalUrl(), version));
+				profile.setProfileName("%s (%s)".formatted(installedStructDef.getTitle(), version));
+				profile.setDomain(installedStructDef.getPackageId());
 				profiles.add(profile);
 
 				// If the package is current, we also add it version-less
-				if (packageVersionResource.getPackageVersion().isCurrentVersion()) {
+				if (installedStructDef.isCurrent()) {
 					final var profile2 = new ValidationProfile();
-					profile2.setProfileID(packageVersionResource.getCanonicalUrl());
-					// PATCHed: filename contains the StructureDefinition title.
-					profile2.setProfileName(packageVersionResource.getFilename());
-					profile2.setDomain(packageVersionResource.getPackageVersion().getPackageId());
+					profile2.setProfileID(installedStructDef.getCanonicalUrl());
+					profile2.setProfileName(installedStructDef.getTitle());
+					profile2.setDomain(installedStructDef.getPackageId());
 					profiles.add(profile2);
 				}
 			});
