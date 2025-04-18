@@ -3,6 +3,7 @@ package ch.ahdis.matchbox.providers;
 import ca.uhn.fhir.context.BaseRuntimeChildDefinition;
 import ca.uhn.fhir.context.BaseRuntimeElementDefinition;
 import ca.uhn.fhir.context.FhirContext;
+import ca.uhn.fhir.jpa.dao.data.MbInstalledStructureDefinitionRepository;
 import ca.uhn.fhir.rest.annotation.IdParam;
 import ca.uhn.fhir.rest.annotation.Read;
 import ca.uhn.fhir.rest.api.server.RequestDetails;
@@ -20,29 +21,33 @@ import org.hl7.fhir.instance.model.api.IBaseConformance;
 import org.hl7.fhir.instance.model.api.IBaseResource;
 import org.hl7.fhir.instance.model.api.IIdType;
 import org.hl7.fhir.r5.model.BooleanType;
+import org.hl7.fhir.r5.model.CanonicalType;
 import org.hl7.fhir.r5.model.CapabilityStatement;
-import org.hl7.fhir.r5.model.DataType;
 import org.hl7.fhir.r5.model.Enumerations;
 import org.hl7.fhir.r5.model.OperationDefinition;
 import org.hl7.fhir.r5.model.StringType;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.lang.reflect.Field;
-
-import static ch.ahdis.matchbox.packages.MatchboxJpaPackageCache.structureDefinitionIsValidatable;
 
 /**
  * A provider of CapabilityStatement customized for Matchbox.
  */
 public class MatchboxCapabilityStatementProvider extends ServerCapabilityStatementProvider {
+	private static final Logger log = LoggerFactory.getLogger(MatchboxCapabilityStatementProvider.class);
+
 	private static final String VALIDATE_OPERATION_NAME = "Validate";
 	private final StructureDefinitionResourceProvider structureDefinitionProvider;
 	protected final CliContext cliContext;
 	protected final FhirContext myFhirContext;
+	private final MbInstalledStructureDefinitionRepository installedStructureDefinitionRepository;
 
 	public MatchboxCapabilityStatementProvider(final FhirContext fhirContext,
 															 final RestfulServer theServerConfiguration,
 															 final StructureDefinitionResourceProvider structureDefinitionProvider,
-															 final CliContext cliContext) {
+															 final CliContext cliContext,
+															 final MbInstalledStructureDefinitionRepository installedStructureDefinitionRepository) {
 		super(theServerConfiguration, null, null);
 		this.structureDefinitionProvider = structureDefinitionProvider;
 		this.cliContext = cliContext;
@@ -52,6 +57,7 @@ public class MatchboxCapabilityStatementProvider extends ServerCapabilityStateme
 			theServerConfiguration.setImplementationDescription("Development mode");
 		}
 		this.myFhirContext = fhirContext;
+		this.installedStructureDefinitionRepository = installedStructureDefinitionRepository;
 	}
 
 	protected void postProcessRestResource(FhirTerser theTerser, IBase theResource, String theResourceName) {
@@ -180,9 +186,16 @@ public class MatchboxCapabilityStatementProvider extends ServerCapabilityStateme
 			.setMax("1")
 			.setType(Enumerations.FHIRTypes.CODE);
 
-		final var profiles = this.structureDefinitionProvider.getCanonicalsR5().stream()
-			.filter(sd -> structureDefinitionIsValidatable(sd.getExtensionByUrl("sd-title").getValueStringType().getValue()))
-			.toList();
+		final var profiles = this.installedStructureDefinitionRepository.findAllValidatable().stream()
+			.map(entity -> {
+				final var canonical = new CanonicalType(entity.getCanonicalUrl());
+				canonical.addExtension("ig-id", new StringType(entity.getPackageId()));
+				canonical.addExtension("ig-version", new StringType(entity.getPackageVersion()));
+				canonical.addExtension("ig-current", new BooleanType(entity.isCurrent()));
+				canonical.addExtension("sd-canonical", new StringType(entity.getCanonicalUrl()));
+				canonical.addExtension("sd-title", new StringType(entity.getTitle()));
+				return canonical;
+			}).toList();
 		validateOperationDefinition.addParameter()
 			.setName("profile")
 			.setUse(Enumerations.OperationParameterUse.IN)
@@ -200,20 +213,17 @@ public class MatchboxCapabilityStatementProvider extends ServerCapabilityStateme
 		final var cliContextProperties = this.cliContext.getValidateEngineParameters();
 		for (final Field field : cliContextProperties) {
 			field.setAccessible(true);
+			final var isBoolean = field.getType().equals(boolean.class) || field.getType().equals(Boolean.class);
 			try {
 				validateOperationDefinition.addParameter()
 					.setName(field.getName())
 					.setUse(Enumerations.OperationParameterUse.IN)
 					.setMin(0)
 					.setMax("1")
-					.setType(field.getType().equals(boolean.class) || field.getType().equals(Boolean.class) ? Enumerations.FHIRTypes.BOOLEAN : Enumerations.FHIRTypes.STRING)
-					.addExtension("http://matchbox.health/validationDefaultValue", field.getType().equals(boolean.class) || field.getType().equals(Boolean.class) ? new BooleanType((Boolean) field.get(cliContext)) : new StringType((String) field.get(cliContext)));
-			} catch (IllegalArgumentException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			} catch (IllegalAccessException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
+					.setType(isBoolean ? Enumerations.FHIRTypes.BOOLEAN : Enumerations.FHIRTypes.STRING)
+					.addExtension("http://matchbox.health/validationDefaultValue", isBoolean ? new BooleanType((Boolean) field.get(cliContext)) : new StringType((String) field.get(cliContext)));
+			} catch (final Exception e) {
+				log.warn("Unable to inspect field", e);
 			}
 		}
 
@@ -223,6 +233,5 @@ public class MatchboxCapabilityStatementProvider extends ServerCapabilityStateme
 			.setMin(0)
 			.setMax("1")
 			.setType(Enumerations.FHIRTypes.STRING);
-
 	}
 }

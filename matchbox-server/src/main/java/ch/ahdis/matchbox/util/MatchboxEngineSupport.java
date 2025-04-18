@@ -294,7 +294,7 @@ public class MatchboxEngineSupport {
 				this.configureValidationEngine(mainEngine, cliContextMain);
 			} else if (cliContextMain.getFhirVersion().equals("4.3.0")) {
 				log.debug("Preconfigure FHIR R4B");
-			    mainEngine = new MatchboxEngineBuilder().withXVersion(cliContextMain.getXVersion()).getEngineR4B();
+			   mainEngine = new MatchboxEngineBuilder().withXVersion(cliContextMain.getXVersion()).getEngineR4B();
 				mainEngine.setIgLoader(new IgLoaderFromJpaPackageCache(mainEngine.getPcm(),
 				mainEngine.getContext(),
 				mainEngine.getVersion(),
@@ -307,7 +307,7 @@ public class MatchboxEngineSupport {
 				this.configureValidationEngine(mainEngine, cliContextMain);
 			} else if (cliContextMain.getFhirVersion().equals("5.0.0")) {
 				log.debug("Preconfigure FHIR R5");
-			    mainEngine = new MatchboxEngineBuilder().withXVersion(cliContextMain.getXVersion()).getEngineR5();
+				mainEngine = new MatchboxEngineBuilder().withXVersion(cliContextMain.getXVersion()).getEngineR5();
 				mainEngine.setIgLoader(new IgLoaderFromJpaPackageCache(mainEngine.getPcm(),
 				mainEngine.getContext(),
 				mainEngine.getVersion(),

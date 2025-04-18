@@ -55,7 +55,6 @@ import org.hl7.fhir.r5.utils.EOperationOutcome;
 import org.hl7.fhir.r5.model.UriType;
 import org.hl7.fhir.r5.utils.OperationOutcomeUtilities;
 import org.hl7.fhir.r5.utils.ToolingExtensions;
-import org.hl7.fhir.utilities.CommaSeparatedStringBuilder;
 import org.hl7.fhir.utilities.validation.ValidationMessage;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -196,8 +195,7 @@ public class ValidationProvider {
 		}
 		if (engine == null) {
 			return this.getOoForError(
-				"Matchbox engine for profile '%s' could not be created, check the installed IGs".formatted(
-					profile));
+				"Matchbox engine for profile '%s' could not be created, check the installed IGs".formatted(profile));
 		}
 		int versionSeparator = profile.lastIndexOf('|');
 		if (versionSeparator != -1) {
