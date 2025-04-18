@@ -73,6 +73,12 @@ public class MatchboxJpaPackageCache {
 															final org.hl7.fhir.r4.model.@Nullable StructureDefinition sdR4,
 															final org.hl7.fhir.r4b.model.@Nullable StructureDefinition sdR4b,
 															final org.hl7.fhir.r5.model.@Nullable StructureDefinition sdR5) {
+		// 1. Modify the original entity
+		//    We update the canonical version to the package version for StructureDefinitions
+		//    https://github.com/ahdis/matchbox/issues/225
+		npmPackageVersionResourceEntity.setCanonicalVersion(npmPackageVersionResourceEntity.getPackageVersion().getVersionId());
+
+		// 2. Extract interesting info
 		final var terser = new FhirTerserWrapper(sdR4, sdR4b, sdR5);
 		var title = terser.getSinglePrimitiveValueOrNull("title");
 		if (title == null) {
@@ -85,6 +91,7 @@ public class MatchboxJpaPackageCache {
 			&& !"logical".equals(kind)
 			&& !"Extension".equals(type);
 
+		// 3. Create our own entity for the StructureDefinition
 		final var entity = new MbInstalledStructureDefinitionEntity();
 		entity.setCanonicalUrl(npmPackageVersionResourceEntity.getCanonicalUrl());
 		entity.setTitle(title);
@@ -95,7 +102,6 @@ public class MatchboxJpaPackageCache {
 		entity.setCurrent(npmPackageVersionResourceEntity.getPackageVersion().isCurrentVersion());
 		entity.setValidatable(isValidatable);
 		entity.setNpmPackageVersionResourceEntity(npmPackageVersionResourceEntity);
-
 		this.installedStructureDefinitionRepository.save(entity);
 	}
 

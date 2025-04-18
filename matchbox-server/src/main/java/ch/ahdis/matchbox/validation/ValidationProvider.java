@@ -195,8 +195,7 @@ public class ValidationProvider {
 		}
 		if (engine == null) {
 			return this.getOoForError(
-				"Matchbox engine for profile '%s' could not be created, check the installed IGs".formatted(
-					profile));
+				"Matchbox engine for profile '%s' could not be created, check the installed IGs".formatted(profile));
 		}
 		int versionSeparator = profile.lastIndexOf('|');
 		if (versionSeparator != -1) {
