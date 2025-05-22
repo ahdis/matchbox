@@ -27,7 +27,6 @@ import java.io.InputStream;
 import java.net.URISyntaxException;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 import java.util.regex.Pattern;
@@ -1159,6 +1158,19 @@ public class MatchboxEngine extends ValidationEngine {
 				return ignoredPatterns.parallelStream().noneMatch(pattern -> pattern.matcher(message).find());
 			})
 			.collect(Collectors.toList());
+	}
+
+
+	/**
+	 * Adds a text to the list of suppressed validation warning/information-level issues.
+	 * <p>
+	 * Implementation note: The text is Regex-escaped before being added to the list.
+	 *
+	 * @param messageId The messageId to check.
+	 * @param regexPath The regexPath to check.
+	 */
+	public void addSuppressedError(final @NonNull String messageId, final @NonNull String regexPath) {
+		((ch.ahdis.matchbox.engine.ValidationPolicyAdvisor) getPolicyAdvisor()).addSuppressedError(messageId, regexPath);
 	}
 
 	/**

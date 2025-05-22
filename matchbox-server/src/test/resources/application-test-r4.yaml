@@ -33,6 +33,9 @@ matchbox:
         hl7.fhir.r4.core#4.0.1:
           - "Constraint failed: dom-6:"
           - "regex:Entry '(.+)' isn't reachable by traversing forwards from the Composition"
+      suppressError:
+        hl7.fhir.r4.core#4.0.1:
+          - "Extension_EXTP_Context_Wrong:RelatedPerson"
       xVersion: true
 spring:
   datasource:
