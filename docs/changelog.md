@@ -1,4 +1,4 @@
-2025/06/25 Release 4.0.9
+2025/06/xx Release 4.0.x
 - unable to resolve resource with reference [#409](https://github.com/ahdis/matchbox/issues/409)
 - disableDefautlResource Fetcher provokes an error [#408](https://github.com/ahdis/matchbox/issues/408)
 
