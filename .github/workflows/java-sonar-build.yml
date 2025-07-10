@@ -44,10 +44,4 @@ jobs:
         with:
           name: build-log
           path: build.log          
-      # - name: Build and analyze
-      #   env:
-      #     SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-      #   run: |
-      #     cd matchbox-server
-      #     mvn -B -q verify org.sonarsource.scanner.maven:sonar-maven-plugin:sonar -Dsonar.projectKey=AccessDigitalHealth_cicd-jira-automation
           
