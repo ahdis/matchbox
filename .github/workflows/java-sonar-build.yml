@@ -39,6 +39,8 @@ jobs:
         run: |
           export MAVEN_OPTS="$MAVEN_OPTS -Dorg.slf4j.simpleLogger.defaultLogLevel=error"
           mvn -B --no-transfer-progress -q verify org.sonarsource.scanner.maven:sonar-maven-plugin:sonar -Dsonar.projectKey=AccessDigitalHealth_cicd-jira-automation -l build.log
+      # Log is too large and so we are creating a log file and uploading it.
+      # this is why we need continue on error on the step above.
       - name: Upload build log
         uses: actions/upload-artifact@v4
         with:
