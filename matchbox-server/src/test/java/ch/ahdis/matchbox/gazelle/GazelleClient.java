@@ -1,6 +1,6 @@
 package ch.ahdis.matchbox.gazelle;
 
-import ch.ahdis.matchbox.validation.gazelle.models.validation.ValidationItem;
+import ch.ahdis.matchbox.validation.gazelle.models.validation.Input;
 import ch.ahdis.matchbox.validation.gazelle.models.validation.ValidationProfile;
 import ch.ahdis.matchbox.validation.gazelle.models.validation.ValidationReport;
 import ch.ahdis.matchbox.validation.gazelle.models.validation.ValidationRequest;
@@ -48,16 +48,13 @@ public class GazelleClient {
 
 	public ValidationReport validate(final String content, final String profileId) throws IOException, InterruptedException {
 		final var validationRequest = new ValidationRequest();
-		validationRequest.setValidationServiceName("Matchbox");
 		validationRequest.setValidationProfileId(profileId);
-		validationRequest.setApiVersion("3.9.9");
-		validationRequest.addValidationItem(new ValidationItem()
-															.setItemId("first")
-															.setContent(content.getBytes(StandardCharsets.UTF_8))
-															.setRole("request")
-															.setLocation("localhost"));
+		validationRequest.addInput(new Input()
+													.setItemId("first")
+													.setContent(content.getBytes(StandardCharsets.UTF_8))
+													.setLocation("localhost"));
 
-		final var dest = this.serverUri.resolve("validation/validate");
+		final var dest = this.serverUri.resolve("validation/v2/validate");
 		System.out.printf("Destination: %s%n", dest);
 
 		final HttpRequest request = HttpRequest.newBuilder(dest)
