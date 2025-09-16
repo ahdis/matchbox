@@ -155,7 +155,7 @@ documentation.
 
 The list of available profiles is available at
 [[server]/gazelle/validation/profiles](https://test.ahdis.ch/matchboxv3/gazelle/validation/profiles), and the 
-validation request is sent to `POST [server]/gazelle/validation/validate`.
+validation request is sent to `POST [server]/gazelle/validation/v2/validate`.
 
 To configure a Matchbox instance in the EVSClient, the following actions shall be done:
 
