@@ -10,7 +10,8 @@ import java.util.*;
  * @author Quentin Ligier
  **/
 public class ValidationReport {
-	private String modelVersion = "0.1";
+	public static final String MODEL_VERSION = "2.0";
+
 	private String uuid;
 	private Date dateTime;
 	private String disclaimer;
@@ -18,7 +19,7 @@ public class ValidationReport {
 	private ValidationTestResult overallResult = ValidationTestResult.UNDEFINED;
 	private List<Metadata> additionalMetadata;
 	private List<ValidationSubReport> reports;
-	private List<ValidationItem> validationItems;
+	private List<Input> inputs;
 	private ValidationCounters counters = new ValidationCounters();
 
 	public ValidationReport() {
@@ -37,11 +38,10 @@ public class ValidationReport {
 	}
 
 	public String getModelVersion() {
-		return this.modelVersion;
+		return MODEL_VERSION;
 	}
 
 	public ValidationReport setModelVersion(String modelVersion) {
-		this.modelVersion = modelVersion;
 		return this;
 	}
 
@@ -117,12 +117,12 @@ public class ValidationReport {
 		return this;
 	}
 
-	public ValidationReport addValidationItem(ValidationItem validationItem) {
-		if (this.validationItems == null) {
-			this.validationItems = new ArrayList();
+	public ValidationReport addValidationItem(Input input) {
+		if (this.inputs == null) {
+			this.inputs = new ArrayList();
 		}
 
-		this.validationItems.add(validationItem);
+		this.inputs.add(input);
 		return this;
 	}
 
@@ -135,12 +135,12 @@ public class ValidationReport {
 		return this;
 	}
 
-	public List<ValidationItem> getValidationItems() {
-		return this.validationItems;
+	public List<Input> getValidationItems() {
+		return this.inputs;
 	}
 
-	public ValidationReport setValidationItems(List<ValidationItem> validationItems) {
-		this.validationItems = validationItems;
+	public ValidationReport setValidationItems(List<Input> inputs) {
+		this.inputs = inputs;
 		return this;
 	}
 
@@ -194,11 +194,6 @@ public class ValidationReport {
 	}
 
 	@JsonIgnore
-	public boolean isModelVersionValid() {
-		return this.modelVersion == null || !this.modelVersion.isBlank();
-	}
-
-	@JsonIgnore
 	public boolean isReportsValid() {
 		return this.reports == null || !this.reports.isEmpty();
 	}
@@ -210,7 +205,7 @@ public class ValidationReport {
 
 	@JsonIgnore
 	public boolean isValidationItemsValid() {
-		return this.validationItems == null || !this.validationItems.isEmpty();
+		return this.inputs == null || !this.inputs.isEmpty();
 	}
 
 	@JsonIgnore
@@ -241,7 +236,7 @@ public class ValidationReport {
 			.setUuid(validationReport.getUuid())
 			.setValidationMethod(ValidationMethod.clone(validationReport.getValidationMethod()))
 			.setValidationItems(
-				validationReport.getValidationItems() != null ? validationReport.getValidationItems().stream().map(ValidationItem::clone).toList() : null
+				validationReport.getValidationItems() != null ? validationReport.getValidationItems().stream().map(Input::clone).toList() : null
 			)
 			.setReports(validationReport.getReports() != null ? validationReport.getReports().stream().map(ValidationSubReport::clone).toList() : null)
 			.setAdditionalMetadata(
