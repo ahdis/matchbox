@@ -1,0 +1,35 @@
+name: Build
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 0 * * 3' 
+    
+jobs:
+  sonarqube:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./matchbox-frontend
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Shallow clones should be disabled for a better relevancy of analysis
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: matchbox-frontend/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Test the build
+        run: npm run build  
+
+      - name: SonarQube Scan
+        uses: SonarSource/sonarqube-scan-action@v5
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}

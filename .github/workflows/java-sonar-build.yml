@@ -33,15 +33,17 @@ jobs:
           key: ${{ runner.os }}-m2
           restore-keys: ${{ runner.os }}-m2
       - name: Build and analyze
+        continue-on-error: true
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         run: |
-          cd matchbox-engine
-          mvn -B verify org.sonarsource.scanner.maven:sonar-maven-plugin:sonar -Dsonar.projectKey=AccessDigitalHealth_cicd-jira-automation
-      - name: Build and analyze
-        env:
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-        run: |
-          cd matchbox-server
-          mvn -B verify org.sonarsource.scanner.maven:sonar-maven-plugin:sonar -Dsonar.projectKey=AccessDigitalHealth_cicd-jira-automation
-          
+          export MAVEN_OPTS="$MAVEN_OPTS -Dorg.slf4j.simpleLogger.defaultLogLevel=error"
+          mvn -B --no-transfer-progress -q verify org.sonarsource.scanner.maven:sonar-maven-plugin:sonar -Dsonar.projectKey=AccessDigitalHealth_matchbox -l build.log
+      # Log is too large and so we are creating a log file and uploading it.
+      # this is why we need continue on error on the step above.
+      - name: Upload build log
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-log
+          path: build.log          
+
