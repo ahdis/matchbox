@@ -1,6 +1,7 @@
 server:
+  port: 8080
   servlet:
-    context-path: /matchbox
+    context-path: /matchboxv3
 spring:
   datasource:
     url: "jdbc:h2:mem:validate-r4"
@@ -10,9 +11,13 @@ spring:
     max-active: 15
     hikari:
       maximum-pool-size: 10
+  ai:
+    mcp:
+      server:
+        enabled: true
 hapi:
   fhir:
-    server_address: http://localhost:8080/matchboxv3/fhir
+    server_address: http://localhost:${server.port}/matchboxv3/fhir
     implementationguides:
       fhir_r4_core:
         name: hl7.fhir.r4.core
@@ -34,6 +39,5 @@ matchbox:
       txServer: http://tx.fhir.org
       llm:
         provider: openai
-        modelName: gpt-3.5-turbo
+        modelName: gpt-4o-mini
         apiKey: sk-xxx
-

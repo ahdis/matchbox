@@ -1,7 +1,10 @@
 package ca.uhn.fhir.jpa.starter;
 
+import ch.ahdis.matchbox.MatchboxRestfulServer;
 import ch.ahdis.matchbox.config.MatchboxStaticResourceConfig;
+import ch.ahdis.matchbox.config.MatchboxTxConfig;
 import ch.ahdis.matchbox.spring.MatchboxEventListener;
+import ch.ahdis.matchbox.terminology.MatchboxTxServer;
 import ch.ahdis.matchbox.terminology.RegistryWs;
 import ch.ahdis.matchbox.validation.gazelle.GazelleValidationWs;
 
@@ -20,6 +23,7 @@ import org.springframework.context.annotation.Import;
 
 import ca.uhn.fhir.jpa.starter.annotations.OnEitherVersion;
 import ca.uhn.fhir.jpa.starter.common.FhirServerConfigR4;
+import ca.uhn.fhir.jpa.starter.mcp.McpServerConfig;
 import ca.uhn.fhir.jpa.starter.mdm.MdmConfig;
 import ca.uhn.fhir.rest.server.RestfulServer;
 import ch.ahdis.matchbox.config.MatchboxJpaConfig;
@@ -33,7 +37,10 @@ import ch.ahdis.matchbox.config.MatchboxJpaConfig;
 	MatchboxEventListener.class,
 	GazelleValidationWs.class,
   RegistryWs.class,
-  MatchboxStaticResourceConfig.class})
+  MatchboxStaticResourceConfig.class,
+  McpServerConfig.class,
+  MatchboxTxConfig.class
+})
 public class Application extends SpringBootServletInitializer {
 
   public static void main(String[] args) {
@@ -53,9 +60,9 @@ public class Application extends SpringBootServletInitializer {
   @Autowired
   AutowireCapableBeanFactory beanFactory;
 
-  @Bean
+  @Bean(name = "hapiServletRegistration")
   @Conditional(OnEitherVersion.class)
-  public ServletRegistrationBean<RestfulServer> hapiServletRegistration(RestfulServer restfulServer) {
+  public ServletRegistrationBean<RestfulServer> hapiServletRegistration(final MatchboxRestfulServer restfulServer) {
     ServletRegistrationBean<RestfulServer> servletRegistrationBean = new ServletRegistrationBean<>();
     beanFactory.autowireBean(restfulServer);
     servletRegistrationBean.setServlet(restfulServer);
@@ -64,5 +71,15 @@ public class Application extends SpringBootServletInitializer {
 
     return servletRegistrationBean;
   }
+  
+  @Bean(name = "terminologyServletRegistration")
+  public ServletRegistrationBean<RestfulServer> terminologyServletRegistration(final MatchboxTxServer matchboxTxServer) {
+    ServletRegistrationBean<RestfulServer> servletRegistrationBean = new ServletRegistrationBean<>();
+    beanFactory.autowireBean(matchboxTxServer);
+    servletRegistrationBean.setServlet(matchboxTxServer);
+    servletRegistrationBean.addUrlMappings("/tx/*");
+    servletRegistrationBean.setLoadOnStartup(2);
 
+    return servletRegistrationBean;
+  }
 }

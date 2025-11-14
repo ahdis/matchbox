@@ -5,15 +5,17 @@ import org.hl7.fhir.exceptions.FHIRException;
 import org.hl7.fhir.exceptions.PathEngineException;
 import org.hl7.fhir.r5.elementmodel.Element;
 import org.hl7.fhir.r5.fhirpath.FHIRPathEngine;
-import org.hl7.fhir.r5.fhirpath.FHIRPathEngine.IEvaluationContext;
+import org.hl7.fhir.r5.fhirpath.IHostApplicationServices;
 import org.hl7.fhir.r5.fhirpath.TypeDetails;
 import org.hl7.fhir.r5.fhirpath.FHIRPathUtilityClasses.FunctionDetails;
+import org.hl7.fhir.r5.fhirpath.IHostApplicationServices;
 import org.hl7.fhir.r5.model.Base;
 import org.hl7.fhir.r5.model.Resource;
 import org.hl7.fhir.r5.model.ValueSet;
 import org.hl7.fhir.r5.elementmodel.Manager.FhirFormat;
 import org.hl7.fhir.r5.utils.validation.IResourceValidator;
 import org.hl7.fhir.utilities.MarkedToMoveToAdjunctPackage;
+import org.hl7.fhir.utilities.fhirpath.FHIRPathConstantEvaluationMode;
 import org.hl7.fhir.utilities.validation.ValidationMessage;
 import org.hl7.fhir.validation.instance.utils.ValidationContext;
 
@@ -22,16 +24,16 @@ import java.util.ArrayList;
 import java.util.List;
 
 @MarkedToMoveToAdjunctPackage
-public class FHIRPathHostServices implements FHIRPathEngine.IEvaluationContext {
+public class FHIRPathHostServices implements IHostApplicationServices {
 
   private final StructureMapUtilities structureMapUtilities;
-  private IEvaluationContext validationHostServices;
-
+  // matchbox patch FML resolve() in Bundle #359
+  private IHostApplicationServices validationHostServices;
   public FHIRPathHostServices(StructureMapUtilities structureMapUtilities) {
     this.structureMapUtilities = structureMapUtilities;
   }
 
-  public List<Base> resolveConstant(FHIRPathEngine engine, Object appContext, String name, boolean beforeContext, boolean explicitConstant) throws PathEngineException {
+  public List<Base> resolveConstant(FHIRPathEngine engine, Object appContext, String name, FHIRPathConstantEvaluationMode mode) throws PathEngineException {
     Variables vars = (Variables) appContext;
     Base res = vars.get(VariableMode.INPUT, name);
     if (res == null)
@@ -43,7 +45,7 @@ public class FHIRPathHostServices implements FHIRPathEngine.IEvaluationContext {
   }
 
   @Override
-  public TypeDetails resolveConstantType(FHIRPathEngine engine, Object appContext, String name, boolean explicitConstant) throws PathEngineException {
+  public TypeDetails resolveConstantType(FHIRPathEngine engine, Object appContext, String name, FHIRPathConstantEvaluationMode mode) throws PathEngineException {
     if (!(appContext instanceof VariablesForProfiling))
       throw new Error("Internal Logic Error (wrong type '" + appContext.getClass().getName() + "' in resolveConstantType)");
     VariablesForProfiling vars = (VariablesForProfiling) appContext;
@@ -75,11 +77,11 @@ public class FHIRPathHostServices implements FHIRPathEngine.IEvaluationContext {
 
   /**
    * we need to access the validation host services, we do this indirectly through matchboxengine
-   * 
+   * matchbox patch FML resolve() in Bundle #359
    * @return
    * @throws IOException
    */
-  private IEvaluationContext getValidationHostServices() throws IOException {
+  private IHostApplicationServices getValidationHostServices() throws IOException {
     if (validationHostServices != null)
       return validationHostServices;
     FHIRPathEngine fpe = ((ch.ahdis.matchbox.mappinglanguage.MatchboxStructureMapUtilities) structureMapUtilities).getEngine()

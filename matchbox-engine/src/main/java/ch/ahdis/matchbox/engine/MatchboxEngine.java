@@ -27,7 +27,6 @@ import java.io.InputStream;
 import java.net.URISyntaxException;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 import java.util.regex.Pattern;
@@ -65,6 +64,7 @@ import org.hl7.fhir.r5.utils.EOperationOutcome;
 import org.hl7.fhir.r5.utils.OperationOutcomeUtilities;
 import org.hl7.fhir.r5.utils.structuremap.StructureMapUtilities;
 import org.hl7.fhir.r5.utils.validation.IResourceValidator;
+import org.hl7.fhir.r5.utils.validation.IValidationPolicyAdvisor;
 import org.hl7.fhir.r5.utils.validation.constants.ReferenceValidationPolicy;
 import org.hl7.fhir.utilities.ByteProvider;
 import org.hl7.fhir.utilities.FhirPublication;
@@ -101,10 +101,12 @@ public class MatchboxEngine extends ValidationEngine {
 	// Current packages that are provided with Matchbox Engine
 	public static final String PACKAGE_R4_TERMINOLOGY = "hl7.terminology.r4#6.3.0";
 	public static final String PACKAGE_R5_TERMINOLOGY = "hl7.terminology.r5#6.3.0";
+	public static final String PACKAGE_R4_TERMINOLOGY65 = "hl7.terminology.r4#6.5.0";
+	public static final String PACKAGE_R5_TERMINOLOGY65 = "hl7.terminology.r5#6.5.0";
 	public static final String PACKAGE_R4_UV_EXTENSIONS = "hl7.fhir.uv.extensions.r4#5.2.0";
 	public static final String PACKAGE_R5_UV_EXTENSIONS = "hl7.fhir.uv.extensions.r5#5.2.0";
 	public static final String PACKAGE_UV_XVER = "hl7.fhir.uv.xver#0.1.0@mb";
-	public static final String PACKAGE_CDA_UV_CORE = "hl7.cda.uv.core#2.0.0-sd-202406-matchbox-patch";
+	public static final String PACKAGE_CDA_UV_CORE = "hl7.cda.uv.core#2.0.1-sd-202510-matchbox-patch";
 
 	protected static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(MatchboxEngine.class);
 
@@ -584,6 +586,10 @@ public class MatchboxEngine extends ValidationEngine {
 
 		SimpleWorkerContext context = this.getContext();
 		StructureMap map = context.fetchResource(StructureMap.class, mapUri);
+		if (map==null) {
+			log.error("map not found" + map);
+			return null;
+		}
 		
 		String fhirVersionTarget = getFhirVersion(getCanonicalFromStructureMap(map, StructureMap.StructureMapModelMode.TARGET));
 		if (fhirVersionTarget !=null && (fhirVersionTarget.startsWith("4.0") || fhirVersionTarget.startsWith("4.3") || fhirVersionTarget.startsWith("5.0"))  && !fhirVersionTarget.equals(this.getVersion().substring(0, 3))) {
@@ -887,6 +893,8 @@ public class MatchboxEngine extends ValidationEngine {
 		final List<ValidationMessage> messages = new ArrayList<>();
 		final InstanceValidator validator = getValidator(format);
 		validator.validate(null, messages, stream, format, (sd != null) ? new ArrayList<>(List.of(sd)) :  new ArrayList<>());
+			log.info("finished validation " + sd.getUrl() + "|" + sd.getVersion() + " "
+						+ (sd.getDateElement() != null ? "(" + sd.getDateElement().asStringValue() + ")" : ""));
 		return this.filterValidationMessages(messages);
 	}
 
@@ -1161,6 +1169,27 @@ public class MatchboxEngine extends ValidationEngine {
 			.collect(Collectors.toList());
 	}
 
+
+	/**
+	 * Adds a text to the list of suppressed validation warning/information-level issues.
+	 * <p>
+	 * Implementation note: The text is Regex-escaped before being added to the list.
+	 *
+	 * @param messageId The messageId to check.
+	 * @param regexPath The regexPath to check.
+	 */
+	public void addSuppressedError(final @NonNull String messageId, final @NonNull String regexPath) {
+		IValidationPolicyAdvisor advisor = getPolicyAdvisor();
+		while(advisor != null && !(advisor instanceof ch.ahdis.matchbox.engine.ValidationPolicyAdvisor)) {
+			advisor = advisor.getPolicyAdvisor();
+		}
+		if (advisor != null) {
+			((ch.ahdis.matchbox.engine.ValidationPolicyAdvisor) advisor).addSuppressedError(messageId, regexPath);
+		} else {
+			log.error("ValidationPolicyAdvisor not found to add suppressed error for messageId: " + messageId + " and regexPath: " + regexPath);
+		}
+	}
+
 	/**
 	 * Adds a text to the list of suppressed validation warning/information-level issues.
 	 * <p>
@@ -1186,6 +1215,20 @@ public class MatchboxEngine extends ValidationEngine {
 	 */
 	public List<String> getSuppressedWarnInfoPatterns() {
 		return this.suppressedWarnInfoPatterns;
+	}
+
+	/**
+	 * Returns the list of suppressed validation error issues.
+	 */
+	public List<String> getSuppressedErrors() {
+		IValidationPolicyAdvisor advisor = getPolicyAdvisor();
+		while(advisor != null && !(advisor instanceof ch.ahdis.matchbox.engine.ValidationPolicyAdvisor)) {
+			advisor = advisor.getPolicyAdvisor();
+		}
+		if (advisor != null) {
+			return ((ch.ahdis.matchbox.engine.ValidationPolicyAdvisor) advisor).getSuppressedErrorMessages();
+		}
+		return null;
 	}
 
 	/**

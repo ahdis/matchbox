@@ -1,12 +1,9 @@
 package ca.uhn.fhir.jpa.starter.common;
 
-import ca.uhn.fhir.jpa.dao.data.INpmPackageVersionResourceDao;
 import ch.ahdis.matchbox.mappinglanguage.StructureMapListProvider;
 import ch.ahdis.matchbox.providers.CodeSystemResourceProvider;
 import ch.ahdis.matchbox.providers.ConceptMapResourceProvider;
 import ch.ahdis.matchbox.packages.ImplementationGuideProviderR4B;
-import ch.ahdis.matchbox.terminology.CodeSystemCodeValidationProvider;
-import ch.ahdis.matchbox.terminology.ValueSetCodeValidationProvider;
 import ch.ahdis.matchbox.util.MatchboxEngineSupport;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
@@ -19,6 +16,7 @@ import ca.uhn.fhir.context.FhirContext;
 import ca.uhn.fhir.jpa.api.dao.IFhirResourceDao;
 import ca.uhn.fhir.jpa.config.r4b.JpaR4BConfig;
 import ca.uhn.fhir.jpa.starter.AppProperties;
+import ca.uhn.fhir.jpa.starter.annotations.OnMatchboxOnlyOneEnginePresent;
 import ca.uhn.fhir.jpa.starter.annotations.OnR4BCondition;
 import ca.uhn.fhir.jpa.validation.ValidatorPolicyAdvisor;
 import ca.uhn.fhir.jpa.validation.ValidatorResourceFetcher;
@@ -31,7 +29,6 @@ import ch.ahdis.matchbox.mappinglanguage.StructureMapTransformProvider;
 import ch.ahdis.matchbox.questionnaire.QuestionnaireAssembleProviderR4B;
 import ch.ahdis.matchbox.questionnaire.QuestionnaireResponseExtractProviderR4B;
 import ch.ahdis.matchbox.util.MatchboxPackageInstallerImpl;
-import org.springframework.transaction.PlatformTransactionManager;
 
 @Configuration
 @Conditional(OnR4BCondition.class)
@@ -70,7 +67,7 @@ public class FhirServerConfigR4B {
   public IFhirResourceDao<org.hl7.fhir.r4b.model.ImplementationGuide> daoImplementationGuideR4B() {
 
     ca.uhn.fhir.jpa.dao.BaseHapiFhirResourceDao<org.hl7.fhir.r4b.model.ImplementationGuide> retVal;
-    retVal = new ca.uhn.fhir.jpa.dao.JpaResourceDao<org.hl7.fhir.r4b.model.ImplementationGuide>();
+    retVal = new ca.uhn.fhir.jpa.dao.JpaResourceDao<>();
     retVal.setResourceType(org.hl7.fhir.r4b.model.ImplementationGuide.class);
     retVal.setContext(fhirContext);
     return retVal;
@@ -87,6 +84,7 @@ public class FhirServerConfigR4B {
   
   @Bean(name = "myQuestionnaireRpR4B")
   @Primary
+	@Conditional(OnMatchboxOnlyOneEnginePresent.class)
   public QuestionnaireResourceProvider rpQuestionnaireR4B() {
     QuestionnaireResourceProvider retVal;
     retVal = new QuestionnaireResourceProvider();
@@ -95,6 +93,7 @@ public class FhirServerConfigR4B {
   
   @Bean(name = "myValueSetRpR4B")
   @Primary
+	@Conditional(OnMatchboxOnlyOneEnginePresent.class)
   public ValueSetResourceProvider rpValueSetR4B() {
   	ValueSetResourceProvider retVal = new ValueSetResourceProvider();
     return retVal;
@@ -102,6 +101,7 @@ public class FhirServerConfigR4B {
 
   @Bean(name = "myCodeSystemRpR4B")
   @Primary
+	@Conditional(OnMatchboxOnlyOneEnginePresent.class)
   public CodeSystemResourceProvider rpCodeSystem4B() {
   	CodeSystemResourceProvider retVal = new CodeSystemResourceProvider();
     return retVal;
@@ -109,6 +109,7 @@ public class FhirServerConfigR4B {
   
   @Bean(name = "myConceptMapRpR4B")
   @Primary
+	@Conditional(OnMatchboxOnlyOneEnginePresent.class)
   public ConceptMapResourceProvider rpConceptMap4B() {
   	ConceptMapResourceProvider retVal = new ConceptMapResourceProvider();
     return retVal;
@@ -122,6 +123,7 @@ public class FhirServerConfigR4B {
   }
 
   @Bean(name = "myStructureMapDaoR4B")
+	@Conditional(OnMatchboxOnlyOneEnginePresent.class)
   public IFhirResourceDao<org.hl7.fhir.r4b.model.StructureMap> daoStructureMapR4() {
 
     ca.uhn.fhir.jpa.dao.BaseHapiFhirResourceDao<org.hl7.fhir.r4b.model.StructureMap> retVal;
@@ -133,6 +135,7 @@ public class FhirServerConfigR4B {
 
   @Bean(name = "myStructureMapRpR4B")
   @Primary
+	@Conditional(OnMatchboxOnlyOneEnginePresent.class)
   public ch.ahdis.matchbox.mappinglanguage.StructureMapTransformProvider rpStructureMapR4B() {
   	StructureMapTransformProvider retVal;
     retVal = new StructureMapTransformProvider();
@@ -164,15 +167,4 @@ public class FhirServerConfigR4B {
   public MatchboxPackageInstallerImpl packageInstaller() {
     return new MatchboxPackageInstallerImpl();
   }
-  
-	@Bean
-	public CodeSystemCodeValidationProvider codeSystemCodeValidationProvider(final FhirContext fhirContext) {
-		return new CodeSystemCodeValidationProvider(fhirContext);
-	}
-
-	@Bean
-	public ValueSetCodeValidationProvider valueSetCodeValidationProvider(final FhirContext fhirContext) {
-		return new ValueSetCodeValidationProvider(fhirContext);
-	}
-
 }

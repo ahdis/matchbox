@@ -9,7 +9,7 @@
 
     <groupId>health.matchbox</groupId>
     <artifactId>matchbox</artifactId>
-    <version>4.0.4</version>
+    <version>4.0.15</version>
     <packaging>pom</packaging>
     <name>matchbox</name>
     <description>An open-source implementation to support testing and implementation of FHIR based solutions and map or
@@ -39,10 +39,9 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
         <maven.compiler.release>21</maven.compiler.release>
-        <fhir.core.version>6.5.21</fhir.core.version>
+
+        <fhir.core.version>6.6.5</fhir.core.version>
         <hapi.fhir.version>8.0.0</hapi.fhir.version>
-        <sonar.organization>accessdigitalhealth</sonar.organization>
-        <sonar.host.url>https://sonarcloud.io</sonar.host.url>
 
 
         <!-- The following section closely matches the one of HAPI-FHIR (for easier version comparison/upgrade).
@@ -52,21 +51,24 @@
         <commons_compress_version>1.27.1</commons_compress_version>
         <commons_dbcp2_version>2.12.0</commons_dbcp2_version>
         <commons_io_version>2.17.0</commons_io_version>
-        <junit_version>5.10.1</junit_version>
+        <commons_lang3_version>3.18.0</commons_lang3_version>
+        <junit_version>5.13.1</junit_version>
         <logback_version>1.5.16</logback_version>
         <jackson_version>2.17.1</jackson_version>
         <okhttp_version>4.12.0</okhttp_version>
         <log4j_to_slf4j_version>2.19.0</log4j_to_slf4j_version>
-        <spring_version>6.1.14</spring_version>
-        <spring_boot_version>3.2.10</spring_boot_version>
-        <testcontainers_version>1.19.4</testcontainers_version>
+        <spring_version>6.1.21</spring_version>
+        <spring_context_version>6.1.20</spring_context_version>
+        <spring_boot_version>3.3.11</spring_boot_version>
+        <testcontainers_version>1.21.1</testcontainers_version>
         <ucum_version>1.0.10</ucum_version>
         <ucum_version>1.0.10</ucum_version>
 
         <!-- The following properties are linked to HAPI-FHIR, which hasn't attributed version properties -->
         <awaitility_version>4.2.0</awaitility_version>
         <xmlunit_version>2.10.0</xmlunit_version>
-        <beanutils_version>1.9.4</beanutils_version>
+        <beanutils_version>1.11.0</beanutils_version>
+
 
 
         <org_commonmark_version>0.21.0</org_commonmark_version>
@@ -78,14 +80,14 @@
 
         <!-- Other dependencies we need -->
         <lombok_version>1.18.36</lombok_version>
-        <tomcat_embed_version>10.1.39</tomcat_embed_version>
-        <postgresql_version>42.7.5</postgresql_version>
+        <tomcat_embed_version>10.1.48</tomcat_embed_version>
+        <postgresql_version>42.7.7</postgresql_version>
         <h2_version>2.3.232</h2_version>
         <jakarta_servlet_version>6.1.0</jakarta_servlet_version>
         <jaxb_api_version>2.3.1</jaxb_api_version>
         <snakeyaml_version>2.4</snakeyaml_version>
 
-        <plugin_maven_compiler_version>3.14.0</plugin_maven_compiler_version>
+        <plugin_maven_compiler_version>3.14.1</plugin_maven_compiler_version>
         <plugin_maven_resources_version>3.3.1</plugin_maven_resources_version>
         <plugin_maven_failsafe_version>3.5.2</plugin_maven_failsafe_version>
         <plugin_duplicate_finder_version>2.0.1</plugin_duplicate_finder_version>
@@ -94,11 +96,11 @@
         <plugin_maven_source_version>3.3.1</plugin_maven_source_version>
         <plugin_maven_javadoc_version>3.11.2</plugin_maven_javadoc_version>
         <plugin_maven_gpg_version>3.2.7</plugin_maven_gpg_version>
-        <plugin_nexus_staging_version>1.7.0</plugin_nexus_staging_version>
+        <plugin_sonatype_central_publishing>0.8.0</plugin_sonatype_central_publishing>
 
         <excludePackageNames>org.hl7.*:ca.uhn.*</excludePackageNames>
 
-        <apache_poi_version>5.2.1</apache_poi_version>
+        <apache_poi_version>5.4.0</apache_poi_version>
 
     </properties>
 
@@ -175,6 +177,17 @@
                 <version>${org_commonmark_version}</version>
             </dependency>
             <dependency>
+                <groupId>org.apache.commons</groupId>
+                <artifactId>commons-lang3</artifactId>
+                <version>${commons_lang3_version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.springframework</groupId>
+                <artifactId>spring-context</artifactId>
+                <version>${spring_context_version}</version>
+            </dependency>
+
+            <dependency>
                 <groupId>ca.uhn.hapi.fhir</groupId>
                 <artifactId>org.hl7.fhir.validation</artifactId>
                 <version>${fhir.core.version}</version>
@@ -217,6 +230,18 @@
             </dependency>
             <dependency>
                 <groupId>ca.uhn.hapi.fhir</groupId>
+                <artifactId>hapi-fhir-server</artifactId>
+                <version>${hapi.fhir.version}</version>
+                <exclusions>
+                    <!-- CVE-2025-7962" "org.eclipse.angus:smtp" -->
+                    <exclusion>
+                        <groupId>org.simplejavamail</groupId>
+                        <artifactId>core-module</artifactId>
+                    </exclusion>
+                </exclusions>
+            </dependency>
+            <dependency>
+                <groupId>ca.uhn.hapi.fhir</groupId>
                 <artifactId>hapi-fhir-jpaserver-base</artifactId>
                 <version>${hapi.fhir.version}</version>
                 <exclusions>
@@ -236,6 +261,10 @@
                     <exclusion>
                         <groupId>commons-logging</groupId>
                         <artifactId>commons-logging</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>org.apache.commons</groupId>
+                        <artifactId>commons-lang3</artifactId>
                     </exclusion>
                     <exclusion>
                         <groupId>com.zaxxer</groupId>
@@ -323,7 +352,7 @@
                 <version>${commons_compress_version}</version>
             </dependency>
             <!-- The following dependencies are only needed for automated unit tests, you do not necessarily need them to run the example. -->
-            <dependency>
+           <dependency>
                 <groupId>org.testcontainers</groupId>
                 <artifactId>testcontainers</artifactId>
                 <scope>test</scope>
@@ -615,13 +644,12 @@
 
             <!-- Release plugins -->
             <plugin>
-                <groupId>org.sonatype.plugins</groupId>
-                <artifactId>nexus-staging-maven-plugin</artifactId>
+                <groupId>org.sonatype.central</groupId>
+                <artifactId>central-publishing-maven-plugin</artifactId>
                 <extensions>true</extensions>
                 <configuration>
-                    <serverId>ossrh</serverId>
-                    <nexusUrl>https://s01.oss.sonatype.org/</nexusUrl>
-                    <autoReleaseAfterClose>true</autoReleaseAfterClose>
+                    <publishingServerId>central</publishingServerId>
+                    <autoPublish>true</autoPublish>
                 </configuration>
             </plugin>
         </plugins>
@@ -698,8 +726,8 @@
                 </plugin>
                 <plugin>
                     <groupId>org.sonatype.plugins</groupId>
-                    <artifactId>nexus-staging-maven-plugin</artifactId>
-                    <version>${plugin_nexus_staging_version}</version>
+                    <artifactId>central-publishing-maven-plugin</artifactId>
+                    <version>${plugin_sonatype_central_publishing}</version>
                 </plugin>
             </plugins>
         </pluginManagement>

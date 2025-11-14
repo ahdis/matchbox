@@ -33,7 +33,7 @@ package org.hl7.fhir.r5.utils.structuremap;
 // remember group resolution
 // trace - account for which wasn't transformed in the source
 
-import net.sourceforge.plantuml.utils.Log;
+import lombok.extern.slf4j.Slf4j;
 import org.hl7.fhir.exceptions.DefinitionException;
 import org.hl7.fhir.exceptions.FHIRException;
 import org.hl7.fhir.exceptions.FHIRFormatError;
@@ -45,6 +45,8 @@ import org.hl7.fhir.r5.elementmodel.Element;
 import org.hl7.fhir.r5.elementmodel.FmlParser;
 import org.hl7.fhir.r5.elementmodel.Manager;
 import org.hl7.fhir.r5.elementmodel.Property;
+import org.hl7.fhir.r5.extensions.ExtensionDefinitions;
+import org.hl7.fhir.r5.extensions.ExtensionUtilities;
 import org.hl7.fhir.r5.elementmodel.ParserBase.ValidationPolicy;
 import org.hl7.fhir.r5.fhirpath.ExpressionNode;
 import org.hl7.fhir.r5.fhirpath.FHIRLexer;
@@ -73,7 +75,6 @@ import org.hl7.fhir.r5.model.ValueSet.ValueSetExpansionContainsComponent;
 import org.hl7.fhir.r5.renderers.TerminologyRenderer;
 import org.hl7.fhir.r5.terminologies.expansion.ValueSetExpansionOutcome;
 import org.hl7.fhir.r5.terminologies.utilities.ValidationResult;
-import org.hl7.fhir.r5.utils.ToolingExtensions;
 import org.hl7.fhir.r5.utils.UserDataNames;
 import org.hl7.fhir.utilities.CommaSeparatedStringBuilder;
 import org.hl7.fhir.utilities.FhirPublication;
@@ -102,6 +103,7 @@ import java.util.*;
  * @author Grahame Grieve
  */
 @MarkedToMoveToAdjunctPackage
+@Slf4j
 public class StructureMapUtilities {
 
   public static final String MAP_WHERE_CHECK = "map.where.check";
@@ -645,13 +647,13 @@ public class StructureMapUtilities {
       log("FHIR version needs to be 5.0.0");
       return null;
     }
-    FmlParser fp = new FmlParser(context);
+    FmlParser fp = new FmlParser(context, fpe);
     fp.setupValidation(ValidationPolicy.EVERYTHING);     
     List<ValidationMessage> errors = new ArrayList<ValidationMessage>();
     Element res = fp.parse(errors, Utilities.stripBOM(text));
     // matchbox patch FML lexer errors swallowed #367
     if (res == null || errors.size() > 0) {
-      Log.error(errors.toString());
+      log.error(errors.toString());
       throw new FHIRException("Unable to parse Map Source for "+srcName + " Details "+errors.toString());
     }
     ByteArrayOutputStream boas = new ByteArrayOutputStream();
@@ -688,9 +690,8 @@ public class StructureMapUtilities {
     if (debug) {
       if (getServices() != null)
         getServices().log(cnt);
-      else
-        System.out.println(cnt);
     }
+    log.debug(cnt);
   }
 
   /**
@@ -2133,8 +2134,8 @@ public class StructureMapUtilities {
     String id = getLogicalMappingId(sd);
     if (id == null)
       return null;
-    String prefix = ToolingExtensions.readStringExtension(sd, ToolingExtensions.EXT_MAPPING_PREFIX);
-    String suffix = ToolingExtensions.readStringExtension(sd, ToolingExtensions.EXT_MAPPING_SUFFIX);
+    String prefix = ExtensionUtilities.readStringExtension(sd, ExtensionDefinitions.EXT_MAPPING_PREFIX);
+    String suffix = ExtensionUtilities.readStringExtension(sd, ExtensionDefinitions.EXT_MAPPING_SUFFIX);
     if (prefix == null || suffix == null)
       return null;
     // we build this by text. Any element that has a mapping, we put it's mappings inside it....

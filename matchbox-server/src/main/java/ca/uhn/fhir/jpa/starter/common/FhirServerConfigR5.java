@@ -5,8 +5,8 @@ import ca.uhn.fhir.jpa.api.dao.IFhirResourceDao;
 import ca.uhn.fhir.jpa.config.r5.JpaR5Config;
 import ca.uhn.fhir.jpa.dao.BaseHapiFhirResourceDao;
 import ca.uhn.fhir.jpa.dao.JpaResourceDao;
-import ca.uhn.fhir.jpa.dao.data.INpmPackageVersionResourceDao;
 import ca.uhn.fhir.jpa.starter.AppProperties;
+import ca.uhn.fhir.jpa.starter.annotations.OnMatchboxOnlyOneEnginePresent;
 import ca.uhn.fhir.jpa.starter.annotations.OnR5Condition;
 import ca.uhn.fhir.jpa.validation.ValidatorPolicyAdvisor;
 import ca.uhn.fhir.jpa.validation.ValidatorResourceFetcher;
@@ -20,15 +20,12 @@ import ch.ahdis.matchbox.validation.ValidationProvider;
 import ch.ahdis.matchbox.mappinglanguage.StructureMapTransformProvider;
 import ch.ahdis.matchbox.questionnaire.QuestionnaireAssembleProviderR5;
 import ch.ahdis.matchbox.questionnaire.QuestionnaireResponseExtractProviderR5;
-import ch.ahdis.matchbox.terminology.CodeSystemCodeValidationProvider;
-import ch.ahdis.matchbox.terminology.ValueSetCodeValidationProvider;
 import ch.ahdis.matchbox.util.MatchboxPackageInstallerImpl;
 import org.hl7.fhir.r5.model.ImplementationGuide;
 import org.hl7.fhir.r5.model.StructureMap;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.*;
-import org.springframework.transaction.PlatformTransactionManager;
 
 @Configuration
 @Conditional(OnR5Condition.class)
@@ -86,6 +83,7 @@ public class FhirServerConfigR5 {
 
 	@Bean(name = "myQuestionnaireRpR5")
 	@Primary
+	@Conditional(OnMatchboxOnlyOneEnginePresent.class)
 	public QuestionnaireResourceProvider rpQuestionnaireR5() {
 		QuestionnaireResourceProvider retVal;
 		retVal = new  QuestionnaireResourceProvider();
@@ -94,6 +92,7 @@ public class FhirServerConfigR5 {
 
 	@Bean(name = "myValueSetRpR5")
 	@Primary
+	@Conditional(OnMatchboxOnlyOneEnginePresent.class)
 	public ValueSetResourceProvider rpValueSetR5() {
 		ValueSetResourceProvider retVal = new ValueSetResourceProvider();
 		return retVal;
@@ -101,6 +100,7 @@ public class FhirServerConfigR5 {
 
 	@Bean(name = "myCodeSystemRpR5")
 	@Primary
+	@Conditional(OnMatchboxOnlyOneEnginePresent.class)
 	public CodeSystemResourceProvider rpCodeSystem4() {
 		CodeSystemResourceProvider retVal = new CodeSystemResourceProvider();
 		return retVal;
@@ -108,6 +108,7 @@ public class FhirServerConfigR5 {
 
 	@Bean(name = "myConceptMapRpR5")
 	@Primary
+	@Conditional(OnMatchboxOnlyOneEnginePresent.class)
 	public ConceptMapResourceProvider rpConceptMap4() {
 		ConceptMapResourceProvider retVal = new ConceptMapResourceProvider();
 		return retVal;
@@ -121,6 +122,7 @@ public class FhirServerConfigR5 {
 	}
 
 	@Bean(name = "myStructureMapDaoR5")
+	@Conditional(OnMatchboxOnlyOneEnginePresent.class)
 	public IFhirResourceDao<StructureMap> daoStructureMapR5() {
 
 		BaseHapiFhirResourceDao<StructureMap> retVal;
@@ -132,6 +134,7 @@ public class FhirServerConfigR5 {
 
 	@Bean(name = "myStructureMapRpR5")
 	@Primary
+	@Conditional(OnMatchboxOnlyOneEnginePresent.class)
 	public StructureMapTransformProvider rpStructureMapR5() {
 		StructureMapTransformProvider retVal;
 		retVal = new StructureMapTransformProvider();
@@ -160,15 +163,5 @@ public class FhirServerConfigR5 {
 	@Primary
 	public MatchboxPackageInstallerImpl packageInstaller() {
 		return new MatchboxPackageInstallerImpl();
-	}
-
-	@Bean
-	public CodeSystemCodeValidationProvider codeSystemCodeValidationProvider(final FhirContext fhirContext) {
-		return new CodeSystemCodeValidationProvider(fhirContext);
-	}
-
-	@Bean
-	public ValueSetCodeValidationProvider valueSetCodeValidationProvider(final FhirContext fhirContext) {
-		return new ValueSetCodeValidationProvider(fhirContext);
 	}
 }

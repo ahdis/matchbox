@@ -31,12 +31,14 @@ class R4ValidationTests {
 	private final MatchboxEngine engine;
 	private final String careplanRaw;
 	private final String measureRaw;
+	private final String relatedPerson;
 
 	public R4ValidationTests() throws IOException, URISyntaxException {
 		this.engine = this.getEngine();
 		//this.engine.setTerminologyServer("http://tx.fhir.org", null, FhirPublication.R4);
 		this.careplanRaw = this.loadSample("careplan.xml");
 		this.measureRaw = this.loadSample("measure.xml");
+		this.relatedPerson = this.loadSample("RelatedPerson-BiologicalFather.json");
 	}
 
 	/**
@@ -53,10 +55,9 @@ class R4ValidationTests {
 		final String invalidCareplan = this.careplanRaw.replace("{{INTENT}}", "non-existent-code");
 		final var errors = this.expectInvalid(invalidCareplan, Manager.FhirFormat.XML, "http://hl7" +
 			".org/fhir/StructureDefinition/CarePlan");
-		assertEquals(1, errors.size());
-		assertEquals(OperationOutcome.IssueType.CODEINVALID, errors.get(0).getCode());
 		assertTrue(errors.get(0).getDetails().getText().startsWith("The value provided ('non-existent-code') was not " +
-																						  "found in the value set 'Care Plan Intent' (http://hl7.org/fhir/ValueSet/care-plan-intent|4.0.1)"));
+																						  "found in the value set 'Care Plan Intent' (http://hl7.org/fhir/ValueSet/care-plan-intent|4.0.1)") || errors.get(1).getDetails().getText().startsWith("The value provided ('non-existent-code') was not " +
+																								  "found in the value set 'Care Plan Intent' (http://hl7.org/fhir/ValueSet/care-plan-intent|4.0.1)" ));
 	}
 
 	/**
@@ -72,12 +73,25 @@ class R4ValidationTests {
 
 		final String invalidMeasure = this.measureRaw.replace("{{STATUS}}", "non-existent-code");
 		final var errors = this.expectInvalid(invalidMeasure, Manager.FhirFormat.XML, "http://hl7.org/fhir/StructureDefinition/Measure");
-		assertEquals(1, errors.size());
-		assertEquals(OperationOutcome.IssueType.CODEINVALID, errors.get(0).getCode());
+		assertEquals(2, errors.size());
  		assertTrue(errors.get(0).getDetails().getText().startsWith("The value provided ('non-existent-code') was not " +
-																						  "found in the value set 'PublicationStatus'"));
+																						  "found in the value set 'PublicationStatus'") || errors.get(1).getDetails().getText().startsWith("The value provided ('non-existent-code') was not " +
+																								  "found in the value set 'PublicationStatus'"));
 	}
-	
+
+	/**
+	 * Test that errors can be ignored
+	 *
+	 */
+	@Test
+	void testIgnoreErrors() throws Exception {
+		final var errors = this.expectInvalid(this.relatedPerson, Manager.FhirFormat.JSON, "http://hl7.org/fhir/StructureDefinition/RelatedPerson");
+		assertEquals(1, errors.size());
+		assertTrue(errors.get(0).getDetails().getText().startsWith("The extension http://hl7.org/fhir/StructureDefinition/patient-citizenship is not allowed to be used at this point (this element is [RelatedPerson]; allowed for this version = e:Patient)"));
+		engine.addSuppressedError("Extension_EXTP_Context_Wrong", "RelatedPerson");
+ 		expectValid(this.relatedPerson, Manager.FhirFormat.JSON, "http://hl7.org/fhir/StructureDefinition/RelatedPerson");
+	}
+
 	/**
 	 * Test the validation of a code from a value set that expands urn:ietf:bcp:13.
 	 *

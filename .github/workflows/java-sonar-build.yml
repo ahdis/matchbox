@@ -4,6 +4,8 @@ on:
   push:
     branches:
       - main
+  pull_request:
+    types: [ opened, synchronize ]
   schedule:
     - cron: '0 0 * * 2'  # Runs every Monday at 00:00 UTC
     
@@ -42,7 +44,7 @@ jobs:
       # Log is too large and so we are creating a log file and uploading it.
       # this is why we need continue on error on the step above.
       - name: Upload build log
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: build-log
           path: build.log          

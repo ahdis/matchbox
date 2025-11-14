@@ -16,6 +16,7 @@ They can be set in the Spring configuration (e.g. `application.properties`/`appl
 | `matchbox.fhir.context.onlyOneEngine`    | `false`       | Forces the server to initialize only one engine. See the section [_Only one engine_](#only-one-engine) below.                                                   |
 | `matchbox.fhir.context.xVersion`         | `false`       | Allows to transform resources between FHIR versions. See the section [_Transforming resources between FHIR versions_](#transform-cross-version) below.          |
 | `matchbox.fhir.context.suppressWarnInfo` | `{}`          | The list of warnings/infos to suppress in validation reports. See [_Suppress warning/information-level issues in validation_](validation.md#suppress-warnings). |
+| `matchbox.fhir.context.suppressError` | `{}`          | The list of errors to suppress in validation reports. See [_Suppress error-level issues in validation_](validation.md#suppress-errors). |
 | `matchbox.fhir.context.httpReadOnly`     | `false`       | Whether the server is in read-only mode or not. See the section [_Read-only mode_](#read-only) below.                                                           |
 | `matchbox.fhir.context.extensions`       | `any`         | The list of domains allowed in extensions while validating resources; `any` will allow all extensions.                                                          |
 | `matchbox.fhir.context.analyzeOutcomeWithAI`       |          | Whether the validation outcome should be analyzed by a LLM or not. Requires the LLM parameters to be correctly set.                                                          |
@@ -23,6 +24,9 @@ They can be set in the Spring configuration (e.g. `application.properties`/`appl
 | `matchbox.fhir.context.llm.provider`       |          | The LLM provider used for the AI analysis of validation.                                                          |
 | `matchbox.fhir.context.llm.modelName`       |          | The LLM model used for the AI analysis of validation.                                                          |
 | `matchbox.fhir.context.llm.apiKey`       |          | Your API key for the desired LLM provider.                                                          |
+| `spring.ai.mcp.server.enabled`       |          | Whether matchbox should be provided as MCP-Server or not.                                                          |
+
+In addition for validation the different [java validator parameters](https://confluence.hl7.org/spaces/FHIR/pages/35718580/Using+the+FHIR+Validator) can also be configured for default values: e.g: matchbox.fhir.context.displayIssuesAreWarnings is set default to true, but you can overwrite that by providing another value. To see the current supported list of parameters, you can check the OperationDefinition of $validate on matchbox [test instance](https://test.ahdis.ch/matchboxv3/fhir/OperationDefinition/-s-validate).
 
 See an example of configuration, to show the expected format:
 
@@ -30,6 +34,7 @@ See an example of configuration, to show the expected format:
 matchbox:
   fhir:
     context:
+      displayIssuesAreWarnings: false
       igsPreloaded: ch.fhir.ig.ch-elm#1.4.0
       suppressWarnInfo:
         hl7.fhir.r4.core#4.0.1:
@@ -91,8 +96,9 @@ It provides the following advantages:
 
 - It lowers the memory and CPU consumption, as a single engine is shared among all requests.
 - It speeds up the response time, as the engine is already initialized and ready to use.
+- You can overwrite conformance resources (e.g. update StructureMaps, ConceptMaps)
 
-It is helpful to enable this mode when the server is used in a production environment (e.g. as a validation server).
+It is helpful to enable this mode when the server is used in a development environment (e.g. as a validation server or for FML map development).
 
 Disabling this mode is recommended when more context separation is required, in particular when dealing with the 
 following situations:

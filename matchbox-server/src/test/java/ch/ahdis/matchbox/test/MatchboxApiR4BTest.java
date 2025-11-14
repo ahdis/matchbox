@@ -59,8 +59,8 @@ public class MatchboxApiR4BTest {
 
 	private String targetServer = "http://localhost:8083/matchboxv3/fhir";
 
-	private final FhirContext context = FhirVersionEnum.R4B.newContext();
-
+	private final FhirContext context = FhirContext.forR4BCached();
+	
 	@BeforeAll
 	void waitUntilStartup() throws Exception {
 		Thread.sleep(10000); // give the server some time to start up
@@ -168,7 +168,7 @@ public class MatchboxApiR4BTest {
 		String sessionIdCore = getSessionId(this.context, operationOutcome);
 		assertEquals(0, getValidationFailures((OperationOutcome) operationOutcome));
 		assertEquals("hl7.fhir.r4b.core#4.3.0", getIg(this.context, operationOutcome));
-		assertEquals(this.targetServer, this.getTxServer(this.context, operationOutcome));
+		assertEquals(this.targetServer.replace("/fhir", "/tx"), this.getTxServer(this.context, operationOutcome));
 
 		// check that the cached validation engine of core gets used
 		operationOutcome = validationClient.validate(resource, profileCore);

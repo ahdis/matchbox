@@ -89,6 +89,9 @@ class CdaToFhirTransformTests {
 				sm = getEngine().parseMap(getFileAsStringFromResources("cda-it-observation.map"));
 				assertTrue(sm != null);
 				engine.addCanonicalResource(sm);
+				sm = getEngine().parseMap(getFileAsStringFromResources("cda-it-observation-st-r2b.map"));
+				assertTrue(sm != null);
+				engine.addCanonicalResource(sm);
 				sm = getEngine().parseMap(getFileAsStringFromResources("cda-it-observation-condition.map"));
 				assertTrue(sm != null);
 				engine.addCanonicalResource(sm);
@@ -210,6 +213,21 @@ class CdaToFhirTransformTests {
 	}
 
 	@Test
+	void TestObservationStR2b() throws FHIRException, IOException {
+		InputStream in = getResourceAsStream("cda-it-observation-st-r2b.xml");
+
+		String cdaObservation = IOUtils.toString(in, StandardCharsets.UTF_8);
+		Resource resource = getEngine().transformToFhir(cdaObservation,
+				false,
+				"http://salute.gov.it/ig/cda-fhir-maps/StructureMap/TestObservationStR2b");
+		Observation obs = (Observation) resource;
+
+		assertEquals("prova", obs.getValueStringType().getValue());
+
+		assertNotNull(resource);
+	}
+
+	@Test
 	void TestObservationCs() throws FHIRException, IOException {
 		InputStream in = getResourceAsStream("cda-it-observation-cs.xml");
 
@@ -250,14 +268,38 @@ class CdaToFhirTransformTests {
 
 	@Test
 	void TestFhirToCda() throws FHIRException, IOException {
-		String bundleString = "<Bundle xmlns=\"http://hl7.org/fhir\">\n" + //
-						"\t<id value=\"test\"/>\n" + //
-						"\t<identifier>\n" + //
-						"\t  <system value=\"urn:ietf:rfc:3986\"/>\n" + //
-						"\t  <value value=\"urn:uuid:6b6ed376-a7da-44cb-92d1-e75ce1ae73b0\"/>\n" + //
-						"\t</identifier>\n" + //
-						"\t<type value=\"document\"/>\n" + //
-						"\t<timestamp value=\"2012-02-04T14:05:00+01:00\"/>\n" + //
+		String bundleString = "<Bundle xmlns=\"http://hl7.org/fhir\">" + //
+						"<id value=\"test\"/>" + //
+						"<identifier>" + //
+						"  <system value=\"urn:ietf:rfc:3986\"/>" + //
+						"  <value value=\"urn:uuid:6b6ed376-a7da-44cb-92d1-e75ce1ae73b0\"/>" + //
+						"</identifier>" + //
+						"<type value=\"document\"/>" + //
+						"<timestamp value=\"2012-02-04T14:05:00+01:00\"/>"+
+						"	<entry>" + //
+						"        <fullUrl value=\"urn:uuid:d543ae7b-3a94-4a2a-a120-6ce2ee3027fc\"/>" + //
+						"        <resource>" + //
+						"            <Composition>" + //
+						"                <id value=\"d543ae7b-3a94-4a2a-a120-6ce2ee3027fc\"/>" + //
+						"                <section>" + //
+						"                    <title value=\"Medikamentenliste\"/>" + //
+						"                </section>" + //
+						"                <section>" + //
+						"                    <title value=\"Kommentar\"/>" + //
+						"                    <text>" + //
+						"                        <status value=\"generated\"/>" + //
+						"                        <div xmlns=\"http://www.w3.org/1999/xhtml\">" + //
+						"                            <h2>Kommentar</h2>"
+						+ "														<p>" + //
+						"                                 Medication Treatment" + //
+						"                            </p>" + //
+						"                        </div>" + //
+						"                    </text>" + //
+						"                </section>" + //
+						"            </Composition>" + //
+						"        </resource>" + //
+						"    </entry>" + //
+						
 						"</Bundle>";
 		String result = getEngine().transform(bundleString,
 														  false,
@@ -270,7 +312,10 @@ class CdaToFhirTransformTests {
 		assertNotNull(result);
 		assertTrue(result.indexOf("20120204140500+0100")>0);
 		assertTrue(result.indexOf("6B6ED376-A7DA-44CB-92D1-E75CE1AE73B0")>0);
-		assertEquals("2012-02-04T14:05:00+01:00",
+		assertTrue(result.indexOf("6B6ED376-A7DA-44CB-92D1-E75CE1AE73B0")>0);
+		assertTrue(result.indexOf("caption")>0);
+		assertTrue(result.indexOf("Kommentar")>0);
+			assertEquals("2012-02-04T14:05:00+01:00",
 				getEngine().evaluateFhirPath(result, false, "effectiveTime.value"));
 	}
 

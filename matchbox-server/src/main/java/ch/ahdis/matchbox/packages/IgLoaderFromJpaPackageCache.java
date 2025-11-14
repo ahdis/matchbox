@@ -176,6 +176,11 @@ public class IgLoaderFromJpaPackageCache extends IgLoader {
 
 		switch (FhirVersionEnum.forVersionString(this.getVersion())) {
 			case R4, R4B -> {
+				if (src.startsWith("hl7.terminology#6.5.0")) {
+					log.info("Requesting to load '{}', loading '{}' instead'", src, PACKAGE_R4_TERMINOLOGY);
+					loadIg(igs, binaries, PACKAGE_R4_TERMINOLOGY65, recursive);
+					return;
+				}
 				if (src.startsWith("hl7.terminology#6.3.0")) {
 					log.info("Requesting to load '{}', loading '{}' instead'", src, PACKAGE_R4_TERMINOLOGY);
 					loadIg(igs, binaries, PACKAGE_R4_TERMINOLOGY, recursive);
@@ -188,6 +193,11 @@ public class IgLoaderFromJpaPackageCache extends IgLoader {
 				}
 			}
 			case R5 -> {
+				if (src.startsWith("hl7.terminology#6.5.0")) {
+					log.info("Requesting to load '{}', loading from classpath '{}' instead'", src, PACKAGE_R5_TERMINOLOGY);
+					loadIg(igs, binaries, PACKAGE_R5_TERMINOLOGY65, recursive);
+					return;
+				}
 				if (src.startsWith("hl7.terminology#6.3.0")) {
 					log.info("Requesting to load '{}', loading from classpath '{}' instead'", src, PACKAGE_R5_TERMINOLOGY);
 					loadIg(igs, binaries, PACKAGE_R5_TERMINOLOGY, recursive);
@@ -207,9 +217,9 @@ public class IgLoaderFromJpaPackageCache extends IgLoader {
 			loadIg(igs, binaries, PACKAGE_CDA_UV_CORE, recursive);
 			return;
 		}
-		if (src.equals("ch.fhir.ig.ch-epr-term#current")) {
-			final var replace = "ch.fhir.ig.ch-epr-term#2.0.x";
-			log.info("Replacing 'ch.fhir.ig.ch-epr-term#current' with '{}'", replace);
+		if (src.equals("ch.fhir.ig.ch-term#current")) {
+			final var replace = "ch.fhir.ig.ch-term#3.2.0";
+			log.info("Replacing 'ch.fhir.ig.ch-term#current' with '{}'", replace);
 			loadIg(igs, binaries, replace, recursive);
 			return;
 		}

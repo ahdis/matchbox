@@ -48,14 +48,13 @@ import org.hl7.fhir.instance.model.api.IBase;
 import org.hl7.fhir.instance.model.api.IBaseResource;
 import org.hl7.fhir.r5.model.CodeableConcept;
 import org.hl7.fhir.r5.elementmodel.Manager.FhirFormat;
+import org.hl7.fhir.r5.extensions.ExtensionDefinitions;
 import org.hl7.fhir.r5.model.Duration;
 import org.hl7.fhir.r5.model.OperationOutcome;
 import org.hl7.fhir.r5.model.StringType;
 import org.hl7.fhir.r5.utils.EOperationOutcome;
 import org.hl7.fhir.r5.model.UriType;
 import org.hl7.fhir.r5.utils.OperationOutcomeUtilities;
-import org.hl7.fhir.r5.utils.ToolingExtensions;
-import org.hl7.fhir.utilities.CommaSeparatedStringBuilder;
 import org.hl7.fhir.utilities.validation.ValidationMessage;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -78,7 +77,7 @@ import java.util.List;
 import static ch.ahdis.matchbox.util.MatchboxServerUtils.addExtension;
 
 /**
- * Operation $validate
+ * The HAPI provider of the operation $validate
  */
 public class ValidationProvider {
 
@@ -138,18 +137,31 @@ public class ValidationProvider {
 		// check for each cliContextProperties if it is in the request parameter
 		for (final Field field : cliContextProperties) {
 			final String cliContextProperty = field.getName();
-			if (theRequest.getParameter(cliContextProperty) != null) {
-				try {
-					final String value = theRequest.getParameter(cliContextProperty);
-					// currently only handles boolean or String
-					if (field.getType() == boolean.class || field.getType() == Boolean.class) {
-						BeanUtils.setProperty(cliContext, cliContextProperty, Boolean.parseBoolean(value));
-					} else {
-						BeanUtils.setProperty(cliContext, cliContextProperty, value);
+			if (field.getType() == String[].class) {
+				if (theRequest.getParameterValues(cliContextProperty) != null) {
+					try {
+						final String[] value = theRequest.getParameterValues(cliContextProperty);
+  						field.setAccessible(true);
+            			field.set(cliContext, value);
+					} catch (final IllegalAccessException e) {
+						log.error("error setting property %s to %s".formatted(cliContextProperty,
+																								theRequest.getParameter(cliContextProperty)));
 					}
-				} catch (final IllegalAccessException | InvocationTargetException e) {
-					log.error("error setting property %s to %s".formatted(cliContextProperty,
-																							theRequest.getParameter(cliContextProperty)));
+				}
+			} else {
+				if (theRequest.getParameter(cliContextProperty) != null) {
+					try {
+						final String value = theRequest.getParameter(cliContextProperty);
+						// currently only handles boolean or String
+						if (field.getType() == boolean.class || field.getType() == Boolean.class) {
+							BeanUtils.setProperty(cliContext, cliContextProperty, Boolean.parseBoolean(value));
+						} else {
+							BeanUtils.setProperty(cliContext, cliContextProperty, value);
+						}
+					} catch (final IllegalAccessException | InvocationTargetException e) {
+						log.error("error setting property %s to %s".formatted(cliContextProperty,
+																								theRequest.getParameter(cliContextProperty)));
+					}
 				}
 			}
 		}
@@ -157,11 +169,6 @@ public class ValidationProvider {
 		// Check if the IG should be auto-installed
 		if (!cliContext.isHttpReadOnly()) {
 			this.ensureIgIsInstalled(theRequest.getParameter("ig"), theRequest.getParameter("profile"));
-		}
-
-		if (theRequest.getParameter("extensions") != null) {
-			String extensions = theRequest.getParameter("extensions");
-			cliContext.setExtensions(new ArrayList<>(Arrays.asList(extensions.split(","))));
 		}
 
 		if (theRequest.getParameter("profile") == null) {
@@ -319,6 +326,12 @@ public class ValidationProvider {
 			for (final String pkg : engine.getContext().getLoadedPackages()) {
 				addExtension(ext, "package", new StringType(pkg));
 			}
+			for (final String suppressedWarning : engine.getSuppressedWarnInfoPatterns()) {
+				addExtension(ext, "suppressedWarning", new StringType(suppressedWarning));
+			}		
+			for (final String suppressedError : engine.getSuppressedErrors()) {
+				addExtension(ext, "suppressedError", new StringType(suppressedError));
+			}		
 		}
 
 		// Map the SingleValidationMessages to OperationOutcomeIssue
@@ -372,7 +385,7 @@ public class ValidationProvider {
 		issue.setSeverity(OperationOutcome.IssueSeverity.ERROR);
 		issue.setCode(OperationOutcome.IssueType.EXCEPTION);
 		issue.setDiagnostics(message);
-		issue.addExtension().setUrl(ToolingExtensions.EXT_ISSUE_SOURCE).setValue(new StringType("ValidationProvider"));
+		issue.addExtension().setUrl(ExtensionDefinitions.EXT_ISSUE_SOURCE).setValue(new StringType("ValidationProvider"));
 		return VersionConvertorFactory_40_50.convertResource(oo);
 	}
 
@@ -489,37 +502,35 @@ public class ValidationProvider {
 			m.setCol(0);
 			m.setLine(0);
 			messages.add(m);
-		} 
+		}
 		return messages;
 	}
 
 	public IBaseResource addAIIssueToOperationOutcome(IBaseResource resource, String aiResponse) {
-		if (resource instanceof OperationOutcome) {
-			var outcome = (OperationOutcome) resource;
-			
-			var issue = outcome.addIssue();
-			issue.setSeverity(OperationOutcome.IssueSeverity.INFORMATION);
-			issue.setCode(OperationOutcome.IssueType.INFORMATIONAL);
-			issue.setDiagnostics(aiResponse);
-			issue.addExtension().setUrl("http://hl7.org/fhir/StructureDefinition/rendering-style").setValue(new StringType("markdown"));
-			CodeableConcept details = new CodeableConcept();
-        	details.setText("AI Analyze of the Operation Outcome");
-			issue.setDetails(details);
-	
+		if (resource instanceof final OperationOutcome outcome) {
+			final var details = new CodeableConcept();
+			details.setText("AI Analyze of the Operation Outcome");
+
+			outcome.addIssue()
+				.setSeverity(OperationOutcome.IssueSeverity.INFORMATION)
+				.setCode(OperationOutcome.IssueType.INFORMATIONAL)
+				.setDiagnostics(aiResponse)
+				.setDetails(details)
+				.addExtension()
+					.setUrl("http://hl7.org/fhir/StructureDefinition/rendering-style")
+					.setValue(new StringType("markdown"));
+
 			return outcome;
 		}
 		throw new IllegalArgumentException("Provided resource is not an OperationOutcome.");
 	}
 
 	public IBaseResource addExceptionToOperationOutcome(IBaseResource resource, Exception e) {
-		if (resource instanceof OperationOutcome) {
-			var outcome = (OperationOutcome) resource;
-			
-			var issue = outcome.addIssue();
-			issue.setSeverity(OperationOutcome.IssueSeverity.ERROR);
-			issue.setCode(OperationOutcome.IssueType.EXCEPTION);
-			issue.setDiagnostics(e.getLocalizedMessage());
-
+		if (resource instanceof final OperationOutcome outcome) {
+			outcome.addIssue()
+				.setSeverity(OperationOutcome.IssueSeverity.ERROR)
+				.setCode(OperationOutcome.IssueType.EXCEPTION)
+				.setDiagnostics(e.getLocalizedMessage());
 			return outcome;
 		}
 		throw new IllegalArgumentException("Provided resource is not an OperationOutcome.");

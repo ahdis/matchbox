@@ -18,14 +18,19 @@ hapi:
         name: hl7.terminology.r4
         version: 6.3.0
         url: classpath:/hl7.terminology.r4#6.3.0.tgz
-      ch-emed:
-        name: ch.fhir.ig.ch-vacd
-        version: 3.0.0 
+      ch-core:
+        name: ch.fhir.ig.ch-core
+        version: 6.0.0-ballot 
+        url: https://fhir.ch/ig/ch-core/package.tgz
 matchbox:
   fhir:
     context:
 #      txServer: http://tx.fhir.org
-      txServer: http://localhost:${server.port}/matchboxv3/fhir
+      httpReadOnly: true
+      txServer: http://localhost:${server.port}/matchboxv3/tx
       suppressWarnInfo:
         hl7.fhir.r4.core#4.0.1:
           - "Constraint failed: dom-6:"
+      suppressError:
+        hl7.fhir.r4.core#4.0.1:
+          - "Extension_EXTP_Context_Wrong@^RelatedPerson"

@@ -1,34 +1,23 @@
 package ch.ahdis.matchbox.engine.cli;
 
 import java.io.FileOutputStream;
-import java.io.IOException;
 import java.io.PrintStream;
 import java.lang.management.ManagementFactory;
 import java.lang.management.MemoryMXBean;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.hl7.fhir.exceptions.FHIRException;
 import org.hl7.fhir.r5.context.ContextUtilities;
 import org.hl7.fhir.r5.context.SimpleWorkerContext;
-import org.hl7.fhir.r5.context.SystemOutLoggingService;
+import org.hl7.fhir.r5.context.Slf4JLoggingService;
 import org.hl7.fhir.r5.elementmodel.Manager;
 import org.hl7.fhir.r5.elementmodel.Manager.FhirFormat;
 import org.hl7.fhir.r5.formats.IParser;
 import org.hl7.fhir.r5.model.Bundle;
-import org.hl7.fhir.r5.model.CanonicalResource;
-import org.hl7.fhir.r5.model.CodeSystem;
-import org.hl7.fhir.r5.model.ConceptMap;
 import org.hl7.fhir.r5.model.OperationOutcome;
 import org.hl7.fhir.r5.model.Resource;
 import org.hl7.fhir.r5.model.StructureDefinition;
-import org.hl7.fhir.r5.model.StructureDefinition.StructureDefinitionKind;
 import org.hl7.fhir.r5.model.StructureMap;
-import org.hl7.fhir.r5.model.ValueSet;
-import org.hl7.fhir.r5.renderers.spreadsheets.CodeSystemSpreadsheetGenerator;
-import org.hl7.fhir.r5.renderers.spreadsheets.ConceptMapSpreadsheetGenerator;
-import org.hl7.fhir.r5.renderers.spreadsheets.StructureDefinitionSpreadsheetGenerator;
-import org.hl7.fhir.r5.renderers.spreadsheets.ValueSetSpreadsheetGenerator;
 import org.hl7.fhir.r5.terminologies.CodeSystemUtilities;
 import org.hl7.fhir.r5.terminologies.client.TerminologyClientManager.InternalLogEvent;
 import org.hl7.fhir.r5.utils.validation.constants.ReferenceValidationPolicy;
@@ -37,12 +26,12 @@ import org.hl7.fhir.utilities.TimeTracker;
 import org.hl7.fhir.utilities.Utilities;
 import org.hl7.fhir.utilities.VersionUtilities;
 import org.hl7.fhir.utilities.npm.FilesystemPackageCacheManager;
-import org.hl7.fhir.utilities.npm.ToolsVersion;
 import org.hl7.fhir.utilities.validation.ValidationMessage;
 import org.hl7.fhir.validation.IgLoader;
 import org.hl7.fhir.validation.ValidationEngine;
 import org.hl7.fhir.validation.ValidationRecord;
 import org.hl7.fhir.validation.ValidatorUtils;
+import org.hl7.fhir.validation.instance.advisor.BasePolicyAdvisorForFullValidation;
 import org.hl7.fhir.validation.service.model.ValidationContext;
 import org.hl7.fhir.validation.service.model.FileInfo;
 import org.hl7.fhir.validation.service.model.ValidationOutcome;
@@ -55,17 +44,15 @@ import org.hl7.fhir.validation.service.renderers.NativeRenderer;
 import org.hl7.fhir.validation.service.renderers.ValidationOutputRenderer;
 import org.hl7.fhir.validation.service.DisabledValidationPolicyAdvisor;
 import org.hl7.fhir.validation.service.HTMLOutputGenerator;
-import org.hl7.fhir.validation.service.IPackageInstaller;
 import org.hl7.fhir.validation.service.PassiveExpiringSessionCache;
-import org.hl7.fhir.validation.service.SessionCache;
 import org.hl7.fhir.validation.service.StandAloneValidatorFetcher;
 import org.hl7.fhir.validation.service.utils.EngineMode;
 import org.hl7.fhir.validation.service.utils.VersionSourceInformation;
-import org.hl7.fhir.validation.instance.advisor.BasePolicyAdvisorForFullValidation;
 
 import ch.ahdis.matchbox.engine.CdaMappingEngine;
 import ch.ahdis.matchbox.engine.MatchboxEngine;
 import ch.ahdis.matchbox.engine.ValidationPolicyAdvisor;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * A executable class 
@@ -74,6 +61,7 @@ import ch.ahdis.matchbox.engine.ValidationPolicyAdvisor;
  *
  * @author Oliver Egger
  */
+@Slf4j
 public class MatchboxService {
 
   public static final String CURRENT_DEFAULT_VERSION = "4.0";
@@ -404,7 +392,7 @@ public class MatchboxService {
       sessionId = sessionCache.cacheSession(validator);
 
       validator.setDebug(validationContext.isDoDebug());
-      validator.getContext().setLogger(new SystemOutLoggingService(validationContext.isDoDebug()));
+      validator.getContext().setLogger(new Slf4JLoggingService(log));
       for (String src : validationContext.getIgs()) {
         validator.getIgLoader().loadIg(validator.getIgs(), validator.getBinaries(), src, validationContext.isRecursive());
       }
@@ -436,6 +424,8 @@ public class MatchboxService {
       validator.setForPublication(validationContext.isForPublication());
       validator.setShowTimes(validationContext.isShowTimes());
       validator.setAllowExampleUrls(validationContext.isAllowExampleUrls());
+      validator.setR5BundleRelativeReferencePolicy(validationContext.getR5BundleRelativeReferencePolicy());
+      ReferenceValidationPolicy refpol = ReferenceValidationPolicy.CHECK_VALID;
       if (!validationContext.isDisableDefaultResourceFetcher()) {
           StandAloneValidatorFetcher fetcher = new StandAloneValidatorFetcher(validator.getPcm(), validator.getContext(), validator);
           validator.setFetcher(fetcher);
@@ -448,12 +438,11 @@ public class MatchboxService {
           }
           fetcher.setResolutionContext(validationContext.getResolutionContext());
         } else {
-          validator.setPolicyAdvisor(new ValidationPolicyAdvisor(ReferenceValidationPolicy.CHECK_VALID));
-          // https://github.com/ahdis/matchbox/issues/334
-//          DisabledValidationPolicyAdvisor fetcher = new DisabledValidationPolicyAdvisor();
-//          validator.setPolicyAdvisor(fetcher);
-//          refpol = ReferenceValidationPolicy.CHECK_TYPE_IF_EXISTS;
+          DisabledValidationPolicyAdvisor fetcher = new DisabledValidationPolicyAdvisor();
+          validator.setPolicyAdvisor(fetcher);
+          refpol = ReferenceValidationPolicy.CHECK_TYPE_IF_EXISTS;
       }
+      validator.getPolicyAdvisor().setPolicyAdvisor(new ValidationPolicyAdvisor(validator.getPolicyAdvisor() == null ? refpol : validator.getPolicyAdvisor().getReferencePolicy()));
       validator.getBundleValidationRules().addAll(validationContext.getBundleValidationRules());
       validator.setJurisdiction(CodeSystemUtilities.readCoding(validationContext.getJurisdiction()));
       
