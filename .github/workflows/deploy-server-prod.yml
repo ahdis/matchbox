@@ -1,0 +1,16 @@
+name: Deploy API to Production
+
+on:
+  workflow_dispatch:      # Allows manual triggering
+
+jobs:
+  call-template:
+    name: Production Environment
+    uses: deploy-server-template.yml
+    secrets:
+      AWS_ACCESS_KEY_ID: ${{ secrets.GLOBAL_PROD_AWS_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.GLOBAL_PROD_AWS_SECRET_ACCESS_KEY }}
+      AWS_ACCOUNT_ID: ${{ secrets.GLOBAL_PROD_AWS_ACCOUNT_ID }}
+    with:
+      environment: prod
+      AWS_REGION: ${{ vars.GLOBAL_PROD_AWS_REGION }}

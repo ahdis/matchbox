@@ -1,0 +1,18 @@
+name: Deploy API to Development
+
+on:
+  push:
+    branches: ["infoway"]
+  workflow_dispatch:      # Allows manual triggering
+
+jobs:
+  call-template:
+    name: Development Environment
+    uses: deploy-server-template.yml
+    secrets:
+      AWS_ACCESS_KEY_ID: ${{ secrets.GLOBAL_DEV_AWS_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.GLOBAL_DEV_AWS_SECRET_ACCESS_KEY }}
+      AWS_ACCOUNT_ID: ${{ secrets.GLOBAL_DEV_AWS_ACCOUNT_ID }}
+    with:
+      environment: dev
+      AWS_REGION: ${{ vars.GLOBAL_DEV_AWS_REGION }}

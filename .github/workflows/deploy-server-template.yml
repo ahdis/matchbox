@@ -1,0 +1,145 @@
+name: Deployment Template
+
+on:
+  workflow_call:
+    inputs:
+      environment:
+        required: true
+        type: string
+        description: 'Deployment to Environment?'
+        default: dev
+      AWS_REGION:
+        required: true
+        type: string
+        default: "ca-central-1"
+    secrets:
+      AWS_ACCOUNT_ID:
+        required: true
+      AWS_ACCESS_KEY_ID:
+        required: true
+      AWS_SECRET_ACCESS_KEY:
+        required: true
+
+jobs:
+  Deploy:
+    name: Deploy ${{ inputs.environment }}
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.environment }}
+    env:
+      EB_APP_NAME: matchbox
+      EB_ENV_NAME: matchbox-server-${{ inputs.environment }}-env
+      ECR_REPOSITORY: infoway/matchbox-server
+#      AWS_ACCESS_KEY_ID: ${{ secrets.GLOBAL_DEV_AWS_ACCESS_KEY_ID }}
+#      AWS_REGION: ca-central-1
+#      AWS_SECRET_ACCESS_KEY: ${{ secrets.GLOBAL_DEV_AWS_SECRET_ACCESS_KEY }}
+      BUCKET_NAME: infoway-${{ inputs.environment }}-github-deployment
+      ECR_URL: ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ vars.AWS_REGION }}.amazonaws.com
+      MAVEN_CACHE_FOLDER: ~/.m2/repository
+
+    steps:
+      - name: Print environment variable
+        run: |
+          echo "EB_APP_NAME is $EB_APP_NAME"
+          echo "EB_ENV_NAME is $EB_ENV_NAME"
+          echo "ECR_REPOSITORY is $ECR_REPOSITORY"
+          echo "AWS_REGION is $AWS_REGION"
+          echo "ECR_URL is $ECR_URL"
+
+      - name: Checkout Code
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 1
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v3
+        with:
+          java-version: "21"
+          distribution: "temurin"
+
+      - name: Generate Today's Date
+        run: |
+          echo "TIMESTAMP=$(date -u +'%Y-%m-%dT%H:%M:%S.%3NZ')" >> $GITHUB_ENV
+
+      - name: Get GIT Short Hash
+        run: |
+          echo "SHORT_HASH=${GITHUB_SHA:0:8}" >> $GITHUB_ENV
+
+      - name: Set short commit hash
+        run: echo "Short Hash ${{ env.SHORT_HASH }}"
+
+      - name: Cache Maven packages
+        uses: actions/cache@v4
+        with:
+          path: ${{ env.MAVEN_CACHE_FOLDER }}
+          key: maven-${{ runner.os }}-${{ env.EB_ENV_NAME }}
+          restore-keys: |
+            maven-${{ runner.os }}-${{ env.EB_ENV_NAME }}
+
+      - name: Build EB Version
+        run: |
+          echo "EB_APP_VERSION=${{ env.EB_APP_NAME }}-${{ env.SHORT_HASH }}" >> $GITHUB_ENV
+
+      - name: Generate Dockerrun.aws.json
+        run: |
+          echo '{
+            "AWSEBDockerrunVersion": "1",
+            "Image": {
+              "Name": "${{ env.ECR_URL }}/${{ env.ECR_REPOSITORY }}:${{ env.SHORT_HASH }}",
+              "Update": "true"
+            },
+            "Ports": [
+              { "ContainerPort": 8080 }
+            ]
+          }' > Dockerrun.aws.json
+
+      - name: Build ZIP Filename
+        run: |
+          echo "ZIP_FILE=${{ env.EB_APP_VERSION }}.zip" >> $GITHUB_ENV
+
+      - name: Zip deployment bundle
+        run: |
+          cat Dockerrun.aws.json
+          zip -r "${{ env.ZIP_FILE }}" Dockerrun.aws.json
+
+      - name: Build with Maven without tests
+        run: mvn package -DskipTests -Dmaven.repo.local="${{ env.MAVEN_CACHE_FOLDER }}"
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ inputs.AWS_REGION }}
+
+      - name: Login to Amazon ECR
+        run: |
+          aws ecr get-login-password | docker login --username AWS --password-stdin "${{ env.ECR_URL }}"
+
+      - name: Build Docker image
+        run: |
+          docker build --build-arg ENVIRONMENT=${{ inputs.environment }} --build-arg VERSION=${{ env.SHORT_HASH }} --build-arg TIMESTAMP=${{ env.TIMESTAMP }} -t ${{ env.ECR_REPOSITORY }}:latest .
+          docker tag ${{ env.ECR_REPOSITORY }}:latest "${{ env.ECR_URL }}/${{ env.ECR_REPOSITORY }}:${{ inputs.environment }}"
+          docker tag ${{ env.ECR_REPOSITORY }}:latest "${{ env.ECR_URL }}/${{ env.ECR_REPOSITORY }}:${{ env.SHORT_HASH }}"
+
+      - name: Push to Amazon ECR
+        run: |
+          docker push "${{ env.ECR_URL }}/${{ env.ECR_REPOSITORY }}:${{ inputs.environment }}"
+          docker push "${{ env.ECR_URL }}/${{ env.ECR_REPOSITORY }}:${{ env.SHORT_HASH }}"
+
+      - name: Upload deploy.zip to S3
+        run: |
+          aws s3 cp "${{ env.ZIP_FILE }}" "s3://${{ env.BUCKET_NAME }}/${{ env.ZIP_FILE }}"
+
+      - name: Create EB application version
+        continue-on-error: true
+        run: |
+          aws elasticbeanstalk create-application-version \
+            --application-name ${{ env.EB_APP_NAME }} \
+            --version-label ${{ env.EB_APP_VERSION }} \
+            --source-bundle S3Bucket="${{ env.BUCKET_NAME }}",S3Key="${{ env.ZIP_FILE }}"
+
+      - name: Update EB environment
+        run: |
+          aws elasticbeanstalk update-environment \
+            --environment-name ${{ env.EB_ENV_NAME }} \
+            --version-label ${{ env.EB_APP_VERSION }}
