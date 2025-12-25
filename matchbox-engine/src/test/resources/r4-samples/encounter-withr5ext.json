@@ -1,0 +1,18 @@
+{
+	"resourceType": "Encounter",
+	"extension": [
+		{
+			"url": "http://hl7.org/fhir/5.0/StructureDefinition/extension-Encounter.plannedStartDate",
+			"valueDateTime": "2023-04-11"
+		},
+		{
+			"url": "http://hl7.org/fhir/5.0/StructureDefinition/extension-Encounter.plannedEndDate",
+			"valueDateTime": "2023-05-05"
+		}
+	],
+	"status": "in-progress",
+	"class": {
+		"system": "http://terminology.hl7.org/CodeSystem/v3-ActCode",
+		"code": "HH"
+	}
+}

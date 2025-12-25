@@ -1,0 +1,36 @@
+server:
+  port: 8080
+  servlet:
+    context-path: /matchboxv3
+hapi:
+  fhir:
+    server_address: http://localhost:8080/matchboxv3/fhir
+    implementationguides:
+      fhir_r4_core:
+        name: hl7.fhir.r4.core
+        version: 4.0.1
+        url: classpath:/hl7.fhir.r4.core.tgz
+      fhir_extensions:
+        name: hl7.fhir.uv.extensions.r4
+        version: 5.2.0
+        url: classpath:/hl7.fhir.uv.extensions.r4#5.2.0.tgz
+      fhir_terminology:
+        name: hl7.terminology.r4
+        version: 6.3.0
+        url: classpath:/hl7.terminology.r4#6.3.0.tgz
+      ans_fr_tddui:
+        name: ans.fhir.fr.tddui
+        version: 2.1.0-ballot
+matchbox:
+  fhir:
+    context:
+#      txServer: http://tx.fhir.org
+#      xVersion: true
+      httpReadOnly: true
+      txServer: http://localhost:${server.port}/matchboxv3/tx
+      suppressWarnInfo:
+        hl7.fhir.r4.core#4.0.1:
+          - "Constraint failed: dom-6:"
+      suppressError:
+        hl7.fhir.r4.core#4.0.1:
+          - "Extension_EXTP_Context_Wrong@^RelatedPerson"
