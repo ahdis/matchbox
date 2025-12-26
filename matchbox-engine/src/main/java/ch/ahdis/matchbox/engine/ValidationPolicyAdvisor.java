@@ -22,8 +22,8 @@ public class ValidationPolicyAdvisor extends BasePolicyAdvisorForFullValidation 
     // This is a map of messageId to a list of regex paths that should be ignored
     private final Map<String, List<String>> messagesToIgnore = new HashMap<>();
 		
-    public ValidationPolicyAdvisor(ReferenceValidationPolicy refpol) {
-        super(refpol);
+    public ValidationPolicyAdvisor(ReferenceValidationPolicy refpol, Set<String> referencesTo) {
+        super(refpol, referencesTo);
     }
 
     @Override

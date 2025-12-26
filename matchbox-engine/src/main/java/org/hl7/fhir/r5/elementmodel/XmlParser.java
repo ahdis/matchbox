@@ -227,12 +227,18 @@ public class XmlParser extends ParserBase {
     String ns = element.getNamespaceURI();
     String name = element.getLocalName();
     String path = "/"+pathPrefix(ns)+name;
+    String rd = element.getAttribute("resourceDefinition");
 
     StructureDefinition sd = getDefinition(errors, line(element, false), col(element, false), (ns == null ? "noNamespace" : ns), name);
-    if (sd == null)
+    if (sd == null && rd != null) {
+      sd = context.fetchResource(StructureDefinition.class, rd);
+    }
+    if (sd == null) {
       return null;
+    }
 
     Element result = new Element(element.getLocalName(), new Property(context, sd.getSnapshot().getElement().get(0), sd, getProfileUtilities(), getContextUtilities())).setFormat(FhirFormat.XML);
+    result.setResourceDefinition(rd);
     result.setPath(element.getLocalName());
     checkElement(errors, element, result, path, result.getProperty(), false);
     result.markLocation(line(element, false), col(element, false));
@@ -330,9 +336,23 @@ public class XmlParser extends ParserBase {
     return null;
   }
 
-  public Element parse(List<ValidationMessage> errors, org.w3c.dom.Element base, String type) throws Exception {
+  public Element parse(List<ValidationMessage> errors, org.w3c.dom.Element base, String typeName) throws Exception {
+    String typeTail = null;
+    String type = typeName;
+    if (typeName.contains(".")) {
+      typeTail = typeName.substring(typeName.indexOf('.') + 1);
+      type = typeName.substring(0, typeName.indexOf('.'));
+    }
+
     StructureDefinition sd = getDefinition(errors, 0, 0, FormatUtilities.FHIR_NS, type);
-    Element result = new Element(base.getLocalName(), new Property(context, sd.getSnapshot().getElement().get(0), sd, getProfileUtilities(), getContextUtilities())).setFormat(FhirFormat.XML).setNativeObject(base);
+    if (sd == null) {
+      throw new FHIRException("Unable to find definition for type "+type);
+    }
+    ElementDefinition ed = sd.getSnapshot().getElement().get(0);
+    if (typeTail != null) {
+      ed = sd.getSnapshot().getElementByPath(typeName);
+    }
+    Element result = new Element(base.getLocalName(), new Property(context, ed, sd, getProfileUtilities(), getContextUtilities())).setFormat(FhirFormat.XML).setNativeObject(base);
     result.setPath(base.getLocalName());
     String path = "/"+pathPrefix(base.getNamespaceURI())+base.getLocalName();
     checkElement(errors, base, result, path, result.getProperty(), false);
@@ -441,10 +461,11 @@ public class XmlParser extends ParserBase {
             if (attr.getLocalName().equals("schemaLocation") && FormatUtilities.NS_XSI.equals(attr.getNamespaceURI())) {
               ok = ok || allowXsiLocation; 
             }
-          } else
+          } else {
             ok = ok || (attr.getLocalName().equals("schemaLocation")); // xsi:schemalocation allowed for non FHIR content
+          }
           ok = ok || (hasTypeAttr(element) && attr.getLocalName().equals("type") && FormatUtilities.NS_XSI.equals(attr.getNamespaceURI())); // xsi:type allowed if element says so
-          if (!ok) { 
+          if (!ok && !Utilities.existsInList(attr.getLocalName(), "resourceDefinition")) {
             logError(errors, ValidationMessage.NO_RULE_DATE, line(node, false), col(node, false), path, IssueType.STRUCTURE, context.formatMessage(I18nConstants.UNDEFINED_ATTRIBUTE__ON__FOR_TYPE__PROPERTIES__, attr.getNodeName(), node.getNodeName(), element.fhirType(), properties), IssueSeverity.ERROR);
           }
         }
@@ -777,6 +798,11 @@ public class XmlParser extends ParserBase {
     if (Utilities.isAbsoluteUrl(e.getType())) {
       xml.namespace(urlRoot(e.getType()), "et");
     }
+
+    if (ExtensionUtilities.readBoolExtension(e.getProperty().getStructure(), ExtensionDefinitions.EXT_ADDITIONAL_RESOURCE)) {
+      xml.attribute("resourceDefinition", e.getProperty().getStructure().getVersionedUrl());
+    }
+
     addNamespaces(xml, e);
     composeElement(xml, e, e.getType(), true);
     xml.end();
@@ -850,6 +876,9 @@ public class XmlParser extends ParserBase {
     if (canonicalFilter.contains(element.getPath())) {
       return;
     }
+    if (element.getProperty().getDefinition().hasExtension(ExtensionDefinitions.EXT_XML_NAME)) {
+      elementName = element.getProperty().getDefinition().getExtensionString(ExtensionDefinitions.EXT_XML_NAME);
+    }
     if (!(isElideElements() && element.isElided())) {
       if (showDecorations) {
         @SuppressWarnings("unchecked")
@@ -900,6 +929,10 @@ public class XmlParser extends ParserBase {
         if (isElideElements() && element.isElided() && xml.canElide())
           xml.elide();
         else {
+          if ((element.getXhtml()==null) && (element.getValue() != null)) {
+            XhtmlParser xhtml = new XhtmlParser();
+            element.setXhtml(xhtml.setXmlMode(true).parse(element.getValue(), null).getDocumentElement());
+          }
           if (isCdaText(element.getProperty())) {
             new CDANarrativeFormat().convert(xml, element.getXhtml());
           } else {

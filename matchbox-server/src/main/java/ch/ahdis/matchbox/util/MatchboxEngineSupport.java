@@ -618,7 +618,8 @@ public class MatchboxEngineSupport {
 			validator.setPolicyAdvisor(fetcher);
 			refpol = ReferenceValidationPolicy.CHECK_TYPE_IF_EXISTS;
 		}
-		validator.getPolicyAdvisor().setPolicyAdvisor(new ValidationPolicyAdvisor(validator.getPolicyAdvisor() == null ? refpol : validator.getPolicyAdvisor().getReferencePolicy()));
+		// TODO add referencesTo als parameter?
+		validator.getPolicyAdvisor().setPolicyAdvisor(new ValidationPolicyAdvisor(validator.getPolicyAdvisor() == null ? refpol : validator.getPolicyAdvisor().getReferencePolicy(), null));
 
 		validator.setJurisdiction(CodeSystemUtilities.readCoding(cli.getJurisdiction()));
 		// TerminologyCache.setNoCaching(cliContext.isNoInternalCaching());

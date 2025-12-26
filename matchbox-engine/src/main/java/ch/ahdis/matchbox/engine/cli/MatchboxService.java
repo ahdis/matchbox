@@ -442,7 +442,8 @@ public class MatchboxService {
           validator.setPolicyAdvisor(fetcher);
           refpol = ReferenceValidationPolicy.CHECK_TYPE_IF_EXISTS;
       }
-      validator.getPolicyAdvisor().setPolicyAdvisor(new ValidationPolicyAdvisor(validator.getPolicyAdvisor() == null ? refpol : validator.getPolicyAdvisor().getReferencePolicy()));
+      // TODO add referencesTo als parameter?
+      validator.getPolicyAdvisor().setPolicyAdvisor(new ValidationPolicyAdvisor(validator.getPolicyAdvisor() == null ? refpol : validator.getPolicyAdvisor().getReferencePolicy(), null));
       validator.getBundleValidationRules().addAll(validationContext.getBundleValidationRules());
       validator.setJurisdiction(CodeSystemUtilities.readCoding(validationContext.getJurisdiction()));
       
