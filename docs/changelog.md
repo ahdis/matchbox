@@ -1,6 +1,7 @@
 2025 Release 4.0.16
 
 - adapt test and map for (440)
+- update to core (448)
 
 2025/11/03 Release 4.0.15
 

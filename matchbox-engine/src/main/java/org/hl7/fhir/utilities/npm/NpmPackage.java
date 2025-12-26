@@ -61,6 +61,7 @@ import java.util.zip.ZipInputStream;
 
 import javax.annotation.Nonnull;
 
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
 import org.apache.commons.compress.archivers.tar.TarArchiveInputStream;
@@ -177,24 +178,22 @@ public class NpmPackage {
   }
 
   public static class PackagedResourceFile {
+    @Getter
     private final String folder;
+    @Getter
     private final String filename;
+    @Getter
     private final String resourceType;
-    protected PackagedResourceFile(String folder, String filename, String resourceType) {
+    @Getter
+    private final boolean example;
+    protected PackagedResourceFile(String folder, String filename, String resourceType, boolean example) {
       super();
       this.folder = folder;
       this.filename = filename;
       this.resourceType = resourceType;
+      this.example = example;
     }
-    public String getFolder() {
-      return folder;
-    }
-    public String getFilename() {
-      return filename;
-    }
-    public String getResourceType() {
-      return resourceType;
-    }
+
     public static class Sorter implements Comparator<PackagedResourceFile> {
 
       @Override
@@ -686,7 +685,7 @@ public class NpmPackage {
   public boolean isIndexed() throws IOException {
     for (NpmPackageFolder folder : folders.values()) {
       JsonObject index = folder.index();
-      if (folder.index() == null || index.forceArray("files").size() == 0) {
+      if (folder.index() == null) {
         return false;
       }
     }
@@ -697,12 +696,17 @@ public class NpmPackage {
   public void checkIndexed(String path) throws IOException {
     for (NpmPackageFolder folder : folders.values()) {
       JsonObject index = folder.index();
-      if (index == null || index.forceArray("files").size() == 0) {
+      if (index == null) {
         indexFolder(path, folder);
       }  
     }
   }
 
+  public void buildIndexes(String path) throws IOException {
+    for (NpmPackageFolder folder : folders.values()) {
+      indexFolder(path, folder);
+    }
+  }
 
   /**
    * Create a package .index.json file for a package folder.
@@ -715,7 +719,7 @@ public class NpmPackage {
    * @throws FileNotFoundException
    * @throws IOException
    */
-  public void indexFolder(String path, NpmPackageFolder folder) throws FileNotFoundException, IOException {
+  public void indexFolder(String path, NpmPackageFolder folder) throws IOException {
     List<String> remove = new ArrayList<>();
     NpmPackageIndexBuilder indexer = new NpmPackageIndexBuilder();
     indexer.start(folder.folder != null ? Utilities.path(folder.folder.getAbsolutePath(), ".index.db") : null);
@@ -839,19 +843,38 @@ public class NpmPackage {
   public List<PackagedResourceFile> listAllResources(Collection<String> types) throws IOException {
     List<PackagedResourceFile> res = new ArrayList<PackagedResourceFile>();
     for (NpmPackageFolder folder : folders.values()) {
-      if (types.size() == 0) {
-        for (String s : folder.types.keySet()) {
-          if (folder.types.containsKey(s)) {
-            for (String n : folder.types.get(s)) {
-              res.add(new PackagedResourceFile(folder.folderName, n, s));
+      if (!folder.getFolderName().startsWith("tests")) {
+        if (types.size() == 0) {
+          for (String s : folder.types.keySet()) {
+            if (folder.types.containsKey(s)) {
+              for (String n : folder.types.get(s)) {
+                res.add(new PackagedResourceFile(folder.folderName, n, s, folder.getFolderName().equals("example")));
+              }
+            }
+          }
+        } else {
+          for (String s : types) {
+            if (folder.types.containsKey(s)) {
+              for (String n : folder.types.get(s)) {
+                res.add(new PackagedResourceFile(folder.folderName, n, s, folder.getFolderName().equals("example")));
+              }
             }
           }
         }
-      } else {
-        for (String s : types) {
+      }
+    }
+    Collections.sort(res, new PackagedResourceFile.Sorter());
+    return res;
+  }
+
+  public List<PackagedResourceFile> listAllResources() throws IOException {
+    List<PackagedResourceFile> res = new ArrayList<PackagedResourceFile>();
+    for (NpmPackageFolder folder : folders.values()) {
+      if (!folder.getFolderName().startsWith("tests") && !folder.getFolderName().startsWith("data")) {
+        for (String s : folder.types.keySet()) {
           if (folder.types.containsKey(s)) {
             for (String n : folder.types.get(s)) {
-              res.add(new PackagedResourceFile(folder.folderName, n, s));
+              res.add(new PackagedResourceFile(folder.folderName, n, s, folder.getFolderName().equals("example")));
             }
           }
         }

@@ -71,14 +71,15 @@ import org.hl7.fhir.r5.model.Enumerations.PublicationStatus;
 import org.hl7.fhir.r5.model.OperationOutcome.OperationOutcomeIssueComponent;
 import org.hl7.fhir.r5.terminologies.ImplicitValueSets;
 import org.hl7.fhir.r5.utils.UserDataNames;
-import org.hl7.fhir.r5.utils.XVerExtensionManager;
-import org.hl7.fhir.r5.utils.XVerExtensionManager.XVerExtensionStatus;
+import org.hl7.fhir.r5.utils.xver.XVerExtensionManager;
+import org.hl7.fhir.r5.utils.xver.XVerExtensionManager.XVerExtensionStatus;
 import org.hl7.fhir.r5.utils.validation.IMessagingServices;
 import org.hl7.fhir.r5.utils.validation.IValidationPolicyAdvisor;
 import org.hl7.fhir.r5.utils.validation.IValidatorResourceFetcher;
 import org.hl7.fhir.r5.utils.validation.ValidatorSession;
 import org.hl7.fhir.r5.utils.validation.ValidationContextCarrier.IValidationContextResourceLoader;
 import org.hl7.fhir.r5.utils.validation.constants.ReferenceValidationPolicy;
+import org.hl7.fhir.r5.utils.xver.XVerExtensionManagerFactory;
 import org.hl7.fhir.utilities.*;
 import org.hl7.fhir.utilities.i18n.I18nConstants;
 import org.hl7.fhir.utilities.validation.ValidationMessage;
@@ -208,10 +209,10 @@ public class BaseValidator implements IValidationContextResourceLoader, IMessagi
     }
     this.xverManager = xverManager;
     if (this.xverManager == null) {
-      this.xverManager = new XVerExtensionManager(context);
+      this.xverManager = XVerExtensionManagerFactory.createExtensionManager(context);
     }
     this.settings = settings;
-    policyAdvisor = new BasePolicyAdvisorForFullValidation(ReferenceValidationPolicy.CHECK_VALID);
+    policyAdvisor = new BasePolicyAdvisorForFullValidation(ReferenceValidationPolicy.CHECK_VALID, null);
     urlRegex = Constants.URI_REGEX_XVER.replace("$$", CommaSeparatedStringBuilder.join("|", context.getResourceNames()));
   }
   
@@ -380,10 +381,10 @@ public class BaseValidator implements IValidationContextResourceLoader, IMessagi
     return addValidationMessage(errors, ruleDate, type, line, col, path, message, IssueSeverity.INFORMATION, theMessage).setSignpost(true);
   }
 
-  protected boolean txHint(List<ValidationMessage> errors, String ruleDate, String txLink, IssueType type, int line, int col, String path, boolean thePass, String theMessage, Object... theMessageArguments) {
+  protected boolean txHint(List<ValidationMessage> errors, String ruleDate, String txLink, String diagnostics, IssueType type, int line, int col, String path, boolean thePass, String theMessage, Object... theMessageArguments) {
     if (!thePass && doingHints() && !isSuppressedValidationMessage(path, theMessage)) {
       String message = context.formatMessage(theMessage, theMessageArguments);
-      addValidationMessage(errors, ruleDate, type, line, col, path, message, IssueSeverity.INFORMATION, Source.TerminologyEngine, theMessage).setTxLink(txLink);
+      addValidationMessage(errors, ruleDate, type, line, col, path, message, IssueSeverity.INFORMATION, Source.TerminologyEngine, theMessage).setTxLink(txLink).setDiagnostics(diagnostics);
     }
     return thePass;
   }
@@ -463,13 +464,13 @@ public class BaseValidator implements IValidationContextResourceLoader, IMessagi
     return thePass;
   }
 
-  protected boolean txRule(List<ValidationMessage> errors, String ruleDate, String txLink, IssueType type, int line, int col, String path, boolean thePass, String theMessage, Object... theMessageArguments) {
+  protected boolean txRule(List<ValidationMessage> errors, String ruleDate, String txLink, String diagnostics, IssueType type, int line, int col, String path, boolean thePass, String theMessage, Object... theMessageArguments) {
     if (!thePass && doingErrors() && !isSuppressedValidationMessage(path, theMessage)) {
       String message = context.formatMessage(theMessage, theMessageArguments);
       ValidationMessage vm = new ValidationMessage(Source.TerminologyEngine, type, line, col, path, message, IssueSeverity.ERROR).setMessageId(idForMessage(theMessage, message));
       vm.setRuleDate(ruleDate);
       if (checkMsgId(theMessage, vm)) {
-        errors.add(vm.setTxLink(txLink));
+        errors.add(vm.setTxLink(txLink).setDiagnostics(diagnostics));
       }
     }
     return thePass;
@@ -658,10 +659,19 @@ public class BaseValidator implements IValidationContextResourceLoader, IMessagi
   protected ValidationMessage addValidationMessage(List<ValidationMessage> errors, String ruleDate, IssueType type, int line, int col, String path, String msg, IssueSeverity theSeverity, Source theSource, String id) {
     ValidationMessage validationMessage = new ValidationMessage(theSource, type, line, col, path, msg, theSeverity).setMessageId(id);
     validationMessage.setRuleDate(ruleDate);
-    if (doingLevel(theSeverity) && checkMsgId(id, validationMessage)) {
+    if (doingLevel(theSeverity) && !hasMessage(errors, validationMessage) && checkMsgId(id, validationMessage)) {
       errors.add(validationMessage);
     }
     return validationMessage;
+  }
+
+  protected boolean hasMessage(List<ValidationMessage> errors, ValidationMessage newMsg) {
+    for (ValidationMessage m : errors) {
+      if (m.preciseMatch(newMsg)) {
+        return true;
+      }
+    }
+    return false;
   }
 
   public boolean checkMsgId(String id, ValidationMessage vm) { 
@@ -682,10 +692,10 @@ public class BaseValidator implements IValidationContextResourceLoader, IMessagi
    *          Set this parameter to <code>false</code> if the validation does not pass
    * @return Returns <code>thePass</code> (in other words, returns <code>true</code> if the rule did not fail validation)
    */
-  protected boolean txWarning(List<ValidationMessage> errors, String ruleDate, String txLink, IssueType type, int line, int col, String path, boolean thePass, String msg, Object... theMessageArguments) {
+  protected boolean txWarning(List<ValidationMessage> errors, String ruleDate, String txLink, String diagnostics, IssueType type, int line, int col, String path, boolean thePass, String msg, Object... theMessageArguments) {
     if (!thePass && doingWarnings() && !isSuppressedValidationMessage(path, msg)) {
       String nmsg = context.formatMessage(msg, theMessageArguments);
-      ValidationMessage vmsg = new ValidationMessage(Source.TerminologyEngine, type, line, col, path, nmsg, IssueSeverity.WARNING).setTxLink(txLink).setMessageId(idForMessage(msg, nmsg));
+      ValidationMessage vmsg = new ValidationMessage(Source.TerminologyEngine, type, line, col, path, nmsg, IssueSeverity.WARNING).setTxLink(txLink).setMessageId(idForMessage(msg, nmsg)).setDiagnostics(diagnostics);
       vmsg.setRuleDate(ruleDate);
       if (checkMsgId(msg, vmsg)) {
         errors.add(vmsg);
@@ -699,18 +709,21 @@ public class BaseValidator implements IValidationContextResourceLoader, IMessagi
    * @param thePass Set this parameter to <code>false</code> if the validation does not pass
    * @return Returns <code>thePass</code> (in other words, returns <code>true</code> if the rule did not fail validation)
    */
-  protected ValidationMessage buildValidationMessage(String txLink, int line, int col, String path, OperationOutcomeIssueComponent issue) {
+  protected ValidationMessage buildValidationMessage(String txLink, String diagnostics, int line, int col, String path, OperationOutcomeIssueComponent issue) {
     if (issue.hasLocation() && issue.getExpressionOrLocation().get(0).getValue().contains(".")) {
       path = path + dropHead(issue.getExpressionOrLocation().get(0).getValue());
     }
     IssueType code = IssueType.fromCode(issue.getCode().toCode());
     IssueSeverity severity = IssueSeverity.fromCode(issue.getSeverity().toCode());
-    ValidationMessage validationMessage = new ValidationMessage(Source.TerminologyEngine, code, line, col, path, issue.getDetails().getText(), severity).setTxLink(txLink);
+    ValidationMessage validationMessage = new ValidationMessage(Source.TerminologyEngine, code, line, col, path, issue.getDetails().getText(), severity).setTxLink(txLink).setDiagnostics(diagnostics);
     if (issue.getExtensionString(ExtensionDefinitions.EXT_ISSUE_SERVER) != null) {
-      validationMessage.setServer(issue.getExtensionString(ExtensionDefinitions.EXT_ISSUE_SERVER).replace("local.fhir.org", "tx-dev.fhir.org"));
+      validationMessage.setServer(issue.getExtensionString(ExtensionDefinitions.EXT_ISSUE_SERVER).replace("http://local.fhir.org", "https://tx-dev.fhir.org"));
     }
     if (issue.getExtensionString(ExtensionDefinitions.EXT_ISSUE_MSG_ID) != null) {
       validationMessage.setMessageId(issue.getExtensionString(ExtensionDefinitions.EXT_ISSUE_MSG_ID));
+    }
+    if (issue.hasDiagnostics()) {
+      validationMessage.setDiagnostics(issue.getDiagnostics());
     }
     return validationMessage;
   }
@@ -726,10 +739,10 @@ public class BaseValidator implements IValidationContextResourceLoader, IMessagi
    *          Set this parameter to <code>false</code> if the validation does not pass
    * @return Returns <code>thePass</code> (in other words, returns <code>true</code> if the rule did not fail validation)
    */
-  protected boolean txWarningForLaterRemoval(Object location, List<ValidationMessage> errors, String ruleDate, String txLink, IssueType type, int line, int col, String path, boolean thePass, String msg, Object... theMessageArguments) {
+  protected boolean txWarningForLaterRemoval(Object location, List<ValidationMessage> errors, String ruleDate, String txLink, String diagnostics, IssueType type, int line, int col, String path, boolean thePass, String msg, Object... theMessageArguments) {
     if (!thePass && doingWarnings() && !isSuppressedValidationMessage(path, msg)) {
       String nmsg = context.formatMessage(msg, theMessageArguments);
-      ValidationMessage vmsg = new ValidationMessage(Source.TerminologyEngine, type, line, col, path, nmsg, IssueSeverity.WARNING).setTxLink(txLink).setMessageId(msg);
+      ValidationMessage vmsg = new ValidationMessage(Source.TerminologyEngine, type, line, col, path, nmsg, IssueSeverity.WARNING).setTxLink(txLink).setDiagnostics(diagnostics).setMessageId(msg);
       vmsg.setRuleDate(ruleDate);
       if (checkMsgId(msg, vmsg)) {
         errors.add(vmsg);
@@ -971,11 +984,11 @@ public class BaseValidator implements IValidationContextResourceLoader, IMessagi
       } else {
         reference = cu.pinValueSet(reference);
         long t = System.nanoTime();
-        ValueSet fr = context.findTxResource(ValueSet.class, reference, src);
+        ValueSet fr = context.findTxResource(ValueSet.class, reference, null, src);
         if (fr == null) {
           if (!Utilities.isAbsoluteUrl(reference)) {
             reference = resolve(uri, reference);
-            fr = context.findTxResource(ValueSet.class, reference, src);
+            fr = context.findTxResource(ValueSet.class, reference, null, src);
           }
         }
         if (fr == null) {
@@ -1484,7 +1497,7 @@ public class BaseValidator implements IValidationContextResourceLoader, IMessagi
   }
   
   public StructureDefinition xverDefn(String url) {
-    return xverManager.makeDefinition(url);
+    return xverManager.getDefinition(url);
   }
   
   public String xverVersion(String url) {
@@ -1507,10 +1520,13 @@ public class BaseValidator implements IValidationContextResourceLoader, IMessagi
         case Invalid:
           rule(errors, NO_RULE_DATE, IssueType.BUSINESSRULE, profile.getId(), false, I18nConstants.EXTENSION_EXT_VERSION_NOCHANGE, url, xverElementId(url));
           return null;
+        case NotAllowed:
+          rule(errors, NO_RULE_DATE, IssueType.BUSINESSRULE, profile.getId(), false, I18nConstants.EXTENSION_EXT_VERSION_NOTALLOWED, url, xverElementId(url));
+          return null;
         case Valid:
           StructureDefinition defn = xverDefn(url);
           new ContextUtilities(context).generateSnapshot(defn);
-          context.cacheResource(defn);
+          context.getManager().cacheResource(defn);
           return defn;
         default:
           rule(errors, NO_RULE_DATE, IssueType.INVALID, profile.getId(), false, I18nConstants.EXTENSION_EXT_VERSION_INTERNAL, url);
@@ -1521,25 +1537,33 @@ public class BaseValidator implements IValidationContextResourceLoader, IMessagi
     }
   }
   
-  public StructureDefinition getXverExt(List<ValidationMessage> errors, String path, Element element, String url) {
+  public StructureDefinition getXverExt(List<ValidationMessage> errors, String path, Element element, String url, BooleanHolder errored) {
     if (isXverUrl(url)) {
       switch (xverStatus(url)) {
       case BadVersion:
         rule(errors, NO_RULE_DATE, IssueType.INVALID, element.line(), element.col(), path + "[url='" + url + "']", false, I18nConstants.EXTENSION_EXT_VERSION_INVALID, url, xverVersion(url));
+        errored.set(true);
         break;
       case Unknown:
         rule(errors, NO_RULE_DATE, IssueType.INVALID, element.line(), element.col(), path + "[url='" + url + "']", false, I18nConstants.EXTENSION_EXT_VERSION_INVALIDID, url, xverElementId(url));
+        errored.set(true);
         break;
       case Invalid:
         rule(errors, NO_RULE_DATE, IssueType.INVALID, element.line(), element.col(), path + "[url='" + url + "']", false, I18nConstants.EXTENSION_EXT_VERSION_NOCHANGE, url, xverElementId(url));
+        errored.set(true);
+        break;
+      case NotAllowed:
+        rule(errors, NO_RULE_DATE, IssueType.INVALID, element.line(), element.col(), path + "[url='" + url + "']", false, I18nConstants.EXTENSION_EXT_VERSION_NOTALLOWED, url, xverElementId(url));
+        errored.set(true);
         break;
       case Valid:
         StructureDefinition ex = xverDefn(url);
         new ContextUtilities(context).generateSnapshot(ex);
-        context.cacheResource(ex);
+        context.getManager().cacheResource(ex);
         return ex;
       default:
         rule(errors, NO_RULE_DATE, IssueType.INVALID, element.line(), element.col(), path + "[url='" + url + "']", false, I18nConstants.EXTENSION_EXT_VERSION_INTERNAL, url);
+        errored.set(true);
         break;
       }
     }
@@ -1766,5 +1790,11 @@ public class BaseValidator implements IValidationContextResourceLoader, IMessagi
   public ValidatorSettings getSettings() {
     return settings;
   }
+
+  // testing only, and transient
+  public void setXverManager(XVerExtensionManager value) {
+    xverManager = value;
+  }
+
 
 }
