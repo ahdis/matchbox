@@ -308,7 +308,6 @@ public class MatchboxEngine extends ValidationEngine {
 			}
 			engine.getContext().setPackageTracker(engine);
 			engine.setPcm(this.getFilesystemPackageCacheManager());
-			// TODO add referencesTo als parameter?
 			engine.setPolicyAdvisor(new ValidationPolicyAdvisor(ReferenceValidationPolicy.CHECK_VALID, null));
 			engine.setAllowExampleUrls(true);
 			log.info("engine R4 initialized");
@@ -354,7 +353,6 @@ public class MatchboxEngine extends ValidationEngine {
 			}
 			engine.getContext().setPackageTracker(engine);
 			engine.setPcm(this.getFilesystemPackageCacheManager());
-			// TODO add referencesTo als parameter?
 			engine.setPolicyAdvisor(new ValidationPolicyAdvisor(ReferenceValidationPolicy.CHECK_VALID, null));
 			engine.setAllowExampleUrls(true);
 			log.info("engine R4B initialized");
@@ -398,7 +396,6 @@ public class MatchboxEngine extends ValidationEngine {
 					throw new TerminologyServerException(e);
 				}
 			}
-			// TODO add referencesTo als parameter?
 			engine.setPolicyAdvisor(new ValidationPolicyAdvisor(ReferenceValidationPolicy.CHECK_VALID, null));
 			engine.setAllowExampleUrls(true);
 
@@ -436,7 +433,6 @@ public class MatchboxEngine extends ValidationEngine {
 			}
 			engine.getContext().setPackageTracker(engine);
 			engine.setPcm(this.getFilesystemPackageCacheManager());
-			// TODO add referencesTo als parameter?
 			engine.setPolicyAdvisor(new ValidationPolicyAdvisor(ReferenceValidationPolicy.CHECK_VALID, null));
 			engine.setAllowExampleUrls(true);
 			return engine;

@@ -612,14 +612,14 @@ public class MatchboxEngineSupport {
 			} else {
 				fetcher.setReferencePolicy(ReferenceValidationPolicy.IGNORE);
 			}
+			fetcher.getCheckReferencesTo().addAll(cli.getCheckReferencesTo() != null ? new HashSet<>(Arrays.asList(cli.getCheckReferencesTo())) : Collections.emptySet());
 			fetcher.setResolutionContext(cli.getResolutionContext());
 		} else {
 			DisabledValidationPolicyAdvisor fetcher = new DisabledValidationPolicyAdvisor();
 			validator.setPolicyAdvisor(fetcher);
 			refpol = ReferenceValidationPolicy.CHECK_TYPE_IF_EXISTS;
 		}
-		// TODO add referencesTo als parameter?
-		validator.getPolicyAdvisor().setPolicyAdvisor(new ValidationPolicyAdvisor(validator.getPolicyAdvisor() == null ? refpol : validator.getPolicyAdvisor().getReferencePolicy(), null));
+		validator.getPolicyAdvisor().setPolicyAdvisor(new ValidationPolicyAdvisor(validator.getPolicyAdvisor() == null ? refpol : validator.getPolicyAdvisor().getReferencePolicy(), cli.getCheckReferencesTo() != null ? new HashSet<>(Arrays.asList(cli.getCheckReferencesTo())) : Collections.emptySet()));
 
 		validator.setJurisdiction(CodeSystemUtilities.readCoding(cli.getJurisdiction()));
 		// TerminologyCache.setNoCaching(cliContext.isNoInternalCaching());
