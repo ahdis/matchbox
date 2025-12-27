@@ -9,6 +9,7 @@ import java.util.Objects;
 import java.util.stream.Collectors;
 
 import org.apache.commons.beanutils.BeanUtils;
+import org.checkerframework.checker.units.qual.A;
 import org.hl7.fhir.r5.model.*;
 import org.hl7.fhir.r5.terminologies.JurisdictionUtilities;
 import org.hl7.fhir.validation.service.model.HtmlInMarkdownCheck;
@@ -41,45 +42,37 @@ public class CliContext {
   @JsonProperty("doNative")
   private boolean doNative = false;
 
-  @JsonProperty("extensions")
   public String[] getExtensions() {
     return extensions;
   }
 
-  @JsonProperty("extensions")
   public CliContext setExtensions(String[] extensions) {
     this.extensions = extensions;
     return this;
   }
 
-  @JsonProperty("suppressWarnInfos")
   public String[] getSuppressWarnInfos() {
     return this.suppressWarnInfos;
   }
 
-  @JsonProperty("suppressWarnInfos")
   public CliContext setSuppressWarnInfos(String[] suppressWarnInfos) {
     this.suppressWarnInfos = suppressWarnInfos;
     return this;
   }
 
-  @JsonProperty("suppressErrors")
   public String[] getSuppressErrors() {
     return this.suppressErrors;
   }
 
-  @JsonProperty("suppressErrors")
   public CliContext setSuppressErrors(String[] suppressErrors) {
     this.suppressErrors = suppressErrors;
     return this;
   }
 
-  @JsonProperty("igs")
   public String[] getIgs() {
     return this.igs;
   }
 
-  @JsonProperty("igs")
   public CliContext setIgs(String[] igs) {
     this.igs = igs;
     return this;
@@ -246,12 +239,10 @@ public class CliContext {
   @JsonProperty("llmProvider")
   private String llmProvider;
 
-  @JsonProperty("llmProvider")
   public String getLlmProvider() {
     return llmProvider;
   }
 
-  @JsonProperty("llmProvider")
   public void setLlmProvider(String llmProvider) {
     this.llmProvider = llmProvider;
   }
@@ -259,12 +250,10 @@ public class CliContext {
   @JsonProperty("llmModelName")
   private String llmModelName;
 
-    @JsonProperty("llmModelName")
   public String getLlmModelName() {
     return llmModelName;
   }
 
-  @JsonProperty("llmModelName")
   public void setLlmModelName(String llmModelName) {
     this.llmModelName = llmModelName;
   }
@@ -272,18 +261,28 @@ public class CliContext {
   @JsonProperty("llmApiKey")
   private String llmApiKey;
 
-  @JsonProperty("llmApiKey")
   public void setLlmApiKey(String llmApiKey) {
     this.llmApiKey = llmApiKey;
   }
 
-  @JsonProperty("llmApiKey")
   public String getLlmApiKey() {
     return this.llmApiKey;
   }
   
   @JsonProperty("check-references")
   private boolean checkReferences = false;
+
+  @JsonProperty("check-references-to")
+  private String[] checkReferencesTo = null;
+
+  public String[] getCheckReferencesTo() {
+    return this.checkReferencesTo;
+  }
+
+  public CliContext setCheckReferencesTo(String[] checkReferencesTo) {
+    this.checkReferencesTo = checkReferencesTo;
+    return this;
+  }
 
   @JsonProperty("r5-bundle-relative-reference-policy")
   private String r5BundleRelativeReferencePolicy = "default";
@@ -366,172 +365,138 @@ public class CliContext {
     this.igs = other.igs;
   }
 
-  @JsonProperty("ig")
   public String getIg() {
     return ig;
   }
 
-  @JsonProperty("ig")
   public void setIg(String ig) {
     this.ig = ig;
   }
 
-  @JsonProperty("questionnaire")
   public QuestionnaireMode getQuestionnaireMode() {
     return questionnaireMode;
   }
 
-  @JsonProperty("questionnaire")
   public void setQuestionnaireMode(QuestionnaireMode questionnaireMode) {
     this.questionnaireMode = questionnaireMode;
   }
 
-  @JsonProperty("level")
   public ValidationLevel getLevel() {
     return level;
   }
 
-  @JsonProperty("level")
   public void setLevel(ValidationLevel level) {
     this.level = level;
   }
 
-  @JsonProperty("txServer")
   public String getTxServer() {
     return txServer;
   }
 
-  @JsonProperty("txServer")
   public void setTxServer(String txServer) {
     this.txServer = txServer;
   }
 
-  @JsonProperty("txServerCache")
   public boolean getTxServerCache() {
     return txServerCache;
   }
 
-  @JsonProperty("txServerCache")
   public void setTxServerCache(boolean txServerCache) {
     this.txServerCache = txServerCache;
   }
 
-  @JsonProperty("txLog")
   public String getTxLog() {
     return txLog;
   }
 
-  @JsonProperty("txLog")
   public void setTxLog(String txLog) {
     this.txLog = txLog;
   }
 
-  @JsonProperty("txUseEcosystem")
   public void setTxUseEcosystem(boolean txUseEcosystem) {
     this.txUseEcosystem = txUseEcosystem;
   }
 
-  @JsonProperty("txUseEcosystem")
   public boolean isTxUseEcosystem() {
     return txUseEcosystem;
   }
 
-  @JsonProperty("doNative")
   public boolean isDoNative() {
     return doNative;
   }
 
-  @JsonProperty("doNative")
   public void setDoNative(boolean doNative) {
     this.doNative = doNative;
   }
 
-  @JsonProperty("hintAboutNonMustSupport")
   public boolean isHintAboutNonMustSupport() {
     return hintAboutNonMustSupport;
   }
 
-  @JsonProperty("hintAboutNonMustSupport")
   public void setHintAboutNonMustSupport(boolean hintAboutNonMustSupport) {
     this.hintAboutNonMustSupport = hintAboutNonMustSupport;
   }
 
-  @JsonProperty("recursive")
   public boolean isRecursive() {
     return recursive;
   }
 
-  @JsonProperty("recursive")
   public void setRecursive(boolean recursive) {
     this.recursive = recursive;
   }
 
-  @JsonProperty("showMessagesFromReferences")
   public boolean isShowMessagesFromReferences() {
     return showMessagesFromReferences;
   }
 
-  @JsonProperty("showMessagesFromReferences")
   public void setShowMessagesFromReferences(boolean showMessagesFromReferences) {
     this.showMessagesFromReferences = showMessagesFromReferences;
   }
 
-  @JsonProperty("doImplicitFHIRPathStringConversion")
   public boolean isDoImplicitFHIRPathStringConversion() {
     return doImplicitFHIRPathStringConversion;
   }
 
-  @JsonProperty("doImplicitFHIRPathStringConversion")
   public void setDoImplicitFHIRPathStringConversion(boolean doImplicitFHIRPathStringConversion) {
     this.doImplicitFHIRPathStringConversion = doImplicitFHIRPathStringConversion;
   }
 
-  @JsonProperty("htmlInMarkdownCheck")
   public HtmlInMarkdownCheck getHtmlInMarkdownCheck() {
     return htmlInMarkdownCheck;
   }
 
-  @JsonProperty("htmlInMarkdownCheck")
   public void setHtmlInMarkdownCheck(HtmlInMarkdownCheck htmlInMarkdownCheck) {
     this.htmlInMarkdownCheck = htmlInMarkdownCheck;
   }
 
-  @JsonProperty("locale")
   public String getLocale() {
     return locale;
   }
 
-  @JsonProperty("locale")
   public void setLocale(String locale) {
     this.locale = locale;
   }
 
-  @JsonProperty("mode")
   public EngineMode getMode() {
     return mode;
   }
 
-  @JsonProperty("mode")
   public void setMode(EngineMode mode) {
     this.mode = mode;
   }
 
-  @JsonProperty("canDoNative")
   public boolean getCanDoNative() {
     return canDoNative;
   }
 
-  @JsonProperty("canDoNative")
   public void setCanDoNative(boolean canDoNative) {
     this.canDoNative = canDoNative;
   }
 
-  @JsonProperty("locations")
   public Map<String, String> getLocations() {
     return locations;
   }
 
-  @JsonProperty("locations")
   public void setLocations(Map<String, String> locations) {
     this.locations = locations;
   }
@@ -541,17 +506,14 @@ public class CliContext {
     return this;
   }
 
-  @JsonProperty("lang")
   public String getLang() {
     return lang;
   }
 
-  @JsonProperty("lang")
   public void setLang(String lang) {
     this.lang = lang;
   }
 
-  @JsonProperty("snomedCT")
   public String getSnomedCT() {
     if ("intl".equals(snomedCT))
       return "900000000000207008";
@@ -576,37 +538,30 @@ public class CliContext {
     return snomedCT;
   }
 
-  @JsonProperty("snomedCT")
   public void setSnomedCT(String snomedCT) {
     this.snomedCT = snomedCT;
   }
 
-  @JsonProperty("fhirVersion")
   public String getFhirVersion() {
     return fhirVersion;
   }
 
-  @JsonProperty("fhirVersion")
   public void setFhirVersion(String targetVer) {
     this.fhirVersion = targetVer;
   }
 
-  @JsonProperty("doDebug")
   public boolean isDoDebug() {
     return doDebug;
   }
 
-  @JsonProperty("doDebug")
   public void setDoDebug(boolean doDebug) {
     this.doDebug = doDebug;
   }
 
-  @JsonProperty("assumeValidRestReferences")
   public boolean isAssumeValidRestReferences() {
     return assumeValidRestReferences;
   }
 
-  @JsonProperty("assumeValidRestReferences")
   public void setAssumeValidRestReferences(boolean assumeValidRestReferences) {
     this.assumeValidRestReferences = assumeValidRestReferences;
   }
@@ -621,52 +576,42 @@ public class CliContext {
   // this.noInternalCaching = noInternalCaching;
   // }
 
-  @JsonProperty("noExtensibleBindingMessages")
   public boolean isNoExtensibleBindingMessages() {
     return noExtensibleBindingMessages;
   }
 
-  @JsonProperty("noExtensibleBindingMessages")
   public void setNoExtensibleBindingMessages(boolean noExtensibleBindingMessages) {
     this.noExtensibleBindingMessages = noExtensibleBindingMessages;
   }
 
-  @JsonProperty("noInvariants")
   public boolean isNoInvariants() {
     return noInvariants;
   }
 
-  @JsonProperty("noInvariants")
   public void setNoInvariants(boolean noInvariants) {
     this.noInvariants = noInvariants;
   }
 
-  @JsonProperty("displayIssuesAreWarnings")
   public boolean isDisplayIssuesAreWarnings() {
     return displayIssuesAreWarnings;
   }
 
-  @JsonProperty("displayIssuesAreWarnings")
   public void setDisplayIssuesAreWarnings(boolean displayIssuesAreWarnings) {
     this.displayIssuesAreWarnings = displayIssuesAreWarnings;
   }
 
-  @JsonProperty("wantInvariantsInMessages")
   public boolean isWantInvariantsInMessages() {
     return wantInvariantsInMessages;
   }
 
-  @JsonProperty("wantInvariantsInMessages")
   public void setWantInvariantsInMessages(boolean wantInvariantsInMessages) {
     this.wantInvariantsInMessages = wantInvariantsInMessages;
   }
 
-  @JsonProperty("securityChecks")
   public boolean isSecurityChecks() {
     return securityChecks;
   }
 
-  @JsonProperty("securityChecks")
   public void setSecurityChecks(boolean securityChecks) {
     this.securityChecks = securityChecks;
   }
@@ -675,7 +620,6 @@ public class CliContext {
     return crumbTrails;
   }
 
-  @JsonProperty("crumbTrails")
   public void setCrumbTrails(boolean crumbTrails) {
     this.crumbTrails = crumbTrails;
   }
@@ -684,7 +628,6 @@ public class CliContext {
     return forPublication;
   }
 
-  @JsonProperty("forPublication")
   public void setForPublication(boolean forPublication) {
     this.forPublication = forPublication;
   }
@@ -717,7 +660,6 @@ public class CliContext {
     return allowExampleUrls;
   }
 
-  @JsonProperty("allowExampleUrls")
   public void setAllowExampleUrls(boolean allowExampleUrls) {
     this.allowExampleUrls = allowExampleUrls;
   }
@@ -726,7 +668,6 @@ public class CliContext {
     return noUnicodeBiDiControlChars;
   }
 
-  @JsonProperty("noUnicodeBiDiControlChars")
   public void setNoUnicodeBiDiControlChars(boolean noUnicodeBiDiControlChars) {
     this.noUnicodeBiDiControlChars = noUnicodeBiDiControlChars;
   }
@@ -735,7 +676,6 @@ public class CliContext {
     return jurisdiction;
   }
 
-  @JsonProperty("jurisdiction")
   public void setJurisdiction(String jurisdiction) {
     this.jurisdiction = jurisdiction;
   }
@@ -744,7 +684,6 @@ public class CliContext {
     return this.checkReferences;
   }
 
-  @JsonProperty("check-references")
   public void setCheckReferences(boolean checkReferences) {
     this.checkReferences = checkReferences;
   }
@@ -753,7 +692,6 @@ public class CliContext {
       return this.resolutionContext;
   }
 
-  @JsonProperty("resolution-context")
   public void setResolutionContext(String resolutionContext) {
     this.resolutionContext = resolutionContext;
   }
@@ -762,7 +700,6 @@ public class CliContext {
       return this.disableDefaultResourceFetcher;
     }
 
-  @JsonProperty("disableDefaultResourceFetcher")
   public void setDisableDefaultResourceFetcher(boolean disableDefaultResourceFetcher) {
     this.disableDefaultResourceFetcher = disableDefaultResourceFetcher;
   }
@@ -771,7 +708,6 @@ public class CliContext {
     return this.checkIpsCodes;
   }
 
-  @JsonProperty("check-ips-codes")
   public void setCheckIpsCodes(boolean checkIpsCodes) {
     this.checkIpsCodes = checkIpsCodes;
   }
@@ -780,37 +716,30 @@ public class CliContext {
     return this.bundle;
   }
 
-  @JsonProperty("bundle")
   public void setBundle(String bundle) {
     this.bundle = bundle;
   }
 
-  @JsonProperty("analyzeOutcomeWithAI")
   public Boolean getAnalyzeOutcomeWithAI() {
     return analyzeOutcomeWithAI;
   }
 
-  @JsonProperty("analyzeOutcomeWithAI")
   public void setAnalyzeOutcomeWithAI(Boolean analyzeOutcomeWithAI) {
     this.analyzeOutcomeWithAI = analyzeOutcomeWithAI;
   }
 
-  @JsonProperty("analyzeOutcomeWithAIOnError")
   public Boolean getAnalyzeOutcomeWithAIOnError() {
     return analyzeOutcomeWithAIOnError;
   }
 
-  @JsonProperty("analyzeOutcomeWithAIOnError")
   public void setAnalyzeOutcomeWithAIOnError(Boolean analyzeOutcomeWithAIOnError) {
     this.analyzeOutcomeWithAIOnError = analyzeOutcomeWithAIOnError;
   }
 
-  @JsonProperty("r5-bundle-relative-reference-policy")
   public String getR5BundleRelativeReferencePolicy() {
     return r5BundleRelativeReferencePolicy;
   }
 
-  @JsonProperty("r5-bundle-relative-reference-policy")
   public void setR5BundleRelativeReferencePolicy(String r5BundleRelativeReferencePolicy) {
     this.r5BundleRelativeReferencePolicy = r5BundleRelativeReferencePolicy;
   }
@@ -864,6 +793,7 @@ public class CliContext {
         && Objects.equals(jurisdiction, that.jurisdiction)
         && Arrays.equals(igsPreloaded, that.igsPreloaded)
         && checkReferences == that.checkReferences
+        && Arrays.equals(checkReferencesTo, that.checkReferencesTo)
         && Objects.equals(resolutionContext, that.resolutionContext)
         && disableDefaultResourceFetcher == that.disableDefaultResourceFetcher
         && Objects.equals(llmProvider, that.llmProvider)
@@ -918,6 +848,7 @@ public class CliContext {
         onlyOneEngine,
         xVersion,
         checkReferences,
+        checkReferencesTo,
         resolutionContext,
         disableDefaultResourceFetcher,
         llmProvider,
@@ -1043,6 +974,11 @@ public class CliContext {
     // addExtension(ext, "locations", new StringType(this.locations));
     addExtension(ext, "jurisdiction", new StringType(this.jurisdiction));
     addExtension(ext, "check-references", new BooleanType(this.checkReferences));
+    if (this.checkReferencesTo != null && this.checkReferencesTo.length > 0) {
+      for( var checkReferenceTo : this.checkReferencesTo) {
+        addExtension(ext, "check-references-to", new StringType(checkReferenceTo));
+      }    
+    }
     addExtension(ext, "resolution-context", new StringType(this.resolutionContext));
     addExtension(ext, "r5-bundle-relative-reference-policy", new StringType(this.r5BundleRelativeReferencePolicy));
     addExtension(ext, "disableDefaultResourceFetcher", new BooleanType(this.disableDefaultResourceFetcher));
