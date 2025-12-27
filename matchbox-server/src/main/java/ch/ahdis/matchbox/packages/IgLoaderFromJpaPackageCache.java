@@ -36,10 +36,13 @@ import org.hl7.fhir.convertors.factory.VersionConvertorFactory_30_50;
 import org.hl7.fhir.convertors.factory.VersionConvertorFactory_40_50;
 import org.hl7.fhir.convertors.factory.VersionConvertorFactory_43_50;
 import org.hl7.fhir.r4.model.ConceptMap.ConceptMapGroupComponent;
+import org.hl7.fhir.r5.context.CanonicalResourceManager.CanonicalResourceProxy;
 import org.hl7.fhir.exceptions.FHIRException;
+import org.hl7.fhir.r5.context.BaseWorkerContext.ResourceProxy;
 import org.hl7.fhir.r5.context.SimpleWorkerContext;
 import org.hl7.fhir.r5.model.CanonicalResource;
 import org.hl7.fhir.r5.model.ImplementationGuide;
+import org.hl7.fhir.r5.model.PackageInformation;
 import org.hl7.fhir.r5.model.Resource;
 import org.hl7.fhir.utilities.ByteProvider;
 import org.hl7.fhir.utilities.FileUtilities;
@@ -266,7 +269,9 @@ public class IgLoaderFromJpaPackageCache extends IgLoader {
 
 				// this way we have 0.5 seconds per 100 resources (eg hl7.fhir.r4.core has 15 seconds for 3128 resources)
 				NpmPackage pi = this.loadPackage(npmPackage.get());
+				PackageInformation packageInfo = new PackageInformation(pi);
 				getContext().getLoadedPackages().add(pi.name() + "#" + pi.version());
+				
 				try {
 					for (String s : pi.listResources("NamingSystem", "CapabilityStatement", "CodeSystem", "ValueSet", "StructureDefinition", "Measure", "Library",
 					"ConceptMap", "SearchParameter", "StructureMap", "Questionnaire", "OperationDefinition","ActorDefinition","Requirements")) {
@@ -282,13 +287,8 @@ public class IgLoaderFromJpaPackageCache extends IgLoader {
 								cleanModifierExtensions((org.hl7.fhir.r5.model.ConceptMap) r);
 							}			
 							if (r instanceof CanonicalResource) {
-								CanonicalResource m = (CanonicalResource) r;
-								String url = m.getUrl();
-								if (this.getContext().hasResource(r.getClass(), url)) {
-									log.debug("Duplicate canonical resource: " + r.getClass().getName() + " from package " +pi.name() + "#" + pi.version() + " with url " + url);
-								} else {
-									this.getContext().cacheResource(r);
-								}
+								// go through context to replace to newer version if needed (see ahdis/matchbox#447)
+								this.getContext().cacheResourceFromPackage(r, packageInfo);
 							} else {
 								log.error("Resource is not a CanonicalResource: " + r.getClass().getName() + " from package " +pi.name() + "#" + pi.version());
 							}
