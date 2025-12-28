@@ -47,6 +47,13 @@ public class TerminologyUtils {
 		return parameters;
 	}
 
+	public static Parameters createSuccessfulResponseParameters(final CodeableConcept codeableConcept) {
+		final var parameters = new Parameters();
+		parameters.setParameter("result", true);
+		parameters.setParameter("codeableConcept", codeableConcept);
+		return parameters;
+	}
+
 	public static Parameters createErrorResponseParameters(final String message,
 																			 @Nullable final Coding coding,
 																			 @Nullable final CodeableConcept codeableConcept) {

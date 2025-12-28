@@ -14,8 +14,9 @@ import org.hl7.fhir.instance.model.api.IAnyResource;
 import org.hl7.fhir.instance.model.api.IBaseParameters;
 import org.hl7.fhir.instance.model.api.IBaseResource;
 import org.hl7.fhir.instance.model.api.IIdType;
-import org.hl7.fhir.r4.model.CodeSystem;
+import org.hl7.fhir.r5.model.CodeSystem;
 import org.hl7.fhir.r5.model.Coding;
+import org.hl7.fhir.r5.model.CodeableConcept;
 import org.hl7.fhir.r5.model.Parameters;
 import org.hl7.fhir.r5.model.Resource;
 import org.slf4j.Logger;
@@ -90,6 +91,11 @@ public class CodeSystemProvider implements IResourceProvider {
 		if (request.hasParameter("coding") && request.getParameterValue("coding") instanceof final Coding coding) {
 			log.debug("Validating code in CS: {}|{}", coding.getCode(), coding.getSystem());
 			return TerminologyUtils.createSuccessfulResponseParameters(coding);
+		}
+
+		if (request.hasParameter("codeableConcept") && request.getParameterValue("codeableConcept") instanceof final CodeableConcept codeableConcept) {
+			log.debug("Validating code in CS: {}|{}", codeableConcept.getCodingFirstRep().getCode(), codeableConcept.getCodingFirstRep().getSystem());
+			return TerminologyUtils.createSuccessfulResponseParameters(codeableConcept);
 		}
 
 		servletResponse.setStatus(422);
