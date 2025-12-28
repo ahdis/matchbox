@@ -2,6 +2,7 @@
 
 - adapt test and map for (440)
 - update to core (448)
+- support validating CodeableConcept in internal tx (448)
 
 2025/11/03 Release 4.0.15
 
