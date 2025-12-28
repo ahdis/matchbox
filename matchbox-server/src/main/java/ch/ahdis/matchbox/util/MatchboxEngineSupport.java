@@ -621,7 +621,9 @@ public class MatchboxEngineSupport {
 		}
 		validator.getPolicyAdvisor().setPolicyAdvisor(new ValidationPolicyAdvisor(validator.getPolicyAdvisor() == null ? refpol : validator.getPolicyAdvisor().getReferencePolicy(), cli.getCheckReferencesTo() != null ? new HashSet<>(Arrays.asList(cli.getCheckReferencesTo())) : Collections.emptySet()));
 
-		validator.setJurisdiction(CodeSystemUtilities.readCoding(cli.getJurisdiction()));
+		if (cli.getJurisdiction() != null) {
+			validator.setJurisdiction(CodeSystemUtilities.readCoding(cli.getJurisdiction()));
+		}
 		// TerminologyCache.setNoCaching(cliContext.isNoInternalCaching());
 
 		// Configure which warnings will be suppressed in the validation results
