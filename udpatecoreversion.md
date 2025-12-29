@@ -33,7 +33,7 @@ cd ../matchbox
 ./updatehapi.sh
 ```
 
-now all the patches are lost and need to be added again, they are marked with `matchbox patch'
+now all the patches are lost and need to be added again, they are marked with `matchbox patch`
 
 
 
