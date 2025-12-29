@@ -1,7 +1,7 @@
 2025 Release 4.0.16
 
 - adapt test and map for (440)
-- update to core (448)
+- update org.hl7.fhir.core 6.7.10 (#448)
 - support validating CodeableConcept in internal tx (448)
 
 2025/11/03 Release 4.0.15
