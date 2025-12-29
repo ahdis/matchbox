@@ -4,7 +4,7 @@ matchbox depends on org.hl7.fhir.core. the project is available on [github](http
 
 matchbox has patched a few classes, that's why an update cannot be done just through referencing mvn.
 
-the following steps need to be perfomed:
+the following steps need to be performed:
 
 ## sync the forked project to the latest release https://github.com/hapifhir/org.hl7.fhir.core/releases and checkout branch
 
