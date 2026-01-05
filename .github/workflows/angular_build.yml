@@ -26,7 +26,7 @@ jobs:
         uses: actions/setup-node@v5
         with:
           # https://github.com/actions/setup-node
-          node-version: 20
+          node-version: 24
           cache: npm
           cache-dependency-path: matchbox-frontend/package-lock.json
 
