@@ -318,6 +318,40 @@ class MatchboxApiR4Test {
 		assertEquals(0, getValidationFailures(report));
 	}
 
+	@Test
+	void validateXVersionSlicingExtensions() throws Exception {
+
+		String encounter = "<Encounter xmlns=\"http://hl7.org/fhir\">\n" + //
+						"  <id value=\"EncounterExtR5\"/>\n" + //
+						"  <meta>\n" + //
+						"    <profile\n" + //
+						"             value=\"http://matchbox.health/ig/test/r4/StructureDefinition/encounter-ext-r5\"/>\n" + //
+						"  </meta>\n" + //
+						"  <text>\n" + //
+						"    <status value=\"extensions\"/>\n" + //
+						"    <div xmlns=\"http://www.w3.org/1999/xhtml\"><p class=\"res-header-id\"><b>Generated Narrative: Encounter EncounterExtR5</b></p><a name=\"EncounterExtR5\"> </a><a name=\"hcEncounterExtR5\"> </a><div style=\"display: inline-block; background-color: #d9e0e7; padding: 6px; margin: 4px; border: 1px solid #8da1b4; border-radius: 5px; line-height: 60%\"><p style=\"margin-bottom: 0px\"/><p style=\"margin-bottom: 0px\">Profile: <a href=\"StructureDefinition-encounter-ext-r5.html\">Encounter</a></p></div><p><b>Extension Definition for Encounter.plannedStartDate for Version 5.0</b>: 2023-04-11</p><p><b>Extension Definition for Encounter.plannedEndDate for Version 5.0</b>: 2023-05-05</p><p><b>status</b>: In Progress</p><p><b>class</b>: <a href=\"http://terminology.hl7.org/6.3.0/CodeSystem-v3-ActCode.html#v3-ActCode-HH\">ActCode: HH</a> (home health)</p></div>\n" + //
+						"  </text>\n" + //
+						"  <extension\n" + //
+						"             url=\"http://hl7.org/fhir/5.0/StructureDefinition/extension-Encounter.plannedStartDate\">\n" + //
+						"    <valueDateTime value=\"2023-04-11\"/>\n" + //
+						"  </extension>\n" + //
+						"  <extension\n" + //
+						"             url=\"http://hl7.org/fhir/5.0/StructureDefinition/extension-Encounter.plannedEndDate\">\n" + //
+						"    <valueDateTime value=\"2023-05-05\"/>\n" + //
+						"  </extension>\n" + //
+						"  <status value=\"in-progress\"/>\n" + //
+						"  <class>\n" + //
+						"    <system value=\"http://terminology.hl7.org/CodeSystem/v3-ActCode\"/>\n" + //
+						"    <code value=\"HH\"/>\n" + //
+						"  </class>\n" + //
+						"</Encounter>";
+		
+		IBaseOperationOutcome operationOutcome = this.validationClient.validate(encounter,
+																			"http://matchbox.health/ig/test/r4/StructureDefinition/encounter-ext-r5");
+		assertEquals(0, getValidationFailures((OperationOutcome) operationOutcome));
+	}
+
+
 	private String getContent(String resourceName) throws IOException {
 		Resource resource = new ClassPathResource(resourceName);
 		File file = resource.getFile();
