@@ -22,7 +22,7 @@ Content-Type: application/fhir+json
     {
       "attachment" : {
         "language" : "de-CH"
-^      }
+      }
     }
   ]
 }
