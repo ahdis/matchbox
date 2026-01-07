@@ -349,6 +349,9 @@ public abstract class BaseWorkerContext extends I18nBase implements IWorkerConte
   protected ContextUtilities cutils;
   private List<String> suppressedMappings;
 
+  // matchbox patch https://github.com/ahdis/matchbox/issues/425
+  private Locale locale;
+
   protected BaseWorkerContext() throws FileNotFoundException, IOException, FHIRException {
     setValidationMessageLanguage(getLocale());
     clock = new TimeTracker();
@@ -437,6 +440,7 @@ public abstract class BaseWorkerContext extends I18nBase implements IWorkerConte
       cachingAllowed = other.cachingAllowed;
       suppressedMappings = other.suppressedMappings;
       cutils.setSuppressedMappings(other.suppressedMappings);
+      locale = other.locale; // matchbox patch https://github.com/ahdis/matchbox/issues/425
     }
   }
   
@@ -3779,7 +3783,23 @@ public abstract class BaseWorkerContext extends I18nBase implements IWorkerConte
   }
 
   public void setLocale(Locale locale) {
-    super.setLocale(locale);
+    // matchbox patch https://github.com/ahdis/matchbox/issues/425
+    if (this.locale == null) {
+      this.locale = locale;
+      super.setLocale(locale);
+    } else {
+      if (!this.locale.equals(locale)) {
+        this.locale = locale;
+        super.setLocale(locale);
+        if (locale != null) {
+          log.info("changing locale to" + locale.toLanguageTag());
+        } else {
+          log.info("resetting locale");
+        }
+      }
+    }
+    // END matchbox patch
+
     if (locale == null) {
       return;
     }
