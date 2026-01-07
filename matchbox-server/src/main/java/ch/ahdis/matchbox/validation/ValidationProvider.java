@@ -166,11 +166,6 @@ public class ValidationProvider {
 			}
 		}
 
-		// Check if the IG should be auto-installed
-		if (!cliContext.isHttpReadOnly()) {
-			this.ensureIgIsInstalled(theRequest.getParameter("ig"), theRequest.getParameter("profile"));
-		}
-
 		if (theRequest.getParameter("profile") == null) {
 			return this.getOoForError("The 'profile' parameter must be provided");
 		}
@@ -387,89 +382,6 @@ public class ValidationProvider {
 		issue.setDiagnostics(message);
 		issue.addExtension().setUrl(ExtensionDefinitions.EXT_ISSUE_SOURCE).setValue(new StringType("ValidationProvider"));
 		return VersionConvertorFactory_40_50.convertResource(oo);
-	}
-
-	private void ensureIgIsInstalled(@Nullable final String ig,
-												final String profile) {
-		if (ig != null) {
-			// Easy case, the IG is known
-			final var parts = ig.split("#");
-			if (!this.igProvider.has(parts[0], parts[1])) {
-				log.debug("Auto-installing the IG '{}' version '{}'", parts[0], parts[1]);
-				this.igProvider.installFromInternetRegistry(parts[0], parts[1]);
-			}
-			return;
-		}
-
-		if (profile.startsWith("http://hl7.org/fhir/")) {
-			log.debug("Profile '{}' is a core FHIR profile, no need to install an IG", profile);
-			return;
-		}
-
-		// Harder case, only the profile is known
-		final var parts = profile.split("\\|");
-		final String canonical;
-		final String version;
-		if (parts.length == 2) {
-			final Boolean found = new TransactionTemplate(this.myTxManager)
-				.execute(tx -> this.myPackageVersionResourceDao.getPackageVersionByCanonicalAndVersion(parts[0], parts[1]).isPresent());
-			if (found != null && found) {
-				// The profile was found in the database, the IG is installed
-				return;
-			}
-			canonical = parts[0];
-			version = parts[1];
-		} else {
-			canonical = profile;
-			version = null;
-		}
-
-		// The profile was not found in the database, we need to search for the IG that contains it
-		final var gson = new Gson();
-		final var igSearchUrl =
-			"https://packages.simplifier.net/catalog?canonical=%s&prerelease=false".formatted(URLEncoder.encode(canonical, StandardCharsets.UTF_8));
-		final SimplifierPackage[] packages;
-		try (final CloseableHttpClient httpclient = HttpClients.createDefault()) {
-			final var httpget = new HttpGet(igSearchUrl);
-			packages = httpclient.execute(httpget, response ->
-					 gson.fromJson(new InputStreamReader(response.getEntity().getContent()), SimplifierPackage[].class));
-		} catch (final Exception e) {
-			log.error("Error while searching for IGs", e);
-			return;
-		}
-
-		if (packages == null || packages.length == 0) {
-			return;
-		}
-		log.debug("Found {} IGs for profile '{}', checking the first one ('{}')", packages.length, profile,
-					 packages[0].getName());
-		if (version != null) {
-			// This might not be always true, but it's a good heuristic: let's use the profile version as the IG version
-			this.igProvider.installFromInternetRegistry(packages[0].getName(), version);
-			return;
-		}
-		// We have to search for the latest profile version
-		final var versionSearchUrl = "https://packages.simplifier.net/" + packages[0].getName();
-		final SimplifierPackageVersionsObject versionsObject;
-		try (final CloseableHttpClient httpclient = HttpClients.createDefault()) {
-			final var httpget = new HttpGet(versionSearchUrl);
-			versionsObject = httpclient.execute(httpget, response ->
-				gson.fromJson(new InputStreamReader(response.getEntity().getContent()), SimplifierPackageVersionsObject.class));
-		} catch (final Exception e) {
-			log.error("Error while searching for IG versions", e);
-			return;
-		}
-
-		if (versionsObject == null || versionsObject.getVersions() == null || versionsObject.getVersions().isEmpty()) {
-			return;
-		}
-
-		final var latestVersion = versionsObject.getVersions().keySet().toArray()[ versionsObject.getVersions().size()-1].toString();
-		try {
-			this.igProvider.installFromInternetRegistry(packages[0].getName(), latestVersion);
-		} catch (final Exception e) {
-			log.error("Error while installing IG version", e);
-		}
 	}
 
 	public static List<ValidationMessage> doValidate(final MatchboxEngine engine,
