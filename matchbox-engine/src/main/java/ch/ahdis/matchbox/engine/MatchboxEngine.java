@@ -285,7 +285,7 @@ public class MatchboxEngine extends ValidationEngine {
 			log.info("loaded hl7.fhir.r4.core#4.0.1 from classpath");
 			engine.setVersion(FhirPublication.R4.toCode());
 			try {
-				engine.loadPackage(this.getNpmPackageStream(PACKAGE_R4_TERMINOLOGY));
+				engine.loadPackage(this.getNpmPackageStream(PACKAGE_R4_TERMINOLOGY65));
 				engine.loadPackage(this.getNpmPackageStream(PACKAGE_R4_UV_EXTENSIONS));
 				if (this.withXVersion) {
 					this.removeStructureMaps(engine);
@@ -330,7 +330,7 @@ public class MatchboxEngine extends ValidationEngine {
 			log.info("loaded hl7.fhir.r4b.core#4.3.0 from classpath");
 			engine.setVersion(FhirPublication.R4B.toCode());
 			try {
-				engine.loadPackage(this.getNpmPackageStream(PACKAGE_R4_TERMINOLOGY));
+				engine.loadPackage(this.getNpmPackageStream(PACKAGE_R4_TERMINOLOGY65));
 				engine.loadPackage(this.getNpmPackageStream(PACKAGE_R4_UV_EXTENSIONS));
 				if (this.withXVersion) {
 					this.removeStructureMaps(engine);
@@ -375,7 +375,7 @@ public class MatchboxEngine extends ValidationEngine {
 			log.info("loaded hl7.fhir.r5.core#5.0.0 from classpath");
 			engine.setVersion(FhirPublication.R5.toCode());
 			try {
-				engine.loadPackage(this.getNpmPackageStream(PACKAGE_R5_TERMINOLOGY));
+				engine.loadPackage(this.getNpmPackageStream(PACKAGE_R5_TERMINOLOGY65));
 				engine.loadPackage(this.getNpmPackageStream(PACKAGE_R5_UV_EXTENSIONS));
 				if (this.withXVersion) {
 					this.removeStructureMaps(engine);

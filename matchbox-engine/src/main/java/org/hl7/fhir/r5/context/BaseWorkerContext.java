@@ -617,18 +617,21 @@ public abstract class BaseWorkerContext extends I18nBase implements IWorkerConte
           if (Utilities.existsInList(url, "http://hl7.org/fhir/SearchParameter/example")) {
             return;
           }
-			// matchbox patch for duplicate resources, see https://github.com/ahdis/matchbox/issues/227
-			// org.hl7.fhir.r5.conformance.R5ExtensionsLoader.loadR5SpecialTypes(R5ExtensionsLoader.java:141)
+			// matchbox patch for duplicate resources, see https://github.com/ahdis/matchbox/issues/227 and issues/452
 			CanonicalResource ex = fetchResourceWithException(m.fhirType(), url);
-			if (ex.getVersion() != null && m.getVersion() != null && laterVersion(m.getVersion(), ex.getVersion())) {
+			boolean forceDrop = false;
+			if (url.startsWith("http://terminology.hl7.org/") && ex.getVersion()!=null && ex.getSourcePackage()!=null && ex.getVersion().equals(ex.getSourcePackage().getVersion()) ) {
+				forceDrop = true;
+			}
+			if (forceDrop || (ex.getVersion() != null && m.getVersion() != null && laterVersion(m.getVersion(), ex.getVersion()))) {
 				logger.logDebugMessage(LogCategory.INIT,
-									   "Note replacing old version: "
+									   "Note replacing existing version (is older): "
 										   + formatMessage(I18nConstants.DUPLICATE_RESOURCE_, url,
-														   m.getVersion(), ex.getVersion(), ex.fhirType()));
+														   m.getVersion(), ex.getVersion(), ex.fhirType()) + (forceDrop ? "forced" : ""));
 				dropResource(ex);
 			} else {
 				logger.logDebugMessage(LogCategory.INIT,
-									   "Note keeping newer version: "
+									   "Note keeping existing version (is newer): "
 										   + formatMessage(I18nConstants.DUPLICATE_RESOURCE_,
 														   url,
 														   m.getVersion(),
