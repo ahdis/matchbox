@@ -4,6 +4,8 @@
 - update org.hl7.fhir.core 6.7.10 (#448)
 - support validating CodeableConcept in internal tx (#448)
 - FHIR R4 validation error with R5 extension (#424)
+- Fix THO loading: Unknown code '26' in the CodeSystem 'http://terminology.hl7.org/CodeSystem/object-role' version '4.0.1' (#452)
+- Remove auto install ig's (did not handle -ballot versions)
 
 2025/11/03 Release 4.0.15
 
