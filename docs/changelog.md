@@ -1,8 +1,8 @@
-2025 Release 4.0.16
+2026/01/07 Release 4.0.16
 
-- adapt test and map for (440)
+- adapt test and map for (#440)
 - update org.hl7.fhir.core 6.7.10 (#448)
-- support validating CodeableConcept in internal tx (448)
+- support validating CodeableConcept in internal tx (#448)
 - FHIR R4 validation error with R5 extension (#424)
 
 2025/11/03 Release 4.0.15
