@@ -99,8 +99,10 @@ import ch.ahdis.matchbox.mappinglanguage.TransformSupportServices;
 public class MatchboxEngine extends ValidationEngine {
 
 	// Current packages that are provided with Matchbox Engine
-	public static final String PACKAGE_R4_TERMINOLOGY = "hl7.terminology.r4#6.3.0";
-	public static final String PACKAGE_R5_TERMINOLOGY = "hl7.terminology.r5#6.3.0";
+	public static final String PACKAGE_R4_TERMINOLOGY = "hl7.terminology.r4#7.0.1";
+	public static final String PACKAGE_R5_TERMINOLOGY = "hl7.terminology.r5#7.0.1";
+	public static final String PACKAGE_R4_TERMINOLOGY63 = "hl7.terminology.r4#6.3.0";
+	public static final String PACKAGE_R5_TERMINOLOGY63 = "hl7.terminology.r5#6.3.0";
 	public static final String PACKAGE_R4_TERMINOLOGY65 = "hl7.terminology.r4#6.5.0";
 	public static final String PACKAGE_R5_TERMINOLOGY65 = "hl7.terminology.r5#6.5.0";
 	public static final String PACKAGE_R4_UV_EXTENSIONS = "hl7.fhir.uv.extensions.r4#5.2.0";
@@ -285,7 +287,7 @@ public class MatchboxEngine extends ValidationEngine {
 			log.info("loaded hl7.fhir.r4.core#4.0.1 from classpath");
 			engine.setVersion(FhirPublication.R4.toCode());
 			try {
-				engine.loadPackage(this.getNpmPackageStream(PACKAGE_R4_TERMINOLOGY65));
+				engine.loadPackage(this.getNpmPackageStream(PACKAGE_R4_TERMINOLOGY));
 				engine.loadPackage(this.getNpmPackageStream(PACKAGE_R4_UV_EXTENSIONS));
 				if (this.withXVersion) {
 					this.removeStructureMaps(engine);
@@ -330,7 +332,7 @@ public class MatchboxEngine extends ValidationEngine {
 			log.info("loaded hl7.fhir.r4b.core#4.3.0 from classpath");
 			engine.setVersion(FhirPublication.R4B.toCode());
 			try {
-				engine.loadPackage(this.getNpmPackageStream(PACKAGE_R4_TERMINOLOGY65));
+				engine.loadPackage(this.getNpmPackageStream(PACKAGE_R4_TERMINOLOGY));
 				engine.loadPackage(this.getNpmPackageStream(PACKAGE_R4_UV_EXTENSIONS));
 				if (this.withXVersion) {
 					this.removeStructureMaps(engine);
@@ -375,7 +377,7 @@ public class MatchboxEngine extends ValidationEngine {
 			log.info("loaded hl7.fhir.r5.core#5.0.0 from classpath");
 			engine.setVersion(FhirPublication.R5.toCode());
 			try {
-				engine.loadPackage(this.getNpmPackageStream(PACKAGE_R5_TERMINOLOGY65));
+				engine.loadPackage(this.getNpmPackageStream(PACKAGE_R5_TERMINOLOGY));
 				engine.loadPackage(this.getNpmPackageStream(PACKAGE_R5_UV_EXTENSIONS));
 				if (this.withXVersion) {
 					this.removeStructureMaps(engine);

@@ -13,7 +13,9 @@ hapi:
       ch-core:
         name: ch.fhir.ig.ch-core
         version: 6.0.0
-        url: https://fhir.ch/ig/ch-core/package.tgz
+      ch-epr-fhir:
+        name: ch.fhir.ig.ch-epr-fhir
+        version: 5.0.0
 matchbox:
   fhir:
     context:
