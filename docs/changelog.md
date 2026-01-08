@@ -1,4 +1,4 @@
-2026/01/07 Release 4.0.16
+2026/01/08 Release 4.0.16
 
 - adapt test and map for (#440)
 - update org.hl7.fhir.core 6.7.10 (#448)
