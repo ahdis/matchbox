@@ -124,7 +124,7 @@ Content-Type: application/fhir+xml
 
 #### Wrong XML element test (not allowed)
 
-[example undefined xml element](https://test.ahdis.ch/matchboxv3/validate#resource=PFBhdGllbnQgeG1sbnM9Imh0dHA6Ly9obDcub3JnL2ZoaXIiPgogIDx0ZXN0IHZhbHVlPSJ0cnVlIiAvPgo8L1BhdGllbnQ%2B&profile=http%3A%2F%2Fhl7.org%2Ffhir%2FStructureDefinition%2FPatient)
+[example undefined xml element](https://test.ahdis.ch/matchboxv3/validate#resource=PFBhdGllbnQgeG1sbnM9Imh0dHA6Ly9obDcub3JnL2ZoaXIiPgogICAgPHRlc3QgdmFsdWU9InRydWUiIC8-CiAgPC9QYXRpZW50PgogIA&profile=http%3A%2F%2Fhl7.org%2Ffhir%2FStructureDefinition%2FPatient)
 ```http
 POST {{host}}/$validate?profile=http://hl7.org/fhir/StructureDefinition/Patient HTTP/1.1
 Content-Type: application/fhir+xml
