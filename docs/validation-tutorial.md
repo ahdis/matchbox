@@ -242,6 +242,7 @@ Content-Type: application/fhir+json
 The validator checks that all values of all properties conform to the rules for the specified types (including checking that enumerated codes are valid).
 
 #### invalid content for boolean
+[example](https://test.ahdis.ch/matchboxv3/validate#resource=ewogICJyZXNvdXJjZVR5cGUiOiAiUGF0aWVudCIsCiAgImFjdGl2ZSIgOiB0cnVlb3JmYWxzZQp9&profile=http%3A%2F%2Fhl7.org%2Ffhir%2FStructureDefinition%2FPatient)
 ```http
 POST {{host}}/$validate?profile=http://hl7.org/fhir/StructureDefinition/Patient HTTP/1.1
 Content-Type: application/fhir+json
