@@ -139,7 +139,7 @@ Content-Type: application/fhir+xml
 
 #### Wrong order of xml elements
 
-[example wrong order](https://test.ahdis.ch/matchboxv3/validate#resource=PFBhdGllbnQgeG1sbnM9Imh0dHA6Ly9obDcub3JnL2ZoaXIiPgogICAgPHRlc3QgdmFsdWU9InRydWUiIC8-CiAgPC9QYXRpZW50PgogIA&profile=http%3A%2F%2Fhl7.org%2Ffhir%2FStructureDefinition%2FPatient)
+[example wrong order](https://test.ahdis.ch/matchboxv3/validate#resource=PFBhdGllbnQgeG1sbnM9Imh0dHA6Ly9obDcub3JnL2ZoaXIiPgogIDxnZW5kZXIgdmFsdWU9Im1hbGUiIC8-CiAgPG5hbWU-CiAgICA8ZmFtaWx5IHZhbHVlPSJUZXN0IiAvPgogIDwvbmFtZT4KPC9QYXRpZW50Pg&profile=http%3A%2F%2Fhl7.org%2Ffhir%2FStructureDefinition%2FPatient)
 ```http
 POST {{host}}/$validate?profile=http://hl7.org/fhir/StructureDefinition/Patient HTTP/1.1
 Content-Type: application/fhir+xml
