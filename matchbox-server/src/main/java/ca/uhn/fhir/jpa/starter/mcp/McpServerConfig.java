@@ -15,6 +15,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.web.servlet.ServletRegistrationBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import com.fasterxml.jackson.databind.DeserializationFeature;
 
 import java.util.List;
 
@@ -61,7 +62,7 @@ public class McpServerConfig {
 		return HttpServletStreamableServerTransportProvider.builder()
 				.disallowDelete(false)
 				.mcpEndpoint(SSE_MESSAGE_ENDPOINT)
-				.objectMapper(new ObjectMapper().configure(com.fasterxml.jackson.databind.DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false))
+				.objectMapper(new ObjectMapper().configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false))
 				// .contextExtractor((serverRequest, context) -> context)
 				.build();
 	}
