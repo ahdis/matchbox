@@ -61,7 +61,7 @@ public class McpServerConfig {
 		return HttpServletStreamableServerTransportProvider.builder()
 				.disallowDelete(false)
 				.mcpEndpoint(SSE_MESSAGE_ENDPOINT)
-				.objectMapper(new ObjectMapper())
+				.objectMapper(new ObjectMapper().configure(com.fasterxml.jackson.databind.DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false))
 				// .contextExtractor((serverRequest, context) -> context)
 				.build();
 	}
