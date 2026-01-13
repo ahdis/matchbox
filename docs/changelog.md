@@ -1,3 +1,7 @@
+2026 Release 4.0.17
+
+- unrestrict transport layer jackson for mcp (#455)
+
 2026/01/08 Release 4.0.16
 
 - adapt test and map for (#440)
