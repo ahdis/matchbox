@@ -83,6 +83,7 @@ export class ValidateComponent implements AfterViewInit {
         // Read the server -s-validate OperationDefinition.
         // This will allow us to create the list of supported (installed) profiles, and supported validation parameters.
         this.analyzeValidateOperationDefinition(values[0]);
+        this.analyzeUrlForValidation();
 
         // Read the list of installed ImplementationGuides
         values[1].entry
@@ -99,12 +100,7 @@ export class ValidateComponent implements AfterViewInit {
 
   ngAfterViewInit() {
     // Initializes the code editor, after the DOM is ready
-    this.editor = new ValidationCodeEditor(ace.edit('editor'), INDENT_SPACES);
-
-    // Check for query string parameters in the current URL.
-    // They may contain a validation request.
-    // This call is placed here because it depends on the `editor` instance being initialized above.
-    this.analyzeUrlForValidation().then();
+    this.editor = new ValidationCodeEditor(ace.edit('editor'), INDENT_SPACES);   
   }
 
   /**
@@ -282,7 +278,6 @@ export class ValidateComponent implements AfterViewInit {
     if (entry.ig) {
       searchParams.set('ig', entry.ig);
     }
-
     // Validation options
     for (const param of entry.validationParameters) {
       searchParams.append(param.name, param.value);
@@ -605,10 +600,15 @@ export class ValidateComponent implements AfterViewInit {
       } else {
         filename = `provided.${contentType.split('+')[1]}`;
       }
-
+      console.log(this.validatorSettings)
+      for (const key of this.validatorSettings.keys()) {
+        console.log(key);
+      }
+    
       for (const [key, value] of searchParams) {
         if (key === 'resource' || key === 'profile' || key === 'filename') {
           continue;
+      
         }
         if (this.validatorSettings.has(key)) {
           this.validatorSettings.get(key).formControl.setValue(value);
