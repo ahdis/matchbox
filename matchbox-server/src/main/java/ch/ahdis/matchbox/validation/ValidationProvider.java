@@ -255,7 +255,7 @@ public class ValidationProvider {
 		if ((aiAnalyze != null && aiAnalyze) || (aiAnalyze == null && aiAnalyzeOnError != null && aiAnalyzeOnError && hasError)) {
 			try {
 				LLMConnector openAIConnector = LLMConnector.getConnector(cliContext);
-				String json = FhirContext.forR5().newJsonParser().setPrettyPrint(true).encodeResourceToString(oo);
+				String json = FhirContext.forR5Cached().newJsonParser().setPrettyPrint(true).encodeResourceToString(oo);
 				String aiResult = openAIConnector.interpretWithMatchbox(contentString, json);
 				oo = this.addAIIssueToOperationOutcome(oo, aiResult);
 			} catch (Exception e) {
