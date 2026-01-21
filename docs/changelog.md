@@ -1,5 +1,5 @@
 2026 Release 4.0.17
-
+- fixed search params are included in the call to the server (#453)
 - unrestrict transport layer jackson for mcp (#455)
 
 2026/01/08 Release 4.0.16
