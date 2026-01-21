@@ -600,10 +600,6 @@ export class ValidateComponent implements AfterViewInit {
       } else {
         filename = `provided.${contentType.split('+')[1]}`;
       }
-      console.log(this.validatorSettings)
-      for (const key of this.validatorSettings.keys()) {
-        console.log(key);
-      }
     
       for (const [key, value] of searchParams) {
         if (key === 'resource' || key === 'profile' || key === 'filename') {
