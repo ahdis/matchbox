@@ -4,7 +4,7 @@ import ca.uhn.fhir.context.BaseRuntimeChildDefinition;
 import ca.uhn.fhir.context.FhirContext;
 import ca.uhn.fhir.context.RuntimeResourceDefinition;
 import ca.uhn.fhir.jpa.starter.Application;
-import ch.ahdis.matchbox.validation.gazelle.models.validation.ValidationItem;
+import ch.ahdis.matchbox.validation.gazelle.models.validation.Input;
 import ch.ahdis.matchbox.validation.gazelle.models.validation.ValidationReport;
 import ch.ahdis.matchbox.validation.gazelle.models.validation.ValidationRequest;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -359,19 +359,17 @@ class MatchboxApiR4Test {
 	}
 
 	private ValidationReport validateWithGazelle(final String resource, final String profileId) throws Exception {
-		final var gazelleRequestItem = new ValidationItem();
+		final var gazelleRequestItem = new Input();
 		gazelleRequestItem.setItemId("first");
 		gazelleRequestItem.setContent(resource.getBytes(StandardCharsets.UTF_8));
-		gazelleRequestItem.setRole("request");
+		gazelleRequestItem.setId("request");
 		gazelleRequestItem.setLocation("localhost");
 
 		final var gazelleRequest = new ValidationRequest();
-		gazelleRequest.setApiVersion("3.5.3");
-		gazelleRequest.setValidationServiceName("Matchbox");
 		gazelleRequest.setValidationProfileId(profileId);
-		gazelleRequest.addValidationItem(gazelleRequestItem);
+		gazelleRequest.addInput(gazelleRequestItem);
 
-		final HttpRequest request = HttpRequest.newBuilder(new URI(TARGET_SERVER + "/gazelle/validation/validate"))
+		final HttpRequest request = HttpRequest.newBuilder(new URI(TARGET_SERVER + "/gazelle/validation/v2/validate"))
 			.POST(HttpRequest.BodyPublishers.ofString(this.objectMapper.writeValueAsString(gazelleRequest)))
 			.header("Content-Type", "application/json")
 			.build();

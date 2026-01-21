@@ -14,7 +14,6 @@ import java.util.List;
  * @author Quentin Ligier
  **/
 @JsonTypeName("validationProfile")
-@JsonPropertyOrder({"profileID", "profileName", "domain", "coveredItems"})
 public class ValidationProfile {
 
 	@JsonProperty("profileID")
@@ -23,6 +22,9 @@ public class ValidationProfile {
 	@JsonProperty("profileName")
 	private String profileName;
 
+	@JsonProperty("version")
+	private String version;
+
 	// Not really useful for FHIR transactions
 	@JsonProperty("coveredItems")
 	private List<String> coveredItems = new ArrayList<>();
@@ -30,6 +32,13 @@ public class ValidationProfile {
 	// E.g. "IHE", "ITI", "EPR".
 	@JsonProperty("domain")
 	private String domain;
+
+	@JsonProperty("standards")
+	private List<String> standards = new ArrayList<>();
+
+	@JsonProperty("supportedInputs")
+	private List<SupportedInput> supportedInputs = new ArrayList<>();
+
 
 	public String getDomain() {
 		return this.domain;
@@ -70,6 +79,32 @@ public class ValidationProfile {
 	public ValidationProfile addCoveredItem(String item) {
 		this.coveredItems.add(item);
 		return this;
+	}
+
+	public String getVersion() {
+		return this.version;
+	}
+
+	public ValidationProfile setVersion(final String version) {
+		this.version = version;
+		return this;
+	}
+
+	public List<String> getStandards() {
+		return this.standards;
+	}
+
+	public ValidationProfile setStandards(final List<String> standards) {
+		this.standards = standards;
+		return this;
+	}
+
+	public List<SupportedInput> getSupportedInputs() {
+		return this.supportedInputs;
+	}
+
+	public void setSupportedInputs(final List<SupportedInput> supportedInputs) {
+		this.supportedInputs = supportedInputs;
 	}
 
 	@JsonIgnore
