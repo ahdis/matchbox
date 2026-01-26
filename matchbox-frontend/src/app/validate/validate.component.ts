@@ -14,6 +14,7 @@ import {StructureDefinition} from './structure-definition';
 import {ToastrService} from 'ngx-toastr';
 import {ValidationCodeEditor} from "./validation-code-editor";
 import {Base64} from 'js-base64';
+import {from, forkJoin, ReplaySubject, take } from 'rxjs';
 
 const INDENT_SPACES = 2;
 
@@ -27,6 +28,7 @@ export class ValidateComponent implements AfterViewInit {
   readonly AUTO_IG_SELECTION = 'AUTOMATIC';
   readonly CodeEditorContent = CodeEditorContent;
   readonly Array = Array;
+  private FhirServerDataReady$ = new ReplaySubject<void>(1); 
 
   // Validation history
   validationEntries: ValidationEntry[] = [];
@@ -65,42 +67,59 @@ export class ValidateComponent implements AfterViewInit {
   ) {
     this.client = data.getFhirClient();
 
-    const validateOperationDefinitionPromise = this.client
-      .read({resourceType: 'OperationDefinition', id: '-s-validate'});
+     // Creation of Observables for the two requests
+    const validateOperationDefinitionObservable$ = from(this.client.read({
+      resourceType: 'OperationDefinition', 
+      id: '-s-validate'
+    }));
 
-    const implementationGuidesPromise = this.client
-      .search({
+    const implementationGuidesObservable$ = from(this.client.search({
         resourceType: 'ImplementationGuide',
         searchParams: {
           _sort: 'title',
-          _count: 1000, // Load all IGs
+          _count: 1000, 
         },
-      });
+      }));
 
-    // Wait for the two requests to complete
-    Promise.all([validateOperationDefinitionPromise, implementationGuidesPromise])
-      .then((values: [fhir.r4.OperationDefinition, fhir.r4.Bundle]) => {
-        // Read the server -s-validate OperationDefinition.
-        // This will allow us to create the list of supported (installed) profiles, and supported validation parameters.
-        this.analyzeValidateOperationDefinition(values[0]);
-        this.analyzeUrlForValidation();
+    // Code inside is subscribed and wait for the two requests to complete. After it notifies it to the listeners
+    forkJoin([validateOperationDefinitionObservable$, implementationGuidesObservable$]).subscribe({
+        next: ([operationDefinition, igBundle]: [fhir.r4.OperationDefinition, fhir.r4.Bundle]) => {
+          
+          // Read the server -s-validate OperationDefinition.
+          // This will allow us to create the list of supported (installed) profiles, and supported validation parameters.
+          this.analyzeValidateOperationDefinition(operationDefinition);
 
-        // Read the list of installed ImplementationGuides
-        values[1].entry
-          ?.map((entry: fhir.r4.BundleEntry) => entry.resource as fhir.r4.ImplementationGuide)
-          .map((ig: fhir.r4.ImplementationGuide) => `${ig.packageId}#${ig.version}`)
-          .sort()
-          .forEach((ig) => this.installedIgs.add(ig));
-      })
-      .catch((error) => {
-        this.showErrorToast('Network error', error.message);
-        console.error(error);
-      });
+          // Read the list of installed ImplementationGuides
+          igBundle.entry
+            ?.map(entry => entry.resource as fhir.r4.ImplementationGuide)
+            .map(ig => `${ig.packageId}#${ig.version}`)
+            .sort()
+            .forEach(ig => this.installedIgs.add(ig));
+
+          this.FhirServerDataReady$.next();
+        },
+        error: (error) => {
+          this.showErrorToast('Network error', error.message);
+          console.error(error);
+        }
+    });
   }
 
   ngAfterViewInit() {
     // Initializes the code editor, after the DOM is ready
-    this.editor = new ValidationCodeEditor(ace.edit('editor'), INDENT_SPACES);   
+    this.editor = new ValidationCodeEditor(ace.edit('editor'), INDENT_SPACES);
+    
+    // Check for query string parameters in the current URL.
+    // They may contain a validation request.
+    // This call is placed here because it depends on the `editor` instance being initialized above.
+    // This call also depends on the FHIR server data requested in the constructor being ready, so we are subscribed to that.
+    this.FhirServerDataReady$
+    .pipe(take(1)) // Take only the first emission and close the subscription
+    .subscribe(() => {
+      this.analyzeUrlForValidation();
+      // This will help to update the view after processing the URL parameters as we so not use async pipes in html.
+      this.cd.detectChanges(); 
+    });
   }
 
   /**
