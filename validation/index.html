@@ -1,0 +1,1088 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+      
+      
+      
+        <link rel="prev" href="../api/">
+      
+      
+        <link rel="next" href="../docker/">
+      
+      
+      <link rel="icon" href="../assets/favicon-96x96.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.6.23">
+    
+    
+      
+        <title>Validation of FHIR resources - Matchbox</title>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/stylesheets/main.84d31ad4.min.css">
+      
+        
+        <link rel="stylesheet" href="../assets/stylesheets/palette.06af60db.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../stylesheets/extra.css">
+    
+    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+    
+  </head>
+  
+  
+    
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="matchbox" data-md-color-primary="indigo" data-md-color-accent="indigo">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#validation-of-fhir-resources" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href=".." title="Matchbox" class="md-header__button md-logo" aria-label="Matchbox" data-md-component="logo">
+      
+  <img src="../assets/matchbox_logo_color.png" alt="logo">
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            Matchbox
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Validation of FHIR resources
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+    
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href=".." title="Matchbox" class="md-nav__button md-logo" aria-label="Matchbox" data-md-component="logo">
+      
+  <img src="../assets/matchbox_logo_color.png" alt="logo">
+
+    </a>
+    Matchbox
+  </label>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href=".." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Welcome
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../features/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Features
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../changelog/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Changelog
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../matchbox-engine/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Matchbox Engine
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../matchbox-server/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Matchbox Server
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    API for Matchbox
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    Validation of FHIR resources
+    
+  </span>
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    Validation of FHIR resources
+    
+  </span>
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#matchbox-engine" class="md-nav__link">
+    <span class="md-ellipsis">
+      matchbox engine
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#matchbox" class="md-nav__link">
+    <span class="md-ellipsis">
+      matchbox
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="matchbox">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#fhir-api" class="md-nav__link">
+    <span class="md-ellipsis">
+      FHIR API
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#configuration-parameters" class="md-nav__link">
+    <span class="md-ellipsis">
+      Configuration parameters
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Configuration parameters">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#suppress-warnings" class="md-nav__link">
+    <span class="md-ellipsis">
+      Suppress warning/information-level issues in validation
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#suppress-errors" class="md-nav__link">
+    <span class="md-ellipsis">
+      Suppress error issues in validation
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#gazelle-evs-api" class="md-nav__link">
+    <span class="md-ellipsis">
+      Gazelle EVS API
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#terminology-server" class="md-nav__link">
+    <span class="md-ellipsis">
+      Terminology server
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Terminology server">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#terminology-server-requiring-authentication" class="md-nav__link">
+    <span class="md-ellipsis">
+      Terminology server requiring authentication
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#gui" class="md-nav__link">
+    <span class="md-ellipsis">
+      GUI
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../docker/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Running matchbox in docker
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../cda/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    CDA Logical Model
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../validation-tutorial/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Tutorial: validation
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../validation-with-ai-tutorial/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Tutorial: validation with ai
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#matchbox-engine" class="md-nav__link">
+    <span class="md-ellipsis">
+      matchbox engine
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#matchbox" class="md-nav__link">
+    <span class="md-ellipsis">
+      matchbox
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="matchbox">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#fhir-api" class="md-nav__link">
+    <span class="md-ellipsis">
+      FHIR API
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#configuration-parameters" class="md-nav__link">
+    <span class="md-ellipsis">
+      Configuration parameters
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Configuration parameters">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#suppress-warnings" class="md-nav__link">
+    <span class="md-ellipsis">
+      Suppress warning/information-level issues in validation
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#suppress-errors" class="md-nav__link">
+    <span class="md-ellipsis">
+      Suppress error issues in validation
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#gazelle-evs-api" class="md-nav__link">
+    <span class="md-ellipsis">
+      Gazelle EVS API
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#terminology-server" class="md-nav__link">
+    <span class="md-ellipsis">
+      Terminology server
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Terminology server">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#terminology-server-requiring-authentication" class="md-nav__link">
+    <span class="md-ellipsis">
+      Terminology server requiring authentication
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#gui" class="md-nav__link">
+    <span class="md-ellipsis">
+      GUI
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+
+<h1 id="validation-of-fhir-resources">Validation of FHIR resources</h1>
+<p>matchbox can validate FHIR resources if they are conform to the FHIR R4/R4B or R5 specification
+and conform to the requirements of specific implementation guides.</p>
+<p>a tutorial how to validate FHIR resources and to what error message you have to look out for is availabe <a href="../validation-tutorial/">here</a>.</p>
+<p>Validation is based on the official <a href="https://confluence.hl7.org/display/FHIR/Using+the+FHIR+Validator">HL7 Java reference validator</a> in accordance with the provided terminologies. An external terminology server can also be configured, and you can validate your implementation through the $validate operation with the FHIR API or through a simple GUI.</p>
+<h2 id="matchbox-engine">matchbox engine</h2>
+<p>see <a href="../matchbox-engine/">matchbox-engine</a> for using the validation functionality as a library.</p>
+<h2 id="matchbox">matchbox</h2>
+<h3 id="fhir-api">FHIR API</h3>
+<p>For the $validate operation on the server, see the OperationDefinition for validation support:
+<a href="https://test.ahdis.ch/matchboxv3/fhir/OperationDefinition/-s-validate">[server]/$validate</a> for checking FHIR 
+resources conforming to the loaded implementation guides.</p>
+<table>
+<thead>
+<tr>
+<th>Parameter IN</th>
+<th>Card</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>resource</td>
+<td>1..1</td>
+<td>The resource (or logical instance) to validate, needs to be provided in the HTTP Body, the HTTP Content-Type header needs to be indicated if it is application/fhir+json or application/fhir+xml</td>
+</tr>
+<tr>
+<td>profile</td>
+<td>1..1</td>
+<td>profile to validate the resources against. Within the profile parameter, the targetProfile returns all profiles possible to use for validation, with the canonical url, and with the canonical url and the business version of the profile</td>
+</tr>
+<tr>
+<td>ig</td>
+<td>0..1</td>
+<td>the Implementation Guide and version which should be used for validation, eg. <a class="magiclink magiclink-github magiclink-issue" href="https://github.com/ahdis/ch.fhir.ig.ch-core/issues/3" title="GitHub Issue: ahdis/ch.fhir.ig.ch-core #3">ch.fhir.ig.ch-core#3</a>.0.0</td>
+</tr>
+</tbody>
+</table>
+<p>The operation returns an array of OperationOutcome with severity defined as fatal, error, warning or information.</p>
+<p>The first entry will contain the information in what configuration the validation was performed, e.g:</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>Validation<span class="w"> </span><span class="k">for</span><span class="w"> </span>profile<span class="w"> </span>http://fhir.ch/ig/ch-core/StructureDefinition/ch-core-patient<span class="p">|</span><span class="m">3</span>.0.0<span class="w"> </span><span class="o">(</span><span class="m">2018</span>-10-15T00:00:00+10:00<span class="o">)</span><span class="w"> </span>with<span class="w"> </span>packages:<span class="w"> </span>hl7.fhir.xver-extensions#0.0.13,<span class="w"> </span>hl7.fhir.r4.core#4.0.1,<span class="w"> </span>hl7.terminology#5.1.0,<span class="w"> </span>ihe.formatcode.fhir#1.1.0,<span class="w"> </span>ch.fhir.ig.ch-epr-term#2.0.8,<span class="w"> </span>ch.fhir.ig.ch-core#3.0.0<span class="w"> </span>No<span class="w"> </span>Issues<span class="w"> </span>detected.<span class="w"> </span>Total:<span class="w"> </span>4430ms<span class="w"> </span>powered<span class="w"> </span>by<span class="w"> </span>matchbox-engine<span class="w"> </span><span class="m">3</span>.1.0,<span class="w"> </span>hapi-fhir<span class="w"> </span><span class="m">6</span>.2.5<span class="w"> </span>and<span class="w"> </span>org.hl7.fhir.core<span class="w"> </span><span class="m">5</span>.6.92<span class="w"> </span>validation<span class="w"> </span>parameters<span class="w"> </span>Parameters<span class="w"> </span><span class="o">{</span><span class="nv">doNative</span><span class="o">=</span>false,<span class="w"> </span><span class="nv">hintAboutNonMustSupport</span><span class="o">=</span>false,<span class="w"> </span><span class="nv">recursive</span><span class="o">=</span>false,<span class="w"> </span><span class="nv">doDebug</span><span class="o">=</span>false,<span class="w"> </span><span class="nv">assumeValidRestReferences</span><span class="o">=</span>false,<span class="w"> </span><span class="nv">canDoNative</span><span class="o">=</span>false,<span class="w"> </span><span class="nv">noExtensibleBindingMessages</span><span class="o">=</span>false,<span class="w"> </span><span class="nv">noUnicodeBiDiControlChars</span><span class="o">=</span>false,<span class="w"> </span><span class="nv">noInvariants</span><span class="o">=</span>false,<span class="w"> </span><span class="nv">wantInvariantsInMessages</span><span class="o">=</span>false,<span class="w"> </span><span class="nv">txServer</span><span class="o">=</span><span class="s1">&#39;http://tx.fhir.org&#39;</span>,<span class="w"> </span><span class="nv">lang</span><span class="o">=</span><span class="s1">&#39;null&#39;</span>,<span class="w"> </span><span class="nv">snomedCT</span><span class="o">=</span><span class="s1">&#39;900000000000207008&#39;</span>,<span class="w"> </span><span class="nv">targetVer</span><span class="o">=</span><span class="s1">&#39;null&#39;</span>,<span class="w"> </span><span class="nv">ig</span><span class="o">=</span>ch.fhir.ig.ch-core#3.0.0,<span class="w"> </span><span class="nv">questionnaireMode</span><span class="o">=</span>CHECK,<span class="w"> </span><span class="nv">level</span><span class="o">=</span>HINTS,<span class="w"> </span><span class="nv">mode</span><span class="o">=</span>VALIDATION,<span class="w"> </span><span class="nv">securityChecks</span><span class="o">=</span>false,<span class="w"> </span><span class="nv">crumbTrails</span><span class="o">=</span>false,<span class="w"> </span><span class="nv">forPublication</span><span class="o">=</span>false,<span class="w"> </span><span class="nv">jurisdiction</span><span class="o">=</span>urn:iso:std:iso:3166#US,<span class="w"> </span><span class="nv">allowExampleUrls</span><span class="o">=</span>false,<span class="w"> </span><span class="nv">locale</span><span class="o">=</span><span class="s1">&#39;English&#39;</span>,<span class="w"> </span><span class="nv">locations</span><span class="o">={}}</span>
+</span></code></pre></div>
+<h3 id="configuration-parameters">Configuration parameters</h3>
+<p>Default validation parameters can be set directly in provided application.yaml, see also the confluecne page of HL7 <a href="https://confluence.hl7.org/display/FHIR/Using+the+FHIR+Validator">Using the FHIR Validator</a></p>
+<div class="language-yaml highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="nt">hapi</span><span class="p">:</span>
+</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="w">  </span><span class="nt">fhir</span><span class="p">:</span>
+</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="w">    </span><span class="nt">implementationguides</span><span class="p">:</span>
+</span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a><span class="w">      </span><span class="nt">fhir_r4_core</span><span class="p">:</span>
+</span><span id="__span-1-5"><a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a><span class="w">        </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">hl7.fhir.r4.core</span>
+</span><span id="__span-1-6"><a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a><span class="w">        </span><span class="nt">version</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">4.0.1</span>
+</span><span id="__span-1-7"><a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a><span class="w">        </span><span class="nt">url</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">classpath:/hl7.fhir.r4.core.tgz</span>
+</span><span id="__span-1-8"><a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a><span class="w">      </span><span class="nt">fhir_terminology</span><span class="p">:</span>
+</span><span id="__span-1-9"><a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a><span class="w">        </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">hl7.terminology.r4</span>
+</span><span id="__span-1-10"><a id="__codelineno-1-10" name="__codelineno-1-10" href="#__codelineno-1-10"></a><span class="w">        </span><span class="nt">version</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">6.2.0</span>
+</span><span id="__span-1-11"><a id="__codelineno-1-11" name="__codelineno-1-11" href="#__codelineno-1-11"></a><span class="w">        </span><span class="nt">url</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">classpath:/hl7.terminology.r4#6.2.0.tgz</span>
+</span><span id="__span-1-12"><a id="__codelineno-1-12" name="__codelineno-1-12" href="#__codelineno-1-12"></a><span class="w">      </span><span class="nt">fhir_extensions</span><span class="p">:</span>
+</span><span id="__span-1-13"><a id="__codelineno-1-13" name="__codelineno-1-13" href="#__codelineno-1-13"></a><span class="w">        </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">hl7.fhir.uv.extensions</span>
+</span><span id="__span-1-14"><a id="__codelineno-1-14" name="__codelineno-1-14" href="#__codelineno-1-14"></a><span class="w">        </span><span class="nt">version</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1.0.0</span>
+</span><span id="__span-1-15"><a id="__codelineno-1-15" name="__codelineno-1-15" href="#__codelineno-1-15"></a><span class="w">        </span><span class="nt">url</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">classpath:/hl7.fhir.uv.extensions#1.0.0.tgz</span>
+</span><span id="__span-1-16"><a id="__codelineno-1-16" name="__codelineno-1-16" href="#__codelineno-1-16"></a><span class="w">      </span><span class="nt">cda</span><span class="p">:</span>
+</span><span id="__span-1-17"><a id="__codelineno-1-17" name="__codelineno-1-17" href="#__codelineno-1-17"></a><span class="w">        </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">ch.fhir.ig.cda-fhir-maps</span>
+</span><span id="__span-1-18"><a id="__codelineno-1-18" name="__codelineno-1-18" href="#__codelineno-1-18"></a><span class="w">        </span><span class="nt">version</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0.3.0</span>
+</span><span id="__span-1-19"><a id="__codelineno-1-19" name="__codelineno-1-19" href="#__codelineno-1-19"></a><span class="w">        </span><span class="nt">url</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">https://fhir.ch/ig/cda-fhir-maps/package.tgz</span>
+</span><span id="__span-1-20"><a id="__codelineno-1-20" name="__codelineno-1-20" href="#__codelineno-1-20"></a><span class="w">      </span><span class="nt">chemd</span><span class="p">:</span>
+</span><span id="__span-1-21"><a id="__codelineno-1-21" name="__codelineno-1-21" href="#__codelineno-1-21"></a><span class="w">        </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">ch.fhir.ig.ch-emed</span>
+</span><span id="__span-1-22"><a id="__codelineno-1-22" name="__codelineno-1-22" href="#__codelineno-1-22"></a><span class="w">        </span><span class="nt">version</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">4.0.1</span>
+</span><span id="__span-1-23"><a id="__codelineno-1-23" name="__codelineno-1-23" href="#__codelineno-1-23"></a><span class="nt">matchbox</span><span class="p">:</span>
+</span><span id="__span-1-24"><a id="__codelineno-1-24" name="__codelineno-1-24" href="#__codelineno-1-24"></a><span class="w">  </span><span class="nt">fhir</span><span class="p">:</span>
+</span><span id="__span-1-25"><a id="__codelineno-1-25" name="__codelineno-1-25" href="#__codelineno-1-25"></a><span class="w">    </span><span class="nt">context</span><span class="p">:</span>
+</span><span id="__span-1-26"><a id="__codelineno-1-26" name="__codelineno-1-26" href="#__codelineno-1-26"></a><span class="w">      </span><span class="nt">fhirVersion</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">4.0.1</span>
+</span><span id="__span-1-27"><a id="__codelineno-1-27" name="__codelineno-1-27" href="#__codelineno-1-27"></a><span class="w">      </span><span class="nt">txServer</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">n/a</span>
+</span><span id="__span-1-28"><a id="__codelineno-1-28" name="__codelineno-1-28" href="#__codelineno-1-28"></a><span class="w">      </span><span class="c1">#      onlyOneEngine: true</span>
+</span><span id="__span-1-29"><a id="__codelineno-1-29" name="__codelineno-1-29" href="#__codelineno-1-29"></a><span class="w">      </span><span class="c1">#      xVersion : false</span>
+</span><span id="__span-1-30"><a id="__codelineno-1-30" name="__codelineno-1-30" href="#__codelineno-1-30"></a><span class="w">      </span><span class="c1">#      igsPreloaded: ch.fhir.ig.ch-core#4.0.0-ballot</span>
+</span><span id="__span-1-31"><a id="__codelineno-1-31" name="__codelineno-1-31" href="#__codelineno-1-31"></a><span class="w">      </span><span class="nt">suppressWarnInfo</span><span class="p">:</span>
+</span><span id="__span-1-32"><a id="__codelineno-1-32" name="__codelineno-1-32" href="#__codelineno-1-32"></a><span class="w">        </span><span class="l l-Scalar l-Scalar-Plain">hl7.fhir.r4.core#4.0.1</span><span class="p p-Indicator">:</span>
+</span><span id="__span-1-33"><a id="__codelineno-1-33" name="__codelineno-1-33" href="#__codelineno-1-33"></a><span class="w">        </span><span class="c1">#- &quot;Constraint failed: dom-6:&quot;</span>
+</span><span id="__span-1-34"><a id="__codelineno-1-34" name="__codelineno-1-34" href="#__codelineno-1-34"></a><span class="w">      </span><span class="c1">#analyzeOutcomeWithAIOnError: true</span>
+</span><span id="__span-1-35"><a id="__codelineno-1-35" name="__codelineno-1-35" href="#__codelineno-1-35"></a><span class="w">      </span><span class="c1">#llm:</span>
+</span><span id="__span-1-36"><a id="__codelineno-1-36" name="__codelineno-1-36" href="#__codelineno-1-36"></a><span class="w">      </span><span class="c1">#  provider: anthropic</span>
+</span><span id="__span-1-37"><a id="__codelineno-1-37" name="__codelineno-1-37" href="#__codelineno-1-37"></a><span class="w">      </span><span class="c1">#  modelName: claude-3-5-sonnet-20241022</span>
+</span><span id="__span-1-38"><a id="__codelineno-1-38" name="__codelineno-1-38" href="#__codelineno-1-38"></a><span class="w">      </span><span class="c1">#  apiKey: sk-xxx</span>
+</span></code></pre></div>
+<table>
+<thead>
+<tr>
+<th>Parameter</th>
+<th>Card</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>implementationguides</td>
+<td>0..*</td>
+<td>the Implementation Guide and version which with which matchbox will be configured, you can provide by classpath, file, http address, if none is specified the FHIR package servers will be used (need to be online)</td>
+</tr>
+<tr>
+<td>txServer</td>
+<td>0..1</td>
+<td>txServer to use, n/a if none (default), <a href="http://localhost:8080/tx">http://localhost:8080/tx</a> for internal (if server.port in application.yaml is 8080), <a href="http://tx.fhir.org">http://tx.fhir.org</a> for hl7 validator, if the terminology server is protected by an API key see configuration notes below</td>
+</tr>
+<tr>
+<td>txUseEcosystem</td>
+<td>0..1</td>
+<td>boolean true if none (default), if true asks tx servers for which CodeSystem they are authoritative</td>
+</tr>
+<tr>
+<td>txServerCache</td>
+<td>0..1</td>
+<td>boolean if responses are cached, true  if none (default)</td>
+</tr>
+<tr>
+<td>txLog</td>
+<td>0..1</td>
+<td>string indicating file location of log (end either in .txt or .html, default no logging</td>
+</tr>
+<tr>
+<td>igsPreloaded</td>
+<td>0..*</td>
+<td>For each mentioned ImplementationGuide (comma separated) an engine will be created, which will be cached in memory as long the application is running. Other IG's will created on demand and will be cached for an hour for subsequent calls. Tradeoff between memory consumption and first response time (creating of engine might have duration of half a minute). Default no igs are preloaded.</td>
+</tr>
+<tr>
+<td>onlyOneEngine</td>
+<td>0..1</td>
+<td>Implementation Guides can have multiple versions with different dependencies. Matchbox creates for transformation and validation an own engine for each Implementation Guide and its dependencies (default setting). You can switch this behavior, e.g. if you are using it in development and want to create and update resources or transform maps. Set the setting for onlyOneEngine to true. The changes are however not persisted and will be lost if matchbox is restarted.</td>
+</tr>
+<tr>
+<td>httpReadOnly</td>
+<td>0..1</td>
+<td>Whether to allow creating, modifying or deleting resources on the server via the HTTP API or not. If <code>true</code>, IGs can only be loaded through the configuration.</td>
+</tr>
+<tr>
+<td>suppressWarnInfo</td>
+<td>0..*</td>
+<td>A list of warning message to ignore while validating resources, per Implementation Guide and version.</td>
+</tr>
+<tr>
+<td>extensions</td>
+<td>0..1</td>
+<td>Extensions not defined by the ImplementationGuides which are accepted, comma separated list by url patterns, defaults to 'any'</td>
+</tr>
+<tr>
+<td>disableDefaultResourceFetcher</td>
+<td>0..1</td>
+<td>defaults to true, enables matchbox behaviour that references within bundles are resolved, validated and checked (different to java validator), if false see below</td>
+</tr>
+<tr>
+<td>check-references</td>
+<td>0..1</td>
+<td>Provided with this parameter and disableDefaultResourceFetcher set to false, the validator only knows how to follow absolute URLs, and it will attempt to. Invalid absolute URLs and any relative URLs will cause validation failures. Defaults to false</td>
+</tr>
+<tr>
+<td>resolution-context</td>
+<td>0..1</td>
+<td>Provided with this parameter and disableDefaultResourceFetcher set to false the validator resolve relative references, needs to be a server address</td>
+</tr>
+</tbody>
+</table>
+<p>See configuration parameters in <a href="../matchbox-server/#configuration">Matchbox Server</a> for more details.</p>
+<h4 id="suppress-warnings">Suppress warning/information-level issues in validation</h4>
+<p>The validation client can suppress warning/information-level issues that are not relevant for the validation.
+Validation issues to be suppressed are defined in the configuration file, per Implementation Guide and optional version.</p>
+<p>To match by exact substring, simply add the message to the list.
+To match by regex pattern, add the prefix <code>regex:</code> to the message.</p>
+<p>Example of configuration file:
+<div class="language-yaml highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="nt">matchbox</span><span class="p">:</span>
+</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="w">  </span><span class="nt">fhir</span><span class="p">:</span>
+</span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="w">    </span><span class="nt">context</span><span class="p">:</span>
+</span><span id="__span-2-4"><a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a><span class="w">      </span><span class="nt">suppressWarnInfo</span><span class="p">:</span>
+</span><span id="__span-2-5"><a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a><span class="w">        </span><span class="l l-Scalar l-Scalar-Plain">hl7.fhir.r4.core#4.0.1</span><span class="p p-Indicator">:</span>
+</span><span id="__span-2-6"><a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a><span class="w">          </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="s">&quot;Constraint</span><span class="nv"> </span><span class="s">failed:</span><span class="nv"> </span><span class="s">dom-6:&quot;</span>
+</span><span id="__span-2-7"><a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a><span class="w">        </span><span class="nt">ch.fhir.ig.ch-elm</span><span class="p">:</span>
+</span><span id="__span-2-8"><a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a><span class="w">          </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="s">&quot;regex:Binding</span><span class="nv"> </span><span class="s">for</span><span class="nv"> </span><span class="s">path</span><span class="nv"> </span><span class="s">(.+).ofType</span><span class="err">\</span><span class="s">(Coding</span><span class="err">\</span><span class="s">)</span><span class="nv"> </span><span class="s">has</span><span class="nv"> </span><span class="s">no</span><span class="nv"> </span><span class="s">source,</span><span class="nv"> </span><span class="s">so</span><span class="nv"> </span><span class="s">can&#39;t</span><span class="nv"> </span><span class="s">be</span><span class="nv"> </span><span class="s">checked&quot;</span>
+</span></code></pre></div></p>
+<h4 id="suppress-errors">Suppress error issues in validation</h4>
+<p>The validation client can suppress error issues that are not relevant for the validation.
+Validation issues to be suppressed are defined in the configuration file, per Implementation Guide and optional version.</p>
+<p>You need to provide the <a href="https://github.com/hapifhir/org.hl7.fhir.core/blob/master/org.hl7.fhir.utilities/src/main/java/org/hl7/fhir/utilities/i18n/I18nConstants.java">messageId</a> to indicate the error which should be suppressed. An optional regex for the path where the error happened in the resouces can be added. The regex needs to be added after the '@^' characters, e.g: "messageId@^regex".</p>
+<p>If you wan't to match the errors with unknown extensions you see error messages like this: </p>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>Bundle.entry[17].resource/Patient/e5ZHnklVuYuT85PnDVOepOg3/.extension[6].url:
+</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>URL value &#39;http://hl7.org/fhir/us/core/StructureDefinition/us-core-sex&#39; does not resolve 
+</span></code></pre></div>
+<p>the following combination will exclude all unknown extensions:</p>
+<p>Type_Specific_Checks_DT_URL_Resolve@^.<em>extension.</em>url</p>
+<p>Example of configuration file:
+<div class="language-yaml highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="nt">matchbox</span><span class="p">:</span>
+</span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="w">  </span><span class="nt">fhir</span><span class="p">:</span>
+</span><span id="__span-4-3"><a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a><span class="w">    </span><span class="nt">context</span><span class="p">:</span>
+</span><span id="__span-4-4"><a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a><span class="w">      </span><span class="nt">suppressError</span><span class="p">:</span>
+</span><span id="__span-4-5"><a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a><span class="w">        </span><span class="l l-Scalar l-Scalar-Plain">hl7.fhir.r4.core#4.0.1</span><span class="p p-Indicator">:</span>
+</span><span id="__span-4-6"><a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a><span class="w">          </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="s">&quot;Extension_EXTP_Context_Wrong@^RelatedPerson&quot;</span>
+</span><span id="__span-4-7"><a id="__codelineno-4-7" name="__codelineno-4-7" href="#__codelineno-4-7"></a><span class="w">          </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="s">&quot;Type_Specific_Checks_DT_URL_Resolve@^.*extension.*url&quot;</span>
+</span></code></pre></div></p>
+<h3 id="gazelle-evs-api">Gazelle EVS API</h3>
+<p>To integrate Matchbox in the <a href="https://www.ihe-europe.net/testing-IHE/gazelle">IHE Gazelle Testing Platform</a>, the 
+EVS API has also been implemented. See the 
+<a href="https://gitlab.inria.fr/gazelle/library/validation-service-api">validation-service-api</a> project for the existing 
+documentation.</p>
+<p>The list of available profiles is available at
+<a href="https://test.ahdis.ch/matchboxv3/gazelle/validation/profiles">[server]/gazelle/validation/profiles</a>, and the 
+validation request is sent to <code>POST [server]/gazelle/validation/validate</code>.</p>
+<p>To configure a Matchbox instance in the EVSClient, the following actions shall be done:</p>
+<ol>
+<li>In <code>Administration → Validations services</code>, create a new validation service with the following parameters:<ul>
+<li>Validator Type: <em>DEFAULT</em></li>
+<li>Name: as you want</li>
+<li>Stylesheet report location: any value will do</li>
+<li>Target endpoint: <em>[server]/gazelle</em></li>
+<li>Support compression: <em>YES</em></li>
+<li>Is available: <em>YES</em></li>
+<li><a href="../assets/evsclient_validation_service.png">Example screenshot</a></li>
+</ul>
+</li>
+<li>In <code>Administration → Referenced standards</code>, create a new standard:<ul>
+<li>Display name: as you want</li>
+<li>Validator Type: <em>DEFAULT</em></li>
+<li>Validation filter: optional, can be used to filter the profiles by their IG identifier. E.g. <em>ch.fhir.ig.ch-core</em></li>
+<li>In <em>Available validation services</em>, add the previously created validation service by clicking on the "plus" icon.</li>
+<li><a href="../assets/evsclient_referenced_standard.png">Example screenshot</a></li>
+</ul>
+</li>
+<li>In <code>Administration → Menu Configuration</code>, add your new standard to an existing menu.<ul>
+<li><a href="../assets/evsclient_menu.png">Example screenshot</a></li>
+</ul>
+</li>
+<li>You can now validate your resource, the new standard appears in the menu.</li>
+</ol>
+<h2 id="terminology-server">Terminology server</h2>
+<p>A terminology server may be used to validate resources.
+It is useful for the following reasons:</p>
+<ul>
+<li>to validate that a code/coding/codeableConcept is within a complex ValueSet (see under for examples of complex 
+  ValueSets);</li>
+<li>to validate that a code/coding/codeableConcept exists in its code system, when the code system is not locally 
+  defined (e.g. SNOMED CT, LOINC, ISOs, etc.).</li>
+</ul>
+<p>A complex value set (in that context) is a value set that uses filters to define its content instead of declaring 
+each code. All <a href="http://build.fhir.org/valueset-filter-operator.html">value set filters</a> would make a value set too 
+complex for the validation client to process the value set expansion by itself.</p>
+<p>Matchbox-server comes with an internal terminology server.
+It tries to expand the value sets if possible, or simply returns success to validation requests. 
+To use it, you can set the terminology server URL to the one of the matchbox-server instance, e.g. 
+<a href="http://localhost:8080/tx">http://localhost:8080/tx</a>.</p>
+<p>Please be aware that by using the internal terminology server, the validation may be incomplete.
+Its use case is simple:</p>
+<ul>
+<li>all CodeSystems that are used are defined in the IG, or is a special CodeSystem supported by HAPI-FHIR;</li>
+<li>in your resources, all important code/coding/codeableConcept are bound to a simple value set, with 'required' 
+  strength.</li>
+</ul>
+<p>Please be aware that if you have unbound code/coding/codeableConcepts, or the binding is not 'required', the 
+code/coding/codeableConcept will be considered valid if the code system is not defined locally (e.g. SNOMED CT, 
+LOINC, etc).</p>
+<h3 id="terminology-server-requiring-authentication">Terminology server requiring authentication</h3>
+<p>If you configure a terminology server which requires authentication you need to specifiy the authentication parameters in <a href="https://confluence.hl7.org/display/FHIR/Using+fhir-settings.json">fhir-settings.json</a>, an additional file in the confiugration directory where you put the application.yaml, see example in <a href="https://github.com/ahdis/matchbox/tree/main/matchbox-server/with-ca">https://github.com/ahdis/matchbox/tree/main/matchbox-server/with-ca</a></p>
+<h3 id="gui">GUI</h3>
+<p>You can run a validation through the GUI by using the fragment in the URL.
+The fragment is the part of the URL that starts with a <code>#</code> character (also called the hash or anchor).
+The different parameters shall be set as if they were in the query string:
+<code>/matchbox/validate#resource=...&amp;profile=...</code>.</p>
+<p>The following parameters are supported:</p>
+<table>
+<thead>
+<tr>
+<th>Parameter</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>resource</code></td>
+<td>The resource to validate, encoded as base64url. Required.</td>
+</tr>
+<tr>
+<td><code>profile</code></td>
+<td>The profile to use for validation. Optional.</td>
+</tr>
+<tr>
+<td><code>filename</code></td>
+<td>The filename to use for the resource. Optional.</td>
+</tr>
+<tr>
+<td>Other parameters</td>
+<td>Any parameter supported by the FHIR API or the <code>CliContext</code>. Optional.</td>
+</tr>
+</tbody>
+</table>
+<p>The only required parameter is <code>resource</code>.
+If <code>profile</code> is not provided, it will default to <code>http://hl7.org/fhir/StructureDefinition/{resourceType}</code>.</p>
+<p>E.g.
+<div class="language-http highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="nf">GET</span> <span class="nn">https://test.ahdis.ch/matchboxv3/validate#profile=http%3A%2F%2Fhl7.org%2Ffhir%2FStructureDefinition%2FBundle&amp;txServer=http://tx.fhir.org/r4&amp;resource=PFBhdGllbnQgeG1sbnM9Imh0dHA6Ly9obDcub3JnL2ZoaXIiPgogIDxuYW1lPgogICAgPGZhbWlseSB2YWx1ZT0iVGVzdCIvPgogIDwvbmFtZT4KPC9QYXRpZW50Pg</span> <span class="kr">HTTP</span><span class="o">/</span><span class="m">1.1</span>
+</span></code></pre></div></p>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      <script id="__config" type="application/json">{"base": "..", "features": [], "search": "../assets/javascripts/workers/search.973d3a69.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../assets/javascripts/bundle.f55a23d4.min.js"></script>
+      
+    
+  </body>
+</html>

@@ -1,0 +1,826 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+      
+      
+      
+      
+      
+      <link rel="icon" href="../../assets/favicon-96x96.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.6.23">
+    
+    
+      
+        <title>Narrative Block - Clinical Document Architecture v2.0.1-sd-202510-matchbox-patch - Matchbox</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.84d31ad4.min.css">
+      
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.06af60db.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../../stylesheets/extra.css">
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+    
+  </head>
+  
+  
+    
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="matchbox" data-md-color-primary="indigo" data-md-color-accent="indigo">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#narrative-block-clinical-document-architecture-v201-sd-202510-matchbox-patch" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../.." title="Matchbox" class="md-header__button md-logo" aria-label="Matchbox" data-md-component="logo">
+      
+  <img src="../../assets/matchbox_logo_color.png" alt="logo">
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            Matchbox
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Narrative Block - Clinical Document Architecture v2.0.1-sd-202510-matchbox-patch
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+    
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="Matchbox" class="md-nav__button md-logo" aria-label="Matchbox" data-md-component="logo">
+      
+  <img src="../../assets/matchbox_logo_color.png" alt="logo">
+
+    </a>
+    Matchbox
+  </label>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Welcome
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../features/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Features
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../changelog/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Changelog
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../matchbox-engine/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Matchbox Engine
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../matchbox-server/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Matchbox Server
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    API for Matchbox
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../validation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Validation of FHIR resources
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../docker/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Running matchbox in docker
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../cda/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    CDA Logical Model
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../validation-tutorial/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Tutorial: validation
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../validation-with-ai-tutorial/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Tutorial: validation with ai
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#narrative-block" class="md-nav__link">
+    <span class="md-ellipsis">
+      Narrative Block
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Narrative Block">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#_2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#and" class="md-nav__link">
+    <span class="md-ellipsis">
+      and
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#_3" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#and_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      and
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#_4" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#_5" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#_6" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#_7" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#_8" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#stylecode-attribute" class="md-nav__link">
+    <span class="md-ellipsis">
+      styleCode attribute
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#referencing-in-and-out-of-the-narrative-block" class="md-nav__link">
+    <span class="md-ellipsis">
+      Referencing in and out of the narrative block
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+
+<h1 id="narrative-block-clinical-document-architecture-v201-sd-202510-matchbox-patch">Narrative Block - Clinical Document Architecture v2.0.1-sd-202510-matchbox-patch</h1>
+<ul>
+<li><a href="toc.md"><strong>Table of Contents</strong></a></li>
+<li><a href="../overview/"><strong>Overview</strong></a></li>
+<li><strong>Narrative Block</strong></li>
+</ul>
+<h2 id="narrative-block">Narrative Block</h2>
+<p>The Section.text field is used to store narrative to be rendered, as described above in <a href="../overview/#cda-conformance">CDA Conformance</a>, and is therefore referred to as the CDA Narrative Block.</p>
+<p><a href="../NarrativeBlock.xsd">The CDA Narrative Block schema can be found here.</a></p>
+<p>The content model of the CDA Narrative Block schema is specially hand crafted to meet the requirements outlined above (see <a href="../overview/#human-readability-and-rendering-cda-documents">Human Readability and Rendering CDA Documents</a>). The schema is registered as a MIME type (text/x-hl7-text+xml), which is the fixed media type for Section.text. Components of the schema are described in the sections that follow.</p>
+<h3 id="_1"><content></h3>
+<p>The CDA <code>&lt;content&gt;</code> element is used to wrap a string of text so that it can be explicitly referenced, or so that it can suggest rendering characteristics. The <code>&lt;content&gt;</code> element can nest recursively, which enables wrapping a string of plain text down to as small a chunk as desired.</p>
+<p>The <code>&lt;content&gt;</code> element contains an optional identifier, that can serve as the target of a reference. All values of attributes of type XML ID must be unique within the document (per the <a href="http://www.w3.org/TR/2004/REC-xml-20040204/#id">W3C XML specification</a>). The originalText component of a RIM attribute present in any CDA entry can make explicit reference to the identifier, thereby indicating the original text associated with the attribute in the CDA entry.</p>
+<p>Example 5</p>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>&lt;section&gt;
+</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>   &lt;code code=&quot;10153-2&quot; 
+</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>    codeSystem=&quot;2.16.840.1.113883.6.1&quot; 
+</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>    codeSystemName=&quot;LOINC&quot;/&gt;
+</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>   &lt;title&gt;Past Medical History&lt;/title&gt;
+</span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>   &lt;text&gt;
+</span><span id="__span-0-7"><a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>    There is a history of &lt;content ID=&quot;a1&quot;&gt;Asthma&lt;/content&gt;
+</span><span id="__span-0-8"><a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>   &lt;/text&gt;
+</span><span id="__span-0-9"><a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a>   &lt;entry&gt;
+</span><span id="__span-0-10"><a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a>      &lt;observation classCode=&quot;OBS&quot; moodCode=&quot;EVN&quot;&gt;
+</span><span id="__span-0-11"><a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a>         &lt;code code=&quot;195967001&quot; 
+</span><span id="__span-0-12"><a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a>          codeSystem=&quot;2.16.840.1.113883.6.96&quot; 
+</span><span id="__span-0-13"><a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a>          codeSystemName=&quot;SNOMED CT&quot; 
+</span><span id="__span-0-14"><a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a>          displayName=&quot;Asthma&quot;&gt;
+</span><span id="__span-0-15"><a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a>            &lt;originalText&gt;
+</span><span id="__span-0-16"><a id="__codelineno-0-16" name="__codelineno-0-16" href="#__codelineno-0-16"></a>               &lt;reference value=&quot;#a1&quot;/&gt;
+</span><span id="__span-0-17"><a id="__codelineno-0-17" name="__codelineno-0-17" href="#__codelineno-0-17"></a>            &lt;/originalText&gt;
+</span><span id="__span-0-18"><a id="__codelineno-0-18" name="__codelineno-0-18" href="#__codelineno-0-18"></a>         &lt;/code&gt;
+</span><span id="__span-0-19"><a id="__codelineno-0-19" name="__codelineno-0-19" href="#__codelineno-0-19"></a>         &lt;statusCode code=&quot;completed&quot;/&gt;
+</span><span id="__span-0-20"><a id="__codelineno-0-20" name="__codelineno-0-20" href="#__codelineno-0-20"></a>      &lt;/observation&gt;
+</span><span id="__span-0-21"><a id="__codelineno-0-21" name="__codelineno-0-21" href="#__codelineno-0-21"></a>   &lt;/entry&gt;
+</span><span id="__span-0-22"><a id="__codelineno-0-22" name="__codelineno-0-22" href="#__codelineno-0-22"></a>&lt;/section&gt;
+</span></code></pre></div>
+<p>There is no requirement that CDA entries must reference into the CDA Narrative Block. The referencing mechanism can be used where it is important to represent the original text component of a coded CDA entry.</p>
+<p>The <code>&lt;content&gt;</code> element contains an optional "revised" attribute that can be valued with "insert" or "delete", which can be used to indicate narrative changes from the last version of a CDA document. The attribute is limited to a single generation, in that it only reflects the changes from the preceding version of a document. If applied, it needs to be used in conjunction with standard CDA revision tracking. Changes to a CDA document that has been released for patient care still require a formal versioning and revision, and the revised document can optionally carry the "revised" attribute to show the delta in the narrative. Receivers are required to interpret the "revised" attribute when rendering by visually distinguishing or suppressing deleted narrative.</p>
+<h3 id="_2"><linkHtml></h3>
+<p>The CDA <code>&lt;linkHtml&gt;</code> is a generic referencing mechanism, similar, but not identical, to the HTML anchor tag. It can be used to reference identifiers that are either internal or external to the document.</p>
+<p>Multimedia that is integral to a document, and part of the attestable content of the document requires the use of the <a href="../StructureDefinition-ObservationMedia/">ObservationMedia</a> CDA entry, which is referenced by the <code>&lt;renderMultiMedia&gt;</code> element (see <a href="#rendermultimedia"><renderMultiMedia></a>). Multimedia that is simply referenced by the document and not an integral part of the document can use <code>&lt;linkHtml&gt;</code>.</p>
+<p>The source of a link uses the linkHtml.href attribute. The target of an internal reference is an identifier of type XML ID, which can exist on other elements in the same or a different narrative block, or XML ID attributes that have been added to the <a href="../StructureDefinition-Section/"><section></a>, <a href="../StructureDefinition-ObservationMedia/"><observationMedia></a>, or <a href="#rendermultimedia"><renderMultiMedia></a> elements of the CDA Schema. The linkHtml.name attribute is deprecated, because attributes of type XML ID provide an alternative and more consistent target for referencing. Following the conventions of HTML, an internal link is prefaced with the pound sign, as shown in the following example.</p>
+<p>Example 6</p>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>&lt;section ID=&quot;SECT001&quot;&gt;
+</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>   &lt;code code=&quot;10164-2&quot; codeSystem=&quot;2.16.840.1.113883.6.1&quot; 
+</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>    codeSystemName=&quot;LOINC&quot;/&gt;
+</span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a>   &lt;title&gt;History of Present Illness&lt;/title&gt;
+</span><span id="__span-1-5"><a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a>   &lt;text&gt;Mr. Smith is a 57 year old male presenting with 
+</span><span id="__span-1-6"><a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a>    chest pain. He sustained a myocardial infarction 3 years 
+</span><span id="__span-1-7"><a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a>    ago, ...
+</span><span id="__span-1-8"><a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a>   &lt;/text&gt;
+</span><span id="__span-1-9"><a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a>&lt;/section&gt;
+</span><span id="__span-1-10"><a id="__codelineno-1-10" name="__codelineno-1-10" href="#__codelineno-1-10"></a>
+</span><span id="__span-1-11"><a id="__codelineno-1-11" name="__codelineno-1-11" href="#__codelineno-1-11"></a> ...
+</span><span id="__span-1-12"><a id="__codelineno-1-12" name="__codelineno-1-12" href="#__codelineno-1-12"></a>
+</span><span id="__span-1-13"><a id="__codelineno-1-13" name="__codelineno-1-13" href="#__codelineno-1-13"></a>&lt;section ID=&quot;SECT003&quot;&gt;
+</span><span id="__span-1-14"><a id="__codelineno-1-14" name="__codelineno-1-14" href="#__codelineno-1-14"></a>   &lt;code code=&quot;10153-2&quot; codeSystem=&quot;2.16.840.1.113883.6.1&quot; 
+</span><span id="__span-1-15"><a id="__codelineno-1-15" name="__codelineno-1-15" href="#__codelineno-1-15"></a>    codeSystemName=&quot;LOINC&quot;/&gt;
+</span><span id="__span-1-16"><a id="__codelineno-1-16" name="__codelineno-1-16" href="#__codelineno-1-16"></a>   &lt;title&gt;Past Medical History&lt;/title&gt;
+</span><span id="__span-1-17"><a id="__codelineno-1-17" name="__codelineno-1-17" href="#__codelineno-1-17"></a>   &lt;text&gt;History of coronary artery disease, as noted
+</span><span id="__span-1-18"><a id="__codelineno-1-18" name="__codelineno-1-18" href="#__codelineno-1-18"></a>    &lt;linkHtml href=&quot;#SECT001&quot;&gt;above&lt;/linkHtml&gt;.&lt;/text&gt;
+</span><span id="__span-1-19"><a id="__codelineno-1-19" name="__codelineno-1-19" href="#__codelineno-1-19"></a>&lt;/section&gt;
+</span></code></pre></div>
+<p>CDA links do not convey shareable meaning. Shareable semantics are only achieved by the inclusion of CDA entries and their associated formalized relationships. There is no requirement that a receiver render an internal or external link, or the target of an external link.</p>
+<h3 id="and"><sub> and <sup></h3>
+<p>The CDA <code>&lt;sub&gt;</code> and <code>&lt;sup&gt;</code> elements are used to indicate subscripts and superscripts, respectively.</p>
+<p>Receivers are required to interpret these elements when rendering by visually distinguishing subscripted and superscripted characters.</p>
+<h3 id="_3"><br></h3>
+<p>The CDA <code>&lt;br/&gt;</code> element is used to indicate a hard line break. It differs from the CDA <code>&lt;paragraph&gt;</code> element in that the 
+ element has no content. Receivers are required to interpret this element when rendering so as to represent a line break.</p>
+<h3 id="and_1"><footnote> and <footnoteRef></h3>
+<p>The CDA <code>&lt;footnote&gt;</code> element is used to indicate a footnote. The element contains the footnote, inline with the flow of text to which it is applied.</p>
+<p>The <code>&lt;footnoteRef&gt;</code> element can reference an existing footnote in the same or different CDA Narrative Block of the same document. It can be used when the same footnote is being used multiple times. The value of the footnoteRef.IDREF must be an footnote.ID value in the same document.</p>
+<p>Receivers are required to interpret these elements when rendering by visually distinguishing footnoted text. The exact rendition is at the discretion of the recipient, and might include a mark at the location of the footnote with a hyperlink to the footnoted text, a simple demarcation (such as "This is the text [this is the footnote] that is being footnoted"), etc.</p>
+<h3 id="_4"><renderMultiMedia></h3>
+<p>The CDA <code>&lt;renderMultiMedia&gt;</code> element references external multimedia that is integral to a document, and part of the attestable content of the document, and serves to show where the referenced multimedia is to be rendered.</p>
+<p>The <code>&lt;renderMultiMedia&gt;</code> element has an optional <code>&lt;caption&gt;</code>, and contains a required referencedObject attribute (of type XML IDREFS), the values of which must equal the XML ID value(s) of <a href="../StructureDefinition-ObservationMedia/">ObservationMedia</a> or <a href="../StructureDefinition-RegionOfInterest/">RegionOfInterest</a> CDA entries within the same document.</p>
+<p>Example 7</p>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>&lt;section&gt;
+</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>   &lt;code code=&quot;8709-8&quot; codeSystem=&quot;2.16.840.1.113883.6.1&quot; 
+</span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a>    codeSystemName=&quot;LOINC&quot;/&gt;
+</span><span id="__span-2-4"><a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a>   &lt;title&gt;Skin exam&lt;/title&gt;
+</span><span id="__span-2-5"><a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a>   &lt;text&gt;Erythematous rash, palmar surface, left index 
+</span><span id="__span-2-6"><a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a>    finger.&lt;renderMultiMedia referencedObject=&quot;MM1&quot;/&gt;
+</span><span id="__span-2-7"><a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a>   &lt;/text&gt;
+</span><span id="__span-2-8"><a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a>   &lt;entry&gt;
+</span><span id="__span-2-9"><a id="__codelineno-2-9" name="__codelineno-2-9" href="#__codelineno-2-9"></a>      &lt;observationMedia classCode=&quot;OBS&quot; moodCode=&quot;EVN&quot; ID=&quot;MM1&quot;&gt;
+</span><span id="__span-2-10"><a id="__codelineno-2-10" name="__codelineno-2-10" href="#__codelineno-2-10"></a>         &lt;id root=&quot;2.16.840.1.113883.19.2.1&quot;/&gt;
+</span><span id="__span-2-11"><a id="__codelineno-2-11" name="__codelineno-2-11" href="#__codelineno-2-11"></a>         &lt;value xsi:type=&quot;ED&quot; mediaType=&quot;image/jpeg&quot;&gt;
+</span><span id="__span-2-12"><a id="__codelineno-2-12" name="__codelineno-2-12" href="#__codelineno-2-12"></a>            &lt;reference value=&quot;left\-hand\-image.jpeg&quot;/&gt;
+</span><span id="__span-2-13"><a id="__codelineno-2-13" name="__codelineno-2-13" href="#__codelineno-2-13"></a>         &lt;/value&gt;
+</span><span id="__span-2-14"><a id="__codelineno-2-14" name="__codelineno-2-14" href="#__codelineno-2-14"></a>      &lt;/observationMedia&gt;
+</span><span id="__span-2-15"><a id="__codelineno-2-15" name="__codelineno-2-15" href="#__codelineno-2-15"></a>   &lt;/entry&gt;
+</span><span id="__span-2-16"><a id="__codelineno-2-16" name="__codelineno-2-16" href="#__codelineno-2-16"></a>&lt;/section&gt;
+</span></code></pre></div>
+<p>Multimedia that is simply referenced by the document and not an integral part of the document must use <code>&lt;linkHtml&gt;</code>.</p>
+<p>The expected behavior is that the referenced multimedia should be rendered or referenced at the point of reference. Where a caption is present, it must also be rendered. <code>&lt;renderMultiMedia&gt;</code> can either reference a single <a href="../StructureDefinition-ObservationMedia/">ObservationMedia</a>, or one or more <a href="../StructureDefinition-RegionOfInterest/">RegionOfInterest</a>. If <code>&lt;renderMultiMedia&gt;</code> references a single ObservationMedia, that ObservationMedia should be rendered or referenced at the point of reference. If <code>&lt;renderMultiMedia&gt;</code> references one or more RegionOfInterest, all RegionOfInterests should be rendered or referenced at the point of reference, atop the multimedia they are regions of. If <code>&lt;renderMultiMedia&gt;</code> references more than one RegionOfInterest, each RegionOfInterest must be a region on the same multimedia.</p>
+<h3 id="_5"><paragraph></h3>
+<p>A CDA <code>&lt;paragraph&gt;</code> is similar to the HTML paragraph, which allows blocks of narrative to be broken up into logically consistent structures. A CDA <code>&lt;paragraph&gt;</code> element contains an optional caption, which if present must come first before any other character data.</p>
+<h3 id="_6"><list></h3>
+<p>A CDA <code>&lt;list&gt;</code> is similar to the HTML list. A CDA <code>&lt;list&gt;</code> has an optional caption, and contains one or more <code>&lt;item&gt;</code> elements. A CDA <code>&lt;item&gt;</code> element contains an optional caption, which if present must come first before any other character data. The required listType attribute specifies whether the <code>&lt;list&gt;</code> is ordered or unordered (with unordered being the default). Unordered lists are typically rendered with bullets, whereas ordered lists are typically rendered with numbers, although this is not a requirement.</p>
+<h3 id="_7"><table></h3>
+<p>The CDA <code>&lt;table&gt;</code> is similar to the HTML table. The table markup is for presentation purposes only and, unlike a database table, does not possess meaningful field names.</p>
+<p>CDA modifies the strict XHTML table model by removing formatting tags and by setting the content model of cells to be similar to the contents of other elements in the CDA Narrative Block.</p>
+<p>The table.border, table.cellspacing, and table.cellpadding attributes are deprecated, because the styleCode attribute (see <a href="#stylecode-attribute">styleCode attribute</a> provides a more consistent way for senders to suggest rendering characteristics.</p>
+<h3 id="_8"><caption></h3>
+<p>The CDA <code>&lt;caption&gt;</code> is a label for a paragraph, list, list item, table, or table cell. It can also be used within the <code>&lt;renderMultiMedia&gt;</code> element to indicate a label for referenced ObservationMedia and RegionOfInterest entries. A <code>&lt;caption&gt;</code> contains plain text and may contain links and footnotes.</p>
+<h3 id="stylecode-attribute">styleCode attribute</h3>
+<p>The styleCode attribute is used within the CDA Narrative Block to give the instance author the ability to suggest rendering characteristics of the nested character data. Receivers are not required to render documents using the style hints provided and can present stylized text in accordance with their local style conventions.</p>
+<p>The value set is drawn from the HL7 styleType vocabulary domain, and has a CWE coding strength.</p>
+<p>Table 89: Value set for styleCode (CWE)</p>
+<ul>
+<li>Code: Font style (Defines font rendering characteristics.)</li>
+<li>Code: Bold</li>
+<li>Definition: Render with a bold font.</li>
+<li>Code: Underline</li>
+<li>Definition: Render with an underlines font.</li>
+<li>Code: Italics</li>
+<li>Definition: Render italicized.</li>
+<li>Code: Emphasis</li>
+<li>Definition: Render with some type of emphasis.</li>
+<li>Code: Table rule style (Defines table cell rendering characteristics.)</li>
+<li>Code: Lrule</li>
+<li>Definition: Render cell with left-sided rule.</li>
+<li>Code: Rrule</li>
+<li>Definition: Render cell with right-sided rule.</li>
+<li>Code: Toprule</li>
+<li>Definition: Render cell with rule on top.</li>
+<li>Code: Botrule</li>
+<li>Definition: Render cell with rule on bottom.</li>
+<li>Code: Ordered list style (Defines rendering characteristics for ordered lists.)</li>
+<li>Code: Arabic</li>
+<li>Definition: List is ordered using Arabic numerals: 1, 2, 3.</li>
+<li>Code: LittleRoman</li>
+<li>Definition: List is ordered using little Roman numerals: i, ii, iii.</li>
+<li>Code: BigRoman</li>
+<li>Definition: List is ordered using big Roman numerals: I, II, III.</li>
+<li>Code: LittleAlpha</li>
+<li>Definition: List is ordered using little alpha characters: a, b, c.</li>
+<li>Code: BigAlpha</li>
+<li>Definition: List is ordered using big alpha characters: A, B, C.</li>
+<li>Code: Unordered list style (Defines rendering characteristics for unordered lists.)</li>
+<li>Code: Disc</li>
+<li>Definition: List bullets are simple solid discs.</li>
+<li>Code: Circle</li>
+<li>Definition: List bullets are hollow discs.</li>
+<li>Code: Square</li>
+<li>Definition: List bullets are solid squares.</li>
+</ul>
+<p>Local extensions to the styleType vocabulary domain must follow the following convention: <code>\[x\]\[A-Za-z\]\[A-Za-z0-9\]\*</code> (first character is "x", second character is an upper or lower case A-Z, remaining characters are any combination of upper and lower case letters or numbers).</p>
+<p>The styleCode attribute can contain multiple values, separated by white space. Where an element containing a styleCode attribute is nested within another element containing a styleCode attribute, the style effects are additive, as in the following example:</p>
+<p>Example 8</p>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>&lt;section&gt;
+</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>   &lt;text&gt;&lt;content styleCode=&quot;Bold&quot;&gt;This is rendered bold, 
+</span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a>    &lt;content styleCode=&quot;Italics&quot;&gt;this is rendered bold and 
+</span><span id="__span-3-4"><a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a>    italicized,&lt;/content&gt; this is rendered bold. &lt;/content&gt;
+</span><span id="__span-3-5"><a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a>    &lt;content styleCode=&quot;Bold Italics&quot;&gt;This is also rendered 
+</span><span id="__span-3-6"><a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a>    bold and italicized.&lt;/content&gt;
+</span><span id="__span-3-7"><a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a>   &lt;/text&gt;
+</span><span id="__span-3-8"><a id="__codelineno-3-8" name="__codelineno-3-8" href="#__codelineno-3-8"></a>&lt;/section&gt;
+</span></code></pre></div>
+<h3 id="referencing-in-and-out-of-the-narrative-block">Referencing in and out of the narrative block</h3>
+<p>To summarize the mechanisms for referencing in and out of the CDA Narrative Block:</p>
+<ul>
+<li>CDA entries can point in to the <code>&lt;content&gt;</code> element of the CDA Narrative Block (see <a href="#content"><content></a>).</li>
+<li>The <code>&lt;linkHtml&gt;</code> element of the CDA Narrative Block can reference targets that are either internal or external to the document (see <a href="#linkhtml"><linkHtml></a>).</li>
+<li>The <code>&lt;footnoteRef&gt;</code> element of the CDA Narrative Block can reference a <code>&lt;footnote&gt;</code> element in the same or different CDA Narrative Block of the same document (see <a href="#footnote-and-footnoteref"><footnote> and <footnoteRef></a>).</li>
+<li>The <code>&lt;renderMultiMedia&gt;</code> element of the CDA Narrative Block can point out to CDA ObservationMedia and RegionOfInterest entries of the same document (see <a href="#rendermultimedia"><renderMultiMedia></a>).</li>
+</ul>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      <script id="__config" type="application/json">{"base": "../..", "features": [], "search": "../../assets/javascripts/workers/search.973d3a69.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.f55a23d4.min.js"></script>
+      
+    
+  </body>
+</html>

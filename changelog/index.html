@@ -1,0 +1,1143 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+      
+      
+      
+        <link rel="prev" href="../features/">
+      
+      
+        <link rel="next" href="../matchbox-engine/">
+      
+      
+      <link rel="icon" href="../assets/favicon-96x96.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.6.23">
+    
+    
+      
+        <title>Changelog - Matchbox</title>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/stylesheets/main.84d31ad4.min.css">
+      
+        
+        <link rel="stylesheet" href="../assets/stylesheets/palette.06af60db.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../stylesheets/extra.css">
+    
+    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+    
+  </head>
+  
+  
+    
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="matchbox" data-md-color-primary="indigo" data-md-color-accent="indigo">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href=".." title="Matchbox" class="md-header__button md-logo" aria-label="Matchbox" data-md-component="logo">
+      
+  <img src="../assets/matchbox_logo_color.png" alt="logo">
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            Matchbox
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Changelog
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+    
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href=".." title="Matchbox" class="md-nav__button md-logo" aria-label="Matchbox" data-md-component="logo">
+      
+  <img src="../assets/matchbox_logo_color.png" alt="logo">
+
+    </a>
+    Matchbox
+  </label>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href=".." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Welcome
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../features/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Features
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    Changelog
+    
+  </span>
+  
+
+      </a>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../matchbox-engine/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Matchbox Engine
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../matchbox-server/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Matchbox Server
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    API for Matchbox
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../validation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Validation of FHIR resources
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../docker/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Running matchbox in docker
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../cda/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    CDA Logical Model
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../validation-tutorial/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Tutorial: validation
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../validation-with-ai-tutorial/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Tutorial: validation with ai
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+
+  <h1>Changelog</h1>
+
+<p>2026/01/27 Release 4.0.17
+- fixed search params not being included in the call to the server (<a class="magiclink magiclink-github magiclink-issue" href="https://github.com/ahdis/matchbox/issues/453" title="GitHub Issue: ahdis/matchbox #453">#453</a>)
+- unrestrict transport layer jackson for mcp (<a class="magiclink magiclink-github magiclink-issue" href="https://github.com/ahdis/matchbox/issues/455" title="GitHub Issue: ahdis/matchbox #455">#455</a>)
+- memory error / security issue (<a class="magiclink magiclink-github magiclink-issue" href="https://github.com/ahdis/matchbox/issues/457" title="GitHub Issue: ahdis/matchbox #457">#457</a>)</p>
+<p>2026/01/08 Release 4.0.16</p>
+<ul>
+<li>adapt test and map for (<a class="magiclink magiclink-github magiclink-issue" href="https://github.com/ahdis/matchbox/issues/440" title="GitHub Issue: ahdis/matchbox #440">#440</a>)</li>
+<li>update org.hl7.fhir.core 6.7.10 (<a class="magiclink magiclink-github magiclink-issue" href="https://github.com/ahdis/matchbox/issues/448" title="GitHub Issue: ahdis/matchbox #448">#448</a>)</li>
+<li>support validating CodeableConcept in internal tx (<a class="magiclink magiclink-github magiclink-issue" href="https://github.com/ahdis/matchbox/issues/448" title="GitHub Issue: ahdis/matchbox #448">#448</a>)</li>
+<li>FHIR R4 validation error with R5 extension (<a class="magiclink magiclink-github magiclink-issue" href="https://github.com/ahdis/matchbox/issues/424" title="GitHub Issue: ahdis/matchbox #424">#424</a>)</li>
+<li>Fix THO loading: Unknown code '26' in the CodeSystem '<a href="http://terminology.hl7.org/CodeSystem/object-role">http://terminology.hl7.org/CodeSystem/object-role</a>' version '4.0.1' (<a class="magiclink magiclink-github magiclink-issue" href="https://github.com/ahdis/matchbox/issues/452" title="GitHub Issue: ahdis/matchbox #452">#452</a>)</li>
+<li>Remove auto install ig's (did not handle -ballot versions)</li>
+<li>Use <a class="magiclink magiclink-github magiclink-issue" href="https://github.com/ahdis/hl7.terminology/issues/7" title="GitHub Issue: ahdis/hl7.terminology #7">hl7.terminology#7</a>.0.1 as FHIR Java validator 6.7.10 is doing (<a class="magiclink magiclink-github magiclink-issue" href="https://github.com/ahdis/matchbox/issues/452" title="GitHub Issue: ahdis/matchbox #452">#452</a>)</li>
+</ul>
+<p>NOTE: Remove in your installation existing classpath entries for hl7.terminology#x.x.x in application.yaml</p>
+<p>2025/11/03 Release 4.0.15</p>
+<ul>
+<li>Upgrade Tomcat to fix <a href="https://github.com/advisories/GHSA-wmwf-9ccg-fff5">CVE-2025-55752</a></li>
+<li>Update <a href="matchbox/cda-logical-model/">CDA logical model</a> for ST.r2b (<a class="magiclink magiclink-github magiclink-issue" href="https://github.com/ahdis/matchbox/issues/439" title="GitHub Issue: ahdis/matchbox #439">#439</a>](<a href="https://github.com/ahdis/matchbox/issues/#439">https://github.com/ahdis/matchbox/issues/#439</a>), see example <a href="https://github.com/ahdis/matchbox/blob/nmain/matchbox-engine/src/test/resources/cda/cda-it-observation-st-r2b.map">map</a></li>
+</ul>
+<p>2025/10/21 Release 4.0.14</p>
+<ul>
+<li>Further MCP Server integration (<a class="magiclink magiclink-github magiclink-issue" href="https://github.com/ahdis/matchbox/issues/398" title="GitHub Issue: ahdis/matchbox #398">#398</a>)</li>
+</ul>
+<p>2025/10/04 Release 4.0.13</p>
+<ul>
+<li>MCP Server integration (<a class="magiclink magiclink-github magiclink-issue" href="https://github.com/ahdis/matchbox/issues/398" title="GitHub Issue: ahdis/matchbox #398">#398</a>)</li>
+</ul>
+<p>2025/08/26 Release 4.0.12</p>
+<ul>
+<li>update org.hl7.fhir.core 6.6.5 (<a class="magiclink magiclink-github magiclink-issue" href="https://github.com/ahdis/matchbox/issues/425" title="GitHub Issue: ahdis/matchbox #425">#425</a>)</li>
+<li>fix for multithreading issue and increasing terminology logs (<a class="magiclink magiclink-github magiclink-issue" href="https://github.com/ahdis/matchbox/issues/425" title="GitHub Issue: ahdis/matchbox #425">#425</a>)</li>
+<li>separating internal terminology server to /tx endpoint</li>
+</ul>
+<p>2025/08/12 Release 4.0.11</p>
+<ul>
+<li>update for scanned vulnerabilities</li>
+</ul>
+<p>2025/08/07 Release 4.0.10</p>
+<ul>
+<li>update org.hl7.fhir.core 6.6.3 (<a class="magiclink magiclink-github magiclink-issue" href="https://github.com/ahdis/matchbox/issues/415" title="GitHub Issue: ahdis/matchbox #415">#415</a>)</li>
+<li>document validation parameters (<a class="magiclink magiclink-github magiclink-issue" href="https://github.com/ahdis/matchbox/issues/407" title="GitHub Issue: ahdis/matchbox #407">#407</a>)</li>
+<li>CDANarrative serialization issue (<a class="magiclink magiclink-github magiclink-issue" href="https://github.com/ahdis/matchbox/issues/417" title="GitHub Issue: ahdis/matchbox #417">#417</a>)</li>
+<li>add HL7 Terminology (THO) 6.5.0</li>
+</ul>
+<p>2025/07/01 Release 4.0.9</p>
+<ul>
+<li>unable to resolve resource with reference (<a class="magiclink magiclink-github magiclink-issue" href="https://github.com/ahdis/matchbox/issues/409" title="GitHub Issue: ahdis/matchbox #409">#409</a>)</li>
+<li>disableDefaultResource Fetcher provokes an error (<a class="magiclink magiclink-github magiclink-issue" href="https://github.com/ahdis/matchbox/issues/408" title="GitHub Issue: ahdis/matchbox #408">#408</a>)</li>
+<li>update org.hl7.fhir.core 6.5.27 (<a class="magiclink magiclink-github magiclink-issue" href="https://github.com/ahdis/matchbox/issues/411" title="GitHub Issue: ahdis/matchbox #411">#411</a>)</li>
+</ul>
+<p>2025/06/22 Release 4.0.8</p>
+<ul>
+<li>suppressErrors not taken into account on gazelle interface (<a class="magiclink magiclink-github magiclink-issue" href="https://github.com/ahdis/matchbox/issues/405" title="GitHub Issue: ahdis/matchbox #405">#405</a>)</li>
+</ul>
+<p>2025/06/18 Release 4.0.7</p>
+<ul>
+<li>fix security issues</li>
+</ul>
+<p>2025/06/15 Release 4.0.6</p>
+<ul>
+<li>fix capability statement for production mode (<a class="magiclink magiclink-github magiclink-issue" href="https://github.com/ahdis/matchbox/issues/399" title="GitHub Issue: ahdis/matchbox #399">#399</a>)</li>
+<li>allow llm api key to be set over gui (<a class="magiclink magiclink-github magiclink-issue" href="https://github.com/ahdis/matchbox/issues/392" title="GitHub Issue: ahdis/matchbox #392">#392</a>)</li>
+</ul>
+<p>2025/06/13 Release 4.0.5</p>
+<ul>
+<li>Add MCP Server integration (<a class="magiclink magiclink-github magiclink-issue" href="https://github.com/ahdis/matchbox/issues/398" title="GitHub Issue: ahdis/matchbox #398">#398</a>)</li>
+<li>suppress error messages for known issues (<a class="magiclink magiclink-github magiclink-issue" href="https://github.com/ahdis/matchbox/issues/395" title="GitHub Issue: ahdis/matchbox #395">#395</a>)</li>
+<li>unknown extensions should not raise an error for validation (IPS) (<a class="magiclink magiclink-github magiclink-issue" href="https://github.com/ahdis/matchbox/issues/394" title="GitHub Issue: ahdis/matchbox #394">#394</a>)</li>
+<li>Update org.hl7.fhir.core to 6.5.25</li>
+<li>SuppressError does not catch constraints (<a class="magiclink magiclink-github magiclink-issue" href="https://github.com/ahdis/matchbox/issues/401" title="GitHub Issue: ahdis/matchbox #401">#401</a>)</li>
+</ul>
+<p>2025/05/13 Release 4.0.4</p>
+<ul>
+<li>integrate with <a href="https://fhirpath-lab.com/FhirPath">https://fhirpath-lab.com/FhirPath</a> (<a class="magiclink magiclink-github magiclink-issue" href="https://github.com/ahdis/matchbox/issues/390" title="GitHub Issue: ahdis/matchbox #390">#390</a>) thx to <a class="magiclink magiclink-github magiclink-mention" href="https://github.com/brianpos" title="GitHub User: brianpos">@brianpos</a></li>
+<li>Validation Error: <a href="http://hl7.org/fhir/StructureDefinition/annotationType">http://hl7.org/fhir/StructureDefinition/annotationType</a> (<a class="magiclink magiclink-github magiclink-issue" href="https://github.com/ahdis/matchbox/issues/389" title="GitHub Issue: ahdis/matchbox #389">#389</a>)</li>
+<li>hl7.terminology 6.3.0 replace for hl7.terminology 6.2.0 (<a class="magiclink magiclink-github magiclink-issue" href="https://github.com/ahdis/matchbox/issues/384" title="GitHub Issue: ahdis/matchbox #384">#384</a>)</li>
+</ul>
+<p>2025/05/09 Release 4.0.3</p>
+<ul>
+<li>matchbox validation: fix ai analysis of xml resources (<a class="magiclink magiclink-github magiclink-issue" href="https://github.com/ahdis/matchbox/issues/378" title="GitHub Issue: ahdis/matchbox #378">#378</a>)</li>
+<li>Fix error thrown when opening a validation link in the GUI (<a class="magiclink magiclink-github magiclink-issue" href="https://github.com/ahdis/matchbox/issues/379" title="GitHub Issue: ahdis/matchbox #379">#379</a>)</li>
+<li>Remove <code>matchbox.fhir.context.fhirVersion</code>, use <code>hapi.fhir.fhir_version</code> instead (<a class="magiclink magiclink-github magiclink-issue" href="https://github.com/ahdis/matchbox/issues/382" title="GitHub Issue: ahdis/matchbox #382">#382</a>)</li>
+<li>API: Matchbox is more respectful of the 'Accept' header (format and FHIR version) (<a class="magiclink magiclink-github magiclink-issue" href="https://github.com/ahdis/matchbox/issues/382" title="GitHub Issue: ahdis/matchbox #382">#382</a>)</li>
+<li>Validation GUI: allow locking the profile selection (<a class="magiclink magiclink-github magiclink-issue" href="https://github.com/ahdis/matchbox/issues/385" title="GitHub Issue: ahdis/matchbox #385">#385</a>)</li>
+<li>Update org.hl7.fhir.core to 6.5.21</li>
+</ul>
+<p>2025/05/01 Release 4.0.2</p>
+<ul>
+<li>matchbox validation: html tags in result (<a class="magiclink magiclink-github magiclink-issue" href="https://github.com/ahdis/matchbox/issues/371" title="GitHub Issue: ahdis/matchbox #371">#371</a>)</li>
+<li>matchbox validation: make showMessagesFromReferences default to true (<a class="magiclink magiclink-github magiclink-issue" href="https://github.com/ahdis/matchbox/issues/370" title="GitHub Issue: ahdis/matchbox #370">#370</a>)</li>
+<li>matchbox validation: fix exception during ai validation (<a class="magiclink magiclink-github magiclink-issue" href="https://github.com/ahdis/matchbox/issues/375" title="GitHub Issue: ahdis/matchbox #375">#375</a>)</li>
+<li>Update org.hl7.fhir.core to 6.5.20</li>
+</ul>
+<p>2025/04/15 Release 4.0.1</p>
+<ul>
+<li>Fix handling of UTF-8 content in the validator GUI (<a class="magiclink magiclink-github magiclink-issue" href="https://github.com/ahdis/matchbox/issues/363" title="GitHub Issue: ahdis/matchbox #363">#363</a>)</li>
+<li>Update org.hl7.fhir.core to 6.5.18</li>
+<li>Incorporate PR for lookup with liquid templates <a href="https://github.com/hapifhir/org.hl7.fhir.core/issues/1942">https://github.com/hapifhir/org.hl7.fhir.core/issues/1942</a></li>
+<li>Add AI Analyze feature to validator (<a class="magiclink magiclink-github magiclink-issue" href="https://github.com/ahdis/matchbox/issues/350" title="GitHub Issue: ahdis/matchbox #350">#350</a>)</li>
+<li>FML: support resolve() for source thx to <a class="magiclink magiclink-github magiclink-mention" href="https://github.com/mrunibe" title="GitHub User: mrunibe">@mrunibe</a> </li>
+<li>FML: lexer errors swallowed (<a class="magiclink magiclink-github magiclink-issue" href="https://github.com/ahdis/matchbox/issues/367" title="GitHub Issue: ahdis/matchbox #367">#367</a>) thx to <a class="magiclink magiclink-github magiclink-mention" href="https://github.com/mrunibe" title="GitHub User: mrunibe">@mrunibe</a></li>
+</ul>
+<p>2025/03/19 Release 4.0.0</p>
+<ul>
+<li>Upgrade to HAPI 8.0.0 and FHIR Core 6.5.15, plus various other dependency upgrades</li>
+<li>Hide primitive/complex datatypes and logical models in the validators (<a class="magiclink magiclink-github magiclink-issue" href="https://github.com/ahdis/matchbox/issues/352" title="GitHub Issue: ahdis/matchbox #352">#352</a>)</li>
+<li>Fix handling of the hl7.fhir.uv.extensions packages (<a class="magiclink magiclink-github magiclink-issue" href="https://github.com/ahdis/matchbox/issues/343" title="GitHub Issue: ahdis/matchbox #343">#343</a>)</li>
+</ul>
+<p>2025/03/05 Release 3.9.13</p>
+<ul>
+<li>No more GUI version mismatch (<a class="magiclink magiclink-github magiclink-issue" href="https://github.com/ahdis/matchbox/issues/346" title="GitHub Issue: ahdis/matchbox #346">#346</a>)</li>
+<li>Support for bundle option to validate directly a resource within the bundle (<a class="magiclink magiclink-github magiclink-issue" href="https://github.com/ahdis/matchbox/issues/348" title="GitHub Issue: ahdis/matchbox #348">#348</a>)</li>
+<li>Automatically validate composition within bundle if profile can be deduced (<a class="magiclink magiclink-github magiclink-issue" href="https://github.com/ahdis/matchbox/issues/348" title="GitHub Issue: ahdis/matchbox #348">#348</a>)</li>
+<li>Update org.hl7.fhir.core to 6.5.9</li>
+</ul>
+<p>2025/02/05 Release 3.9.12</p>
+<ul>
+<li>Update org.hl7.fhir.core to 6.5.7 </li>
+<li>Update hl7.terminology.r4 to 6.2.0 (note you need to update your application.yaml) (<a class="magiclink magiclink-github magiclink-issue" href="https://github.com/ahdis/matchbox/issues/339" title="GitHub Issue: ahdis/matchbox #339">#339</a>)</li>
+<li>Validation GUI: handle non-200 responses that contain an OperationOutcome (<a class="magiclink magiclink-github magiclink-issue" href="https://github.com/ahdis/matchbox/issues/326" title="GitHub Issue: ahdis/matchbox #326">#326</a>)</li>
+<li>Set the right PostgreSQL dialect in Hibernate configuration (<a class="magiclink magiclink-github magiclink-issue" href="https://github.com/ahdis/matchbox/issues/321" title="GitHub Issue: ahdis/matchbox #321">#321</a>)</li>
+<li>Customize the NpmPackageVersionResourceEntities before saving them for the first time (<a class="magiclink magiclink-github magiclink-issue" href="https://github.com/ahdis/matchbox/issues/341" title="GitHub Issue: ahdis/matchbox #341">#341</a>)</li>
+<li>Optimize <code>NpmPackageIndexBuilder.seeFile</code> for memory consumption (<a class="magiclink magiclink-github magiclink-issue" href="https://github.com/ahdis/matchbox/issues/342" title="GitHub Issue: ahdis/matchbox #342">#342</a>)</li>
+<li>Matchbox too strict in document validation (<a class="magiclink magiclink-github magiclink-issue" href="https://github.com/ahdis/matchbox/issues/345" title="GitHub Issue: ahdis/matchbox #345">#345</a>)</li>
+<li>Duplicate ID for contained resource in IG Publisher 1.8.10 / core 6.5.7 (<a class="magiclink magiclink-github magiclink-issue" href="https://github.com/ahdis/matchbox/issues/344" title="GitHub Issue: ahdis/matchbox #344">#344</a>)</li>
+</ul>
+<p>2025/01/24 Release 3.9.11</p>
+<ul>
+<li>remove introduced FML limitation to R5 (<a class="magiclink magiclink-github magiclink-issue" href="https://github.com/ahdis/matchbox/issues/329" title="GitHub Issue: ahdis/matchbox #329">#329</a>), (<a class="magiclink magiclink-github magiclink-issue" href="https://github.com/ahdis/matchbox/issues/331" title="GitHub Issue: ahdis/matchbox #331">#331</a>) thanks <a class="magiclink magiclink-github magiclink-mention" href="https://github.com/mrunibe" title="GitHub User: mrunibe">@mrunibe</a> for PR's !</li>
+<li>load testing example for matchbox with jmeter</li>
+<li>memory leaks with precached implementation guides (<a class="magiclink magiclink-github magiclink-issue" href="https://github.com/ahdis/matchbox/issues/336" title="GitHub Issue: ahdis/matchbox #336">#336</a>)</li>
+<li>Update org.hl7.fhir.core to 6.5.5, additional validation parameters -check-references -resolution-context and -disableDefaultResourceFetcher (<a class="magiclink magiclink-github magiclink-issue" href="https://github.com/ahdis/matchbox/issues/334" title="GitHub Issue: ahdis/matchbox #334">#334</a>) and (<a class="magiclink magiclink-github magiclink-issue" href="https://github.com/ahdis/matchbox/issues/337" title="GitHub Issue: ahdis/matchbox #337">#337</a>)</li>
+</ul>
+<p>2025/01/13 Release 3.9.10</p>
+<ul>
+<li>Performance improvement fml parsing (<a class="magiclink magiclink-github magiclink-issue" href="https://github.com/ahdis/matchbox/issues/323" title="GitHub Issue: ahdis/matchbox #323">#323</a>)</li>
+<li>Update org.hl7.fhir.core to 6.5.4 and hapi-fhir to 7.6.1 </li>
+<li>Update integration tests with correct url</li>
+<li>make autoinstall new ig (<a class="magiclink magiclink-github magiclink-issue" href="https://github.com/ahdis/matchbox/issues/325" title="GitHub Issue: ahdis/matchbox #325">#325</a>)</li>
+<li>support for terminology servers which require authentication (<a class="magiclink magiclink-github magiclink-issue" href="https://github.com/ahdis/matchbox/issues/327" title="GitHub Issue: ahdis/matchbox #327">#327</a>), thanks <a class="magiclink magiclink-github magiclink-mention" href="https://github.com/echiu-infoway" title="GitHub User: echiu-infoway">@echiu-infoway</a> for support!</li>
+</ul>
+<p>2024/12/09 Release 3.9.9</p>
+<ul>
+<li>Upgrade org.hl7.fhir.core to 6.4.4 and hapi-fhir to 7.6.0</li>
+<li>Remove the <code>devMode</code> configuration parameter, it is now enabled when <code>httpReadOnly</code> is not (<a class="magiclink magiclink-github magiclink-issue" href="https://github.com/ahdis/matchbox/issues/315" title="GitHub Issue: ahdis/matchbox #315">#315</a>)</li>
+<li>Remove the <code>autoInstallMissingIgs</code> configuration parameter, it is now enabled when <code>httpReadOnly</code> is not (<a class="magiclink magiclink-github magiclink-issue" href="https://github.com/ahdis/matchbox/issues/315" title="GitHub Issue: ahdis/matchbox #315">#315</a>)</li>
+<li>Improve the Matchbox server documentation (<a class="magiclink magiclink-github magiclink-issue" href="https://github.com/ahdis/matchbox/issues/315" title="GitHub Issue: ahdis/matchbox #315">#315</a>)</li>
+<li>Respect the 'onlyOneEngine' mode in MappingLanguageInterceptor (<a class="magiclink magiclink-github magiclink-issue" href="https://github.com/ahdis/matchbox/issues/316" title="GitHub Issue: ahdis/matchbox #316">#316</a>)</li>
+<li>Use the proper encoding when returning a transformed resource (<a class="magiclink magiclink-github magiclink-issue" href="https://github.com/ahdis/matchbox/issues/318" title="GitHub Issue: ahdis/matchbox #318">#318</a>)</li>
+</ul>
+<p>2024/11/25 Release 3.9.8</p>
+<ul>
+<li>Allow providing map and models in the StructureMap $transform operation (<a class="magiclink magiclink-github magiclink-issue" href="https://github.com/ahdis/matchbox/issues/305" title="GitHub Issue: ahdis/matchbox #305">#305</a>)</li>
+<li>Introduce parameter 'autoInstallMissingIgs' to automatically install IGs from the public registry
+  (<a class="magiclink magiclink-github magiclink-issue" href="https://github.com/ahdis/matchbox/issues/306" title="GitHub Issue: ahdis/matchbox #306">#306</a>)</li>
+<li>Introduce the configuration parameter 'devMode' to enable the development environment; it allows installing an 
+  ImplementationGuide by posting its NPM package to the operation <em>$install-npm-package</em>
+  (<a class="magiclink magiclink-github magiclink-issue" href="https://github.com/ahdis/matchbox/issues/306" title="GitHub Issue: ahdis/matchbox #306">#306</a>)</li>
+<li>Add filtering to the list of StructureMaps in the GUI</li>
+<li>Move from the hash-based Angular routing to the path-based routing</li>
+<li>Upgrade hapifhir org.hl7.fhir.core to 6.4.2</li>
+<li>Upgrade hl7.terminology to 6.1.0 (<a class="magiclink magiclink-github magiclink-issue" href="https://github.com/ahdis/matchbox/issues/313" title="GitHub Issue: ahdis/matchbox #313">#313</a>)</li>
+</ul>
+<p>2024/11/13 Release 3.9.7</p>
+<ul>
+<li>Upgrade hapifhir org.hl7.fhir.core to 6.4.1</li>
+</ul>
+<p>2024/10/24 Release 3.9.6</p>
+<ul>
+<li>Remove lucene dependencies (<a class="magiclink magiclink-github magiclink-issue" href="https://github.com/ahdis/matchbox/issues/301" title="GitHub Issue: ahdis/matchbox #301">#301</a>)</li>
+</ul>
+<p>2024/10/24 Release 3.9.5</p>
+<ul>
+<li>Updated dependencies (<a class="magiclink magiclink-github magiclink-issue" href="https://github.com/ahdis/matchbox/issues/301" title="GitHub Issue: ahdis/matchbox #301">#301</a>)</li>
+</ul>
+<p>2024/10/17 Release 3.9.4</p>
+<ul>
+<li>Validation: Tutorial for validating FHIR resources with <a href="https://ahdis.github.io/matchbox/validation-tutorial/">matchbox</a></li>
+<li>Validation: add button to copy a direct link to the validation (<a class="magiclink magiclink-github magiclink-issue" href="https://github.com/ahdis/matchbox/issues/296" title="GitHub Issue: ahdis/matchbox #296">#296</a>)</li>
+<li>Validation: support additional validation parameters (<a class="magiclink magiclink-github magiclink-issue" href="https://github.com/ahdis/matchbox/issues/299" title="GitHub Issue: ahdis/matchbox #299">#299</a>)</li>
+<li>Validation: Allow validating a resource through the GUI with URL search parameters (<a class="magiclink magiclink-github magiclink-issue" href="https://github.com/ahdis/matchbox/issues/288" title="GitHub Issue: ahdis/matchbox #288">#288</a>)</li>
+<li>Validation: Terminology: support CodeableConcept in ValueSet/$validate operation (<a class="magiclink magiclink-github magiclink-issue" href="https://github.com/ahdis/matchbox/issues/291" title="GitHub Issue: ahdis/matchbox #291">#291</a>)</li>
+<li>FML: Use FMLParser in StructureMapUtilities and support for identity transform (<a class="magiclink magiclink-github magiclink-issue" href="https://github.com/ahdis/matchbox/issues/289" title="GitHub Issue: ahdis/matchbox #289">#289</a>)</li>
+<li>FML: FML transform performance tuning <a class="magiclink magiclink-github magiclink-issue" href="https://github.com/ahdis/matchbox/issues/264" title="GitHub Issue: ahdis/matchbox #264">#264</a> (via <a class="magiclink magiclink-github magiclink-mention" href="https://github.com/mrunibe" title="GitHub User: mrunibe">@mrunibe</a>)</li>
+<li>Gazelle reports: add test to ensure <a href="https://gazelle.ihe.net/jira/browse/EHS-831">https://gazelle.ihe.net/jira/browse/EHS-831</a> is fixed</li>
+<li>Upgrade hapifhir org.hl7.fhir.core to 6.3.32</li>
+</ul>
+<p>2024/10/07 Release 3.9.3</p>
+<ul>
+<li>Gazelle reports: add an information message if there are no other messages (<a class="magiclink magiclink-github magiclink-issue" href="https://github.com/ahdis/matchbox/issues/274" title="GitHub Issue: ahdis/matchbox #274">#274</a>)</li>
+<li>Additional tx Parameters txLog and txUseEcosystem (<a class="magiclink magiclink-github magiclink-issue" href="https://github.com/ahdis/matchbox/issues/281" title="GitHub Issue: ahdis/matchbox #281">#281</a>)</li>
+<li>FML: updates to work with fhir-mapping-tutorial (<a class="magiclink magiclink-github magiclink-issue" href="https://github.com/ahdis/matchbox/issues/283" title="GitHub Issue: ahdis/matchbox #283">#283</a>)</li>
+<li>Container: Create config directory already in base image (<a class="magiclink magiclink-github magiclink-issue" href="https://github.com/ahdis/matchbox/issues/284" title="GitHub Issue: ahdis/matchbox #284">#284</a>)</li>
+</ul>
+<p>2024/09/16 Release 3.9.2</p>
+<ul>
+<li>Fix security issues (<a class="magiclink magiclink-github magiclink-issue" href="https://github.com/ahdis/matchbox/issues/279" title="GitHub Issue: ahdis/matchbox #279">#279</a>)</li>
+<li>where clause on alias (<a class="magiclink magiclink-github magiclink-issue" href="https://github.com/ahdis/matchbox/issues/278" title="GitHub Issue: ahdis/matchbox #278">#278</a>)</li>
+</ul>
+<p>2024/09/16 Release 3.9.1</p>
+<ul>
+<li>Make CORS configurable, default not activated make cors configurable (now activated) (<a class="magiclink magiclink-github magiclink-issue" href="https://github.com/ahdis/matchbox/issues/271" title="GitHub Issue: ahdis/matchbox #271">#271</a>)</li>
+<li>server API FML transforms between different FHIR versions (R4, R4B, R5) (<a class="magiclink magiclink-github magiclink-issue" href="https://github.com/ahdis/matchbox/issues/265" title="GitHub Issue: ahdis/matchbox #265">#265</a>), set flag xVersion</li>
+<li>show a notification on errors in the validation GUI (<a class="magiclink magiclink-github magiclink-issue" href="https://github.com/ahdis/matchbox/issues/272" title="GitHub Issue: ahdis/matchbox #272">#272</a>)</li>
+<li>ignore info/warnings also in slicing info (<a class="magiclink magiclink-github magiclink-issue" href="https://github.com/ahdis/matchbox/issues/273" title="GitHub Issue: ahdis/matchbox #273">#273</a>)</li>
+<li>Gazelle validation reports with no issues should pass (<a class="magiclink magiclink-github magiclink-issue" href="https://github.com/ahdis/matchbox/issues/274" title="GitHub Issue: ahdis/matchbox #274">#274</a>)</li>
+<li>update frontend dependencies</li>
+<li>provide version-less Gazelle profiles for current packages (<a class="magiclink magiclink-github magiclink-issue" href="https://github.com/ahdis/matchbox/issues/276" title="GitHub Issue: ahdis/matchbox #276">#276</a>)</li>
+</ul>
+<p>2024/09/10 Release 3.9.0</p>
+<ul>
+<li>initial support for FML transforms between different FHIR versions (R4, R4B, R5) (<a class="magiclink magiclink-github magiclink-issue" href="https://github.com/ahdis/matchbox/issues/265" title="GitHub Issue: ahdis/matchbox #265">#265</a>), set flag xVersion</li>
+<li>support for FHIR R4B in engine and server (<a class="magiclink magiclink-github magiclink-issue" href="https://github.com/ahdis/matchbox/issues/65" title="GitHub Issue: ahdis/matchbox #65">#65</a>)</li>
+<li>upgrade to hapi-fhir 7.4.0 and org.hl7.fhir.core 6.3.24 (<a class="magiclink magiclink-github magiclink-issue" href="https://github.com/ahdis/matchbox/issues/267" title="GitHub Issue: ahdis/matchbox #267">#267</a>)</li>
+<li>Ignore info/warnings also in slicing info (<a class="magiclink magiclink-github magiclink-issue" href="https://github.com/ahdis/matchbox/issues/269" title="GitHub Issue: ahdis/matchbox #269">#269</a>)</li>
+</ul>
+<p>2024/08/13 Release 3.8.10</p>
+<ul>
+<li>upgrade graphql to fix <a href="https://github.com/ahdis/matchbox/security/code-scanning/83">CVE-2024-40094</a></li>
+<li>Server-Side Request Forgery in axios <a href="https://github.com/ahdis/matchbox/security/dependabot/117">#117</a></li>
+</ul>
+<p>2024/07/10 Release 3.8.9</p>
+<ul>
+<li>add support for dateTime (<a class="magiclink magiclink-github magiclink-issue" href="https://github.com/ahdis/matchbox/issues/243" title="GitHub Issue: ahdis/matchbox #243">#243</a>)</li>
+<li>fix code editor high-jacking of the search keyboard shortcut (CTRL + f) (<a class="magiclink magiclink-github magiclink-issue" href="https://github.com/ahdis/matchbox/issues/260" title="GitHub Issue: ahdis/matchbox #260">#260</a>)</li>
+<li>upgrade Tomcat to fix <a href="https://github.com/ahdis/matchbox/security/dependabot/115">CVE-2024-34750</a></li>
+</ul>
+<p>2024/06/25 Release 3.8.8</p>
+<ul>
+<li>validation for 3 letter country codes (<a class="magiclink magiclink-github magiclink-issue" href="https://github.com/ahdis/matchbox/issues/259" title="GitHub Issue: ahdis/matchbox #259">#259</a>)</li>
+<li>making caching of txServer configurable</li>
+<li>add support for dateTime (<a class="magiclink magiclink-github magiclink-issue" href="https://github.com/ahdis/matchbox/issues/243" title="GitHub Issue: ahdis/matchbox #243">#243</a>)</li>
+</ul>
+<p>2024/06/24 Release 3.8.7</p>
+<ul>
+<li>docker image for v3.8.6 not starting up (<a class="magiclink magiclink-github magiclink-issue" href="https://github.com/ahdis/matchbox/issues/258" title="GitHub Issue: ahdis/matchbox #258">#258</a>)</li>
+</ul>
+<p>2024/06/24 Release 3.8.6</p>
+<ul>
+<li>fhirpath date add/minus with variables in fml (<a class="magiclink magiclink-github magiclink-issue" href="https://github.com/ahdis/matchbox/issues/243" title="GitHub Issue: ahdis/matchbox #243">#243</a>)</li>
+<li>update to published CDA FHIR logical model with matchbox patches 2.0.0-sd (<a class="magiclink magiclink-github magiclink-issue" href="https://github.com/ahdis/matchbox/issues/241" title="GitHub Issue: ahdis/matchbox #241">#241</a>)</li>
+<li>update frontend for high security vulnerabilities (<a class="magiclink magiclink-github magiclink-issue" href="https://github.com/ahdis/matchbox/issues/246" title="GitHub Issue: ahdis/matchbox #246">#246</a>)</li>
+<li>CH:IPS validation problem (<a class="magiclink magiclink-github magiclink-issue" href="https://github.com/ahdis/matchbox/issues/248" title="GitHub Issue: ahdis/matchbox #248">#248</a>)</li>
+<li>improved the validation GUI (<a class="magiclink magiclink-github magiclink-issue" href="https://github.com/ahdis/matchbox/issues/242" title="GitHub Issue: ahdis/matchbox #242">#242</a>), upgraded to angular@18</li>
+<li>update to hl7.fhir.core 6.3.11 (<a class="magiclink magiclink-github magiclink-issue" href="https://github.com/ahdis/matchbox/issues/254" title="GitHub Issue: ahdis/matchbox #254">#254</a>)</li>
+<li>fixed validation problems (<a class="magiclink magiclink-github magiclink-issue" href="https://github.com/ahdis/matchbox/issues/250" title="GitHub Issue: ahdis/matchbox #250">#250</a>),(<a class="magiclink magiclink-github magiclink-issue" href="https://github.com/ahdis/matchbox/issues/251" title="GitHub Issue: ahdis/matchbox #251">#251</a>),(<a class="magiclink magiclink-github magiclink-issue" href="https://github.com/ahdis/matchbox/issues/252" title="GitHub Issue: ahdis/matchbox #252">#252</a>)</li>
+<li>enable Terminology Caching (<a class="magiclink magiclink-github magiclink-issue" href="https://github.com/ahdis/matchbox/issues/257" title="GitHub Issue: ahdis/matchbox #257">#257</a>)</li>
+</ul>
+<p>2024/06/14 Release 3.8.5</p>
+<ul>
+<li>Exception when using internal terminology server (<a class="magiclink magiclink-github magiclink-issue" href="https://github.com/ahdis/matchbox/issues/236" title="GitHub Issue: ahdis/matchbox #236">#236</a>)</li>
+<li>Extension profiles are not shown for validation anymore (<a class="magiclink magiclink-github magiclink-issue" href="https://github.com/ahdis/matchbox/issues/237" title="GitHub Issue: ahdis/matchbox #237">#237</a>)</li>
+<li>Ignore suppressWarnInfo Version independent (<a class="magiclink magiclink-github magiclink-issue" href="https://github.com/ahdis/matchbox/issues/239" title="GitHub Issue: ahdis/matchbox #239">#239</a>)</li>
+</ul>
+<p>2024/05/27 Release 3.8.4</p>
+<ul>
+<li>R5 validation problem from EVS Client (<a class="magiclink magiclink-github magiclink-issue" href="https://github.com/ahdis/matchbox/issues/234" title="GitHub Issue: ahdis/matchbox #234">#234</a>)</li>
+<li>IPS validation with unknown extensions should not give an error (<a class="magiclink magiclink-github magiclink-issue" href="https://github.com/ahdis/matchbox/issues/233" title="GitHub Issue: ahdis/matchbox #233">#233</a>) </li>
+<li>Only download NPM package from localhost or ci-build if already installed in container (<a class="magiclink magiclink-github magiclink-issue" href="https://github.com/ahdis/matchbox/issues/232" title="GitHub Issue: ahdis/matchbox #232">#232</a>)</li>
+</ul>
+<p>2024/04/29 Release 3.8.3</p>
+<ul>
+<li>profile validation with different ig version issues, GUI &amp; EVS Client (<a class="magiclink magiclink-github magiclink-issue" href="https://github.com/ahdis/matchbox/issues/225" title="GitHub Issue: ahdis/matchbox #225">#225</a>)</li>
+<li>improved the profile selection in the validation GUI</li>
+<li>FML: Side effect exception when updating a StructureMap (<a class="magiclink magiclink-github magiclink-issue" href="https://github.com/ahdis/matchbox/issues/227" title="GitHub Issue: ahdis/matchbox #227">#227</a>)</li>
+</ul>
+<p>2024/04/22 Release 3.8.2</p>
+<ul>
+<li>Improvements in the Gazelle validation API</li>
+<li>Upgrade to Spring 6.1.6 to fix <a href="https://github.com/ahdis/matchbox/security/code-scanning/59">CVE-2024-22262</a></li>
+<li>Fix <a href="https://nvd.nist.gov/vuln/detail/CVE-2023-4043">CVE-2023-4043</a></li>
+<li>Upgrade to HAPI FHIR 7.0.2 and org.hl7.fhir.core 6.3.5 (<a class="magiclink magiclink-github magiclink-issue" href="https://github.com/ahdis/matchbox/issues/222" title="GitHub Issue: ahdis/matchbox #222">#222</a>)</li>
+</ul>
+<p>2024/04/09 Release 3.8.1</p>
+<ul>
+<li>update to latest cda logical model 2.0.0-sd-snapshot1 (CDA Serialization issue) (<a class="magiclink magiclink-github magiclink-issue" href="https://github.com/ahdis/matchbox/issues/196" title="GitHub Issue: ahdis/matchbox #196">#196</a>)</li>
+<li>adapt the simple terminology server to the new API (<a class="magiclink magiclink-github magiclink-issue" href="https://github.com/ahdis/matchbox/issues/217" title="GitHub Issue: ahdis/matchbox #217">#217</a>)</li>
+<li>loading of ig's in dev mode into engine (<a class="magiclink magiclink-github magiclink-issue" href="https://github.com/ahdis/matchbox/issues/219" title="GitHub Issue: ahdis/matchbox #219">#219</a>)</li>
+<li>upgrade to JDK 21 (LTS)</li>
+<li>Path traversal in webpack-dev-middleware (<a class="magiclink magiclink-github magiclink-issue" href="https://github.com/ahdis/matchbox/issues/221" title="GitHub Issue: ahdis/matchbox #221">#221</a>)</li>
+</ul>
+<p>2024/03/19 Release 3.8.0</p>
+<ul>
+<li><code>docker pull europe-west6-docker.pkg.dev/ahdis-ch/ahdis/matchbox:v3.8.0</code></li>
+<li>update to fhir.core.version 6.3.2 (<a class="magiclink magiclink-github magiclink-issue" href="https://github.com/ahdis/matchbox/issues/210" title="GitHub Issue: ahdis/matchbox #210">#210</a>)</li>
+<li>support for target CDA observation.value as xsi:type CS (<a class="magiclink magiclink-github magiclink-issue" href="https://github.com/ahdis/matchbox/issues/205" title="GitHub Issue: ahdis/matchbox #205">#205</a>)</li>
+<li>update to latest cda logical model 2.0.0-sd-snapshot1 (Note: breaking changes for existing CDA to FHIR maps, see details in issue) (<a class="magiclink magiclink-github magiclink-issue" href="https://github.com/ahdis/matchbox/issues/196" title="GitHub Issue: ahdis/matchbox #196">#196</a>)</li>
+<li>Update to Spring 6.1.5 to fix <a href="https://github.com/ahdis/matchbox/security/dependabot/105">CVE-2024-22259</a></li>
+<li>Update to Tomcat 10.1.19 to fix <a href="https://github.com/ahdis/matchbox/security/dependabot/104">CVE-2024-24549</a></li>
+<li>Update frontend dependencies</li>
+<li>Fixed invalid imports in FhirPathR4 <a href="https://github.com/ahdis/matchbox-int-tests/issues/5">#5</a></li>
+</ul>
+<p>2024/03/07 Release 3.7.0</p>
+<ul>
+<li><code>docker pull europe-west6-docker.pkg.dev/ahdis-ch/ahdis/matchbox:v3.7.0</code></li>
+<li>Implemented the new Gazelle validation API (<a class="magiclink magiclink-github magiclink-issue" href="https://github.com/ahdis/matchbox/issues/141" title="GitHub Issue: ahdis/matchbox #141">#141</a>)</li>
+<li>Fixed some validation GUI issues (<a class="magiclink magiclink-github magiclink-issue" href="https://github.com/ahdis/matchbox/issues/207" title="GitHub Issue: ahdis/matchbox #207">#207</a>)</li>
+<li>Renamed the keyword "current" to "last" for Implementation Guide versions (<a class="magiclink magiclink-github magiclink-issue" href="https://github.com/ahdis/matchbox/issues/206" title="GitHub Issue: ahdis/matchbox #206">#206</a>)</li>
+<li>Added support for R5 (<a class="magiclink magiclink-github magiclink-issue" href="https://github.com/ahdis/matchbox/issues/55" title="GitHub Issue: ahdis/matchbox #55">#55</a>)</li>
+<li>Fixed an XXE vulnerability in the XmlParser <a href="https://github.com/ahdis/matchbox/security/code-scanning/45">#45</a></li>
+<li>Upgraded to HAPI FHIR 7.0.1</li>
+</ul>
+<p>2024/02/28 Release 3.6.1</p>
+<ul>
+<li><code>docker pull europe-west6-docker.pkg.dev/ahdis-ch/ahdis/matchbox:v3.6.1</code></li>
+<li>Fixed support for the date format <code>YYYYMMDDHHMMSS.UUUU[+|-ZZzz]</code> (<a class="magiclink magiclink-github magiclink-issue" href="https://github.com/ahdis/matchbox/issues/202" title="GitHub Issue: ahdis/matchbox #202">#202</a>)</li>
+</ul>
+<p>2024/02/27 Release 3.6.0</p>
+<ul>
+<li><code>docker pull europe-west6-docker.pkg.dev/ahdis-ch/ahdis/matchbox:v3.6.0</code></li>
+<li>Upgraded to HAPI FHIR 7.0.0 and org.hl7.fhir.core 6.1.2.2 (<a class="magiclink magiclink-github magiclink-issue" href="https://github.com/ahdis/matchbox/issues/191" title="GitHub Issue: ahdis/matchbox #191">#191</a>)</li>
+<li>Added matchbox validation API tests (<a class="magiclink magiclink-github magiclink-issue" href="https://github.com/ahdis/matchbox/issues/193" title="GitHub Issue: ahdis/matchbox #193">#193</a>)</li>
+</ul>
+<p>2024/01/31 Release 3.5.4</p>
+<ul>
+<li><code>docker pull europe-west6-docker.pkg.dev/ahdis-ch/ahdis/matchbox:v3.5.4</code></li>
+<li>The application now stops if it fails to load an IG, instead of continuing running without an engine (<a class="magiclink magiclink-github magiclink-issue" href="https://github.com/ahdis/matchbox/issues/171" title="GitHub Issue: ahdis/matchbox #171">#171</a>)</li>
+<li>GUI: improved the validation interface (<a class="magiclink magiclink-github magiclink-issue" href="https://github.com/ahdis/matchbox/issues/177" title="GitHub Issue: ahdis/matchbox #177">#177</a>)</li>
+<li>Dependency upgrade to fix various security issues (see <a href="https://github.com/ahdis/matchbox/security/dependabot">https://github.com/ahdis/matchbox/security/dependabot</a> and 
+  <a href="https://github.com/ahdis/matchbox/security/code-scanning">https://github.com/ahdis/matchbox/security/code-scanning</a>)</li>
+<li>Added security scanners for the Java code, Java dependencies and Docker image</li>
+</ul>
+<p>2024/01/05 Release 3.5.3</p>
+<ul>
+<li><code>docker pull europe-west6-docker.pkg.dev/ahdis-ch/ahdis/matchbox:v3.5.3</code></li>
+<li>Updated <code>hl7.terminology</code> from 5.3.0 to 5.4.0 (<a class="magiclink magiclink-github magiclink-issue" href="https://github.com/ahdis/matchbox/issues/174" title="GitHub Issue: ahdis/matchbox #174">#174</a>)</li>
+<li>Prevented initializing a matchbox engine in <code>only_load_packages</code> mode (<a class="magiclink magiclink-github magiclink-issue" href="https://github.com/ahdis/matchbox/issues/172" title="GitHub Issue: ahdis/matchbox #172">#172</a>)</li>
+<li>Fixed the issue count in validation results (<a class="magiclink magiclink-github magiclink-issue" href="https://github.com/ahdis/matchbox/issues/173" title="GitHub Issue: ahdis/matchbox #173">#173</a>)</li>
+<li>Improved the validation interface</li>
+<li>GUI: updated to Angular 17</li>
+</ul>
+<p>2023/12/27 Release 3.5.2</p>
+<ul>
+<li><code>docker pull europe-west6-docker.pkg.dev/ahdis-ch/ahdis/matchbox:v3.5.2</code></li>
+<li>IG ballot versions are not considered "current" if the same version, non-balloted is also loaded (<a class="magiclink magiclink-github magiclink-issue" href="https://github.com/ahdis/matchbox/issues/168" title="GitHub Issue: ahdis/matchbox #168">#168</a>)</li>
+<li>Removed wrong warning about R5 specials not being loaded (<a class="magiclink magiclink-github magiclink-issue" href="https://github.com/ahdis/matchbox/issues/167" title="GitHub Issue: ahdis/matchbox #167">#167</a>)</li>
+<li>Fixed loading of hl7.terminology (<a class="magiclink magiclink-github magiclink-issue" href="https://github.com/ahdis/matchbox/issues/166" title="GitHub Issue: ahdis/matchbox #166">#166</a>)</li>
+<li>Added onlyOneEngine and httpReadOnly flags to the validation OperationOutcome (<a class="magiclink magiclink-github magiclink-issue" href="https://github.com/ahdis/matchbox/issues/164" title="GitHub Issue: ahdis/matchbox #164">#164</a>)</li>
+<li>Implemented feature to suppress warning/information-level issues from validation result (<a class="magiclink magiclink-github magiclink-issue" href="https://github.com/ahdis/matchbox/issues/163" title="GitHub Issue: ahdis/matchbox #163">#163</a>)</li>
+<li>Fixed configuration of the terminology server when onlyOneEngine mode is used (<a class="magiclink magiclink-github magiclink-issue" href="https://github.com/ahdis/matchbox/issues/160" title="GitHub Issue: ahdis/matchbox #160">#160</a>)</li>
+<li>Improved common error messages about engine malfunctions (<a class="magiclink magiclink-github magiclink-issue" href="https://github.com/ahdis/matchbox/issues/159" title="GitHub Issue: ahdis/matchbox #159">#159</a>)</li>
+<li>Improved waiting loop for the validation engine initialization (you should not get the "engine not ready" error 
+  message anymore)</li>
+<li>Reworked exception handling and logging in the validation engine</li>
+<li>Updated the validation OperationOutcome to include more information, the GUI was also updated</li>
+</ul>
+<p>2023/12/11 Release 3.5.1</p>
+<ul>
+<li><code>docker pull europe-west6-docker.pkg.dev/ahdis-ch/ahdis/matchbox:v3.5.1</code></li>
+<li>The terminology system advertises support for more code systems</li>
+</ul>
+<p>2023/12/08 Release 3.5.0</p>
+<ul>
+<li><code>docker pull europe-west6-docker.pkg.dev/ahdis-ch/ahdis/matchbox:v3.5.0</code></li>
+<li>Upgraded to HAPI FHIR 6.10.0 and Core 6.1.16</li>
+<li>Implemented an HTTP read-only mode (<a class="magiclink magiclink-github magiclink-issue" href="https://github.com/ahdis/matchbox/issues/158" title="GitHub Issue: ahdis/matchbox #158">#158</a>)</li>
+<li>Implemented a simple terminology server for offline validation (<a class="magiclink magiclink-github magiclink-issue" href="https://github.com/ahdis/matchbox/issues/152" title="GitHub Issue: ahdis/matchbox #152">#152</a>)</li>
+<li>Upgraded logback to fix CVE-2023-6378</li>
+<li>Fixed a bug in package loading on Windows filesystem</li>
+</ul>
+<p>2023/10/05 Release 3.4.5</p>
+<ul>
+<li><code>docker pull europe-west6-docker.pkg.dev/ahdis-ch/ahdis/matchbox:v3.4.5</code></li>
+<li>CDA Logical Model update for xsi-type ST (<a class="magiclink magiclink-github magiclink-issue" href="https://github.com/ahdis/matchbox/issues/145" title="GitHub Issue: ahdis/matchbox #145">#145</a>)</li>
+</ul>
+<p>2023/10/03 Release 3.4.4</p>
+<ul>
+<li><code>docker pull europe-west6-docker.pkg.dev/ahdis-ch/ahdis/matchbox:v3.4.4</code></li>
+<li>CDA Logical Model update for xsi-type ST (<a class="magiclink magiclink-github magiclink-issue" href="https://github.com/ahdis/matchbox/issues/145" title="GitHub Issue: ahdis/matchbox #145">#145</a>)</li>
+<li>update hl7.terminology package from 5.1.0 to 5.3.0 (<a class="magiclink magiclink-github magiclink-issue" href="https://github.com/ahdis/matchbox/issues/146" title="GitHub Issue: ahdis/matchbox #146">#146</a>)</li>
+<li>Validation: Upload of new IG over API does not configure it for validation (<a class="magiclink magiclink-github magiclink-issue" href="https://github.com/ahdis/matchbox/issues/144" title="GitHub Issue: ahdis/matchbox #144">#144</a>)</li>
+</ul>
+<p>2023/09/20 Release 3.4.3</p>
+<ul>
+<li><code>docker pull europe-west6-docker.pkg.dev/ahdis-ch/ahdis/matchbox:v3.4.3</code></li>
+<li>FML: Contained ConceptMap in StructureMap does not work for transformation (<a class="magiclink magiclink-github magiclink-issue" href="https://github.com/ahdis/matchbox/issues/137" title="GitHub Issue: ahdis/matchbox #137">#137</a>)</li>
+<li>FML: POST / PUT for StructureMap should return HTTP error code 404 instead of 200 in deployment mode (<a class="magiclink magiclink-github magiclink-issue" href="https://github.com/ahdis/matchbox/issues/133" title="GitHub Issue: ahdis/matchbox #133">#133</a>)</li>
+<li>FHIR Validation problem with not support R5 extensions (<a class="magiclink magiclink-github magiclink-issue" href="https://github.com/ahdis/matchbox/issues/135" title="GitHub Issue: ahdis/matchbox #135">#135</a>)</li>
+<li>FHIR Validation Errors for display values should only be warnings (<a class="magiclink magiclink-github magiclink-issue" href="https://github.com/ahdis/matchbox/issues/132" title="GitHub Issue: ahdis/matchbox #132">#132</a>)</li>
+<li>GET all and query for url is not working in development mode (<a class="magiclink magiclink-github magiclink-issue" href="https://github.com/ahdis/matchbox/issues/129" title="GitHub Issue: ahdis/matchbox #129">#129</a>)</li>
+<li>matchbox app assumed matchboxv3 as the app location (<a class="magiclink magiclink-github magiclink-issue" href="https://github.com/ahdis/matchbox/issues/128" title="GitHub Issue: ahdis/matchbox #128">#128</a>)</li>
+<li>FHIR R4 validation error with cross version Extension for R5 (<a class="magiclink magiclink-github magiclink-issue" href="https://github.com/ahdis/matchbox/issues/138" title="GitHub Issue: ahdis/matchbox #138">#138</a>)</li>
+</ul>
+<p>2023/09/05 Release 3.4.2</p>
+<ul>
+<li><code>docker pull europe-west6-docker.pkg.dev/ahdis-ch/ahdis/matchbox:v3.4.2</code></li>
+<li>Query all conformance resources by type (<a class="magiclink magiclink-github magiclink-issue" href="https://github.com/ahdis/matchbox/issues/129" title="GitHub Issue: ahdis/matchbox #129">#129</a>)</li>
+</ul>
+<p>2023/09/04 Release 3.4.1</p>
+<ul>
+<li><code>docker pull europe-west6-docker.pkg.dev/ahdis-ch/ahdis/matchbox:v3.4.1</code></li>
+<li>development mode to create conformance resources (<a class="magiclink magiclink-github magiclink-issue" href="https://github.com/ahdis/matchbox/issues/125" title="GitHub Issue: ahdis/matchbox #125">#125</a>)</li>
+<li>matchbox version in capability statement <a href="https://github.com/ahdis/matchbox/issues/126">matchbox#126</a></li>
+</ul>
+<p>2023/08/30 Release 3.4.0</p>
+<ul>
+<li><code>docker pull europe-west6-docker.pkg.dev/ahdis-ch/ahdis/matchbox:v3.4.0</code></li>
+<li>Updated to HAPI FHIR 6.8.0 and Core 6.0.22</li>
+<li>Added support for custom paths with the filesystem package cache manager</li>
+</ul>
+<p>2023/08/09 Release 3.3.3</p>
+<ul>
+<li><code>docker pull europe-west6-docker.pkg.dev/ahdis-ch/ahdis/matchbox:v3.3.3</code></li>
+<li>Upgraded Jackson to allow parsing longer JSON documents</li>
+</ul>
+<p>2023/08/09 Release 3.3.2</p>
+<ul>
+<li><code>docker pull europe-west6-docker.pkg.dev/ahdis-ch/ahdis/matchbox:v3.3.2</code></li>
+<li>Increased the max heap to 2.5 giga to allow loading more IGs</li>
+</ul>
+<p>2023/07/27 Release 3.3.1</p>
+<ul>
+<li><code>docker pull europe-west6-docker.pkg.dev/ahdis-ch/ahdis/matchbox:v3.3.1</code></li>
+<li>Updated to HAPI FHIR 6.6.2</li>
+<li>GUI: updated to Angular 16</li>
+<li>Fix hl7#terminology version in MatchboxEngineSupport</li>
+<li>GUI: all IGs are now showing, fixes <a class="magiclink magiclink-github magiclink-issue" href="https://github.com/ahdis/matchbox/issues/119" title="GitHub Issue: ahdis/matchbox #119">#119</a></li>
+<li>GUI: remove the backend URL field, fixes <a class="magiclink magiclink-github magiclink-issue" href="https://github.com/ahdis/matchbox/issues/84" title="GitHub Issue: ahdis/matchbox #84">#84</a></li>
+<li>Improve the MatchboxEngineBuilder, fixes <a class="magiclink magiclink-github magiclink-issue" href="https://github.com/ahdis/matchbox/issues/113" title="GitHub Issue: ahdis/matchbox #113">#113</a></li>
+<li>Prepare for R4B/R5 support</li>
+</ul>
+<p>2023/07/10 Release 3.3.0</p>
+<ul>
+<li><code>docker pull europe-west6-docker.pkg.dev/ahdis-ch/ahdis/matchbox:v3.3.0</code></li>
+<li>Updated to Core 6.0.1 and hapi-fhir 6.6.0</li>
+<li>Updated to hl7#terminology 5.1.0</li>
+<li>Loaded hl7.fhir.uv.extensions.r4 1.0.0</li>
+<li>Improved testing</li>
+</ul>
+<p>2023/05/15 Release 3.2.3</p>
+<ul>
+<li><code>docker pull europe-west6-docker.pkg.dev/ahdis-ch/ahdis/matchbox:v3.2.3</code></li>
+<li>fix validation engine caching mechanism</li>
+</ul>
+<p>2023/05/08 Release 3.2.2</p>
+<ul>
+<li>docker pull europe-west6-docker.pkg.dev/ahdis-ch/ahdis/matchbox:v3.2.2</li>
+<li>dependency upgrade (core 5.6.971, HAPI 6.4.4, Spring 5.3.27, Spring Boot 2.7.11)</li>
+<li>replaced IgLoaderFromClassPath with #loadPackage()</li>
+</ul>
+<p>2023/04/05 Release 3.2.1</p>
+<ul>
+<li>docker pull \
+   europe-west6-docker.pkg.dev/ahdis-ch/ahdis/matchbox:v3.2.1</li>
+<li>reenable proxy support for downloading packages</li>
+<li>update to core 5.6.116</li>
+</ul>
+<p>2023/03/06 Release 3.2.0</p>
+<ul>
+<li>updated CDA core logical model 2.0 and added tests</li>
+<li>docker multiarchitecture support and ci-build setup (<a class="magiclink magiclink-github magiclink-issue" href="https://github.com/ahdis/matchbox/issues/76" title="GitHub Issue: ahdis/matchbox #76">#76</a>)</li>
+<li>proxy support for downloading packages, thanks <a class="magiclink magiclink-github magiclink-mention" href="https://github.com/ValentinLorand" title="GitHub User: ValentinLorand">@ValentinLorand</a> for your <a href="https://github.com/ahdis/matchbox/pull/74">PR</a>, (<a class="magiclink magiclink-github magiclink-issue" href="https://github.com/ahdis/matchbox/issues/76" title="GitHub Issue: ahdis/matchbox #76">#76</a>)</li>
+<li>matchbox-server: disable caching for specific engines / implementation guides (<a class="magiclink magiclink-github magiclink-issue" href="https://github.com/ahdis/matchbox/issues/77" title="GitHub Issue: ahdis/matchbox #77">#77</a>)</li>
+<li>update to core 5.6.100 and hapi-fhir 5.4.1 for r4 and r5 maps support (<a class="magiclink magiclink-github magiclink-issue" href="https://github.com/ahdis/matchbox/issues/81" title="GitHub Issue: ahdis/matchbox #81">#81</a>)</li>
+</ul>
+<p>2023/02/01 Release 3.1.0</p>
+<ul>
+<li>Reenable FHIR Mapping Language tutorial, xml and json issues with matchbox (<a class="magiclink magiclink-github magiclink-issue" href="https://github.com/ahdis/matchbox/issues/51" title="GitHub Issue: ahdis/matchbox #51">#51</a>)</li>
+<li>Enable create and update on conformance resources (<a class="magiclink magiclink-github magiclink-issue" href="https://github.com/ahdis/matchbox/issues/70" title="GitHub Issue: ahdis/matchbox #70">#70</a>), valid for 60 minutes (not persisting)</li>
+<li>GUI: more intuitive order for validation (<a class="magiclink magiclink-github magiclink-issue" href="https://github.com/ahdis/matchbox/issues/69" title="GitHub Issue: ahdis/matchbox #69">#69</a>)</li>
+<li>GUI: paged ig's page does not work (<a class="magiclink magiclink-github magiclink-issue" href="https://github.com/ahdis/matchbox/issues/67" title="GitHub Issue: ahdis/matchbox #67">#67</a>)</li>
+<li>Update to <a href="https://github.com/hapifhir/org.hl7.fhir.core/releases/tag/5.6.92">https://github.com/hapifhir/org.hl7.fhir.core/releases/tag/5.6.92</a> and hapi-fhir 6.2.5</li>
+<li>validation difference to HL7 FHIR validator (<a class="magiclink magiclink-github magiclink-issue" href="https://github.com/ahdis/matchbox/issues/71" title="GitHub Issue: ahdis/matchbox #71">#71</a>): only selected ig (and dependencies) for selected canonical will be used for validation if configured on matchbox (including no dynamic loading of packages depending on meta.profile)</li>
+<li>spurios validation erros with package validation (<a class="magiclink magiclink-github magiclink-issue" href="https://github.com/ahdis/matchbox/issues/72" title="GitHub Issue: ahdis/matchbox #72">#72</a>)</li>
+<li>Fixed package configuration, not loading additional ig / conformance resources (<a class="magiclink magiclink-github magiclink-issue" href="https://github.com/ahdis/matchbox/issues/71" title="GitHub Issue: ahdis/matchbox #71">#71</a>)</li>
+<li>loading IG from package by filepath does not work (<a class="magiclink magiclink-github magiclink-issue" href="https://github.com/ahdis/matchbox/issues/26" title="GitHub Issue: ahdis/matchbox #26">#26</a>)</li>
+<li>base release with no ig's configured: docker pull eu.gcr.io/fhir-ch/matchbox:v313</li>
+</ul>
+<p>2023/01/16 Release 3.0.0</p>
+<ul>
+<li>Update to <a href="https://github.com/hapifhir/org.hl7.fhir.core/releases/tag/5.6.88">https://github.com/hapifhir/org.hl7.fhir.core/releases/tag/5.6.88</a></li>
+<li>Extracting matchbox-engine out of matchbox for validation and transformation with standalone validation engine</li>
+<li>CDA transformation: Updating to latest <a href="cda-logical-model/index.html">CDA Core 2.0 logical model</a> with lab/pharm additions, <a href="https://github.com/ahdis/cda-core-2.0/releases/download/v0.0.4-dev/cda-core-2.0.2.1.0-cibuild.tgz">package</a></li>
+<li>matchbox-server for validation and transformation but not storage of FHIR resources</li>
+<li>cda to fhir: decimal in cda allows spaces (<a class="magiclink magiclink-github magiclink-issue" href="https://github.com/ahdis/matchbox/issues/62" title="GitHub Issue: ahdis/matchbox #62">#62</a>)</li>
+<li>Mapping of xmlText fails (<a class="magiclink magiclink-github magiclink-issue" href="https://github.com/ahdis/matchbox/issues/61" title="GitHub Issue: ahdis/matchbox #61">#61</a>)</li>
+<li>removing questionnaire viewer and mobile access gateway gui</li>
+</ul>
+<p>2022/09/11 Release 2.4.0</p>
+<ul>
+<li>hapi-fhir 6.2.0 and org.hl7.fhir.core 5.6.43</li>
+<li>update mobile access</li>
+<li><a class="magiclink magiclink-github magiclink-issue" href="https://github.com/ahdis/ihe.iti.pmir/issues/1" title="GitHub Issue: ahdis/ihe.iti.pmir #1">ihe.iti.pmir#1</a>.5.0 cannot be uploaded to matchbox (<a class="magiclink magiclink-github magiclink-issue" href="https://github.com/ahdis/matchbox/issues/59" title="GitHub Issue: ahdis/matchbox #59">#59</a>): removed Subscription from resources to import</li>
+<li>show all cda2fhir and fhir2cda maps (<a class="magiclink magiclink-github magiclink-issue" href="https://github.com/ahdis/matchbox/issues/58" title="GitHub Issue: ahdis/matchbox #58">#58</a>)</li>
+<li>hapi.fhir.version: 6.2.0-PRE5-SNAPSHOT and fhir.core.version 5.6.65</li>
+</ul>
+<p>2022/07/11 Release 2.3.0</p>
+<ul>
+<li>favicon fixed (<a class="magiclink magiclink-github magiclink-issue" href="https://github.com/ahdis/matchbox/issues/53" title="GitHub Issue: ahdis/matchbox #53">#53</a>)</li>
+<li>add possiblity to add a static file location (<a class="magiclink magiclink-github magiclink-issue" href="https://github.com/ahdis/matchbox/issues/57" title="GitHub Issue: ahdis/matchbox #57">#57</a>)</li>
+</ul>
+<p>2022/06/08 Release 2.2.0</p>
+<ul>
+<li>FHIR Mapping Language tutorial, xml and json issues (<a class="magiclink magiclink-github magiclink-issue" href="https://github.com/ahdis/matchbox/issues/51" title="GitHub Issue: ahdis/matchbox #51">#51</a>)</li>
+<li>base release with no ig's configured: docker pull eu.gcr.io/fhir-ch/matchbox:v220</li>
+</ul>
+<p>2022/05/25 Release 2.1.0</p>
+<ul>
+<li>hapi-fhir 6.0.0 and org.hl7.fhir.core 5.6.43</li>
+<li>Validation: CapabilityStatement caching fixed (<a class="magiclink magiclink-github magiclink-issue" href="https://github.com/ahdis/matchbox/issues/43" title="GitHub Issue: ahdis/matchbox #43">#43</a>)</li>
+<li>prototype <a href="http://hl7.org/fhir/uv/sdc/OperationDefinition-Questionnaire-assemble.html">SDC $assembly operation</a> (<a class="magiclink magiclink-github magiclink-issue" href="https://github.com/ahdis/matchbox/issues/46" title="GitHub Issue: ahdis/matchbox #46">#46</a>)</li>
+<li>Enable SDC extraction with unknown ValueSets (<a class="magiclink magiclink-github magiclink-issue" href="https://github.com/ahdis/matchbox/issues/48" title="GitHub Issue: ahdis/matchbox #48">#48</a>)</li>
+<li>Patch for FHIR Mapping Language: funcMemberOf/resolveValueSet: Not Implemented Yet (<a class="magiclink magiclink-github magiclink-issue" href="https://github.com/ahdis/matchbox/issues/49" title="GitHub Issue: ahdis/matchbox #49">#49</a>)</li>
+<li>validation without terminology server and with hl7.terminology (<a class="magiclink magiclink-github magiclink-issue" href="https://github.com/ahdis/matchbox/issues/50" title="GitHub Issue: ahdis/matchbox #50">#50</a>)</li>
+<li>base release with no ig's configured: docker pull eu.gcr.io/fhir-ch/matchbox:v210</li>
+</ul>
+<p>2022/04/28 Release 2.0.0</p>
+<ul>
+<li>version of ig, validator and matchbox should be provided in the validation report (<a class="magiclink magiclink-github magiclink-issue" href="https://github.com/ahdis/matchbox/issues/40" title="GitHub Issue: ahdis/matchbox #40">#40</a>)</li>
+<li>hapi-fhir 6.0.0-PRE10-SNAPSHOT and org.hl7.fhir.core 5.6.43</li>
+<li>allow xml in gui for validation (<a class="magiclink magiclink-github magiclink-issue" href="https://github.com/ahdis/matchbox/issues/38" title="GitHub Issue: ahdis/matchbox #38">#38</a>)</li>
+<li>mobile access gateway gui: prefix DocumentEntry.identifier with urn:uuid in GUI (<a class="magiclink magiclink-github magiclink-issue" href="https://github.com/ahdis/matchbox/issues/41" title="GitHub Issue: ahdis/matchbox #41">#41</a>)</li>
+<li>base release with no ig's configured: docker pull eu.gcr.io/fhir-ch/matchbox:v200</li>
+</ul>
+<p>2022/03/21 Release 1.9.1</p>
+<ul>
+<li>custom log banner, thanks <a href="https://github.com/ralych">ralych</a></li>
+<li>Fixed StructureMap transformation <a href="https://github.com/hapifhir/org.hl7.fhir.core/issues/771">issue core</a> and <a href="https://github.com/ahdis/matchbox/issues/37">issue#37</a></li>
+</ul>
+<p>2022/03/10 Release 1.9.0</p>
+<ul>
+<li>Updated to hap-fhir 5.7.0, fhir.core.version (validator) 5.6.27</li>
+<li>Extended Mobile Access Gateway support for PMP (replacing FHIR documents with selected Patient in Mobile Access Gateway, transforming to CDA and MDH publish)</li>
+<li>base release with no ig's configured: docker pull eu.gcr.io/fhir-ch/matchbox:v190</li>
+<li>docker-compose setup for postgres and for postgres and swiss igs</li>
+</ul>
+<p>2022/02/21 Release 1.8.2</p>
+<ul>
+<li>OAuth integration for <a href="https://github.com/i4mi/MobileAccessGateway">Mobile Access Gateway</a> in webapp</li>
+</ul>
+<p>2022/02/21 Release 1.8.1</p>
+<ul>
+<li>Parsing of bundles adds additional contained resources [<a class="magiclink magiclink-github magiclink-issue" href="https://github.com/ahdis/matchbox/issues/11" title="GitHub Issue: ahdis/matchbox #11">#11</a>|(<a href="https://github.com/ahdis/matchbox/issues/11">https://github.com/ahdis/matchbox/issues/11</a>)</li>
+</ul>
+<p>2022/02/08 Release 1.8.0</p>
+<ul>
+<li>Integrate webapp running on matchbox port and root itself (<a class="magiclink magiclink-github magiclink-issue" href="https://github.com/ahdis/matchbox/issues/35" title="GitHub Issue: ahdis/matchbox #35">#35</a>)</li>
+<li>NPM can be downloaded with Accept:application/gzip on Implementation Guide Resource</li>
+</ul>
+<p>2022/01/13 Release 1.7.1</p>
+<ul>
+<li>JSON POST Requests have a size limit (filler issue) (<a class="magiclink magiclink-github magiclink-issue" href="https://github.com/ahdis/matchbox/issues/33" title="GitHub Issue: ahdis/matchbox #33">#33</a>)</li>
+<li>FHIRPathEnginge construction is expensive (<a class="magiclink magiclink-github magiclink-issue" href="https://github.com/ahdis/matchbox/issues/31" title="GitHub Issue: ahdis/matchbox #31">#31</a>)</li>
+<li>SNOMED CT Code validation problem for Quantity in Medication.amount (<a class="magiclink magiclink-github magiclink-issue" href="https://github.com/ahdis/matchbox/issues/30" title="GitHub Issue: ahdis/matchbox #30">#30</a>)</li>
+<li>Validation: Uploaded StructureDefinitions via NPM are not available in same session for $validate (<a class="magiclink magiclink-github magiclink-issue" href="https://github.com/ahdis/matchbox/issues/29" title="GitHub Issue: ahdis/matchbox #29">#29</a>)</li>
+<li>StructureMap transformation: Bundle request element not correctly ordered (<a class="magiclink magiclink-github magiclink-issue" href="https://github.com/ahdis/matchbox/issues/27" title="GitHub Issue: ahdis/matchbox #27">#27</a>)</li>
+<li>Error on release V1.6.0 (<a class="magiclink magiclink-github magiclink-issue" href="https://github.com/ahdis/matchbox/issues/24" title="GitHub Issue: ahdis/matchbox #24">#24</a>), thanks <a href="https://github.com/delcroip">@delcroip</a></li>
+<li>Integrated <a href="https://github.com/ahdis/matchbox/pull/25">PR</a> and <a href="https://github.com/ahdis/matchbox/pull/32">PR</a> for translate in Structure Map, thanks <a href="https://github.com/ralych">@aralych</a></li>
+<li>base release with no ig's configured: docker pull eu.gcr.io/fhir-ch/matchbox:v171</li>
+</ul>
+<p>2022/01/04 Release 1.6.0</p>
+<ul>
+<li>extend FHIR API based on Implementation Guide NPM packages (<a class="magiclink magiclink-github magiclink-issue" href="https://github.com/ahdis/matchbox/issues/23" title="GitHub Issue: ahdis/matchbox #23">#23</a>)</li>
+<li>add spring actuator for health checks (<a class="magiclink magiclink-github magiclink-issue" href="https://github.com/ahdis/matchbox/issues/22" title="GitHub Issue: ahdis/matchbox #22">#22</a>)</li>
+<li>disable special questionnaire validation (<a class="magiclink magiclink-github magiclink-issue" href="https://github.com/ahdis/matchbox/issues/21" title="GitHub Issue: ahdis/matchbox #21">#21</a>)</li>
+<li>base release with no ig's configured: docker pull eu.gcr.io/fhir-ch/matchbox:v160</li>
+</ul>
+<p>2021/12/17 Release 1.5.0</p>
+<ul>
+<li>updated hapi-fhir to 5.6.0</li>
+<li>patched slicing validation problems in <a href="https://github.com/ahdis/matchbox/issues/15">bundle</a></li>
+<li>activated $expand operation on ValueSet</li>
+<li>base release with no ig's configured: docker pull eu.gcr.io/fhir-ch/matchbox:v150</li>
+</ul>
+<p>2021/09/14 Release 1.4.0</p>
+<ul>
+<li>updated hapi-fhir to 5.5.1, no more dependencies on forked packages</li>
+<li>$extract on QuestionnaireResponse for StructureMap based extraction</li>
+<li>support for the $transform operation for StructureMap</li>
+<li>FHIR Mapping Language Support (POST FHIR Mapping language, transform)</li>
+<li>fixed issues <a class="magiclink magiclink-github magiclink-issue" href="https://github.com/ahdis/matchbox/issues/7" title="GitHub Issue: ahdis/matchbox #7">#7</a> and <a class="magiclink magiclink-github magiclink-issue" href="https://github.com/ahdis/matchbox/issues/8" title="GitHub Issue: ahdis/matchbox #8">#8</a> (custom SearchParmeters and validation)</li>
+<li>public test instance <a href="https://test.ahdis.ch/matchbox/fhir">https://test.ahdis.ch/matchbox/fhir</a></li>
+<li>base release with no ig's configured: docker pull eu.gcr.io/fhir-ch/matchbox:v140</li>
+<li>swiss epr release: docker pull eu.gcr.io/fhir-ch/matchbox-swissepr:v140</li>
+</ul>
+<p>2021/07/05 Release 1.3.0</p>
+<ul>
+<li>updated hapi-fhir to 5.5.0-PRE5-SNAPSHOT with patches for hapi-fhir and org.hl7.fhir.core (dev branch on ahdis foreach project)</li>
+<li>updated swiss epr implementation guides to STU2 Ballot</li>
+<li>renamed project to matchbox-validator</li>
+<li>base release with no ig's configured: docker pull eu.gcr.io/fhir-ch/matchbox-validator:v130</li>
+<li>swiss epr release: docker pull eu.gcr.io/fhir-ch/matchbox-validator-swissepr:v130</li>
+<li>testsystem endpoint for siwssepr validator: <a href="https://test.ahdis.ch/matchbox-validator/fhir">https://test.ahdis.ch/matchbox-validator/fhir</a></li>
+</ul>
+<p>2020/12/23 Release 1.2.0</p>
+<ul>
+<li>updated hapi-fhir to 5.2.0</li>
+<li>updated ch-epr-mhealth to 0.1.2</li>
+<li>Release is available here:
+  docker pull eu.gcr.io/fhir-ch/hapi-fhir-jpavalidator:v120</li>
+</ul>
+<p>2020/10/22 Release 1.1.0</p>
+<ul>
+<li>updated hapi-fhir to (21.10.2020) and spring-boot</li>
+<li>updated fhir.core.version 5.1.15, later is not yet possible due to class name changes</li>
+<li><a href="https://github.com/ahdis/hapi-fhir-jpaserver-validator/issues/2">fixed EHS-439</a> added testcase for EHS-439 to verify correct behaviour with fhir.core.version 5.1.15 <a href="https://github.com/hapifhir/org.hl7.fhir.core/releases/tag/5.1.15">https://github.com/hapifhir/org.hl7.fhir.core/releases/tag/5.1.15</a></li>
+<li><a href="https://github.com/ahdis/hapi-fhir-jpaserver-validator/issues/1">fixed Parameters evaluation</a> two different versions for calling the $validate operation: with Parameters resource and containing the resource to validate within as additional name "resource" parameter
+  with Resource to validate directly according to <a href="https://www.hl7.org/fhir/validation.html#op">7.5.5 Asking a FHIR Server</a></li>
+<li><a href="https://gazelle.ihe.net/jira/browse/EHS-431">fixed EHS-431</a> Validator crashes and does not give a result if the JSON starts with a [ ] (square bracket).</li>
+<li><a href="https://gazelle.ihe.net/jira/browse/EHS-419">fixed EHS-419</a> warning instead of crash for Byte order mark in validation request</li>
+<li>changed docker build: ig's will be installed during docker build process, no connection to the internet is needed for validation</li>
+<li><a href="https://github.com/ahdis/hapi-fhir-jpaserver-validator/blob/ig/src/test/java/ch/ahdis/validation/IgValidateR4Test.java">Validation Test Suite for all examples in the loaded ig's</a> checking that they can be validated with no errors with the $validate operation</li>
+<li><a href="https://github.com/ahdis/hapi-fhir-jpaserver-validator/blob/ig/src/test/java/ch/ahdis/validation/IgValidateRawProfileTest.java">Validation Test Suite with hapi-fhir-client for individual examples</a></li>
+<li><a href="https://github.com/ahdis/hapi-fhir-jpaserver-validator/blob/ig/src/test/java/ch/ahdis/validation/CoreValidationTests.java">Experimental: Validation Test Suite based on on</a> <a href="https://github.com/FHIR/fhir-test-cases/tree/master/validator">fhir-testcases</a> (only R4, no test-cases from ig's, valuesets or with profiles yet)</li>
+</ul>
+<p>2020/09/02 Release 1.0.0</p>
+<ul>
+<li>system level $validate operation for $ig's</li>
+<li>based on hapi-fhir-jpaserverstarter 5.1.0</li>
+</ul>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      <script id="__config" type="application/json">{"base": "..", "features": [], "search": "../assets/javascripts/workers/search.973d3a69.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../assets/javascripts/bundle.f55a23d4.min.js"></script>
+      
+    
+  </body>
+</html>
