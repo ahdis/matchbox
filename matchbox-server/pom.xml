@@ -5,7 +5,7 @@
     <parent>
         <artifactId>matchbox</artifactId>
         <groupId>health.matchbox</groupId>
-        <version>4.0.16</version>
+        <version>4.0.17</version>
     </parent>
 
     <artifactId>matchbox-server</artifactId>
@@ -33,6 +33,11 @@
             <artifactId>postgresql</artifactId>
         </dependency>
 
+        <dependency>
+            <groupId>com.googlecode.owasp-java-html-sanitizer</groupId>
+            <artifactId>owasp-java-html-sanitizer</artifactId>
+            <version>20260101.1</version>
+        </dependency>
         <!-- This dependency includes the core HAPI-FHIR classes -->
         <dependency>
             <groupId>ca.uhn.hapi.fhir</groupId>
