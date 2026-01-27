@@ -87,5 +87,8 @@
     "hooks": {
       "pre-commit": "pretty-quick --staged"
     }
+  },
+  "overrides": {
+    "tar": ">=7.5.4"
   }
 }
