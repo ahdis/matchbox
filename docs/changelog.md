@@ -1,6 +1,7 @@
-2026 Release 4.0.17
+2026/01/27 Release 4.0.17
 - fixed search params not being included in the call to the server (#453)
 - unrestrict transport layer jackson for mcp (#455)
+- memory error / security issue (#457)
 
 2026/01/08 Release 4.0.16
 
