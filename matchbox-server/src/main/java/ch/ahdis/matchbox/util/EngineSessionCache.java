@@ -38,7 +38,9 @@ import org.hl7.fhir.validation.service.PassiveExpiringSessionCache;
  *         
  *         Note: To prevent memory leaks, the "forever" caches use an LRU eviction policy
  *         with a maximum size limit. When the limit is reached, the least recently used
- *         entries are automatically removed.
+ *         entries are automatically removed. The bidirectional maps (sessionId->engine and
+ *         engine->sessionId) may temporarily have orphaned entries after eviction, but these
+ *         will be naturally evicted by the LRU policy, preventing unbounded growth.
  */
 public class EngineSessionCache extends PassiveExpiringSessionCache {
 
@@ -126,24 +128,7 @@ public class EngineSessionCache extends PassiveExpiringSessionCache {
     public synchronized String cacheSessionForEver(String sessionId, ValidationEngine validationEngine) {
         cachedSessionsNoTimeout.put(sessionId, validationEngine);
         cachedSessionIdsNoTimeout.put(validationEngine, sessionId);
-        // Clean up any orphaned entries due to LRU eviction
-        cleanupOrphanedEntries();
         return sessionId;
-    }
-    
-    /**
-     * Cleans up orphaned entries in bidirectional maps after LRU eviction.
-     * This ensures map consistency when one map evicts entries but the other doesn't.
-     */
-    private void cleanupOrphanedEntries() {
-        // Remove entries from cachedSessionIdsNoTimeout that don't have corresponding entries in cachedSessionsNoTimeout
-        cachedSessionIdsNoTimeout.entrySet().removeIf(entry -> 
-            !cachedSessionsNoTimeout.containsValue(entry.getKey())
-        );
-        // Remove entries from cachedSessionsNoTimeout that don't have corresponding entries in cachedSessionIdsNoTimeout
-        cachedSessionsNoTimeout.entrySet().removeIf(entry -> 
-            !cachedSessionIdsNoTimeout.containsKey(entry.getValue())
-        );
     }
 
     public String cacheSession(String sessionId, ValidationEngine validationEngine) {
