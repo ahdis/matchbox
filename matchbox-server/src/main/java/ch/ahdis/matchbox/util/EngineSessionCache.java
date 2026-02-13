@@ -22,6 +22,7 @@ package ch.ahdis.matchbox.util;
 
 import java.util.Set;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 import org.apache.commons.collections4.map.PassiveExpiringMap;
@@ -33,11 +34,18 @@ import org.hl7.fhir.validation.service.PassiveExpiringSessionCache;
  * 
  *         We want to have a validation engines also that are not timed out as
  *         in the parent class.
+ *         
+ *         Note: To prevent memory leaks, the "forever" caches use an LRU eviction policy
+ *         with a maximum size limit. When the limit is reached, the least recently used
+ *         entries are automatically removed.
  */
 public class EngineSessionCache extends PassiveExpiringSessionCache {
 
-    private final Map<String, ValidationEngine> cachedSessionsNoTimeout = new java.util.HashMap<String, ValidationEngine>();
-    private final Map<ValidationEngine, String> cachedSessionIdsNoTimeout = new java.util.HashMap<ValidationEngine, String>();
+    // Maximum number of ValidationEngine instances to cache forever to prevent memory leaks
+    private static final int MAX_PERMANENT_CACHE_SIZE = 50;
+    
+    private final Map<String, ValidationEngine> cachedSessionsNoTimeout;
+    private final Map<ValidationEngine, String> cachedSessionIdsNoTimeout;
     private final PassiveExpiringMap<ValidationEngine, String> cachedSessionIds;
     
     final static int TEST_TIME_TO_LIVE = 60;
@@ -47,6 +55,31 @@ public class EngineSessionCache extends PassiveExpiringSessionCache {
         super(TEST_TIME_TO_LIVE,TIME_UNIT); 
         this.setResetExpirationAfterFetch(true);
         cachedSessionIds = new PassiveExpiringMap<>(TEST_TIME_TO_LIVE, TIME_UNIT);
+        
+        // Create LRU caches with automatic eviction to prevent memory leaks
+        this.cachedSessionsNoTimeout = new LinkedHashMap<String, ValidationEngine>(MAX_PERMANENT_CACHE_SIZE, 0.75f, true) {
+            @Override
+            protected boolean removeEldestEntry(Map.Entry<String, ValidationEngine> eldest) {
+                boolean shouldRemove = size() > MAX_PERMANENT_CACHE_SIZE;
+                if (shouldRemove) {
+                    // Also remove from the bidirectional map
+                    cachedSessionIdsNoTimeout.remove(eldest.getValue());
+                }
+                return shouldRemove;
+            }
+        };
+        
+        this.cachedSessionIdsNoTimeout = new LinkedHashMap<ValidationEngine, String>(MAX_PERMANENT_CACHE_SIZE, 0.75f, true) {
+            @Override
+            protected boolean removeEldestEntry(Map.Entry<ValidationEngine, String> eldest) {
+                boolean shouldRemove = size() > MAX_PERMANENT_CACHE_SIZE;
+                if (shouldRemove) {
+                    // Also remove from the bidirectional map
+                    cachedSessionsNoTimeout.remove(eldest.getValue());
+                }
+                return shouldRemove;
+            }
+        };
     }
 
     /**

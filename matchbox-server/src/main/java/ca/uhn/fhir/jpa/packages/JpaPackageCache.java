@@ -828,10 +828,23 @@ public class JpaPackageCache extends BasePackageCacheManager implements IHapiPac
 		return predicates;
 	}
 
+	/**
+	 * Maximum number of processing messages to retain per package to prevent memory leaks
+	 */
+	private static final int MAX_PROCESSING_MESSAGES = 100;
+
 	@SuppressWarnings("unchecked")
 	public static List<String> getProcessingMessages(NpmPackage thePackage) {
-		return (List<String>)
+		List<String> messages = (List<String>)
 				thePackage.getUserData().computeIfAbsent("JpPackageCache_ProcessingMessages", t -> new ArrayList<>());
+		
+		// Limit the size of the message list to prevent unbounded growth
+		if (messages.size() > MAX_PROCESSING_MESSAGES) {
+			// Keep only the most recent messages
+			messages.subList(0, messages.size() - MAX_PROCESSING_MESSAGES).clear();
+		}
+		
+		return messages;
 	}
 
 	/**
