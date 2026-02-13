@@ -20,6 +20,7 @@
 
 package ch.ahdis.matchbox.util;
 
+import java.util.Collections;
 import java.util.Set;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
@@ -57,29 +58,24 @@ public class EngineSessionCache extends PassiveExpiringSessionCache {
         cachedSessionIds = new PassiveExpiringMap<>(TEST_TIME_TO_LIVE, TIME_UNIT);
         
         // Create LRU caches with automatic eviction to prevent memory leaks
-        this.cachedSessionsNoTimeout = new LinkedHashMap<String, ValidationEngine>(MAX_PERMANENT_CACHE_SIZE, 0.75f, true) {
-            @Override
-            protected boolean removeEldestEntry(Map.Entry<String, ValidationEngine> eldest) {
-                boolean shouldRemove = size() > MAX_PERMANENT_CACHE_SIZE;
-                if (shouldRemove) {
-                    // Also remove from the bidirectional map
-                    cachedSessionIdsNoTimeout.remove(eldest.getValue());
+        // Use a single map to avoid bidirectional synchronization issues
+        this.cachedSessionsNoTimeout = Collections.synchronizedMap(
+            new LinkedHashMap<String, ValidationEngine>(MAX_PERMANENT_CACHE_SIZE, 0.75f, true) {
+                @Override
+                protected boolean removeEldestEntry(Map.Entry<String, ValidationEngine> eldest) {
+                    return size() > MAX_PERMANENT_CACHE_SIZE;
                 }
-                return shouldRemove;
             }
-        };
+        );
         
-        this.cachedSessionIdsNoTimeout = new LinkedHashMap<ValidationEngine, String>(MAX_PERMANENT_CACHE_SIZE, 0.75f, true) {
-            @Override
-            protected boolean removeEldestEntry(Map.Entry<ValidationEngine, String> eldest) {
-                boolean shouldRemove = size() > MAX_PERMANENT_CACHE_SIZE;
-                if (shouldRemove) {
-                    // Also remove from the bidirectional map
-                    cachedSessionsNoTimeout.remove(eldest.getValue());
+        this.cachedSessionIdsNoTimeout = Collections.synchronizedMap(
+            new LinkedHashMap<ValidationEngine, String>(MAX_PERMANENT_CACHE_SIZE, 0.75f, true) {
+                @Override
+                protected boolean removeEldestEntry(Map.Entry<ValidationEngine, String> eldest) {
+                    return size() > MAX_PERMANENT_CACHE_SIZE;
                 }
-                return shouldRemove;
             }
-        };
+        );
     }
 
     /**
@@ -127,10 +123,27 @@ public class EngineSessionCache extends PassiveExpiringSessionCache {
      * @return The {@link String} id that will be associated with the stored
      *         {@link ValidationEngine}
      */
-    public String cacheSessionForEver(String sessionId, ValidationEngine validationEngine) {
+    public synchronized String cacheSessionForEver(String sessionId, ValidationEngine validationEngine) {
         cachedSessionsNoTimeout.put(sessionId, validationEngine);
         cachedSessionIdsNoTimeout.put(validationEngine, sessionId);
+        // Clean up any orphaned entries due to LRU eviction
+        cleanupOrphanedEntries();
         return sessionId;
+    }
+    
+    /**
+     * Cleans up orphaned entries in bidirectional maps after LRU eviction.
+     * This ensures map consistency when one map evicts entries but the other doesn't.
+     */
+    private void cleanupOrphanedEntries() {
+        // Remove entries from cachedSessionIdsNoTimeout that don't have corresponding entries in cachedSessionsNoTimeout
+        cachedSessionIdsNoTimeout.entrySet().removeIf(entry -> 
+            !cachedSessionsNoTimeout.containsValue(entry.getKey())
+        );
+        // Remove entries from cachedSessionsNoTimeout that don't have corresponding entries in cachedSessionIdsNoTimeout
+        cachedSessionsNoTimeout.entrySet().removeIf(entry -> 
+            !cachedSessionIdsNoTimeout.containsKey(entry.getValue())
+        );
     }
 
     public String cacheSession(String sessionId, ValidationEngine validationEngine) {

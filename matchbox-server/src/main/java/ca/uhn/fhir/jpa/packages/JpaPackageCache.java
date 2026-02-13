@@ -292,7 +292,7 @@ public class JpaPackageCache extends BasePackageCacheManager implements IHapiPac
 						loadPackageFromCacheOnly(packageVersion.getPackageId(), packageVersion.getVersionId());
 				String msg = "Package version already exists in local storage, no action taken: " + packageId + "#"
 						+ packageVersionId;
-				getProcessingMessages(existingPackage).add(msg);
+				addProcessingMessage(existingPackage, msg);
 				ourLog.info(msg);
 				return existingPackage;
 			}
@@ -304,14 +304,12 @@ public class JpaPackageCache extends BasePackageCacheManager implements IHapiPac
 			String packageAuthor = truncateStorageString(npmPackage.getNpm().asString("author"));
 
 			if (currentVersion) {
-				getProcessingMessages(npmPackage)
-						.add("Marking package " + packageId + "#" + initialPackageVersionId + " as current version");
+				addProcessingMessage(npmPackage, "Marking package " + packageId + "#" + initialPackageVersionId + " as current version");
 				pkg.setCurrentVersionId(packageVersionId);
 				pkg.setDescription(packageDesc);
 				myPackageDao.save(pkg);
 			} else {
-				getProcessingMessages(npmPackage)
-						.add("Package " + packageId + "#" + initialPackageVersionId + " is not the newest version");
+				addProcessingMessage(npmPackage, "Package " + packageId + "#" + initialPackageVersionId + " is not the newest version");
 			}
 
 			packageVersion = new NpmPackageVersionEntity();
@@ -355,7 +353,7 @@ public class JpaPackageCache extends BasePackageCacheManager implements IHapiPac
 					} else if (nextFile.toLowerCase().endsWith(".json")) {
 						resource = packageContext.newJsonParser().parseResource(contentsString);
 					} else {
-						getProcessingMessages(npmPackage).add("Not indexing file: " + nextFile);
+						addProcessingMessage(npmPackage, "Not indexing file: " + nextFile);
 						continue;
 					}
 
@@ -417,13 +415,12 @@ public class JpaPackageCache extends BasePackageCacheManager implements IHapiPac
 					String resType = packageContext.getResourceType(resource);
 					String msg = "Indexing " + resType + " Resource[" + dirName + '/' + nextFile + "] with URL: "
 							+ defaultString(url) + "|" + defaultString(version);
-					getProcessingMessages(npmPackage).add(msg);
+					addProcessingMessage(npmPackage, msg);
 					ourLog.info("Package[{}#{}] " + msg, packageId, packageVersionId);
 				}
 			}
 
-			getProcessingMessages(npmPackage)
-					.add("Successfully added package " + npmPackage.id() + "#" + npmPackage.version() + " to registry");
+			addProcessingMessage(npmPackage, "Successfully added package " + npmPackage.id() + "#" + npmPackage.version() + " to registry");
 
 			return npmPackage;
 		});
@@ -516,11 +513,7 @@ public class JpaPackageCache extends BasePackageCacheManager implements IHapiPac
 		try {
 			// and add it to the cache
 			NpmPackage retVal = addPackageToCacheInternal(pkgData);
-			getProcessingMessages(retVal)
-					.add(
-							0,
-							"Package fetched from server at: "
-									+ pkgData.getPackage().url());
+			addProcessingMessageFirst(retVal, "Package fetched from server at: " + pkgData.getPackage().url());
 			return retVal;
 		} finally {
 			pkgData.getInputStream().close();
@@ -835,16 +828,43 @@ public class JpaPackageCache extends BasePackageCacheManager implements IHapiPac
 
 	@SuppressWarnings("unchecked")
 	public static List<String> getProcessingMessages(NpmPackage thePackage) {
-		List<String> messages = (List<String>)
+		return (List<String>)
 				thePackage.getUserData().computeIfAbsent("JpPackageCache_ProcessingMessages", t -> new ArrayList<>());
+	}
+	
+	/**
+	 * Adds a processing message to the package and trims the list if it exceeds the maximum size.
+	 * This prevents unbounded memory growth by keeping only the most recent messages.
+	 * 
+	 * @param thePackage The package to add the message to
+	 * @param message The message to add
+	 */
+	public static void addProcessingMessage(NpmPackage thePackage, String message) {
+		List<String> messages = getProcessingMessages(thePackage);
+		messages.add(message);
 		
-		// Limit the size of the message list to prevent unbounded growth
+		// Trim old messages if list is too large
 		if (messages.size() > MAX_PROCESSING_MESSAGES) {
-			// Keep only the most recent messages
+			// Remove oldest messages from the beginning, keeping only the most recent ones
 			messages.subList(0, messages.size() - MAX_PROCESSING_MESSAGES).clear();
 		}
+	}
+	
+	/**
+	 * Adds a processing message to the beginning of the list.
+	 * 
+	 * @param thePackage The package to add the message to
+	 * @param message The message to add at the beginning
+	 */
+	public static void addProcessingMessageFirst(NpmPackage thePackage, String message) {
+		List<String> messages = getProcessingMessages(thePackage);
+		messages.add(0, message);
 		
-		return messages;
+		// Trim old messages if list is too large
+		if (messages.size() > MAX_PROCESSING_MESSAGES) {
+			// Remove oldest messages from the end when adding at the beginning
+			messages.subList(MAX_PROCESSING_MESSAGES, messages.size()).clear();
+		}
 	}
 
 	/**
