@@ -104,7 +104,8 @@ public class ValidationProvider {
 	@Autowired
 	private PlatformTransactionManager myTxManager;
 
-	@Autowired
+	@Autowired(required = false)
+	@Nullable
 	private IStatisticsDao statisticsDao;
 
 //	@Operation(name = "$canonical", manualRequest = true, idempotent = true, returnParameters = {
@@ -275,12 +276,13 @@ public class ValidationProvider {
 			}
 		}
 
-		try {
-			this.saveStatistics(oo, profile, millis, aiUsed, engine);
-		} catch (Exception e) {
-			log.error("Error while saving statistics: ", e);
+		if (this.statisticsDao != null) {
+			try {
+				this.saveStatistics(oo, profile, millis, aiUsed, engine);
+			} catch (Exception e) {
+				log.error("Error while saving statistics: ", e);
+			}
 		}
-
 		
 		return switch (this.myContext.getVersion().getVersion()) {
 			case R4 -> VersionConvertorFactory_40_50.convertResource((OperationOutcome) oo);
