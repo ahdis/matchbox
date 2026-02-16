@@ -38,7 +38,6 @@ import ch.ahdis.matchbox.packages.MatchboxImplementationGuideProvider;
 import ch.ahdis.matchbox.registry.SimplifierPackage;
 import ch.ahdis.matchbox.registry.SimplifierPackageVersionsObject;
 import com.google.gson.Gson;
-import net.sf.saxon.functions.ConstantFunction;
 import org.apache.commons.beanutils.BeanUtils;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.http.client.methods.HttpGet;
@@ -275,8 +274,12 @@ public class ValidationProvider {
 			}
 		}
 
-		// here should also be an if Statement, if statistics are enabled in the configuration.
-		this.saveStatistics(oo, profile, millis, aiUsed);
+		try {
+			this.saveStatistics(oo, profile, millis, aiUsed);
+		} catch (Exception e) {
+			log.error("Error while saving statistics: ", e);
+		}
+
 		
 		return switch (this.myContext.getVersion().getVersion()) {
 			case R4 -> VersionConvertorFactory_40_50.convertResource((OperationOutcome) oo);
@@ -470,7 +473,7 @@ public class ValidationProvider {
 	 */
 	public void saveStatistics(OperationOutcome oo, String profile, Long duration, boolean aiUsed) {
 		// create new Statistics Entity (new row in table)
-		StatisticsEntity statsEntity = new StatisticsEntity();
+		final var statsEntity = new StatisticsEntity();
 
 		// initialize all the helper variables
 		int nbFatals = 0;
