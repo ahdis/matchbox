@@ -13,6 +13,7 @@ import ch.ahdis.matchbox.mappinglanguage.StructureMapListProvider;
 import ch.ahdis.matchbox.packages.*;
 import ch.ahdis.matchbox.providers.*;
 import ch.ahdis.matchbox.questionnaire.*;
+import ch.ahdis.matchbox.statistics.StatisticsObservationProvider;
 import ch.ahdis.matchbox.util.MatchboxEngineSupport;
 import ch.ahdis.matchbox.util.MatchboxPackageInstallerImpl;
 import jakarta.persistence.EntityManager;
@@ -154,6 +155,9 @@ public class MatchboxJpaConfig extends StarterJpaConfig {
 	@Autowired(required = false)
 	private ImplementationGuideProviderR5 implementationGuideResourceProviderR5;
 
+	@Autowired
+	private StatisticsObservationProvider statisticsObservationProvider;
+
 	// removed GraphQlProvider
 	// removed IVAldiationSupport
 	
@@ -199,7 +203,8 @@ public class MatchboxJpaConfig extends StarterJpaConfig {
 			this.valueSetProvider,
 			this.structureDefinitionProvider,
 			this.structureMapTransformProvider,
-			this.structureMapListProvider
+			this.structureMapListProvider,
+			this.statisticsObservationProvider
 		})
 		.filter(Objects::nonNull)
 		.forEach(fhirServer::registerProvider);

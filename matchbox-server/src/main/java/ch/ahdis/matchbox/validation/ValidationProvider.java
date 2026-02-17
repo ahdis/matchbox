@@ -22,6 +22,8 @@ package ch.ahdis.matchbox.validation;
 
 import ca.uhn.fhir.context.FhirContext;
 import ca.uhn.fhir.jpa.dao.data.INpmPackageVersionResourceDao;
+import ca.uhn.fhir.jpa.dao.data.IStatisticsDao;
+import ca.uhn.fhir.jpa.model.entity.StatisticsEntity;
 import ca.uhn.fhir.rest.annotation.Operation;
 import ca.uhn.fhir.rest.annotation.OperationParam;
 import ca.uhn.fhir.rest.api.EncodingEnum;
@@ -70,6 +72,8 @@ import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
+import java.time.Instant;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -99,6 +103,10 @@ public class ValidationProvider {
 
 	@Autowired
 	private PlatformTransactionManager myTxManager;
+
+	@Autowired(required = false)
+	@Nullable
+	private IStatisticsDao statisticsDao;
 
 //	@Operation(name = "$canonical", manualRequest = true, idempotent = true, returnParameters = {
 //			@OperationParam(name = "return", type = IBase.class, min = 1, max = 1) })
@@ -235,6 +243,8 @@ public class ValidationProvider {
 
 		var oo = this.getOperationOutcome(sha3Hex, messages, profile, engine, millis, cliContext);
 
+		boolean aiUsed = false;
+
 		Boolean aiAnalyze = null;
 		// check if the request ai analyze parameter is set to true or false
 		if (theRequest.getParameter("analyzeOutcomeWithAI") != null) {
@@ -258,6 +268,7 @@ public class ValidationProvider {
 				String json = FhirContext.forR5Cached().newJsonParser().encodeResourceToString(oo);
 				String aiResult = openAIConnector.interpretWithMatchbox(contentString, json);
 				oo = this.addAIIssueToOperationOutcome(oo, aiResult);
+				aiUsed = true;
 			} catch (Exception e) {
 				log.error("Error during AI analysis", e);
 				// add the error to the OperationOutcome, so the client still gets the validation result
@@ -265,6 +276,13 @@ public class ValidationProvider {
 			}
 		}
 
+		if (this.statisticsDao != null) {
+			try {
+				this.saveStatistics(oo, profile, millis, aiUsed, engine);
+			} catch (Exception e) {
+				log.error("Error while saving statistics: ", e);
+			}
+		}
 		
 		return switch (this.myContext.getVersion().getVersion()) {
 			case R4 -> VersionConvertorFactory_40_50.convertResource((OperationOutcome) oo);
@@ -275,7 +293,7 @@ public class ValidationProvider {
 		};
 	}
 
-	private IBaseResource getOperationOutcome(final String id,
+	private OperationOutcome getOperationOutcome(final String id,
 															final List<ValidationMessage> messages,
 															final String profile,
 															final MatchboxEngine engine,
@@ -418,7 +436,7 @@ public class ValidationProvider {
 		return messages;
 	}
 
-	public IBaseResource addAIIssueToOperationOutcome(IBaseResource resource, String aiResponse) {
+	public OperationOutcome addAIIssueToOperationOutcome(IBaseResource resource, String aiResponse) {
 		if (resource instanceof final OperationOutcome outcome) {
 			final var details = new CodeableConcept();
 			details.setText("AI Analyze of the Operation Outcome");
@@ -437,7 +455,7 @@ public class ValidationProvider {
 		throw new IllegalArgumentException("Provided resource is not an OperationOutcome.");
 	}
 
-	public IBaseResource addExceptionToOperationOutcome(IBaseResource resource, Exception e) {
+	public OperationOutcome addExceptionToOperationOutcome(IBaseResource resource, Exception e) {
 		if (resource instanceof final OperationOutcome outcome) {
 			outcome.addIssue()
 				.setSeverity(OperationOutcome.IssueSeverity.ERROR)
@@ -447,4 +465,63 @@ public class ValidationProvider {
 		}
 		throw new IllegalArgumentException("Provided resource is not an OperationOutcome.");
 	}
+
+	/**
+	 * This method extracts Statistics (Error count, packages used, ...) from the current OO. These then get stored in
+	 * the database together with the profile, duration and aiUsed attribute.
+	 * @param oo Current OperationOutcome response; used to extract statistics
+	 * @param profile Current FHIR profile selected
+	 * @param duration Amount of milliseconds the validation took
+	 * @param aiUsed States if AI analysis was used
+	 * @param engine Takes the used Matchboxengine to extract the loaded packages.
+	 */
+	public void saveStatistics(OperationOutcome oo, String profile, Long duration,
+										boolean aiUsed, MatchboxEngine engine) {
+		// create new Statistics Entity (new row in table)
+		final var statsEntity = new StatisticsEntity();
+
+		// initialize all the helper variables
+		int nbFatals = 0;
+		int nbErrors = 0;
+		int nbWarnings = 0;
+		int nbInfos = 0;
+		boolean validationSuccess = false;
+
+		// get the current timestamp to save in the database
+		Instant timestamp = Instant.now();
+
+		// iterate through every issue in the OO and update the severity count
+		for (var issue : oo.getIssue()) {
+			switch (issue.getSeverity()) {
+				case FATAL -> nbFatals++;
+				case ERROR -> nbErrors++;
+				case WARNING -> nbWarnings++;
+				case INFORMATION -> nbInfos++;
+			}
+		}
+		// check if the validation was flagged as successful
+		if (nbFatals == 0 && nbErrors == 0) {
+			validationSuccess = true;
+		}
+
+		// extract all packages from the Matchbox engine and join them in a String
+		final String usedPackagesString = String.join(",", engine.getContext().getLoadedPackages());
+
+		// set all the fields with the corresponding parameters
+		statsEntity.setProfile(profile);
+		statsEntity.setPackages(usedPackagesString);
+		statsEntity.setNumberOfInfos(nbInfos);
+		statsEntity.setNumberOfWarnings(nbWarnings);
+		statsEntity.setNumberOfErrors(nbErrors);
+		statsEntity.setNumberOfFatals(nbFatals);
+		statsEntity.setTimestamp(timestamp);
+		statsEntity.setDurationMillis(duration);
+		statsEntity.setAiUsed(aiUsed);
+		statsEntity.setSuccess(validationSuccess);
+
+		// save to the database
+		this.statisticsDao.save(statsEntity);
+
+	}
 }
+

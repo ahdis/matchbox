@@ -1,9 +1,11 @@
 package ca.uhn.fhir.jpa.starter.common;
 
+import ca.uhn.fhir.jpa.dao.data.IStatisticsDao;
 import ch.ahdis.matchbox.mappinglanguage.StructureMapListProvider;
 import ch.ahdis.matchbox.providers.ValueSetResourceProvider;
 import ch.ahdis.matchbox.providers.ConceptMapResourceProvider;
 import ch.ahdis.matchbox.packages.ImplementationGuideProviderR4;
+import ch.ahdis.matchbox.statistics.StatisticsObservationProvider;
 import ch.ahdis.matchbox.util.MatchboxEngineSupport;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
@@ -61,6 +63,11 @@ public class FhirServerConfigR4 {
   @Bean
   public ValidationProvider validationProvider() {
     return new ValidationProvider();
+  }
+  
+  @Bean
+  public StatisticsObservationProvider statisticsObservationProvider(IStatisticsDao statisticsDao) { 
+    return new StatisticsObservationProvider(statisticsDao);
   }
 
 
