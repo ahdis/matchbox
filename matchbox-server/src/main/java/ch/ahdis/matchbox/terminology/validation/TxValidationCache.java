@@ -11,6 +11,13 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
+/**
+ * Cache for terminology validation ValueSet expansions.
+ * 
+ * MEMORY LEAK PREVENTION:
+ * Inner maps use LinkedHashMap with LRU eviction policy to prevent unbounded growth.
+ * See createBoundedLinkedHashMap() and docs/memory-leak-prevention.md for details.
+ */
 @Service
 public class TxValidationCache {
 
@@ -42,12 +49,27 @@ public class TxValidationCache {
 	}
 
 	/**
-	 * Creates a bounded LRU cache for ValueSets to prevent memory leaks
+	 * Creates a bounded LRU cache for ValueSets to prevent memory leaks.
+	 * 
+	 * IMPORTANT: Simply using LinkedHashMap does NOT prevent memory leaks.
+	 * What prevents the leak is the combination of:
+	 * 1. LinkedHashMap with accessOrder=true (3rd parameter) - maintains access order
+	 * 2. removeEldestEntry() override - automatically removes oldest entry when size exceeds limit
+	 * 
+	 * When a new ValueSet is added and size() > MAX_VALUESETS_PER_CACHE_ID:
+	 * - removeEldestEntry() returns true
+	 * - LinkedHashMap automatically removes the least recently used entry
+	 * - This implements an LRU (Least Recently Used) cache with bounded size
+	 * 
+	 * See docs/memory-leak-prevention.md for detailed explanation.
+	 * 
+	 * @return A bounded LinkedHashMap with LRU eviction policy
 	 */
 	private Map<String, ValueSet> createBoundedLinkedHashMap() {
 		return new LinkedHashMap<String, ValueSet>(20, 0.75f, true) {
 			@Override
 			protected boolean removeEldestEntry(Map.Entry<String, ValueSet> eldest) {
+				// When this returns true, the eldest (least recently used) entry is automatically removed
 				return size() > MAX_VALUESETS_PER_CACHE_ID;
 			}
 		};

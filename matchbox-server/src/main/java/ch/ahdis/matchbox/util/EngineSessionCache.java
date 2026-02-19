@@ -33,14 +33,28 @@ import org.hl7.fhir.validation.service.PassiveExpiringSessionCache;
 /**
  * @author Oliver Egger
  * 
- *         We want to have a validation engines also that are not timed out as
- *         in the parent class.
- *         
- *         Note: To prevent memory leaks, the "forever" caches use an LRU eviction policy
- *         with a maximum size limit. When the limit is reached, the least recently used
- *         entries are automatically removed. The bidirectional maps (sessionId->engine and
- *         engine->sessionId) may temporarily have orphaned entries after eviction, but these
- *         will be naturally evicted by the LRU policy, preventing unbounded growth.
+ * We want to have validation engines also that are not timed out as
+ * in the parent class.
+ * 
+ * MEMORY LEAK PREVENTION:
+ * To prevent memory leaks, the "forever" caches use an LRU (Least Recently Used) eviction
+ * policy with a maximum size limit. This is implemented using LinkedHashMap with the
+ * removeEldestEntry() method override.
+ * 
+ * IMPORTANT: Simply changing HashMap to LinkedHashMap does NOT prevent memory leaks.
+ * The key is the removeEldestEntry() override that returns true when the size limit is
+ * exceeded, causing LinkedHashMap to automatically remove the least recently used entry.
+ * 
+ * When the limit (MAX_PERMANENT_CACHE_SIZE) is reached:
+ * - New entries can still be added
+ * - The least recently used entry is automatically removed
+ * - This keeps the cache size bounded, preventing OutOfMemoryError
+ * 
+ * The bidirectional maps (sessionId->engine and engine->sessionId) may temporarily have
+ * orphaned entries after eviction, but these will be naturally evicted by the LRU policy,
+ * preventing unbounded growth.
+ * 
+ * See docs/memory-leak-prevention.md for detailed explanation of the pattern.
  */
 public class EngineSessionCache extends PassiveExpiringSessionCache {
 
@@ -59,12 +73,26 @@ public class EngineSessionCache extends PassiveExpiringSessionCache {
         this.setResetExpirationAfterFetch(true);
         cachedSessionIds = new PassiveExpiringMap<>(TEST_TIME_TO_LIVE, TIME_UNIT);
         
-        // Create LRU caches with automatic eviction to prevent memory leaks
-        // Use a single map to avoid bidirectional synchronization issues
+        // IMPORTANT: Create LRU caches with automatic eviction to prevent memory leaks.
+        // 
+        // Simply changing HashMap to LinkedHashMap does NOT prevent memory leaks.
+        // What prevents the leak is the combination of:
+        // 1. LinkedHashMap with accessOrder=true (3rd parameter) - maintains access order
+        // 2. removeEldestEntry() override - automatically removes oldest entry when size exceeds limit
+        // 3. Collections.synchronizedMap() wrapper - provides thread safety
+        //
+        // When a new entry is added and size() > MAX_PERMANENT_CACHE_SIZE:
+        // - removeEldestEntry() returns true
+        // - LinkedHashMap automatically removes the least recently used entry
+        // - This implements an LRU (Least Recently Used) cache with bounded size
+        //
+        // See docs/memory-leak-prevention.md for detailed explanation.
+        
         this.cachedSessionsNoTimeout = Collections.synchronizedMap(
             new LinkedHashMap<String, ValidationEngine>(MAX_PERMANENT_CACHE_SIZE, 0.75f, true) {
                 @Override
                 protected boolean removeEldestEntry(Map.Entry<String, ValidationEngine> eldest) {
+                    // When this returns true, the eldest (least recently used) entry is automatically removed
                     return size() > MAX_PERMANENT_CACHE_SIZE;
                 }
             }
@@ -74,6 +102,7 @@ public class EngineSessionCache extends PassiveExpiringSessionCache {
             new LinkedHashMap<ValidationEngine, String>(MAX_PERMANENT_CACHE_SIZE, 0.75f, true) {
                 @Override
                 protected boolean removeEldestEntry(Map.Entry<ValidationEngine, String> eldest) {
+                    // When this returns true, the eldest (least recently used) entry is automatically removed
                     return size() > MAX_PERMANENT_CACHE_SIZE;
                 }
             }
