@@ -868,6 +868,10 @@ public class CliContext {
     return result;
   }
 
+  public String sessionId() {
+	 return String.valueOf(this.hashCode());
+  }
+
   @Override
   public String toString() {
     return "CliContext{" +
