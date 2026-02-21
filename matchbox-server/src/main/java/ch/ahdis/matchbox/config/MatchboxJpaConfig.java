@@ -57,6 +57,7 @@ import ch.ahdis.matchbox.mappinglanguage.StructureMapTransformProvider;
 import ch.ahdis.matchbox.packages.*;
 import ch.ahdis.matchbox.providers.*;
 import ch.ahdis.matchbox.questionnaire.*;
+import ch.ahdis.matchbox.util.MatchboxEngineCache;
 import ch.ahdis.matchbox.util.MatchboxEngineSupport;
 import ch.ahdis.matchbox.util.MatchboxPackageInstallerImpl;
 import ch.ahdis.matchbox.validation.ValidationProvider;
@@ -243,10 +244,16 @@ public class MatchboxJpaConfig extends StarterJpaConfig {
 	}
 
 	@Bean
+	public MatchboxEngineCache matchboxEngineCache() {
+		return new MatchboxEngineCache();
+	}
+
+	@Bean
 	public MatchboxEngineSupport getMatchboxEngineSupport(final MatchboxFhirContextProperties matchboxFhirContextProperties,
 																			final CliContext cliContext,
-																			@Value("${hapi.fhir.fhir_version}") final FhirVersionEnum serverFhirVersion) {
-		return new MatchboxEngineSupport(matchboxFhirContextProperties, cliContext, serverFhirVersion);
+																			@Value("${hapi.fhir.fhir_version}") final FhirVersionEnum serverFhirVersion,
+																			final MatchboxEngineCache matchboxEngineCache) {
+		return new MatchboxEngineSupport(matchboxFhirContextProperties, cliContext, serverFhirVersion, matchboxEngineCache);
 	}
 
 	@Bean
