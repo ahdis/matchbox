@@ -2,9 +2,9 @@ package ch.ahdis.matchbox.mappinglanguage;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
+import ch.ahdis.matchbox.util.metrics.MatchboxMetrics;
 import jakarta.servlet.ServletOutputStream;
 /*
  * #%L
@@ -59,8 +59,6 @@ import org.hl7.fhir.r4.model.Narrative.NarrativeStatus;
 import org.hl7.fhir.r5.model.*;
 
 import javax.annotation.Nullable;
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * StructureMapTransformProvider
@@ -69,6 +67,9 @@ public class StructureMapTransformProvider extends StructureMapResourceProvider 
 
 	@Autowired
 	protected MatchboxEngineSupport matchboxEngineSupport;
+
+	@Autowired(required = false)
+	private Optional<MatchboxMetrics> matchboxMetrics;
 
 	private final FhirContext fhirR5Context = FhirContext.forR5Cached();
 
@@ -97,6 +98,7 @@ public class StructureMapTransformProvider extends StructureMapResourceProvider 
 	@Operation(name = "$transform", type = StructureMap.class, manualResponse = true, manualRequest = true)
 	public void manualInputAndOutput(final HttpServletRequest theServletRequest,
 												final HttpServletResponse theServletResponse) throws IOException {
+		this.matchboxMetrics.ifPresent(MatchboxMetrics::addTransformation);
 		// Parse the request body, it is either a Parameters resource, or any resource
 		final String body = new String(theServletRequest.getInputStream().readAllBytes()).trim();
 		@Nullable String resource = null;

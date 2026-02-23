@@ -525,4 +525,8 @@ public class ImplementationGuideProviderR5 extends ImplementationGuideResourcePr
 				.setVersion(packageVersion)
 		);
 	}
+
+	public long count() {
+		return this.myPackageVersionDao.count();
+	}
 }
