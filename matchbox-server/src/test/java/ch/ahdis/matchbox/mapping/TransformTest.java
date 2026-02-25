@@ -1,7 +1,6 @@
 package ch.ahdis.matchbox.mapping;
 
 import ca.uhn.fhir.context.FhirContext;
-import ca.uhn.fhir.context.FhirVersionEnum;
 import ca.uhn.fhir.jpa.starter.Application;
 import ch.ahdis.matchbox.test.CompareUtil;
 import ch.ahdis.matchbox.test.ValidationClient;
@@ -12,7 +11,6 @@ import org.junit.jupiter.api.TestInstance;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
-import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.ContextConfiguration;
 
@@ -36,7 +34,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 @ContextConfiguration(classes = {Application.class})
 @ActiveProfiles("test-transform")
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-@DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_CLASS)
 public class TransformTest {
 	private static final String TARGET_SERVER = "http://localhost:8086/matchboxv3";
 	private static final FhirContext FHIR_CONTEXT = FhirContext.forR4Cached();

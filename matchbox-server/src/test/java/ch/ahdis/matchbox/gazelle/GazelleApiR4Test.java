@@ -9,7 +9,6 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.ContextConfiguration;
 
@@ -25,7 +24,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 @ContextConfiguration(classes = { Application.class })
 @ActiveProfiles("test-r4")
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-@DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_CLASS)
 public class GazelleApiR4Test extends AbstractGazelleTest {
 
 	private final GazelleClient client = new GazelleClient("http://localhost:8081/matchboxv3/gazelle/");
