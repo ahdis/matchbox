@@ -24,8 +24,8 @@ public class MatchboxMetrics {
 			.register(meterRegistry);
 		this.validationDurationTimer = Timer.builder("matchbox.validation.duration")
 			.description("Duration of FHIR resource validation by Matchbox")
-			.distributionStatisticExpiry(Duration.ofDays(30))
-			.distributionStatisticBufferLength(1000)
+			.distributionStatisticExpiry(Duration.ofSeconds(30))
+			.distributionStatisticBufferLength(10)
 			.register(meterRegistry);
 		this.transformationCounter = Counter.builder("matchbox.transformation.count")
 			.description("Number of FHIR resources transformed by Matchbox")
