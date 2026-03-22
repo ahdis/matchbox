@@ -1,0 +1,17 @@
+# Common configuration of all test Spring profiles.
+
+## Disable all metrics and the metrics endpoint
+management:
+  metrics:
+    enable:
+      all: false
+  endpoint:
+    metrics:
+      enabled: false
+  endpoints:
+    web:
+      exposure:
+        exclude: "*"
+    jmx:
+      exposure:
+        exclude: "*"

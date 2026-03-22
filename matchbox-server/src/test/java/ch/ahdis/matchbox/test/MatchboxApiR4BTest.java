@@ -36,7 +36,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 		"hapi.fhir.implementationguides.fhir_terminology.name=",
 		"hapi.fhir.implementationguides.fhir_extensions.name="}) // Unset R4 IGs
 @ContextConfiguration(classes = {Application.class})
-@ActiveProfiles("test-r4b")
+@ActiveProfiles({"test-r4b", "disable-metrics"})
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_CLASS)
 class MatchboxApiR4BTest {
