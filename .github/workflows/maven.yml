@@ -23,26 +23,30 @@ jobs:
           distribution: adopt
           cache: maven
 
-      - name: Run the tests in Maven
+      - name: Run the core tests in Maven
         timeout-minutes: 15
         # We need a timeout here
         env:
           MAVEN_OPTS: -Xmx12g
-        run: mvn --batch-mode --no-transfer-progress --update-snapshots verify
-    
-      - uses: actions/upload-artifact@v4
-        if: failure() 
-        with:
-          name: testresults
-          path: |
-            ./matchbox-server/target/surefire-reports
-            ./matchbox-engine/target/surefire-reports
-          retention-days: 2
+        run: mvn --batch-mode --no-transfer-progress --update-snapshots -Dgroups='core' test
 
-      - name: Test Summary
-        uses: test-summary/action@v2
-        with:
-          paths: |
-            matchbox-engine/target/surefire-reports/TEST-*.xml
-            matchbox-server/target/surefire-reports/TEST-*.xml
-        if: always()
+      - name: Run the validation tests in Maven
+        timeout-minutes: 15
+        # We need a timeout here
+        env:
+          MAVEN_OPTS: -Xmx12g
+        run: mvn --batch-mode --no-transfer-progress --update-snapshots -Dgroups='validation' test
+
+      - name: Run the Gazelle API tests in Maven
+        timeout-minutes: 15
+        # We need a timeout here
+        env:
+          MAVEN_OPTS: -Xmx12g
+        run: mvn --batch-mode --no-transfer-progress --update-snapshots -Dgroups='gazelle' test
+
+      - name: Run the mapping tests in Maven
+        timeout-minutes: 15
+        # We need a timeout here
+        env:
+          MAVEN_OPTS: -Xmx12g
+        run: mvn --batch-mode --no-transfer-progress --update-snapshots -Dgroups='mapping' test

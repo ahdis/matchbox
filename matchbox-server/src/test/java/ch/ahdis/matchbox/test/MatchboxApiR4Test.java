@@ -4,6 +4,7 @@ import ca.uhn.fhir.context.BaseRuntimeChildDefinition;
 import ca.uhn.fhir.context.FhirContext;
 import ca.uhn.fhir.context.RuntimeResourceDefinition;
 import ca.uhn.fhir.jpa.starter.Application;
+import ch.ahdis.matchbox.TestTags;
 import ch.ahdis.matchbox.validation.gazelle.models.validation.ValidationItem;
 import ch.ahdis.matchbox.validation.gazelle.models.validation.ValidationReport;
 import ch.ahdis.matchbox.validation.gazelle.models.validation.ValidationRequest;
@@ -14,10 +15,7 @@ import org.hl7.fhir.r4.model.OperationOutcome;
 import org.hl7.fhir.r4.model.OperationOutcome.IssueSeverity;
 import org.hl7.fhir.r4.model.OperationOutcome.OperationOutcomeIssueComponent;
 import org.hl7.fhir.r4.model.Parameters;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.Disabled;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.TestInstance;
+import org.junit.jupiter.api.*;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.context.SpringBootTest.WebEnvironment;
 import org.springframework.core.io.ClassPathResource;
@@ -60,6 +58,7 @@ class MatchboxApiR4Test {
 	}
 
 	@Test
+	@Tag(TestTags.VALIDATION)
 	void validatePatientRawR4() {
 
 		String patient = """
@@ -85,6 +84,7 @@ class MatchboxApiR4Test {
 	}
 
 	@Test
+	@Tag(TestTags.CORE)
 	void verifyCachingImplementationGuides() {
 		String resource = """
 			<Practitioner xmlns="http://hl7.org/fhir">
@@ -143,6 +143,7 @@ class MatchboxApiR4Test {
 	}
 
 	@Test
+	@Tag(TestTags.CORE)
 	void verifyIgVersioning() {
 		String resource = """
 			<Practitioner xmlns="http://hl7.org/fhir">
@@ -192,6 +193,7 @@ class MatchboxApiR4Test {
 	}
 
 	@Test
+	@Tag(TestTags.GAZELLE)
 	void verifyIgVersioningGazelle() throws Exception {
 		String resource = """
 			<Practitioner xmlns="http://hl7.org/fhir">
@@ -233,6 +235,7 @@ class MatchboxApiR4Test {
 
 
 	@Test
+	@Tag(TestTags.VALIDATION)
 		// https://gazelle.ihe.net/jira/browse/EHS-431
 	void validateEhs431() throws IOException {
 		// IBaseOperationOutcome operationOutcome =
@@ -245,6 +248,7 @@ class MatchboxApiR4Test {
 	}
 
 	@Test
+	@Tag(TestTags.GAZELLE)
 	void validateEhs431Gazelle() throws Exception {
 		ValidationReport report = this.validateWithGazelle(getContent("ehs-431.json"),
 																			profileCore("Bundle"));
@@ -252,6 +256,7 @@ class MatchboxApiR4Test {
 	}
 
 	@Test
+	@Tag(TestTags.VALIDATION)
 		// https://gazelle.ihe.net/jira/browse/EHS-419
 	void validateEhs419() throws IOException {
 		IBaseOperationOutcome operationOutcome = validationClient.validate(getContent("ehs-419.json"),
@@ -261,6 +266,7 @@ class MatchboxApiR4Test {
 	}
 
 	@Test
+	@Tag(TestTags.VALIDATION)
 	void validateIgnoreError() {
 
 		String patient = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\r\n" + //
@@ -287,6 +293,7 @@ class MatchboxApiR4Test {
 	}
 
 	@Test
+	@Tag(TestTags.VALIDATION)
 	void validateIgnoreErrorMatchboxTest() throws Exception {
 		String practitioner = "<Practitioner xmlns=\"http://hl7.org/fhir\">\n" + //
 						"    <extension url=\"http://hl7.org/fhir/StructureDefinition/unknown\">\n" + //
@@ -303,7 +310,7 @@ class MatchboxApiR4Test {
 						"        <value value=\"7610000050719\" />\n" + //
 						"    </identifier>\n" + //
 						"</Practitioner>";
-		
+
 		IBaseOperationOutcome operationOutcome = this.validationClient.validate(practitioner,"http://matchbox.health/ig/test/r4/StructureDefinition/practitioner-identifier-required");
 		assertEquals(0, getValidationFailures((OperationOutcome) operationOutcome));
 
@@ -312,6 +319,7 @@ class MatchboxApiR4Test {
 	}
 
 	@Test
+	@Tag(TestTags.GAZELLE)
 	void validateEhs419Gazelle() throws Exception {
 		ValidationReport report = this.validateWithGazelle(getContent("ehs-419.json"),
 																			"http://hl7.org/fhir/StructureDefinition/Patient");
@@ -319,6 +327,7 @@ class MatchboxApiR4Test {
 	}
 
 	@Test
+	@Tag(TestTags.VALIDATION)
 	void validateXVersionSlicingExtensions() throws Exception {
 
 		String encounter = "<Encounter xmlns=\"http://hl7.org/fhir\">\n" + //
@@ -345,13 +354,14 @@ class MatchboxApiR4Test {
 						"    <code value=\"HH\"/>\n" + //
 						"  </class>\n" + //
 						"</Encounter>";
-		
+
 		IBaseOperationOutcome operationOutcome = this.validationClient.validate(encounter,
 																			"http://matchbox.health/ig/test/r4/StructureDefinition/encounter-ext-r5");
 		assertEquals(0, getValidationFailures((OperationOutcome) operationOutcome));
 	}
 
 	@Test
+	@Tag(TestTags.VALIDATION)
 	@Disabled("For some reason, the validation engine does not fail on unknown extensions with the default configuration, needs further investigation")
 	void validateUnknownExtensionIsRejectedByDefault() throws Exception {
 		final var patient = getContent("patient-dicom.json");
@@ -360,6 +370,7 @@ class MatchboxApiR4Test {
 	}
 
 	@Test
+	@Tag(TestTags.VALIDATION)
 	void validateUnknownExtensionIsAcceptedWithAny() throws Exception {
 		final var patient = getContent("patient-dicom.json");
 		final var parameters = new Parameters();
@@ -370,6 +381,7 @@ class MatchboxApiR4Test {
 	}
 
 	@Test
+	@Tag(TestTags.VALIDATION)
 	void validateUnknownExtensionIsAcceptedWithValidDomain() throws Exception {
 		final var patient = getContent("patient-dicom.json");
 		final var parameters = new Parameters();
@@ -380,6 +392,7 @@ class MatchboxApiR4Test {
 	}
 
 	@Test
+	@Tag(TestTags.VALIDATION)
 	@Disabled("For some reason, the validation engine does not fail on unknown extensions with the default configuration, needs further investigation")
 	void validateUnknownExtensionIsRejectedWithWrongDomain() throws Exception {
 		final var patient = getContent("patient-dicom.json");

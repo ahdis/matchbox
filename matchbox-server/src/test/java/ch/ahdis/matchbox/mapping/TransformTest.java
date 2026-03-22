@@ -1,12 +1,13 @@
 package ch.ahdis.matchbox.mapping;
 
 import ca.uhn.fhir.context.FhirContext;
-import ca.uhn.fhir.context.FhirVersionEnum;
 import ca.uhn.fhir.jpa.starter.Application;
+import ch.ahdis.matchbox.TestTags;
 import ch.ahdis.matchbox.test.CompareUtil;
 import ch.ahdis.matchbox.test.ValidationClient;
 import org.apache.commons.io.FileUtils;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -37,7 +38,8 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 @ActiveProfiles("test-transform")
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_CLASS)
-public class TransformTest {
+@Tag(TestTags.MAPPING)
+class TransformTest {
 	private static final String TARGET_SERVER = "http://localhost:8086/matchboxv3";
 	private static final FhirContext FHIR_CONTEXT = FhirContext.forR4Cached();
 
@@ -94,7 +96,7 @@ public class TransformTest {
 		assertTrue(docRef.contains("<line value=\"rue de la république 10\">"));
 		assertTrue(docRef.contains("<valueString value=\"rue de la république\"/>"));
 	}
-	
+
 	@Test
 	void testTransformEncounterR4() throws Exception {
 		// Test the regular $transform operation with an R4 resource
