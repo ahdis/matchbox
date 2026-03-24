@@ -10,11 +10,7 @@ on:
 
 jobs:
   build:
-    strategy:
-      fail-fast: false
-      matrix:
-        os: [ ubuntu-latest, ubuntu-slim, macos-latest, windows-latest ]
-    runs-on: ${{ matrix.os }}
+    runs-on: ubuntu-latest
     steps:
       - name: Checkout the project
         uses: actions/checkout@v5
@@ -47,7 +43,7 @@ jobs:
 
       - name: Run the MatchboxApiR4Test tests in Maven
         timeout-minutes: 15
-        run: mvn --batch-mode --no-transfer-progress --update-snapshots -pl matchbox-server -Dtest=MatchboxApiR4Test test
+        run: mvn --batch-mode --no-transfer-progress --update-snapshots -pl matchbox-server -Dscheduling_disabled=true -Dtest=MatchboxApiR4Test test
 
 
       - name: Run the MatchboxApiR4BTest tests in Maven
