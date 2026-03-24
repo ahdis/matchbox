@@ -43,6 +43,7 @@ import org.hl7.fhir.r4.model.StructureMap;
 import org.hl7.fhir.r5.formats.JsonParser;
 import org.hl7.fhir.r5.model.Composition;
 import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import ch.ahdis.matchbox.engine.MatchboxEngine;
@@ -62,6 +63,12 @@ class FhirMappingLanguageTests {
 	@AfterAll
 	static void teardownClass() {
 		CompareUtil.logMemory();
+	}
+
+	@BeforeEach
+	void clean() {
+		this.engine.getContext().dropResource("StructureDefinition", "TLeft");
+		this.engine.getContext().dropResource("StructureDefinition", "TRight");
 	}
 
 	public String getFileAsStringFromResources(String file) throws IOException {
