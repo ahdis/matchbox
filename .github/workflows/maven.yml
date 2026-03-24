@@ -11,6 +11,7 @@ on:
 jobs:
   build:
     strategy:
+      fail-fast: false
       matrix:
         os: [ ubuntu-latest, ubuntu-slim, macos-latest, windows-latest ]
     runs-on: ${{ matrix.os }}
@@ -25,6 +26,10 @@ jobs:
           java-version: 21
           distribution: adopt
           cache: maven
+
+      - name: Install maven (ubuntu-slim)
+        if: matrix.os == 'ubuntu-slim'
+        run: sudo apt-get update && sudo apt-get install -y maven
 
       - name: Run the engine tests in Maven
         timeout-minutes: 15
