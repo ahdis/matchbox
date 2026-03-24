@@ -1,8 +1,12 @@
 2026/03/23 Release 4.1.0
 
-- Upgrade HAPI FHIR from 8.0.0 to 8.8.0, Spring Boot from 3.3.13 to 3.5.9
+- Upgrade HAPI FHIR from 8.0.0 to 8.8.0, Spring Boot from 3.3.13 to 3.5.12
 - Upgrade jackson-core to 2.21.2 to fix async parser DoS vulnerability (GHSA-72hv-8253-57qq)
 - Upgrade Angular from 21.1.3 to 21.2.5 to fix XSS vulnerability in i18n attribute bindings (CVE-2026-32635)
+- Upgrade Tomcat from 10.1.48 to 10.1.52 to fix input validation vulnerability (CVE-2025-31651)
+- Upgrade Spring Boot from 3.5.9 to 3.5.12 to fix actuator authentication bypass (CVE-2025-49470, CVE-2025-49471)
+- Fix prototype pollution in flatted (GHSA-v5vr-gp4q-wv4p)
+- Fix undici WebSocket parser crash (GHSA-7r4h-r29g-6p4p)
 
 2026/03/22 Release 4.0.20
 
