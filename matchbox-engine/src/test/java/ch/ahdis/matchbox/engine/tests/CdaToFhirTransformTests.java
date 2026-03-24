@@ -23,148 +23,127 @@ package ch.ahdis.matchbox.engine.tests;
 import ch.ahdis.matchbox.engine.CdaMappingEngine;
 import org.apache.commons.io.IOUtils;
 import org.hl7.fhir.exceptions.FHIRException;
-import org.hl7.fhir.instance.model.api.IBaseOperationOutcome;
 import org.hl7.fhir.r4.model.Bundle;
 import org.hl7.fhir.r4.model.Composition;
 import org.hl7.fhir.r4.model.Condition;
 import org.hl7.fhir.r4.model.Observation;
-import org.hl7.fhir.r4.model.OperationOutcome;
-import org.hl7.fhir.r4.model.OperationOutcome.IssueSeverity;
-import org.hl7.fhir.r4.model.OperationOutcome.OperationOutcomeIssueComponent;
 import org.hl7.fhir.r4.model.Patient;
 import org.hl7.fhir.r4.model.Resource;
 import org.hl7.fhir.r4.model.StructureMap;
-import org.hl7.fhir.r5.utils.EOperationOutcome;
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.*;
 
 
 import static org.junit.jupiter.api.Assertions.*;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.URISyntaxException;
 import java.nio.charset.StandardCharsets;
 import java.util.Calendar;
 
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class CdaToFhirTransformTests {
 
-	static private CdaMappingEngine engine;
-	static String cdaLabItaly;
+	private final CdaMappingEngine engine;
+	private final String cdaLabItaly;
 
 	private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(CdaToFhirTransformTests.class);
 
-	@BeforeAll
-	static void setUpBeforeClass() throws Exception {
+	public CdaToFhirTransformTests() throws Exception {
 		InputStream in = getResourceAsStream("cda-it.xml");
 		cdaLabItaly = IOUtils.toString(in, StandardCharsets.UTF_8);
+		engine = this.getEngine();
 	}
-	
+
 	@AfterAll
-	static void teardownClass() throws Exception {
-		engine = null;
+	void teardownClass() {
 		CompareUtil.logMemory();
 	}
 
-
-	private CdaMappingEngine getEngine() {
-		if (engine == null) {
-			try {
-				engine = new CdaMappingEngine.CdaMappingEngineBuilder().getCdaEngineR4();
-				StructureMap sm = engine.parseMap(getFileAsStringFromResources("datatypes.map"));
-				assertTrue(sm != null);
-				engine.addCanonicalResource(sm);
-				sm = engine.parseMap(getFileAsStringFromResources("FullHeader.map"));
-				assertTrue(sm != null);
-				engine.addCanonicalResource(sm);
-				sm = engine.parseMap(getFileAsStringFromResources("LabBody.map"));
-				assertTrue(sm != null);
-				engine.addCanonicalResource(sm);
-				sm = getEngine().parseMap(getFileAsStringFromResources("cda-it-observation.map"));
-				assertTrue(sm != null);
-				engine.addCanonicalResource(sm);
-				sm = getEngine().parseMap(getFileAsStringFromResources("cda-it-observation-st-r2b.map"));
-				assertTrue(sm != null);
-				engine.addCanonicalResource(sm);
-				sm = getEngine().parseMap(getFileAsStringFromResources("cda-it-observation-condition.map"));
-				assertTrue(sm != null);
-				engine.addCanonicalResource(sm);
-				sm = getEngine().parseMap(getFileAsStringFromResources("fhir-to-cda.map"));
-				assertTrue(sm != null);
-				engine.addCanonicalResource(sm);
-			} catch (FHIRException | IOException | URISyntaxException e) {
-				e.printStackTrace();
-			}
-			return engine;
-		}
+	private CdaMappingEngine getEngine() throws Exception {
+		final var engine = new CdaMappingEngine.CdaMappingEngineBuilder().getCdaEngineR4();
+		StructureMap sm = engine.parseMap(getFileAsStringFromResources("datatypes.map"));
+		assertTrue(sm != null);
+		engine.addCanonicalResource(sm);
+		sm = engine.parseMap(getFileAsStringFromResources("FullHeader.map"));
+		assertTrue(sm != null);
+		engine.addCanonicalResource(sm);
+		sm = engine.parseMap(getFileAsStringFromResources("LabBody.map"));
+		assertTrue(sm != null);
+		engine.addCanonicalResource(sm);
+		sm = engine.parseMap(getFileAsStringFromResources("cda-it-observation.map"));
+		assertTrue(sm != null);
+		engine.addCanonicalResource(sm);
+		sm = engine.parseMap(getFileAsStringFromResources("cda-it-observation-st-r2b.map"));
+		assertTrue(sm != null);
+		engine.addCanonicalResource(sm);
+		sm = engine.parseMap(getFileAsStringFromResources("cda-it-observation-condition.map"));
+		assertTrue(sm != null);
+		engine.addCanonicalResource(sm);
+		sm = engine.parseMap(getFileAsStringFromResources("fhir-to-cda.map"));
+		assertTrue(sm != null);
+		engine.addCanonicalResource(sm);
 		return engine;
-	}
-
-	@BeforeEach
-	void setUp() throws Exception {
 	}
 
 	@Test
 	void TestFhirPath() throws FHIRException, IOException {
-	    
-	  String str = getEngine().convert(cdaLabItaly, false);
+
+	  String str = this.engine.convert(cdaLabItaly, false);
 	  log.debug(str);
 
-		assertEquals("11502-2", getEngine().evaluateFhirPath(cdaLabItaly, false, "code.code"));
+		assertEquals("11502-2", this.engine.evaluateFhirPath(cdaLabItaly, false, "code.code"));
 		String attributeWithCdaWhiteSpace = cdaLabItaly.replaceAll("11502-2", " 11502-2");
 		assertTrue(attributeWithCdaWhiteSpace.indexOf(" 11502-2") > 0);
 		assertEquals("11502-2",
-				getEngine().evaluateFhirPath(attributeWithCdaWhiteSpace, false, "code.code"));
+				this.engine.evaluateFhirPath(attributeWithCdaWhiteSpace, false, "code.code"));
 		assertEquals("REFERTO DI LABORATORIO",
-				getEngine().evaluateFhirPath(cdaLabItaly, false, "title.xmlText"));
-		assertEquals("IT", getEngine().evaluateFhirPath(cdaLabItaly, false, "realmCode.code"));
+				this.engine.evaluateFhirPath(cdaLabItaly, false, "title.xmlText"));
+		assertEquals("IT", this.engine.evaluateFhirPath(cdaLabItaly, false, "realmCode.code"));
 		assertEquals("2.16.840.1.113883.1.3",
-				getEngine().evaluateFhirPath(cdaLabItaly, false, "typeId.root"));
+				this.engine.evaluateFhirPath(cdaLabItaly, false, "typeId.root"));
 //		assertEquals("POCD_MT000040UV02",
-//				getEngine().evaluateFhirPath(cdaLabItaly, false, "typeId.extension"));
+//				this.engine.evaluateFhirPath(cdaLabItaly, false, "typeId.extension"));
     assertEquals("POCD_HD000040",
-            getEngine().evaluateFhirPath(cdaLabItaly, false, "typeId.extension"));
+            this.engine.evaluateFhirPath(cdaLabItaly, false, "typeId.extension"));
 		// stdc
-//		assertEquals("active", getEngine().evaluateFhirPath(cdaLabItaly, false, "statusCode.code"));
+//		assertEquals("active", this.engine.evaluateFhirPath(cdaLabItaly, false, "statusCode.code"));
 		// changed with core 7.3.0
-    assertEquals("active", getEngine().evaluateFhirPath(cdaLabItaly, false, "sdtcStatusCode.code"));
+    assertEquals("active", this.engine.evaluateFhirPath(cdaLabItaly, false, "sdtcStatusCode.code"));
 		// <effectiveTime value="20220330112426+0100"/>
 		assertEquals("2022-03-30T11:24:26+01:00",
-				getEngine().evaluateFhirPath(cdaLabItaly, false, "effectiveTime.value"));
+				this.engine.evaluateFhirPath(cdaLabItaly, false, "effectiveTime.value"));
 		assertEquals("1993-06-19",
-				getEngine().evaluateFhirPath(cdaLabItaly,
+				this.engine.evaluateFhirPath(cdaLabItaly,
 						false,
 						"recordTarget.patientRole.patient.birthTime.value"));
-		
-		
+
+
 //		https://hl7.org/cda/stds/core/2.0.0-sd-snapshot1/StructureDefinition-PN.html
 		assertEquals("Verdi",
-				getEngine().evaluateFhirPath(cdaLabItaly,
+				this.engine.evaluateFhirPath(cdaLabItaly,
 						false,
 						"recordTarget.patientRole.patient.name.item.family.xmlText"));
 		assertEquals("Giuseppe",
-				getEngine().evaluateFhirPath(cdaLabItaly,
+				this.engine.evaluateFhirPath(cdaLabItaly,
 						false,
 						"recordTarget.patientRole.patient.name.item.given.xmlText"));
 
 		// hl7 austria
 
-		assertEquals("2021-06-01", getEngine().evaluateFhirPath(cdaLabItaly, false, "terminologyDate.value"));
-		assertEquals("code", getEngine().evaluateFhirPath(cdaLabItaly, false, "formatCode.code"));
-		assertEquals("F028", getEngine().evaluateFhirPath(cdaLabItaly, false, "practiceSettingCode.code"));
+		assertEquals("2021-06-01", this.engine.evaluateFhirPath(cdaLabItaly, false, "terminologyDate.value"));
+		assertEquals("code", this.engine.evaluateFhirPath(cdaLabItaly, false, "formatCode.code"));
+		assertEquals("F028", this.engine.evaluateFhirPath(cdaLabItaly, false, "practiceSettingCode.code"));
 	}
 
 	@Test
 	void TestInitial() throws FHIRException, IOException {
-		String result = getEngine().transform(cdaLabItaly,
+		String result = this.engine.transform(cdaLabItaly,
 				false,
 				"http://salute.gov.it/ig/cda-fhir-maps/StructureMap/RefertodilaboratorioFULLBODY",
 				true);
 		assertNotNull(result);
 
-		Bundle resource = (Bundle) getEngine().transformToFhir(cdaLabItaly,	false,"http://salute.gov.it/ig/cda-fhir-maps/StructureMap/RefertodilaboratorioFULLBODY");
+		Bundle resource = (Bundle) this.engine.transformToFhir(cdaLabItaly,	false,"http://salute.gov.it/ig/cda-fhir-maps/StructureMap/RefertodilaboratorioFULLBODY");
 		assertNotNull(resource);
 		Composition composition = (Composition) resource.getEntryFirstRep().getResource();
 		assertNotNull(composition);
@@ -181,12 +160,12 @@ class CdaToFhirTransformTests {
 	void TestObservation() throws FHIRException, IOException {
 		InputStream in = getResourceAsStream("cda-it-observation.xml");
 
-		StructureMap sm = getEngine().parseMap(getFileAsStringFromResources("cda-it-observation.map"));
+		StructureMap sm = this.engine.parseMap(getFileAsStringFromResources("cda-it-observation.map"));
 		assertTrue(sm != null);
 		engine.addCanonicalResource(sm);
 
 		String cdaObservation = IOUtils.toString(in, StandardCharsets.UTF_8);
-		Resource resource = getEngine().transformToFhir(cdaObservation,
+		Resource resource = this.engine.transformToFhir(cdaObservation,
 				false,
 				"http://salute.gov.it/ig/cda-fhir-maps/StructureMap/TestObservation");
 
@@ -204,7 +183,7 @@ class CdaToFhirTransformTests {
 		InputStream in = getResourceAsStream("cda-it-observation-st.xml");
 
 		String cdaObservation = IOUtils.toString(in, StandardCharsets.UTF_8);
-		Resource resource = getEngine().transformToFhir(cdaObservation,
+		Resource resource = this.engine.transformToFhir(cdaObservation,
 				false,
 				"http://salute.gov.it/ig/cda-fhir-maps/StructureMap/TestObservation");
 		Observation obs = (Observation) resource;
@@ -219,7 +198,7 @@ class CdaToFhirTransformTests {
 		InputStream in = getResourceAsStream("cda-it-observation-st-r2b.xml");
 
 		String cdaObservation = IOUtils.toString(in, StandardCharsets.UTF_8);
-		Resource resource = getEngine().transformToFhir(cdaObservation,
+		Resource resource = this.engine.transformToFhir(cdaObservation,
 				false,
 				"http://salute.gov.it/ig/cda-fhir-maps/StructureMap/TestObservationStR2b");
 		Observation obs = (Observation) resource;
@@ -234,7 +213,7 @@ class CdaToFhirTransformTests {
 		InputStream in = getResourceAsStream("cda-it-observation-cs.xml");
 
 		String cdaObservation = IOUtils.toString(in, StandardCharsets.UTF_8);
-		Resource resource = getEngine().transformToFhir(cdaObservation,
+		Resource resource = this.engine.transformToFhir(cdaObservation,
 				false,
 				"http://salute.gov.it/ig/cda-fhir-maps/StructureMap/TestObservation");
 		Observation obs = (Observation) resource;
@@ -249,7 +228,7 @@ class CdaToFhirTransformTests {
 		InputStream in = getResourceAsStream("cda-it-observation-cd.xml");
 
 		String cdaObservation = IOUtils.toString(in, StandardCharsets.UTF_8);
-		Resource resource = getEngine().transformToFhir(cdaObservation,
+		Resource resource = this.engine.transformToFhir(cdaObservation,
 				false,
 				"http://salute.gov.it/ig/cda-fhir-maps/StructureMap/TestObservation");
 		Observation obs = (Observation) resource;
@@ -264,7 +243,7 @@ class CdaToFhirTransformTests {
 		InputStream in = getResourceAsStream("cda-it-observation-condition.xml");
 
 		String cdaObservation = IOUtils.toString(in, StandardCharsets.UTF_8);
-		Resource resource = getEngine().transformToFhir(cdaObservation,
+		Resource resource = this.engine.transformToFhir(cdaObservation,
 				false,
 				"http://salute.gov.it/ig/cda-fhir-maps/StructureMap/TestObservationConditionCoding");
 		Condition condition = (Condition) resource;
@@ -275,7 +254,7 @@ class CdaToFhirTransformTests {
 
 	@Test
 	void TestSecond() throws FHIRException, IOException {
-		String result = getEngine().transform(cdaLabItaly,
+		String result = this.engine.transform(cdaLabItaly,
 				false,
 				"http://salute.gov.it/ig/cda-fhir-maps/StructureMap/RefertodilaboratorioFULLBODY",
 				true);
@@ -315,16 +294,16 @@ class CdaToFhirTransformTests {
 						"            </Composition>" + //
 						"        </resource>" + //
 						"    </entry>" + //
-						
+
 						"</Bundle>";
-		String result = getEngine().transform(bundleString,
+		String result = this.engine.transform(bundleString,
 														  false,
 														  "http://fhir.ch/ig/cda-fhir-maps/StructureMap/BundleToCda",
 														  false);
 		assertEquals("2.16.840.1.113883.1.3",
-						getEngine().evaluateFhirPath(result, false, "typeId.root"));
+						this.engine.evaluateFhirPath(result, false, "typeId.root"));
 //		assertEquals("POCD_MT000040UV02",
-//						getEngine().evaluateFhirPath(result, false, "typeId.extension"));
+//						this.engine.evaluateFhirPath(result, false, "typeId.extension"));
 		assertNotNull(result);
 		assertTrue(result.indexOf("20120204140500+0100")>0);
 		assertTrue(result.indexOf("6B6ED376-A7DA-44CB-92D1-E75CE1AE73B0")>0);
@@ -332,12 +311,12 @@ class CdaToFhirTransformTests {
 		assertTrue(result.indexOf("caption")>0);
 		assertTrue(result.indexOf("Kommentar")>0);
 			assertEquals("2012-02-04T14:05:00+01:00",
-				getEngine().evaluateFhirPath(result, false, "effectiveTime.value"));
+				this.engine.evaluateFhirPath(result, false, "effectiveTime.value"));
 	}
 
 	@Test
 	void TestThird() throws FHIRException, IOException {
-		String result = getEngine().transform(cdaLabItaly,
+		String result = this.engine.transform(cdaLabItaly,
 				false,
 				"http://salute.gov.it/ig/cda-fhir-maps/StructureMap/RefertodilaboratorioFULLBODY",
 				true);
@@ -345,15 +324,14 @@ class CdaToFhirTransformTests {
 	}
 
 	@Test
-	void TestValidateCdaIt() throws FHIRException, IOException, EOperationOutcome, URISyntaxException {
-	  ch.ahdis.matchbox.engine.CdaMappingEngine  engine = new CdaMappingEngine.CdaMappingEngineBuilder().getCdaEngineR4();
-		String fhirBundle = getEngine().transform(cdaLabItaly,
+	void TestValidateCdaIt() throws FHIRException, IOException {
+		String fhirBundle = this.engine.transform(cdaLabItaly,
 				false,
 				"http://salute.gov.it/ig/cda-fhir-maps/StructureMap/RefertodilaboratorioFULLBODY",
 				false);
 		assertNotNull(fhirBundle);
 		log.debug(fhirBundle);
-		String cda = getEngine().transform(fhirBundle,
+		String cda = this.engine.transform(fhirBundle,
 				false,
 				"http://fhir.ch/ig/cda-fhir-maps/StructureMap/BundleToCda",
 				false);
@@ -362,76 +340,6 @@ class CdaToFhirTransformTests {
 		// check that we do not have an "item in deserialization" see https://github.com/ahdis/matchbox/issues/196
 		assertTrue(cda.indexOf("item") < 0);
 		CompareUtil.logMemory();
-	}
-
-	private int errors(OperationOutcome op) {
-		int i = 0;
-		for (OperationOutcomeIssueComponent vm : op.getIssue()) {
-			if (vm.getSeverity() == IssueSeverity.ERROR || vm.getSeverity() == IssueSeverity.FATAL) {
-				// eg ('tel: 390 666 0581')
-				if (vm.getDetails().getText().startsWith("URI values cannot have whitespace")) {
-					continue;
-				}
-				// https://terminology.hl7.org/5.0.0/ValueSet-v3-RoleClassAssignedEntity.json.html
-				// has a filter with an is-a concept to ASSIGEND and this cannot be evaluated by
-				// org.hl7.fhir.r5.terminologies.ValueSetCheckerSimple
-        if (vm.getDetails().getText().startsWith(
-                "The System URI could not be determined for the code 'it-IT'")) {
-              continue;
-            }
-				if (vm.getDetails().getText().startsWith(
-						"The value provided ('it-IT') was not found in the value set 'All Languages'")) {
-					continue;
-				}
-        if (vm.getDetails().getText().startsWith(
-                "The value provided ('ASSIGNED') was not found in the value set 'RoleClassAssignedEntity'")) {
-              continue;
-            }
-        
-        if (vm.getDetails().getText().startsWith(
-                "IntendedRecipient.classCode: minimum required = 1,")) {
-              continue;
-            }
-        
-        if (vm.getDetails().getText().startsWith(
-                "ServiceEvent.classCode: minimum required = 1, ")) {
-              continue;
-            }
-        
-        if (vm.getDetails().getText().startsWith(
-                "HealthCareFacility.classCode: minimum required = 1, ")) {
-              continue;
-            }
-        
-        if (vm.getDetails().getText().startsWith(
-                "PlayingEntity.classCode: minimum required = 1, ")) {
-              continue;
-            }
-        if (vm.getDetails().getText().startsWith(
-                "ObservationRange.classCode: minimum required = 1, ")) {
-              continue;
-            }
-        if (vm.getDetails().getText().startsWith(
-                "LabCriterion.classCode: minimum required = 1, ")) {
-              continue;
-            }
-        if (vm.getDetails().getText().startsWith(
-                "LabCriterion.moodCode: minimum required = 1, ")) {
-              continue;
-            }
-        
-				// id value 'ESAMI_URINE' is not valid
-				// id value 'ALBUMINA_URINE' is not valid
-				if (vm.getDetails().getText().startsWith(
-						"id value ")) {
-					continue;
-				}
-
-				log.error(vm.getDetails().getText());
-				++i;
-			}
-		}
-		return i;
 	}
 
 	private static InputStream getResourceAsStream(final String filename) {

@@ -39,7 +39,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 @ActiveProfiles({"test-r4b", "disable-metrics"})
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_CLASS)
-class MatchboxApiR4BTest {
+public class MatchboxApiR4BTest {
 
 	static int getValidationFailures(OperationOutcome outcome) {
 		int fails = 0;

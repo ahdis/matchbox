@@ -29,7 +29,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_CLASS)
 @Tag(TestTags.GAZELLE)
-class GazelleApiR4Test extends AbstractGazelleTest {
+public class GazelleApiR4Test extends AbstractGazelleTest {
 
 	private final GazelleClient client = new GazelleClient("http://localhost:8081/matchboxv3/gazelle/");
 

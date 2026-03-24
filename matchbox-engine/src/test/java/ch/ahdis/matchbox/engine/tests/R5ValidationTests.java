@@ -12,7 +12,6 @@ import org.slf4j.LoggerFactory;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
-import java.net.URISyntaxException;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -26,12 +25,12 @@ import static org.junit.jupiter.api.Assertions.*;
  **/
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class R5ValidationTests {
-	private static final Logger log = LoggerFactory.getLogger(R5ValidationTests.class);
+	private final Logger log = LoggerFactory.getLogger(R5ValidationTests.class);
 	private final MatchboxEngine engine;
 	private final String careplanRaw;
 	private final String measureRaw;
 
-	public R5ValidationTests() throws IOException, URISyntaxException {
+	public R5ValidationTests() throws IOException {
 		this.engine = this.getEngine();
 		//this.engine.setTerminologyServer("http://tx.fhir.org", null, FhirPublication.R4);
 		this.careplanRaw = this.loadSample("careplan.xml");
@@ -72,7 +71,7 @@ class R5ValidationTests {
 		assertEquals(2, errors.size());
 		assertTrue(errors.get(0).getDetails().getText().startsWith("The value provided ('non-existent-code') was not found in the value set 'PublicationStatus'") || errors.get(1).getDetails().getText().startsWith("The value provided ('non-existent-code') was not found in the value set 'PublicationStatus'"));
 	}
-	
+
 	/**
 	 * Test the validation of a code from a value set that expands urn:ietf:bcp:13.
 	 *

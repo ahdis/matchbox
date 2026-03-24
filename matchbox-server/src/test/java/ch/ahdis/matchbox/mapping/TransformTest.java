@@ -39,7 +39,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_CLASS)
 @Tag(TestTags.MAPPING)
-class TransformTest {
+public class TransformTest {
 	private static final String TARGET_SERVER = "http://localhost:8086/matchboxv3";
 	private static final FhirContext FHIR_CONTEXT = FhirContext.forR4Cached();
 

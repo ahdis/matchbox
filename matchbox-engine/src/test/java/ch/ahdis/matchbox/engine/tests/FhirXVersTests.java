@@ -29,15 +29,13 @@ import java.nio.charset.StandardCharsets;
 
 import org.apache.commons.io.IOUtils;
 import org.hl7.fhir.exceptions.FHIRException;
-import org.hl7.fhir.r4.model.StructureDefinition;
 import org.hl7.fhir.r5.context.SimpleWorkerContext;
 import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import ch.ahdis.matchbox.engine.MatchboxEngine;
 import ch.ahdis.matchbox.engine.MatchboxEngine.MatchboxEngineBuilder;
+import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.condition.DisabledIfEnvironmentVariable;
 
 /**
@@ -45,15 +43,14 @@ import org.junit.jupiter.api.condition.DisabledIfEnvironmentVariable;
  * Uses more then 4GB on the ci-build
  */
 @DisabledIfEnvironmentVariable(named = "GITHUB_ACTIONS", matches = "true")
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class FhirXVersTests {
+	private final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(FhirXVersTests.class);
 
-//	static private MatchboxEngine engineR4B;
-	static private MatchboxEngine engineR4, engineR5;
+	private final MatchboxEngine engineR4, engineR5;
 
-	private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(FhirMappingLanguageTests.class);
 
-	@BeforeAll
-	static void setUpBeforeClass() throws Exception {
+	public FhirXVersTests() throws Exception {
 		log.info("Setup");
 		CompareUtil.logMemory();
 		engineR4 = new MatchboxEngineBuilder().withXVersion(true).getEngineR4();
@@ -75,15 +72,7 @@ class FhirXVersTests {
 
 	@AfterAll
 	static void teardownClass() throws Exception {
-		engineR4 = null;
-		engineR5 = null;
-//		engineR4B = null;
-		log.info("Teardown");
 		CompareUtil.logMemory();
-	}
-
-	@BeforeEach
-	void setUp() throws Exception {
 	}
 
 	public String getFileAsStringFromResources(String file) throws IOException {
@@ -91,18 +80,12 @@ class FhirXVersTests {
 		return IOUtils.toString(in, StandardCharsets.UTF_8);
 	}
 
-	public StructureDefinition getStructureDefinitionFromFile(String file) throws IOException {
-		return (StructureDefinition) new org.hl7.fhir.r4.formats.XmlParser()
-				.parse(FhirMappingLanguageTests.class.getResourceAsStream(file));
-	}
-
 	@Test
 	void testMedication5to4inR4() throws FHIRException, IOException {
 		log.info("testMedication5to4inR4");
-		MatchboxEngine engine = FhirXVersTests.engineR4;
-		assertEquals("4.0.1", engine.getVersion());
-		assertEquals("4.0.1", engine.getContext().getVersion());
-		SimpleWorkerContext context = engine.getContext();
+		assertEquals("4.0.1", engineR4.getVersion());
+		assertEquals("4.0.1", engineR4.getContext().getVersion());
+		SimpleWorkerContext context = engineR4.getContext();
 		assertNotNull(context.fetchResource(org.hl7.fhir.r5.model.Resource.class,
 				"http://hl7.org/fhir/StructureDefinition/Patient"));
 		assertNotNull(context.fetchResource(org.hl7.fhir.r5.model.Resource.class,
@@ -110,7 +93,7 @@ class FhirXVersTests {
 		assertNotNull(context.fetchResource(org.hl7.fhir.r5.model.Resource.class,
 				"http://hl7.org/fhir/uv/xver/StructureMap/Medication4to5"));
 
-		String result = engine.transform(getFileAsStringFromResources("/medication-r5-med0301.json"), true,
+		String result = engineR4.transform(getFileAsStringFromResources("/medication-r5-med0301.json"), true,
 				"http://hl7.org/fhir/uv/xver/StructureMap/Medication5to4", true);
 		log.info(result);
 		CompareUtil.compare(getFileAsStringFromResources("/medication-r4-med0301.json"), result, false);
@@ -145,16 +128,15 @@ class FhirXVersTests {
 	@Test
 	void testMedication5to4inR5() throws FHIRException, IOException {
 		log.info("testMedication5to4inR5");
-		MatchboxEngine engine = FhirXVersTests.engineR5;
-		SimpleWorkerContext context = engine.getContext();
+		SimpleWorkerContext context = engineR5.getContext();
 		log.info("finished TestEngineR5");
-		assertEquals("5.0.0", engine.getVersion());
-		assertEquals("5.0.0", engine.getContext().getVersion());
+		assertEquals("5.0.0", engineR5.getVersion());
+		assertEquals("5.0.0", engineR5.getContext().getVersion());
 		assertNotNull(context.fetchResource(org.hl7.fhir.r5.model.Resource.class,
 				"http://hl7.org/fhir/StructureDefinition/Patient"));
 		assertNotNull(context.fetchResource(org.hl7.fhir.r5.model.Resource.class,
 				"http://hl7.org/fhir/uv/xver/StructureMap/Medication5to4"));
-		String result = engine.transform(getFileAsStringFromResources("/medication-r5-med0301.json"), true,
+		String result = engineR5.transform(getFileAsStringFromResources("/medication-r5-med0301.json"), true,
 				"http://hl7.org/fhir/uv/xver/StructureMap/Medication5to4", true);
 		log.info(result);
 		CompareUtil.compare(getFileAsStringFromResources("/medication-r4-med0301.json"), result, false);
@@ -175,8 +157,7 @@ class FhirXVersTests {
 	@Test
 	void testMedication4to5inR4() throws FHIRException, IOException {
 		log.info("testMedication4to5inR4");
-		MatchboxEngine engine = FhirXVersTests.engineR4;
-		String result = engine.transform(getFileAsStringFromResources("/medication-r4-med0301.json"), true,
+		String result = engineR4.transform(getFileAsStringFromResources("/medication-r4-med0301.json"), true,
 				"http://hl7.org/fhir/uv/xver/StructureMap/Medication4to5", true);
 		log.info(result);
 		CompareUtil.compare(getFileAsStringFromResources("/medication-r5-med0301.json"), result, false);
@@ -206,8 +187,7 @@ class FhirXVersTests {
 	@Test
 	void testMedication4to5inR5() throws FHIRException, IOException {
 		log.info("testMedication4to5inR5");
-		MatchboxEngine engine = FhirXVersTests.engineR5;
-		String result = engine.transform(getFileAsStringFromResources("/medication-r4-med0301.json"), true,
+		String result = engineR5.transform(getFileAsStringFromResources("/medication-r4-med0301.json"), true,
 				"http://hl7.org/fhir/uv/xver/StructureMap/Medication4to5", true);
 		log.info(result);
 		CompareUtil.compare(getFileAsStringFromResources("/medication-r5-med0301.json"), result, false);

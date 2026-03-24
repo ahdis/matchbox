@@ -29,7 +29,7 @@ import static org.junit.jupiter.api.Assertions.*;
  **/
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class R4ValidationTests {
-	private static final Logger log = LoggerFactory.getLogger(R4ValidationTests.class);
+	private final Logger log = LoggerFactory.getLogger(R4ValidationTests.class);
 	private final MatchboxEngine engine;
 	private final String careplanRaw;
 	private final String measureRaw;

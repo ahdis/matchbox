@@ -41,7 +41,7 @@ import static org.junit.jupiter.api.Assertions.assertNotEquals;
 @ActiveProfiles({"test-r4", "disable-metrics"})
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_CLASS)
-class MatchboxApiR4Test {
+public class MatchboxApiR4Test {
 	private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(MatchboxApiR4Test.class);
 	private static final String TARGET_SERVER = "http://localhost:8081/matchboxv3";
 	private static final FhirContext FHIR_CONTEXT = FhirContext.forR4Cached();

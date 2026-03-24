@@ -19,34 +19,26 @@ jobs:
         uses: actions/setup-java@v5
         # https://github.com/actions/setup-java#usage
         with:
-          java-version: 21
+          java-version: 25
           distribution: adopt
           cache: maven
 
+      - name: Run the engine tests in Maven
+        timeout-minutes: 15
+        run: mvn --batch-mode --no-transfer-progress --update-snapshots -pl matchbox-engine test
+
       - name: Run the core tests in Maven
         timeout-minutes: 15
-        # We need a timeout here
-        env:
-          MAVEN_OPTS: -Xmx12g
         run: mvn --batch-mode --no-transfer-progress --update-snapshots -Dgroups='core' test
 
       - name: Run the validation tests in Maven
         timeout-minutes: 15
-        # We need a timeout here
-        env:
-          MAVEN_OPTS: -Xmx12g
         run: mvn --batch-mode --no-transfer-progress --update-snapshots -Dgroups='validation' test
 
       - name: Run the Gazelle API tests in Maven
         timeout-minutes: 15
-        # We need a timeout here
-        env:
-          MAVEN_OPTS: -Xmx12g
         run: mvn --batch-mode --no-transfer-progress --update-snapshots -Dgroups='gazelle' test
 
       - name: Run the mapping tests in Maven
         timeout-minutes: 15
-        # We need a timeout here
-        env:
-          MAVEN_OPTS: -Xmx12g
         run: mvn --batch-mode --no-transfer-progress --update-snapshots -Dgroups='mapping' test

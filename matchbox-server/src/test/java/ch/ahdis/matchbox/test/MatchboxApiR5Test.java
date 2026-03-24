@@ -39,7 +39,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 @ActiveProfiles({"test-r5", "disable-metrics"})
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_CLASS)
-class MatchboxApiR5Test {
+public class MatchboxApiR5Test {
 
 	static int getValidationFailures(OperationOutcome outcome) {
 		int fails = 0;
