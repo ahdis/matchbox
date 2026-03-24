@@ -27,18 +27,31 @@ jobs:
         timeout-minutes: 15
         run: mvn --batch-mode --no-transfer-progress --update-snapshots -pl matchbox-engine test
 
-      - name: Run the core tests in Maven
+      - name: Run the GazelleApiR4Test tests in Maven
         timeout-minutes: 15
-        run: mvn --batch-mode --no-transfer-progress --update-snapshots -Dgroups='core' test
+        run: mvn --batch-mode --no-transfer-progress --update-snapshots -pl matchbox-server -Dtest=GazelleApiR4Test test
 
-      - name: Run the validation tests in Maven
-        timeout-minutes: 15
-        run: mvn --batch-mode --no-transfer-progress --update-snapshots -Dgroups='validation' test
 
-      - name: Run the Gazelle API tests in Maven
+      - name: Run the TransformTest tests in Maven
         timeout-minutes: 15
-        run: mvn --batch-mode --no-transfer-progress --update-snapshots -Dgroups='gazelle' test
+        run: mvn --batch-mode --no-transfer-progress --update-snapshots -pl matchbox-server -Dtest=TransformTest test
 
-      - name: Run the mapping tests in Maven
+
+      - name: Run the MatchboxApiR4Test tests in Maven
         timeout-minutes: 15
-        run: mvn --batch-mode --no-transfer-progress --update-snapshots -Dgroups='mapping' test
+        run: mvn --batch-mode --no-transfer-progress --update-snapshots -pl matchbox-server -Dtest=MatchboxApiR4Test test
+
+
+      - name: Run the MatchboxApiR4BTest tests in Maven
+        timeout-minutes: 15
+        run: mvn --batch-mode --no-transfer-progress --update-snapshots -pl matchbox-server -Dtest=MatchboxApiR4BTest test
+
+
+      - name: Run the MatchboxApiR5Test tests in Maven
+        timeout-minutes: 15
+        run: mvn --batch-mode --no-transfer-progress --update-snapshots -pl matchbox-server -Dtest=MatchboxApiR5Test test
+
+
+      - name: Run the MatchboxApiR5onR4Test tests in Maven
+        timeout-minutes: 15
+        run: mvn --batch-mode --no-transfer-progress --update-snapshots -pl matchbox-server -Dtest=MatchboxApiR5onR4Test test
