@@ -61,6 +61,7 @@
     "@typescript-eslint/eslint-plugin": "8.55.x",
     "@typescript-eslint/parser": "8.55.x",
     "eslint": "^9.15.0",
+    "hono": ">=4.12.7",
     "jasmine": "5.13.x",
     "jasmine-core": "5.13.x",
     "jasmine-spec-reporter": "^7.0.0",
@@ -91,8 +92,7 @@
     "lodash-es": "npm:lodash-es@4.17.23",
     "flatted": "3.4.2",
     "undici": "7.24.0",
-    "hono": "4.12.2",
-    "serialize-javascript": ">=7.0.3",
+"serialize-javascript": ">=7.0.3",
     "minimatch@>=9.0.0 <9.0.7": "9.0.7"
   }
 }
