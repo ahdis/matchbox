@@ -48,11 +48,11 @@
              Only re-used dependencies are listed here.
              https://github.com/hapifhir/hapi-fhir/blob/master/pom.xml -->
         <maven_surefire_version>3.5.2</maven_surefire_version>
-        <commons_compress_version>1.27.1</commons_compress_version>
-        <commons_dbcp2_version>2.12.0</commons_dbcp2_version>
-        <commons_io_version>2.17.0</commons_io_version>
-        <commons_lang3_version>3.18.0</commons_lang3_version>
-        <junit_version>5.13.1</junit_version>
+        <commons_compress_version>1.28.0</commons_compress_version>
+        <commons_dbcp2_version>2.14.0</commons_dbcp2_version>
+        <commons_io_version>2.21.0</commons_io_version>
+        <commons_lang3_version>3.20.0</commons_lang3_version>
+        <junit_version>5.14.3</junit_version>
         <logback_version>1.5.29</logback_version>
         <jackson_version>2.19.4</jackson_version>
         <okhttp_version>4.12.0</okhttp_version>
@@ -60,7 +60,7 @@
         <spring_version>6.2.17</spring_version>
         <spring_context_version>6.2.17</spring_context_version>
         <spring_boot_version>3.5.12</spring_boot_version>
-        <testcontainers_version>1.21.1</testcontainers_version>
+        <testcontainers_version>1.21.4</testcontainers_version>
         <ucum_version>1.0.10</ucum_version>
 
         <!-- The following properties are linked to HAPI-FHIR, which hasn't attributed version properties -->
@@ -77,13 +77,13 @@
 
 
         <!-- Other dependencies we need -->
-        <lombok_version>1.18.36</lombok_version>
-        <tomcat_embed_version>10.1.52</tomcat_embed_version>
-        <postgresql_version>42.7.7</postgresql_version>
-        <h2_version>2.3.232</h2_version>
+        <lombok_version>1.18.44</lombok_version>
+        <tomcat_embed_version>10.1.53</tomcat_embed_version>
+        <postgresql_version>42.7.10</postgresql_version>
+        <h2_version>2.4.240</h2_version>
         <jakarta_servlet_version>6.1.0</jakarta_servlet_version>
         <jaxb_api_version>2.3.1</jaxb_api_version>
-        <snakeyaml_version>2.4</snakeyaml_version>
+        <snakeyaml_version>2.6</snakeyaml_version>
 
         <plugin_maven_compiler_version>3.14.1</plugin_maven_compiler_version>
         <plugin_maven_resources_version>3.3.1</plugin_maven_resources_version>
