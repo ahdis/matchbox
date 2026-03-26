@@ -22,8 +22,8 @@ class SuppressedWarnInfoTests {
 	private final MatchboxEngine engine;
 	private final byte[] resource;
 
-	private final static String WARN1 = "A measure should contain at least one group";
-	private final static String WARN_DOM6 = "Constraint failed: dom-6: 'A resource should have narrative for robust " +
+	private static final String WARN1 = "A measure should contain at least one group";
+	private static final String WARN_DOM6 = "Constraint failed: dom-6: 'A resource should have narrative for robust " +
 		"management' (defined in http://hl7.org/fhir/StructureDefinition/DomainResource) (Best Practice Recommendation)";
 
 	public SuppressedWarnInfoTests() throws IOException {
@@ -97,7 +97,6 @@ class SuppressedWarnInfoTests {
 	private MatchboxEngine getEngine() {
 		return new MatchboxEngine.MatchboxEngineBuilder().getEngineR4();
 	}
-
 
 	private String loadSample(final String filename) throws IOException {
 		return new String(

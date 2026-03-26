@@ -43,32 +43,32 @@ import org.hl7.fhir.r4.model.StructureMap;
 import org.hl7.fhir.r5.formats.JsonParser;
 import org.hl7.fhir.r5.model.Composition;
 import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import ch.ahdis.matchbox.engine.MatchboxEngine;
 import ch.ahdis.matchbox.engine.MatchboxEngine.MatchboxEngineBuilder;
+import org.junit.jupiter.api.TestInstance;
 
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class FhirMappingLanguageTests {
+	private final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(FhirMappingLanguageTests.class);
 
-	static private MatchboxEngine engine;
+	private final MatchboxEngine engine;
 
-	private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(FhirMappingLanguageTests.class);
-
-	@BeforeAll
-	static void setUpBeforeClass() throws Exception {
+	public FhirMappingLanguageTests() {
 		engine = new MatchboxEngineBuilder().getEngineR4();
 	}
 
 	@AfterAll
-	static void teardownClass() throws Exception {
-		engine = null;
+	static void teardownClass() {
 		CompareUtil.logMemory();
 	}
 
 	@BeforeEach
-	void setUp() throws Exception {
+	void clean() {
+		this.engine.getContext().dropResource("StructureDefinition", "TLeft");
+		this.engine.getContext().dropResource("StructureDefinition", "TRight");
 	}
 
 	public String getFileAsStringFromResources(String file) throws IOException {
@@ -82,7 +82,6 @@ class FhirMappingLanguageTests {
 
 	@Test
 	void testQr2Patient() throws FHIRException, IOException {
-		MatchboxEngine engine = new MatchboxEngine(FhirMappingLanguageTests.engine);
 		StructureMap sm = engine.parseMap(getFileAsStringFromResources("/qr2patgender.map"));
 		assertTrue(sm != null);
 		engine.addCanonicalResource(sm);
@@ -96,7 +95,6 @@ class FhirMappingLanguageTests {
 
 	@Test
 	void testMemberOf() throws FHIRException, IOException {
-		MatchboxEngine engine = new MatchboxEngine(FhirMappingLanguageTests.engine);
 		StructureMap sm = engine.parseMap(getFileAsStringFromResources("/memberof.map"));
 		assertTrue(sm != null);
 		engine.addCanonicalResource(sm);
@@ -110,7 +108,6 @@ class FhirMappingLanguageTests {
 
 	@Test
 	void testNarrative() throws FHIRException, IOException {
-		MatchboxEngine engine = new MatchboxEngine(FhirMappingLanguageTests.engine);
 		StructureMap sm = engine.parseMap(getFileAsStringFromResources("/narrative.map"));
 		assertTrue(sm != null);
 		engine.addCanonicalResource(sm);
@@ -124,7 +121,6 @@ class FhirMappingLanguageTests {
 
 	@Test
 	void testConformsTo() throws FHIRException, IOException {
-		MatchboxEngine engine = new MatchboxEngine(FhirMappingLanguageTests.engine);
 		StructureMap sm = engine.parseMap(getFileAsStringFromResources("/conformsto.map"));
 		assertTrue(sm != null);
 		engine.addCanonicalResource(sm);
@@ -138,7 +134,6 @@ class FhirMappingLanguageTests {
 
 	@Test
 	void testMatchboxEngine() throws FHIRException, IOException {
-		MatchboxEngine engine = new MatchboxEngine(FhirMappingLanguageTests.engine);
 		StructureMap sm = engine.parseMap(getFileAsStringFromResources("/conformstoneg.map"));
 		assertTrue(sm != null);
 		engine.addCanonicalResource(sm);
@@ -159,7 +154,6 @@ class FhirMappingLanguageTests {
 
 	@Test
 	void testConformsToNeg() throws FHIRException, IOException {
-		MatchboxEngine engine = new MatchboxEngine(FhirMappingLanguageTests.engine);
 		StructureMap sm = engine.parseMap(getFileAsStringFromResources("/conformstoneg.map"));
 		assertTrue(sm != null);
 		engine.addCanonicalResource(sm);
@@ -173,7 +167,6 @@ class FhirMappingLanguageTests {
 
 	@Test
 	void testQty() throws FHIRException, IOException {
-		MatchboxEngine engine = new MatchboxEngine(FhirMappingLanguageTests.engine);
 		StructureMap sm = engine.parseMap(getFileAsStringFromResources("/quantity.map"));
 		assertTrue(sm != null);
 		engine.addCanonicalResource(sm);
@@ -195,7 +188,6 @@ class FhirMappingLanguageTests {
 
 	@Test
 	void testStringToCoding() throws FHIRException, IOException {
-		MatchboxEngine engine = new MatchboxEngine(FhirMappingLanguageTests.engine);
 		StructureMap sm = engine.parseMap(getFileAsStringFromResources("/stringtocoding.map"));
 		assertTrue(sm != null);
 		engine.addCanonicalResource(sm);
@@ -210,7 +202,6 @@ class FhirMappingLanguageTests {
 
 	@Test
 	void testStringToCodingWithCC() throws FHIRException, IOException {
-		MatchboxEngine engine = new MatchboxEngine(FhirMappingLanguageTests.engine);
 		StructureMap sm = engine.parseMap(getFileAsStringFromResources("/stringtocodingwithcc.map"));
 		assertTrue(sm != null);
 		engine.addCanonicalResource(sm);
@@ -226,7 +217,6 @@ class FhirMappingLanguageTests {
 
 	@Test
 	void testTranslateCoding() throws FHIRException, IOException {
-		MatchboxEngine engine = new MatchboxEngine(FhirMappingLanguageTests.engine);
 		StructureMap sm = engine.parseMap(getFileAsStringFromResources("/translatecoding.map"));
 		assertTrue(sm != null);
 		engine.addCanonicalResource(sm);
@@ -247,7 +237,6 @@ class FhirMappingLanguageTests {
 
 	@Test
 	void testCast() throws FHIRException, IOException {
-		MatchboxEngine engine = new MatchboxEngine(FhirMappingLanguageTests.engine);
 		StructureMap sm = engine.parseMap(getFileAsStringFromResources("/cast.map"));
 		assertTrue(sm != null);
 		engine.addCanonicalResource(sm);
@@ -259,7 +248,6 @@ class FhirMappingLanguageTests {
 
 	@Test
 	void testBundleTimestamp() throws FHIRException, IOException {
-		MatchboxEngine engine = new MatchboxEngine(FhirMappingLanguageTests.engine);
 		StructureMap sm = engine.parseMap(getFileAsStringFromResources("/bundlets.map"));
 		assertTrue(sm != null);
 		engine.addCanonicalResource(sm);
@@ -273,7 +261,6 @@ class FhirMappingLanguageTests {
 
 	@Test
 	void testWhereClause() throws FHIRException, IOException {
-		MatchboxEngine engine = new MatchboxEngine(FhirMappingLanguageTests.engine);
 		StructureMap sm = engine.parseMap(getFileAsStringFromResources("/whereclause.map"));
 		assertTrue(sm != null);
 		engine.addCanonicalResource(sm);
@@ -286,7 +273,6 @@ class FhirMappingLanguageTests {
 
 	@Test
 	void testDateManipulation() throws FHIRException, IOException {
-		MatchboxEngine engine = new MatchboxEngine(FhirMappingLanguageTests.engine);
 		StructureMap sm = engine.parseMap(getFileAsStringFromResources("/qr2patfordates.map"));
 		assertTrue(sm != null);
 		engine.addCanonicalResource(sm);
@@ -307,7 +293,6 @@ class FhirMappingLanguageTests {
 
 	@Test
 	void testTutorialStep1Xml() throws FHIRException, IOException {
-		MatchboxEngine engine = new MatchboxEngine(FhirMappingLanguageTests.engine);
 		StructureMap sm = engine.parseMap(getFileAsStringFromResources("/tutorial/step1/map/step1.map"));
 		assertTrue(sm != null);
 		engine.addCanonicalResource(sm);
@@ -324,7 +309,6 @@ class FhirMappingLanguageTests {
 
 	@Test
 	void testTutorialStep1Json() throws FHIRException, IOException {
-		MatchboxEngine engine = new MatchboxEngine(FhirMappingLanguageTests.engine);
 		StructureMap sm = engine.parseMap(getFileAsStringFromResources("/tutorial/step1/map/step1.map"));
 		assertTrue(sm != null);
 		engine.addCanonicalResource(sm);
@@ -346,7 +330,6 @@ class FhirMappingLanguageTests {
 		// from rule 'rule_a_short'
 		// 1b org.hl7.fhir.exceptions.FHIRException: No matches found for rule for
 		// 'string to string' from http://hl7.org/fhir/StructureMap/tutorial-step1b,
-		MatchboxEngine engine = new MatchboxEngine(FhirMappingLanguageTests.engine);
 		StructureMap sm = engine.parseMap(getFileAsStringFromResources("/tutorial/step1/map/step1b.map"));
 		assertTrue(sm != null);
 		engine.addCanonicalResource(sm);
@@ -365,7 +348,6 @@ class FhirMappingLanguageTests {
 
 	@Test
 	void testTutorialStep2Xml() throws FHIRException, IOException {
-		MatchboxEngine engine = new MatchboxEngine(FhirMappingLanguageTests.engine);
 		StructureMap sm = engine.parseMap(getFileAsStringFromResources("/tutorial/step2/map/step2.map"));
 		assertTrue(sm != null);
 		engine.addCanonicalResource(sm);
@@ -382,7 +364,6 @@ class FhirMappingLanguageTests {
 
 	@Test
 	void testTutorialStep2Json() throws FHIRException, IOException {
-		MatchboxEngine engine = new MatchboxEngine(FhirMappingLanguageTests.engine);
 		StructureMap sm = engine.parseMap(getFileAsStringFromResources("/tutorial/step2/map/step2.map"));
 		assertTrue(sm != null);
 		engine.addCanonicalResource(sm);
@@ -401,7 +382,6 @@ class FhirMappingLanguageTests {
 
 	@Test
 	void testTutorialStep3aXml() throws FHIRException, IOException {
-		MatchboxEngine engine = new MatchboxEngine(FhirMappingLanguageTests.engine);
 		StructureMap sm = engine.parseMap(getFileAsStringFromResources("/tutorial/step3/map/step3a.map"));
 		assertTrue(sm != null);
 		engine.addCanonicalResource(sm);
@@ -423,7 +403,6 @@ class FhirMappingLanguageTests {
 
 	@Test
 	void testTutorialStep3aJson() throws FHIRException, IOException {
-		MatchboxEngine engine = new MatchboxEngine(FhirMappingLanguageTests.engine);
 		StructureMap sm = engine.parseMap(getFileAsStringFromResources("/tutorial/step3/map/step3a.map"));
 		assertTrue(sm != null);
 		engine.addCanonicalResource(sm);
@@ -447,7 +426,6 @@ class FhirMappingLanguageTests {
 
 	@Test
 	void testTutorialStep3bXml() throws FHIRException, IOException {
-		MatchboxEngine engine = new MatchboxEngine(FhirMappingLanguageTests.engine);
 		StructureMap sm = engine.parseMap(getFileAsStringFromResources("/tutorial/step3/map/step3b.map"));
 		assertTrue(sm != null);
 		engine.addCanonicalResource(sm);
@@ -469,7 +447,6 @@ class FhirMappingLanguageTests {
 
 	@Test
 	void testTutorialStep3bJson() throws FHIRException, IOException {
-		MatchboxEngine engine = new MatchboxEngine(FhirMappingLanguageTests.engine);
 		StructureMap sm = engine.parseMap(getFileAsStringFromResources("/tutorial/step3/map/step3b.map"));
 		assertTrue(sm != null);
 		engine.addCanonicalResource(sm);
@@ -494,7 +471,6 @@ class FhirMappingLanguageTests {
 
 	@Test
 	void testTutorialStep3cXml() throws FHIRException, IOException {
-		MatchboxEngine engine = new MatchboxEngine(FhirMappingLanguageTests.engine);
 		StructureMap sm = engine.parseMap(getFileAsStringFromResources("/tutorial/step3/map/step3c.map"));
 		assertTrue(sm != null);
 		engine.addCanonicalResource(sm);
@@ -521,7 +497,6 @@ class FhirMappingLanguageTests {
 
 	@Test
 	void testTutorialStep3cJson() throws FHIRException, IOException {
-		MatchboxEngine engine = new MatchboxEngine(FhirMappingLanguageTests.engine);
 		StructureMap sm = engine.parseMap(getFileAsStringFromResources("/tutorial/step3/map/step3c.map"));
 		assertTrue(sm != null);
 		engine.addCanonicalResource(sm);
@@ -550,7 +525,6 @@ class FhirMappingLanguageTests {
 
 	@Test
 	void testTutorialStep4aXml() throws FHIRException, IOException {
-		MatchboxEngine engine = new MatchboxEngine(FhirMappingLanguageTests.engine);
 		StructureMap sm = engine.parseMap(getFileAsStringFromResources("/tutorial/step4/map/step4a.map"));
 		assertTrue(sm != null);
 		engine.addCanonicalResource(sm);
@@ -574,7 +548,6 @@ class FhirMappingLanguageTests {
 
 	@Test
 	void testTutorialStep4aJson() throws FHIRException, IOException {
-		MatchboxEngine engine = new MatchboxEngine(FhirMappingLanguageTests.engine);
 		StructureMap sm = engine.parseMap(getFileAsStringFromResources("/tutorial/step4/map/step4a.map"));
 		assertTrue(sm != null);
 		engine.addCanonicalResource(sm);
@@ -601,7 +574,6 @@ class FhirMappingLanguageTests {
 
 	@Test
 	void testTutorialStep4b2Xml() throws FHIRException, IOException {
-		MatchboxEngine engine = new MatchboxEngine(FhirMappingLanguageTests.engine);
 		StructureMap sm = engine.parseMap(getFileAsStringFromResources("/tutorial/step4/map/step4b2.map"));
 		assertTrue(sm != null);
 		engine.addCanonicalResource(sm);
@@ -623,7 +595,6 @@ class FhirMappingLanguageTests {
 
 	@Test
 	void testTutorialStep4b2Json() throws FHIRException, IOException {
-		MatchboxEngine engine = new MatchboxEngine(FhirMappingLanguageTests.engine);
 		StructureMap sm = engine.parseMap(getFileAsStringFromResources("/tutorial/step4/map/step4b2.map"));
 		assertTrue(sm != null);
 		engine.addCanonicalResource(sm);
@@ -647,7 +618,6 @@ class FhirMappingLanguageTests {
 
 	@Test
 	void testTutorialStep4b3Xml() throws FHIRException, IOException {
-		MatchboxEngine engine = new MatchboxEngine(FhirMappingLanguageTests.engine);
 		StructureMap sm = engine.parseMap(getFileAsStringFromResources("/tutorial/step4/map/step4b3.map"));
 		assertTrue(sm != null);
 		engine.addCanonicalResource(sm);
@@ -669,7 +639,6 @@ class FhirMappingLanguageTests {
 
 	@Test
 	void testTutorialStep4b3Json() throws FHIRException, IOException {
-		MatchboxEngine engine = new MatchboxEngine(FhirMappingLanguageTests.engine);
 		StructureMap sm = engine.parseMap(getFileAsStringFromResources("/tutorial/step4/map/step4b3.map"));
 		assertTrue(sm != null);
 		engine.addCanonicalResource(sm);
@@ -693,7 +662,6 @@ class FhirMappingLanguageTests {
 
 	@Test
 	void testTutorialStep4cXml() throws FHIRException, IOException {
-		MatchboxEngine engine = new MatchboxEngine(FhirMappingLanguageTests.engine);
 		StructureMap sm = engine.parseMap(getFileAsStringFromResources("/tutorial/step4/map/step4c.map"));
 		assertTrue(sm != null);
 		engine.addCanonicalResource(sm);
@@ -715,7 +683,6 @@ class FhirMappingLanguageTests {
 
 	@Test
 	void testTutorialStep4cJson() throws FHIRException, IOException {
-		MatchboxEngine engine = new MatchboxEngine(FhirMappingLanguageTests.engine);
 		StructureMap sm = engine.parseMap(getFileAsStringFromResources("/tutorial/step4/map/step4c.map"));
 		assertTrue(sm != null);
 		engine.addCanonicalResource(sm);
@@ -739,7 +706,6 @@ class FhirMappingLanguageTests {
 
 	@Test
 	void testTutorialStep5Xml() throws FHIRException, IOException {
-		MatchboxEngine engine = new MatchboxEngine(FhirMappingLanguageTests.engine);
 		StructureMap sm = engine.parseMap(getFileAsStringFromResources("/tutorial/step5/map/step5.map"));
 		assertTrue(sm != null);
 		engine.addCanonicalResource(sm);
@@ -761,7 +727,6 @@ class FhirMappingLanguageTests {
 
 	@Test
 	void testTutorialStep5Json() throws FHIRException, IOException {
-		MatchboxEngine engine = new MatchboxEngine(FhirMappingLanguageTests.engine);
 		StructureMap sm = engine.parseMap(getFileAsStringFromResources("/tutorial/step5/map/step5.map"));
 		assertTrue(sm != null);
 		engine.addCanonicalResource(sm);
@@ -785,7 +750,6 @@ class FhirMappingLanguageTests {
 
 	@Test
 	void testTutorialStep6aXml() throws FHIRException, IOException {
-		MatchboxEngine engine = new MatchboxEngine(FhirMappingLanguageTests.engine);
 		StructureMap sm = engine.parseMap(getFileAsStringFromResources("/tutorial/step6/map/step6a.map"));
 		assertTrue(sm != null);
 		engine.addCanonicalResource(sm);
@@ -807,7 +771,6 @@ class FhirMappingLanguageTests {
 
 	@Test
 	void testTutorialStep6aJson() throws FHIRException, IOException {
-		MatchboxEngine engine = new MatchboxEngine(FhirMappingLanguageTests.engine);
 		StructureMap sm = engine.parseMap(getFileAsStringFromResources("/tutorial/step6/map/step6a.map"));
 		assertTrue(sm != null);
 		engine.addCanonicalResource(sm);
@@ -831,7 +794,6 @@ class FhirMappingLanguageTests {
 
 	@Test
 	void testTutorialStep6bXml() throws FHIRException, IOException {
-		MatchboxEngine engine = new MatchboxEngine(FhirMappingLanguageTests.engine);
 		StructureMap sm = engine.parseMap(getFileAsStringFromResources("/tutorial/step6/map/step6b.map"));
 		assertTrue(sm != null);
 		engine.addCanonicalResource(sm);
@@ -851,12 +813,11 @@ class FhirMappingLanguageTests {
 				assertTrue(false, "API-0389: Failed to call access method: org.hl7.fhir.exceptions.FHIRException: Rule &quot;rule_a23b&quot;: Check condition failed: the collection has more than one item");
 		}
 		catch (FHIRException e) {
-		}		
+		}
 	}
 
 	@Test
 	void testTutorialStep6bJson() throws FHIRException, IOException {
-		MatchboxEngine engine = new MatchboxEngine(FhirMappingLanguageTests.engine);
 		StructureMap sm = engine.parseMap(getFileAsStringFromResources("/tutorial/step6/map/step6b.map"));
 		assertTrue(sm != null);
 		engine.addCanonicalResource(sm);
@@ -878,12 +839,11 @@ class FhirMappingLanguageTests {
 			assertTrue(false, "API-0389: Failed to call access method: org.hl7.fhir.exceptions.FHIRException: Rule &quot;rule_a23b&quot;: Check condition failed: the collection has more than one item");
 		}
 		catch (FHIRException e) {
-		}	
+		}
 	}
 
 	@Test
 	void testTutorialStep6cXml() throws FHIRException, IOException {
-		MatchboxEngine engine = new MatchboxEngine(FhirMappingLanguageTests.engine);
 		StructureMap sm = engine.parseMap(getFileAsStringFromResources("/tutorial/step6/map/step6c.map"));
 		assertTrue(sm != null);
 		engine.addCanonicalResource(sm);
@@ -905,7 +865,6 @@ class FhirMappingLanguageTests {
 
 	@Test
 	void testTutorialStep6cJson() throws FHIRException, IOException {
-		MatchboxEngine engine = new MatchboxEngine(FhirMappingLanguageTests.engine);
 		StructureMap sm = engine.parseMap(getFileAsStringFromResources("/tutorial/step6/map/step6c.map"));
 		assertTrue(sm != null);
 		engine.addCanonicalResource(sm);
@@ -929,7 +888,6 @@ class FhirMappingLanguageTests {
 
 	@Test
 	void testTutorialStep6dXml() throws FHIRException, IOException {
-		MatchboxEngine engine = new MatchboxEngine(FhirMappingLanguageTests.engine);
 		StructureMap sm = engine.parseMap(getFileAsStringFromResources("/tutorial/step6/map/step6d.map"));
 		assertTrue(sm != null);
 		engine.addCanonicalResource(sm);
@@ -951,7 +909,6 @@ class FhirMappingLanguageTests {
 
 	@Test
 	void testTutorialStep6dJson() throws FHIRException, IOException {
-		MatchboxEngine engine = new MatchboxEngine(FhirMappingLanguageTests.engine);
 		StructureMap sm = engine.parseMap(getFileAsStringFromResources("/tutorial/step6/map/step6d.map"));
 		assertTrue(sm != null);
 		engine.addCanonicalResource(sm);
@@ -975,7 +932,6 @@ class FhirMappingLanguageTests {
 
 	@Test
 	void testTutorialStep7Xml() throws FHIRException, IOException {
-		MatchboxEngine engine = new MatchboxEngine(FhirMappingLanguageTests.engine);
 		StructureMap sm = engine.parseMap(getFileAsStringFromResources("/tutorial/step7/map/step7.map"));
 		assertTrue(sm != null);
 		engine.addCanonicalResource(sm);
@@ -1002,7 +958,6 @@ class FhirMappingLanguageTests {
 
 	@Test
 	void testTutorialStep7Json() throws FHIRException, IOException {
-		MatchboxEngine engine = new MatchboxEngine(FhirMappingLanguageTests.engine);
 		StructureMap sm = engine.parseMap(getFileAsStringFromResources("/tutorial/step7/map/step7.map"));
 		assertTrue(sm != null);
 		engine.addCanonicalResource(sm);
@@ -1029,7 +984,6 @@ class FhirMappingLanguageTests {
 
 	@Test
 	void testTutorialStep8Xml() throws FHIRException, IOException {
-		MatchboxEngine engine = new MatchboxEngine(FhirMappingLanguageTests.engine);
 		StructureMap sm = engine.parseMap(getFileAsStringFromResources("/tutorial/step8/map/step8.map"));
 		assertTrue(sm != null);
 		engine.addCanonicalResource(sm);
@@ -1046,7 +1000,6 @@ class FhirMappingLanguageTests {
 
 	@Test
 	void testTutorialStep8Json() throws FHIRException, IOException {
-		MatchboxEngine engine = new MatchboxEngine(FhirMappingLanguageTests.engine);
 		StructureMap sm = engine.parseMap(getFileAsStringFromResources("/tutorial/step8/map/step8.map"));
 		assertTrue(sm != null);
 		engine.addCanonicalResource(sm);
@@ -1065,7 +1018,6 @@ class FhirMappingLanguageTests {
 
 	@Test
 	void testTutorialStep9Xml() throws FHIRException, IOException {
-		MatchboxEngine engine = new MatchboxEngine(FhirMappingLanguageTests.engine);
 		StructureMap sm = engine.parseMap(getFileAsStringFromResources("/tutorial/step9/map/step9.map"));
 		assertTrue(sm != null);
 		engine.addCanonicalResource(sm);
@@ -1087,7 +1039,6 @@ class FhirMappingLanguageTests {
 
 	@Test
 	void testTutorialStep9Json() throws FHIRException, IOException {
-		MatchboxEngine engine = new MatchboxEngine(FhirMappingLanguageTests.engine);
 		StructureMap sm = engine.parseMap(getFileAsStringFromResources("/tutorial/step9/map/step9.map"));
 		assertTrue(sm != null);
 		engine.addCanonicalResource(sm);
@@ -1111,7 +1062,6 @@ class FhirMappingLanguageTests {
 
 	@Test
 	void testTutorialStep10Xml() throws FHIRException, IOException {
-		MatchboxEngine engine = new MatchboxEngine(FhirMappingLanguageTests.engine);
 		StructureMap sm = engine.parseMap(getFileAsStringFromResources("/tutorial/step10/map/step10.map"));
 		assertTrue(sm != null);
 		engine.addCanonicalResource(sm);
@@ -1132,7 +1082,6 @@ class FhirMappingLanguageTests {
 
 	@Test
 	void testTutorialStep10Json() throws FHIRException, IOException {
-		MatchboxEngine engine = new MatchboxEngine(FhirMappingLanguageTests.engine);
 		StructureMap sm = engine.parseMap(getFileAsStringFromResources("/tutorial/step10/map/step10.map"));
 		assertTrue(sm != null);
 		engine.addCanonicalResource(sm);
@@ -1157,7 +1106,6 @@ class FhirMappingLanguageTests {
 
 	@Test
 	void testTutorialStep11Xml() throws FHIRException, IOException {
-		MatchboxEngine engine = new MatchboxEngine(FhirMappingLanguageTests.engine);
 		StructureMap sm = engine.parseMap(getFileAsStringFromResources("/tutorial/step11/map/step11.map"));
 		assertTrue(sm != null);
 		engine.addCanonicalResource(sm);
@@ -1174,7 +1122,6 @@ class FhirMappingLanguageTests {
 
 	@Test
 	void testTutorialStep11Json() throws FHIRException, IOException {
-		MatchboxEngine engine = new MatchboxEngine(FhirMappingLanguageTests.engine);
 		StructureMap sm = engine.parseMap(getFileAsStringFromResources("/tutorial/step11/map/step11.map"));
 		assertTrue(sm != null);
 		engine.addCanonicalResource(sm);
@@ -1193,7 +1140,6 @@ class FhirMappingLanguageTests {
 
 	@Test
 	void testTutorialStep12Xml() throws FHIRException, IOException {
-		MatchboxEngine engine = new MatchboxEngine(FhirMappingLanguageTests.engine);
 		StructureMap sm = engine.parseMap(getFileAsStringFromResources("/tutorial/step12/map/step12.map"));
 		assertTrue(sm != null);
 		engine.addCanonicalResource(sm);
@@ -1210,7 +1156,6 @@ class FhirMappingLanguageTests {
 
 	@Test
 	void testTutorialStep12Json() throws FHIRException, IOException {
-		MatchboxEngine engine = new MatchboxEngine(FhirMappingLanguageTests.engine);
 		StructureMap sm = engine.parseMap(getFileAsStringFromResources("/tutorial/step12/map/step12.map"));
 		assertTrue(sm != null);
 		engine.addCanonicalResource(sm);
@@ -1229,7 +1174,6 @@ class FhirMappingLanguageTests {
 
 	@Test
 	void testTutorialStep13Xml() throws FHIRException, IOException {
-		MatchboxEngine engine = new MatchboxEngine(FhirMappingLanguageTests.engine);
 		StructureMap sm = engine.parseMap(getFileAsStringFromResources("/tutorial/step13/map/step13.map"));
 		assertTrue(sm != null);
 		engine.addCanonicalResource(sm);
@@ -1246,7 +1190,6 @@ class FhirMappingLanguageTests {
 
 	@Test
 	void testTutorialStep13Json() throws FHIRException, IOException {
-		MatchboxEngine engine = new MatchboxEngine(FhirMappingLanguageTests.engine);
 		StructureMap sm = engine.parseMap(getFileAsStringFromResources("/tutorial/step13/map/step13.map"));
 		assertTrue(sm != null);
 		engine.addCanonicalResource(sm);
@@ -1275,22 +1218,22 @@ class FhirMappingLanguageTests {
 			if (i>0) {
 				bundleBuilder.append(",");
 			}
-			bundleBuilder.append("  {\n" + 
-								"      \"resource\": {\n" + 
-								"        \"resourceType\": \"Observation\",\n" + 
-								"        \"id\": \""+i+"\"\n" + 
-								"        \"component\": [\n" + 
-								"          {\n" + 
-								"            \"code\": {\n" + 
-								"              \"coding\": [\n" + 
-								"                {\n" + 
-								"                  \"system\": \"http://loinc.org\",\n" + 
-								"                  \"code\": \"8480-6\"\n" + 
-								"                }\n" + 
-								"              ]\n" + 
-								"            },\n" + 
-								"            \"valueQuantity\": {\n" + 
-								"              \"value\": " +i +"\n" + 
+			bundleBuilder.append("  {\n" +
+								"      \"resource\": {\n" +
+								"        \"resourceType\": \"Observation\",\n" +
+								"        \"id\": \""+i+"\"\n" +
+								"        \"component\": [\n" +
+								"          {\n" +
+								"            \"code\": {\n" +
+								"              \"coding\": [\n" +
+								"                {\n" +
+								"                  \"system\": \"http://loinc.org\",\n" +
+								"                  \"code\": \"8480-6\"\n" +
+								"                }\n" +
+								"              ]\n" +
+								"            },\n" +
+								"            \"valueQuantity\": {\n" +
+								"              \"value\": " +i +"\n" +
 								"            }\n" + //
 								"          },\n" + //
 								"          {\n" + //
@@ -1311,7 +1254,7 @@ class FhirMappingLanguageTests {
 								"    }");
 		}
 		bundleBuilder.append("]\n}");
-		String bundle = bundleBuilder.toString();		  
+		String bundle = bundleBuilder.toString();
 
 		StructureMap sm = engine.parseMap(getFileAsStringFromResources("/bundleobs.map"));
 		assertTrue(sm != null);
@@ -1323,10 +1266,9 @@ class FhirMappingLanguageTests {
 
 		CompareUtil.logMemory();
 	}
-	
+
 	@Test
 	void testBundleResolveJson() throws FHIRException, IOException {
-		MatchboxEngine engine = new MatchboxEngine(FhirMappingLanguageTests.engine);
 		StructureMap sm = engine.parseMap(getFileAsStringFromResources("/bundle-resolve.map"));
 		assertTrue(sm != null);
 		engine.addCanonicalResource(sm);
@@ -1340,7 +1282,6 @@ class FhirMappingLanguageTests {
 
 	@Test
 	void testParseFailWithError() throws FHIRException, IOException {
-		MatchboxEngine engine = new MatchboxEngine(FhirMappingLanguageTests.engine);
 		try {
 			StructureMap sm = engine.parseMap(getFileAsStringFromResources("/map-with-error.map"));
 			assertTrue(sm == null);

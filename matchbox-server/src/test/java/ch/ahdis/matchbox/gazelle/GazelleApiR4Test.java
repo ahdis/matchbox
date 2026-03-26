@@ -1,11 +1,13 @@
 package ch.ahdis.matchbox.gazelle;
 
 import ca.uhn.fhir.jpa.starter.Application;
+import ch.ahdis.matchbox.TestTags;
 import ch.ahdis.matchbox.validation.gazelle.models.validation.SeverityLevel;
 import ch.ahdis.matchbox.validation.gazelle.models.validation.ValidationReport;
 import ch.ahdis.matchbox.validation.gazelle.models.validation.ValidationTestResult;
 import ch.ahdis.matchbox.test.CompareUtil;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -23,9 +25,10 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  **/
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT)
 @ContextConfiguration(classes = { Application.class })
-@ActiveProfiles("test-r4")
+@ActiveProfiles({"test-r4", "disable-metrics"})
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_CLASS)
+@Tag(TestTags.GAZELLE)
 public class GazelleApiR4Test extends AbstractGazelleTest {
 
 	private final GazelleClient client = new GazelleClient("http://localhost:8081/matchboxv3/gazelle/");

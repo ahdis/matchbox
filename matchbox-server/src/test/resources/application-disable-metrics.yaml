@@ -1,0 +1,40 @@
+# Common configuration of all test Spring profiles.
+
+## Disable all metrics and the metrics endpoint
+management:
+  metrics:
+    enable:
+      all: false
+  endpoint:
+    metrics:
+      enabled: false
+    prometheus:
+      enabled: false
+  endpoints:
+    web:
+      exposure:
+        exclude: "*"
+    jmx:
+      exposure:
+        exclude: "*"
+  prometheus:
+    metrics:
+      export:
+        enabled: false
+hapi:
+  fhir:
+    openapi_enabled: false
+    lastn_enabled: false
+    subscription:
+      resthook_enabled: false
+    search-coord-core-pool-size: 1
+    search-coord-max-pool-size: 1
+    search-coord-queue-capacity: 1
+    advanced_lucene_indexing: false
+    search_index_full_text_enabled: false
+
+spring:
+  ai:
+    mcp:
+      server:
+        enabled: false

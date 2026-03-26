@@ -2,16 +2,17 @@ package ch.ahdis.matchbox.test;
 
 import ca.uhn.fhir.context.BaseRuntimeChildDefinition;
 import ca.uhn.fhir.context.FhirContext;
-import ca.uhn.fhir.context.FhirVersionEnum;
 import ca.uhn.fhir.context.RuntimeResourceDefinition;
 import ca.uhn.fhir.jpa.starter.Application;
 
+import ch.ahdis.matchbox.TestTags;
 import org.apache.commons.io.FileUtils;
 import org.hl7.fhir.instance.model.api.*;
 import org.hl7.fhir.r4b.model.OperationOutcome;
 import org.hl7.fhir.r4b.model.OperationOutcome.IssueSeverity;
 import org.hl7.fhir.r4b.model.OperationOutcome.OperationOutcomeIssueComponent;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -35,12 +36,12 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 		"hapi.fhir.implementationguides.fhir_terminology.name=",
 		"hapi.fhir.implementationguides.fhir_extensions.name="}) // Unset R4 IGs
 @ContextConfiguration(classes = {Application.class})
-@ActiveProfiles("test-r4b")
+@ActiveProfiles({"test-r4b", "disable-metrics"})
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_CLASS)
 public class MatchboxApiR4BTest {
 
-	static public int getValidationFailures(OperationOutcome outcome) {
+	static int getValidationFailures(OperationOutcome outcome) {
 		int fails = 0;
 		if (outcome != null && outcome.getIssue() != null) {
 			for (OperationOutcomeIssueComponent issue : outcome.getIssue()) {
@@ -60,7 +61,7 @@ public class MatchboxApiR4BTest {
 	private String targetServer = "http://localhost:8083/matchboxv3/fhir";
 
 	private final FhirContext context = FhirContext.forR4BCached();
-	
+
 	@BeforeAll
 	void waitUntilStartup() throws Exception {
 		Thread.sleep(10000); // give the server some time to start up
@@ -129,7 +130,8 @@ public class MatchboxApiR4BTest {
 	}
 
 	@Test
-	public void validatePatientRawR4B() {
+	@Tag(TestTags.VALIDATION)
+	void validatePatientRawR4B() {
 		ValidationClient validationClient = new ValidationClient(this.context, this.targetServer);
 
 		String patient = "<Patient xmlns=\"http://hl7.org/fhir\">\n" + "            <id value=\"example\"/>\n"
@@ -152,7 +154,8 @@ public class MatchboxApiR4BTest {
 	}
 
 	@Test
-	public void verifyCachingImplementationGuides() {
+	@Tag(TestTags.CORE)
+	void verifyCachingImplementationGuides() {
 		ValidationClient validationClient = new ValidationClient(this.context, this.targetServer);
 
 		String resource = "<Practitioner xmlns=\"http://hl7.org/fhir\">\n" + //
@@ -178,8 +181,9 @@ public class MatchboxApiR4BTest {
 	}
 
 	@Test
+	@Tag(TestTags.VALIDATION)
 	// https://gazelle.ihe.net/jira/browse/EHS-431
-	public void validateEhs431() throws IOException {
+	void validateEhs431() throws IOException {
 		//
 		ValidationClient validationClient = new ValidationClient(this.context, this.targetServer);
 
@@ -195,8 +199,9 @@ public class MatchboxApiR4BTest {
 	}
 
 	@Test
+	@Tag(TestTags.VALIDATION)
 	// https://gazelle.ihe.net/jira/browse/EHS-419
-	public void validateEhs419() throws IOException {
+	void validateEhs419() throws IOException {
 		//
 		ValidationClient validationClient = new ValidationClient(this.context, this.targetServer);
 
