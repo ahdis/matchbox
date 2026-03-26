@@ -12,6 +12,7 @@ public class ValidationMethod {
 	private String validationServiceVersion;
 	private String validationProfileID;
 	private String validationProfileVersion;
+	private String validationProfileName;
 
 	public ValidationMethod() {
 	}
@@ -52,6 +53,15 @@ public class ValidationMethod {
 		return this;
 	}
 
+	public String getValidationProfileName() {
+		return this.validationProfileName;
+	}
+
+	public ValidationMethod setValidationProfileName(final String validationProfileName) {
+		this.validationProfileName = validationProfileName;
+		return this;
+	}
+
 	@JsonIgnore
 	public boolean isValidationServiceNameValid() {
 		return this.validationServiceName != null && !this.validationServiceName.isBlank();
@@ -87,6 +97,7 @@ public class ValidationMethod {
 			.setValidationServiceName(validationMethod.getValidationServiceName())
 			.setValidationServiceVersion(validationMethod.getValidationServiceVersion())
 			.setValidationProfileID(validationMethod.getValidationProfileID())
-			.setValidationProfileVersion(validationMethod.getValidationProfileVersion());
+			.setValidationProfileVersion(validationMethod.getValidationProfileVersion())
+			.setValidationProfileName(validationMethod.getValidationProfileName());
 	}
 }
