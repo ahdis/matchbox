@@ -79,6 +79,14 @@ docker run -d --name matchbox -p 8080:8080 -v /Users/oegger/Documents/github/mat
 
 Server will then be accessible at http://localhost:8080/matchboxv3/fhir/metadata.
 
+The Docker image includes a HEALTHCHECK that pings `http://localhost:8080/matchboxv3/actuator/health` by default. If you change the context path, set the `HEALTHCHECK_URL` environment variable accordingly:
+
+```bash
+docker run -d --name matchbox -p 8080:8080 -e HEALTHCHECK_URL=http://localhost:8080/mycontext/actuator/health matchbox
+```
+
+Note: In Kubernetes environments, Docker HEALTHCHECK is ignored — use `livenessProbe`/`readinessProbe` in your pod spec instead.
+
 To dynamically configure run in a kubernetes environment and add a kubernetes config map that provides /config/application.yaml file with implementation guide list like in "with-preload/application.yaml"
 
 ## Using docker-compose with a persistent postgreSQL database

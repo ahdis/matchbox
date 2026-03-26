@@ -7,6 +7,7 @@
 - Upgrade Spring Boot from 3.5.9 to 3.5.12 to fix actuator authentication bypass (CVE-2025-49470, CVE-2025-49471)
 - Fix prototype pollution in flatted (GHSA-v5vr-gp4q-wv4p)
 - Fix undici WebSocket parser crash (GHSA-7r4h-r29g-6p4p)
+- Add Docker HEALTHCHECK instruction (DS-0026), configurable via HEALTHCHECK_URL env variable
 
 2026/03/22 Release 4.0.20
 

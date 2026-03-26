@@ -1,4 +1,4 @@
-FROM bellsoft/liberica-openjdk-alpine:latest
+FROM bellsoft/liberica-openjdk-alpine:21
 EXPOSE 8080
 
 COPY ./target/matchbox.jar /matchbox.jar
@@ -15,6 +15,11 @@ RUN mkdir -p /config && chown matchbox:matchbox /config
 RUN chown matchbox:matchbox /
 
 USER matchbox
+
+ENV HEALTHCHECK_URL=http://localhost:8080/matchboxv3/actuator/health
+
+HEALTHCHECK --interval=30s --timeout=10s --start-period=120s --retries=3 \
+  CMD wget -q --spider $HEALTHCHECK_URL || exit 1
 
 ENTRYPOINT java -Xmx3072M -Dfhir.settings.path=/config/fhir-settings.json -Dspring.config.additional-location=optional:file:/config/application.yaml,optional:file:application.yaml -jar /matchbox.jar
 
