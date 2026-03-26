@@ -1,14 +1,13 @@
-FROM bellsoft/liberica-openjdk-alpine:21
+FROM bellsoft/liberica-openjdk-debian:21
 EXPOSE 8080
 
 COPY ./target/matchbox.jar /matchbox.jar
 
 ENV LANG='en_US.UTF-8' LANGUAGE='en_US:en' LC_ALL='en_US.UTF-8'
 RUN mkdir -p /data/hapi/lucenefiles && chmod 775 /data/hapi/lucenefiles
-RUN apk --purge del
 
 # Create a new user and switch to it
-RUN adduser -D matchbox --disabled-password --gecos '' matchbox
+RUN adduser --disabled-password --gecos '' matchbox
 ENV HOME=/home/matchbox
 RUN mkdir -p /database && chown matchbox:matchbox /database
 RUN mkdir -p /config && chown matchbox:matchbox /config
@@ -18,8 +17,8 @@ USER matchbox
 
 ENV HEALTHCHECK_URL=http://localhost:8080/matchboxv3/actuator/health
 
-HEALTHCHECK --interval=30s --timeout=10s --start-period=120s --retries=3 \
-  CMD wget -q --spider $HEALTHCHECK_URL || exit 1
+HEALTHCHECK --interval=10s --timeout=3s --start-period=30s --retries=3 \
+  CMD curl -sf $HEALTHCHECK_URL || exit 1
 
 ENTRYPOINT java -Xmx3072M -Dfhir.settings.path=/config/fhir-settings.json -Dspring.config.additional-location=optional:file:/config/application.yaml,optional:file:application.yaml -jar /matchbox.jar
 
