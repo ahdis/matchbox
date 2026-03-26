@@ -1,4 +1,4 @@
-FROM bellsoft/liberica-openjdk-debian:21
+FROM bellsoft/liberica-openjdk-debian:26
 EXPOSE 8080
 
 COPY ./target/matchbox.jar /matchbox.jar
