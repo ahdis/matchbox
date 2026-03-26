@@ -3,6 +3,7 @@ package ch.ahdis.matchbox.validation.gazelle;
 import ca.uhn.fhir.jpa.model.entity.NpmPackageVersionResourceEntity;
 import ca.uhn.fhir.rest.api.EncodingEnum;
 import ca.uhn.fhir.util.StopWatch;
+import ch.ahdis.matchbox.util.metrics.MatchboxMetrics;
 import ch.ahdis.matchbox.validation.ValidationProvider;
 import ch.ahdis.matchbox.CliContext;
 import ch.ahdis.matchbox.util.MatchboxEngineSupport;
@@ -29,6 +30,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 
 import static ch.ahdis.matchbox.packages.MatchboxJpaPackageCache.structureDefinitionIsValidatable;
 
@@ -50,18 +52,20 @@ public class GazelleValidationWs {
 	private static final String VALIDATE_PATH = "/validation/validate";
 
 	private final MatchboxEngineSupport matchboxEngineSupport;
-
 	private final StructureDefinitionResourceProvider structureDefinitionProvider;
+	private final Optional<MatchboxMetrics> matchboxMetrics;
 
 	// The base CLI context, with the default parameters
 	private final CliContext baseCliContext;
 
 	public GazelleValidationWs(final MatchboxEngineSupport matchboxEngineSupport,
 										final CliContext baseCliContext,
-										final StructureDefinitionResourceProvider structureDefinitionProvider) {
+										final StructureDefinitionResourceProvider structureDefinitionProvider,
+										final Optional<MatchboxMetrics> matchboxMetrics) {
 		this.matchboxEngineSupport = Objects.requireNonNull(matchboxEngineSupport);
 		this.baseCliContext = Objects.requireNonNull(baseCliContext);
 		this.structureDefinitionProvider = Objects.requireNonNull(structureDefinitionProvider);
+		this.matchboxMetrics = Objects.requireNonNull(matchboxMetrics);
 	}
 
 	/**
@@ -133,6 +137,7 @@ public class GazelleValidationWs {
 	@PostMapping(path = VALIDATE_PATH, consumes = MediaType.APPLICATION_JSON_VALUE, produces =
 		MediaType.APPLICATION_JSON_VALUE)
 	public ValidationReport postValidate(@RequestBody final ValidationRequest validationRequest) {
+		this.matchboxMetrics.ifPresent(MatchboxMetrics::addValidation);
 		final var sw = new StopWatch();
 		sw.startTask("Total");
 
