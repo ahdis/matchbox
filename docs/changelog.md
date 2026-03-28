@@ -1,5 +1,6 @@
-2026/03/23 Release 4.1.0
+2026/03/30 Release 4.1.0
 
+- fix ClassCastException in $validate-code when expanding inline ValueSet on R4/R4B servers (#497)
 - Upgrade HAPI FHIR from 8.0.0 to 8.8.0, Spring Boot from 3.3.13 to 3.5.12
 - Upgrade jackson-core to 2.21.2 to fix async parser DoS vulnerability (GHSA-72hv-8253-57qq)
 - Upgrade Angular from 21.1.3 to 21.2.5 to fix XSS vulnerability in i18n attribute bindings (CVE-2026-32635)

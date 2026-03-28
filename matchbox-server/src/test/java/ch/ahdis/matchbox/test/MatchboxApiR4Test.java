@@ -391,6 +391,67 @@ class MatchboxApiR4Test {
 	}
 
 
+	/**
+	 * Demonstrates the ClassCastException bug in ValueSetProvider when $validate-code is called with an inline
+	 * ValueSet on an R4 server. The inMemoryTerminologySupport is constructed with an R4 FhirContext, so its
+	 * internal R4Strategy tries to cast the R5 ValueSet (used internally after applyOnR5 conversion) to an
+	 * R4 Resource → ClassCastException → HTTP 500.
+	 *
+	 * Expected behaviour after fix: HTTP 200 with a Parameters response.
+	 */
+	@Test
+	void validateCodeWithInlineValueSet() throws Exception {
+		final String parametersJson = """
+			{
+			  "resourceType": "Parameters",
+			  "parameter": [
+			    {
+			      "name": "coding",
+			      "valueCoding": {
+			        "system": "http://terminology.hl7.org/CodeSystem/v3-ActStatus",
+			        "code": "active"
+			      }
+			    },
+			    {
+			      "name": "valueSet",
+			      "resource": {
+			        "resourceType": "ValueSet",
+			        "url": "http://example.org/test-vs",
+			        "status": "active",
+			        "compose": {
+			          "include": [
+			            {
+			              "system": "http://terminology.hl7.org/CodeSystem/v3-ActStatus",
+			              "concept": [
+			                { "code": "active" },
+			                { "code": "suspended" }
+			              ]
+			            }
+			          ]
+			        }
+			      }
+			    }
+			  ]
+			}
+			""";
+
+		final HttpRequest request = HttpRequest.newBuilder(
+				new URI(TARGET_SERVER + "/tx/ValueSet/$validate-code"))
+			.POST(HttpRequest.BodyPublishers.ofString(parametersJson))
+			.header("Content-Type", "application/fhir+json")
+			.header("Accept", "application/fhir+json")
+			.build();
+
+		final var response = this.httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+		String body = response.body();
+		log.debug("$validate-code response status: {}", response.statusCode());
+		log.debug("$validate-code response body: {}", body);
+
+		// Currently fails with HTTP 500 due to ClassCastException (R5 ValueSet cast to R4 Resource
+		// inside VersionCanonicalizer$R4Strategy). After the fix this should return 200.
+		assertEquals(200, response.statusCode());
+	}
+
 	private String getContent(String resourceName) throws IOException {
 		Resource resource = new ClassPathResource(resourceName);
 		File file = resource.getFile();
