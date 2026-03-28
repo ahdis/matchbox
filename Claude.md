@@ -452,6 +452,10 @@ GitHub Actions workflows (`.github/workflows/`):
 - **googleregistry.yml** - Docker image publishing
 - **central_repository.yml** - Maven Central publishing
 
+## Git Remotes & Pull Requests
+
+The `upstream` remote points to `hapifhir/hapi-fhir-jpaserver-starter`, which is the upstream HAPI FHIR starter project. The `origin` remote points to `ahdis/matchbox`. **Always create PRs against `ahdis/matchbox`** — use `gh pr create --repo ahdis/matchbox` to ensure the PR targets the correct repository.
+
 ## Release Process
 
 1. Update versions in `pom.xml`, `package.json`, and documentation
