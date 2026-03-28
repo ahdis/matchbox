@@ -47,8 +47,12 @@ public class ValueSetProvider extends AbstractMatchboxResourceProvider {
 				org.hl7.fhir.r4b.model.ValueSet.class,
 				org.hl7.fhir.r5.model.ValueSet.class);
 		this.expansionOptions.setFailOnMissingCodeSystem(false);
-		this.inMemoryTerminologySupport = new InMemoryTerminologyServerValidationSupport(fhirContext);
-		this.validationSupportContext = new ValidationSupportContext(new DummyValidationSupport(fhirContext));
+		// Use an R5 FhirContext because doValidateR5Code always works with R5 models internally
+		// (via applyOnR5 conversion). Using the server's FhirContext (e.g. R4) causes a ClassCastException
+		// in VersionCanonicalizer when it tries to cast R5 model objects to R4.
+		final var r5Context = FhirContext.forR5Cached();
+		this.inMemoryTerminologySupport = new InMemoryTerminologyServerValidationSupport(r5Context);
+		this.validationSupportContext = new ValidationSupportContext(new DummyValidationSupport(r5Context));
 		this.txValidationCache = txValidationCache;
 	}
 
