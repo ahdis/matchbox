@@ -37,4 +37,4 @@ matchbox:
       xVersion: true
 spring:
   datasource:
-    url: "jdbc:h2:file:./target/test-db/test-r4"
+    url: "jdbc:h2:mem:test-r4"
