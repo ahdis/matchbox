@@ -61,3 +61,24 @@ table {
 .card-igs {
   margin-bottom: 10px;
 }
+
+.pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  padding: 1rem 0;
+
+  button {
+    cursor: pointer;
+
+    &:disabled {
+      cursor: default;
+      opacity: 0.5;
+    }
+  }
+
+  .page-info {
+    color: rgb(107, 114, 128);
+  }
+}

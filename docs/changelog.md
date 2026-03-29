@@ -9,6 +9,7 @@
 - Fix prototype pollution in flatted (GHSA-v5vr-gp4q-wv4p)
 - Fix undici WebSocket parser crash (GHSA-7r4h-r29g-6p4p)
 - Add Docker HEALTHCHECK instruction (DS-0026), configurable via HEALTHCHECK_URL env variable
+- Bundle next link returns HAPI-0287 error (#489)
 
 2026/03/22 Release 4.0.20
 
