@@ -23,6 +23,14 @@
     }
     </tbody>
   </table>
+
+  @if (totalCount !== null && totalPages > 1) {
+    <div class="pagination">
+      <button (click)="previousPage()" [disabled]="!hasPreviousPage">&#8592; Previous</button>
+      <span class="page-info">Page {{ currentPage }} of {{ totalPages }} ({{ totalCount }} items)</span>
+      <button (click)="nextPage()" [disabled]="!hasNextPage">Next &#8594;</button>
+    </div>
+  }
 </div>
 
 <div class="white-block Search card-igs">

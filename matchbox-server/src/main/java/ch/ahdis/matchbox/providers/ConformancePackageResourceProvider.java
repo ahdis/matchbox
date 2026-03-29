@@ -162,7 +162,17 @@ public class ConformancePackageResourceProvider<R4 extends MetadataResource, R4B
 					resources.addAll(matchboxEngine.getContext().fetchResourcesByType(classR5));
 				}
 
-				return httpWrapper.makeBundleProviderFromR5(resources);
+				final int offset = (theOffset == null ? 0 : theOffset);
+				final int count = (theCount == null ? 20 : theCount);
+				final int totalSize = resources.size();
+				final int toIndex = Math.min(offset + count, totalSize);
+				final var paged = (offset < totalSize) ? resources.subList(offset, toIndex) : List.<org.hl7.fhir.r5.model.Resource>of();
+
+				final SimpleBundleProvider bundleProvider = httpWrapper.makeBundleProviderFromR5(paged);
+				bundleProvider.setSize(totalSize);
+				bundleProvider.setCurrentPageOffset(offset);
+				bundleProvider.setCurrentPageSize(count);
+				return bundleProvider;
 			}
 		}
 		return null;

@@ -483,8 +483,17 @@ public class ImplementationGuideProviderR4B extends ImplementationGuideResourceP
 				list.add(ig);
 			}
 
-			SimpleBundleProvider simpleBundleProivder = new SimpleBundleProvider(list);
-			return simpleBundleProivder;
+			final int offset = (theOffset == null ? 0 : theOffset);
+			final int count = (theCount == null ? 20 : theCount);
+			final int totalSize = list.size();
+			final int toIndex = Math.min(offset + count, totalSize);
+			final List<ImplementationGuide> paged = (offset < totalSize) ? list.subList(offset, toIndex) : List.of();
+
+			SimpleBundleProvider simpleBundleProvider = new SimpleBundleProvider(paged);
+			simpleBundleProvider.setSize(totalSize);
+			simpleBundleProvider.setCurrentPageOffset(offset);
+			simpleBundleProvider.setCurrentPageSize(count);
+			return simpleBundleProvider;
 
 		} finally {
 			endRequest(theServletRequest);

@@ -24,9 +24,14 @@ export class IgsComponent {
   errorMessage: string;
   operationResult: OperationResult | null = null;
 
+  pageSize = 20;
+  currentOffset = 0;
+  totalCount: number | null = null;
+
   query = {
     _sort: 'title',
-    _count: 10000,
+    _count: 20,
+    _offset: 0,
   };
 
   constructor(
@@ -41,11 +46,14 @@ export class IgsComponent {
   }
 
   search() {
+    this.query._offset = this.currentOffset;
+    this.query._count = this.pageSize;
     this.client
       .search({ resourceType: 'ImplementationGuide', searchParams: this.query })
       .then((response) => {
         const bundle = <fhir.r4.Bundle>response;
-        this.igs = bundle.entry.map((entry) => <fhir.r4.ImplementationGuide>entry.resource);
+        this.igs = bundle.entry ? bundle.entry.map((entry) => <fhir.r4.ImplementationGuide>entry.resource) : [];
+        this.totalCount = bundle.total ?? null;
         this.selection = undefined;
         this.addPackageId.setValue('');
         this.addVersion.setValue('');
@@ -60,6 +68,33 @@ export class IgsComponent {
         }
       });
     this.update = false;
+  }
+
+  get hasPreviousPage(): boolean {
+    return this.currentOffset > 0;
+  }
+
+  get hasNextPage(): boolean {
+    return this.totalCount !== null && (this.currentOffset + this.pageSize) < this.totalCount;
+  }
+
+  get currentPage(): number {
+    return Math.floor(this.currentOffset / this.pageSize) + 1;
+  }
+
+  get totalPages(): number {
+    if (this.totalCount === null) return 0;
+    return Math.ceil(this.totalCount / this.pageSize);
+  }
+
+  previousPage() {
+    this.currentOffset = Math.max(0, this.currentOffset - this.pageSize);
+    this.search();
+  }
+
+  nextPage() {
+    this.currentOffset += this.pageSize;
+    this.search();
   }
 
   getPackageUrl(ig: fhir.r4.ImplementationGuide): string {
@@ -126,6 +161,7 @@ export class IgsComponent {
       .then((response) => {
         this.errorMessage = 'Created Implementation Guide ' + this.addPackageId.value;
         this.operationResult = OperationResult.fromOperationOutcome(response as fhir.r4.OperationOutcome);
+        this.currentOffset = 0;
         this.search();
       })
       .catch((error) => {
@@ -162,6 +198,7 @@ export class IgsComponent {
       .then((response) => {
         this.errorMessage = 'Updated Implementation Guide ' + this.selection.packageId;
         this.operationResult = OperationResult.fromOperationOutcome(response as fhir.r4.OperationOutcome);
+        this.currentOffset = 0;
         this.search();
       })
       .catch((error) => {
@@ -193,6 +230,7 @@ export class IgsComponent {
       .then((response) => {
         this.errorMessage = 'Deleted Implementation Guide Resource ' + this.selection.packageId;
         this.operationResult = OperationResult.fromOperationOutcome(response as fhir.r4.OperationOutcome);
+        this.currentOffset = 0;
         this.search();
       })
       .catch((error) => {
