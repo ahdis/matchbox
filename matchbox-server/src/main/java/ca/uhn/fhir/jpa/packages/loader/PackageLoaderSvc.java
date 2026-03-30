@@ -184,4 +184,15 @@ public class PackageLoaderSvc extends BasePackageCacheManager {
 			}
 		}
 	}
+
+	@Override
+    public String getLatestVersion(String statedId, boolean milestonesOnly) throws IOException {
+		throw new UnsupportedOperationException("Unimplemented method 'getLatestVersion'");
+	}
+
+	@Override
+	public String getLatestVersion(String statedId, String versionFilter) throws IOException {
+		throw new UnsupportedOperationException("Unimplemented method 'getLatestVersion'");
+	}
+
 }

@@ -1,3 +1,7 @@
+2026/03/31 Release 4.1.1
+
+- update org.hl7.fhir.core 6.9.4
+
 2026/03/30 Release 4.1.0
 
 - fix ClassCastException in $validate-code when expanding inline ValueSet on R4/R4B servers (#497)
