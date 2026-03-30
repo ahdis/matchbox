@@ -2410,7 +2410,7 @@ public abstract class BaseWorkerContext extends I18nBase implements IWorkerConte
     if (sourceForReference != null && sourceForReference.getSourcePackage() != null && rules != VersionResolutionRules.LATEST) {
       populatePVList(pvlist, sourceForReference.getSourcePackage());
     }
-
+    
     if (class_ == StructureDefinition.class) {
       uri = ProfileUtilities.sdNs(uri, null);
     }

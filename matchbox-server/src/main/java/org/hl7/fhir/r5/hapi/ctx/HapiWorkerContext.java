@@ -24,6 +24,7 @@ import org.hl7.fhir.r5.model.CodeableConcept;
 import org.hl7.fhir.r5.model.Coding;
 import org.hl7.fhir.r5.model.ElementDefinition.ElementDefinitionBindingComponent;
 import org.hl7.fhir.r5.model.NamingSystem;
+import org.hl7.fhir.r5.model.OperationOutcome;
 import org.hl7.fhir.r5.model.PackageInformation;
 import org.hl7.fhir.r5.model.Parameters;
 import org.hl7.fhir.r5.model.Resource;
@@ -188,6 +189,9 @@ public final class HapiWorkerContext extends I18nBase implements IWorkerContext 
 		return supportsSystem(system);
 	}
 
+	public SystemSupportInformation getTxSupportInfo(String system) {
+		return null;
+	}
 
 	public ValidationResult validateCode(ValidationOptions theOptions, CodeableConcept theCode, ValueSet theVs) {
 		for (Coding next : theCode.getCoding()) {
@@ -199,8 +203,6 @@ public final class HapiWorkerContext extends I18nBase implements IWorkerContext 
 
 		return new ValidationResult(IssueSeverity.ERROR, null, null);
 	}
-
-
 	public ValidationResult validateCode(ValidationOptions theOptions, Coding theCode, ValueSet theVs) {
 		String system = theCode.getSystem();
 		String code = theCode.getCode();
@@ -644,6 +646,12 @@ public final class HapiWorkerContext extends I18nBase implements IWorkerContext 
 		throw new UnsupportedOperationException(Msg.code(2113) + "Can't fetch all resources of type: " + theClass);
 	}
 
+	public <T extends Resource> List<T> fetchResourceVersionsByTypeAndUrl(Class<T> class_, String url) {
+		throw new UnsupportedOperationException(
+				Msg.code(2796) + "Can't fetch all resources of type : " + class_ + " and url: " + url);
+	}
+
+
 	public <T extends Resource> List<T> fetchResourcesByUrl(Class<T> class_, String url) {
 		throw new UnsupportedOperationException(Msg.code(2508) + "Can't fetch all resources of url: " + url);
 	}
@@ -678,16 +686,23 @@ public final class HapiWorkerContext extends I18nBase implements IWorkerContext 
 		throw new UnsupportedOperationException(Msg.code(2473));
 	}
 
+	@Override
+	public <T extends Resource> T findTxResource(Class<T> arg0, String arg1, VersionResolutionRules arg2, String arg3,
+			Resource arg4) {
+		throw new UnsupportedOperationException("Unimplemented method 'findTxResource'");
+	}
 
 	public <T extends Resource> T findTxResource(Class<T> class_, String canonical, IWorkerContext.VersionResolutionRules rules) {
 		throw new UnsupportedOperationException(Msg.code(2491));
 	}
 
-
-	public <T extends Resource> T findTxResource(Class<T> class_, String canonical, IWorkerContext.VersionResolutionRules rules, String version, Resource sourceOfReference) {
-		throw new UnsupportedOperationException(Msg.code(2493));
+	public <T extends Resource> T findTxResource(Class<T> class_, String canonical) {
+		throw new UnsupportedOperationException(Msg.code(2492));
 	}
 
+	public <T extends Resource> T findTxResource(Class<T> class_, String canonical, String version) {
+		throw new UnsupportedOperationException(Msg.code(2493));
+	}
 
 	public Boolean subsumes(ValidationOptions optionsArg, Coding parent, Coding child) {
 		throw new UnsupportedOperationException(Msg.code(2488));
@@ -710,10 +725,10 @@ public final class HapiWorkerContext extends I18nBase implements IWorkerContext 
 		throw new UnsupportedOperationException(Msg.code(2488));
 	}
 
-	public org.hl7.fhir.r5.model.OperationOutcome validateTxResource(ValidationOptions options, Resource resource) {
-		throw new UnsupportedOperationException(Msg.code(2488));
+	@Override
+	public OperationOutcome validateTxResource(ValidationOptions options, Resource resource) {
+		throw new UnsupportedOperationException(Msg.code(2734));
 	}
-
 	private final java.util.Map<String, Object> analyses = new java.util.HashMap<>();
 
 
@@ -725,4 +740,6 @@ public final class HapiWorkerContext extends I18nBase implements IWorkerContext 
 	public Object retrieveAnalysis(Class className) {
 		return analyses.get(className.getName());
 	}
+
+
 }
