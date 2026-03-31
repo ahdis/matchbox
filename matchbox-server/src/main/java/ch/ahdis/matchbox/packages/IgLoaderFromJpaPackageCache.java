@@ -185,16 +185,6 @@ public class IgLoaderFromJpaPackageCache extends IgLoader {
 					loadIg(igs, binaries, PACKAGE_R4_TERMINOLOGY, recursive);
 					return;
 				}
-				if (src.startsWith("hl7.terminology#6.5.0")) {
-					log.info("Requesting to load '{}', loading '{}' instead'", src, PACKAGE_R4_TERMINOLOGY65);
-					loadIg(igs, binaries, PACKAGE_R4_TERMINOLOGY65, recursive);
-					return;
-				}
-				if (src.startsWith("hl7.terminology#6.3.0")) {
-					log.info("Requesting to load '{}', loading '{}' instead'", src, PACKAGE_R4_TERMINOLOGY63);
-					loadIg(igs, binaries, PACKAGE_R4_TERMINOLOGY63, recursive);
-					return;
-				}
 				if (src.startsWith("hl7.fhir.uv.extensions#5.2.0")) {
 					log.info("Requesting to load '{}', loading '{}' instead'", src, PACKAGE_R4_UV_EXTENSIONS);
 					loadIg(igs, binaries, PACKAGE_R4_UV_EXTENSIONS, recursive);
@@ -205,16 +195,6 @@ public class IgLoaderFromJpaPackageCache extends IgLoader {
 				if (src.startsWith("hl7.terminology#7.0.1")) {
 					log.info("Requesting to load '{}', loading '{}' instead'", src, PACKAGE_R5_TERMINOLOGY);
 					loadIg(igs, binaries, PACKAGE_R5_TERMINOLOGY, recursive);
-					return;
-				}
-				if (src.startsWith("hl7.terminology#6.5.0")) {
-					log.info("Requesting to load '{}', loading from classpath '{}' instead'", src, PACKAGE_R5_TERMINOLOGY65);
-					loadIg(igs, binaries, PACKAGE_R5_TERMINOLOGY65, recursive);
-					return;
-				}
-				if (src.startsWith("hl7.terminology#6.3.0")) {
-					log.info("Requesting to load '{}', loading from classpath '{}' instead'", src, PACKAGE_R5_TERMINOLOGY63);
-					loadIg(igs, binaries, PACKAGE_R5_TERMINOLOGY63, recursive);
 					return;
 				}
 				if (src.startsWith("hl7.fhir.uv.extensions#5.2.0")) {
@@ -229,12 +209,6 @@ public class IgLoaderFromJpaPackageCache extends IgLoader {
 		if (src.equals("hl7.fhir.cda#dev")) {
 			log.info("Replacing 'hl7.fhir.cda#dev' with '{}'", PACKAGE_CDA_UV_CORE);
 			loadIg(igs, binaries, PACKAGE_CDA_UV_CORE, recursive);
-			return;
-		}
-		if (src.equals("ch.fhir.ig.ch-term#current")) {
-			final var replace = "ch.fhir.ig.ch-term#3.2.0";
-			log.info("Replacing 'ch.fhir.ig.ch-term#current' with '{}'", replace);
-			loadIg(igs, binaries, replace, recursive);
 			return;
 		}
 		if (getContext().getLoadedPackages().contains(src)) {
@@ -366,7 +340,7 @@ public class IgLoaderFromJpaPackageCache extends IgLoader {
 						String url = ext.asString("url");
 						if ("http://hl7.org/fhir/tools/StructureDefinition/ig-internal-dependency".equals(url)) {
 							String value = ext.asString("valueCode");
-							if (value != null && value.contains("#") && !value.startsWith("hl7.fhir.uv.tools#current")) {
+							if (value != null && value.contains("#") && !value.startsWith("hl7.fhir.uv.tools")) {
 								result.add(value);
 							}
 						}

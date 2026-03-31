@@ -14,7 +14,6 @@ They can be set in the Spring configuration (e.g. `application.properties`/`appl
 | `matchbox.fhir.context.txServer`         | `n/a`         | The URL of the terminology server to use, or `n/a` not to use a terminology server.                                                                             |
 | `matchbox.fhir.context.igsPreloaded`     | `[]`          | The list of IGs to always pre-load when initializing a Matchbox engine.                                                                                         |
 | `matchbox.fhir.context.onlyOneEngine`    | `false`       | Forces the server to initialize only one engine. See the section [_Only one engine_](#only-one-engine) below.                                                   |
-| `matchbox.fhir.context.xVersion`         | `false`       | Allows to transform resources between FHIR versions. See the section [_Transforming resources between FHIR versions_](#transform-cross-version) below.          |
 | `matchbox.fhir.context.suppressWarnInfo` | `{}`          | The list of warnings/infos to suppress in validation reports. See [_Suppress warning/information-level issues in validation_](validation.md#suppress-warnings). |
 | `matchbox.fhir.context.suppressError` | `{}`          | The list of errors to suppress in validation reports. See [_Suppress error-level issues in validation_](validation.md#suppress-errors). |
 | `matchbox.fhir.context.httpReadOnly`     | `false`       | Whether the server is in read-only mode or not. See the section [_Read-only mode_](#read-only) below.                                                           |
@@ -137,17 +136,6 @@ The FHIR package to install will be determined by (in the implemented order):
 2. The `profile` parameter. Matchbox will search for IGs that contain that canonical with the
    [Simplifier API](https://app.swaggerhub.com/apis-docs/firely/Simplifier.net_FHIR_Package_API/1.0.1) and install 
    the first result.
-
-## Transforming resources between FHIR versions {: #transform-cross-version}
-
-If you intend to transform resources between FHIR versions (e.g. from R4 to R5), you need to enable the `xVersion` 
-configuration parameter.
-
-This mode will load the [FHIR Cross-Version Mapping Pack](https://build.fhir.org/ig/HL7/fhir-cross-version/) package,
-which contains _StructureMaps_ for all FHIR Core resources.
-Matchbox will also force the right version on the FHIR Core _StructureDefinitions_, to allow their use by the 
-_StructureMaps_.
-
 
 ## LLM support {: #llm-support}
 Adding `llm` configurations will allow the server to make API calls to the specified LLM and add an analysis of the validation results to the operation outcome. This provides the user with AI generated instructions on how to fix errors in the validated FHIR resource.

@@ -13,10 +13,6 @@ hapi:
         name: matchbox.health.test.ig.r4
         version: 0.2.0
         url: classpath:/matchbox.health.test.ig.r4-0.2.0.tgz
-      xver:
-        name: hl7.fhir.uv.xver
-        version: 0.1.0
-        url: classpath:/hl7.fhir.uv.xver#0.1.0@mb.tgz
 matchbox:
   fhir:
     context:
@@ -34,7 +30,6 @@ matchbox:
           - "Type_Specific_Checks_DT_URL_Resolve@^.*coding.*system"
           - "Extension_EXT_Unknown"
           - "Extension_EXT_Unknown_NotHere"
-      xVersion: true
 spring:
   datasource:
     url: "jdbc:h2:mem:test-r4"

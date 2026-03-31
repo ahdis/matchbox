@@ -4,6 +4,7 @@ import static org.apache.commons.lang3.StringUtils.defaultString;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
 
@@ -12,9 +13,11 @@ import ca.uhn.fhir.jpa.dao.data.INpmPackageVersionResourceDao;
 import ca.uhn.fhir.jpa.model.entity.NpmPackageVersionResourceEntity;
 import jakarta.annotation.PostConstruct;
 
+import org.hl7.fhir.exceptions.FHIRException;
 import org.hl7.fhir.instance.model.api.*;
 import org.hl7.fhir.r4.model.Identifier;
 import org.hl7.fhir.utilities.json.model.JsonObject;
+import org.hl7.fhir.utilities.npm.BasePackageCacheManager.InputStreamWithSrc;
 import org.hl7.fhir.utilities.npm.IPackageCacheManager;
 import org.hl7.fhir.utilities.npm.NpmPackage;
 import org.hl7.fhir.utilities.npm.NpmPackage.NpmPackageFolder;
@@ -56,6 +59,7 @@ import ca.uhn.fhir.rest.param.UriParam;
 import ca.uhn.fhir.rest.server.exceptions.InternalErrorException;
 import ca.uhn.fhir.util.FhirTerser;
 import ca.uhn.fhir.util.SearchParameterUtil;
+import ch.ahdis.matchbox.engine.MatchboxEngine;
 
 /**
  * This is a copy of ca.uhn.fhir.jpa.packages.PackageInstallerSvcImpl with the
@@ -204,6 +208,21 @@ public class MatchboxPackageInstallerImpl implements IPackageInstallerSvc {
 		return retVal;
 	}
 
+	private boolean skipPackage(String value) {
+		boolean skip = false;
+		switch (value) {
+			case MatchboxEngine.PACKAGE_R4_TERMINOLOGY:
+			case MatchboxEngine.PACKAGE_R5_TERMINOLOGY:
+			case MatchboxEngine.PACKAGE_R4_UV_EXTENSIONS:
+			case MatchboxEngine.PACKAGE_R5_UV_EXTENSIONS:
+			case MatchboxEngine.PACKAGE_UV_XVER:
+			case MatchboxEngine.PACKAGE_UV_XVER54:
+			case MatchboxEngine.PACKAGE_CDA_UV_CORE:
+				skip = true;
+		}
+		return skip;
+	}
+
 	private void fetchAndInstallDependencies(NpmPackage npmPackage, PackageInstallationSpec theInstallationSpec, PackageInstallOutcomeJson theOutcome) throws ImplementationGuideInstallationException {
 		if (npmPackage.getNpm().has("dependencies")) {
 			JsonObject dependencies = npmPackage.getNpm().get("dependencies").asJsonObject();
@@ -213,7 +232,12 @@ public class MatchboxPackageInstallerImpl implements IPackageInstallerSvc {
 				try {
 					theOutcome.getMessage().add("Package " + npmPackage.id() + "#" + npmPackage.version() + " depends on package " + ig + "#" + ver);
 
-					boolean skip = false;
+					if (skipPackage(ig + "#" + ver)) {
+						theOutcome.getMessage().add("Skipping internal dependency " +ig + " (bundled in engine classpath)");
+						continue;
+					}
+
+					boolean skip = skipPackage(ig);
 					for (String next : theInstallationSpec.getDependencyExcludes()) {
 						if (ig.matches(next)) {
 							theOutcome.getMessage().add("Not installing dependency " + ig + " because it matches exclude criteria: " + next);
@@ -248,10 +272,15 @@ public class MatchboxPackageInstallerImpl implements IPackageInstallerSvc {
 						String url = ext.asString("url");
 						if ("http://hl7.org/fhir/tools/StructureDefinition/ig-internal-dependency".equals(url)) {
 							String value = ext.asString("valueCode");
-							if (value != null && value.contains("#") && !value.startsWith("hl7.fhir.uv.tools#current")) {
+							if (value != null && value.contains("#") && !value.startsWith("hl7.fhir.uv.tools")) {
 								String depId = value.substring(0, value.indexOf("#"));
 								String depVer = value.substring(value.indexOf("#") + 1);
 								theOutcome.getMessage().add("Package " + npmPackage.id() + "#" + npmPackage.version() + " has internal dependency " + depId + "#" + depVer);
+								// Skip packages that are already loaded from classpath by the engine
+								if (skipPackage(value)) {
+									theOutcome.getMessage().add("Skipping internal dependency " + depId + "#" + depVer + " (bundled in engine classpath)");
+									continue;
+								}
 								try {
 									NpmPackage dependency = myPackageCacheManager.loadPackage(depId, depVer);
 									fetchAndInstallDependencies(dependency, theInstallationSpec, theOutcome);

@@ -33,7 +33,6 @@ Example configuration (API-Key must be replaced):
 matchbox:
   fhir:
     context:
-      xVersion: true
       onlyOneEngine: true
       txServer: http://tx.fhir.org
       analyzeOutcomeWithAIOnError: true

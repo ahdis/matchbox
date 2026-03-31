@@ -229,12 +229,6 @@ public class CliContext {
     return this.httpReadOnly;
   }
 
-  private boolean xVersion = false;
-  
-  public boolean getXVersion() {
-    return xVersion;
-  }
-
   @JsonProperty("llmProvider")
   private String llmProvider;
 
@@ -334,7 +328,6 @@ public class CliContext {
     this.igsPreloaded = environment.getProperty("matchbox.fhir.context.igsPreloaded", String[].class);
     this.onlyOneEngine = environment.getProperty("matchbox.fhir.context.onlyOneEngine", Boolean.class, false);
     this.httpReadOnly = environment.getProperty("matchbox.fhir.context.httpReadOnly", Boolean.class, false);
-    this.xVersion = environment.getProperty("matchbox.fhir.context.xVersion", Boolean.class, false);
   }
 
   public CliContext(CliContext other) {
@@ -353,7 +346,6 @@ public class CliContext {
     this.igsPreloaded = other.igsPreloaded;
     this.onlyOneEngine = other.onlyOneEngine;
     this.httpReadOnly = other.httpReadOnly;
-    this.xVersion = other.xVersion;
     this.analyzeOutcomeWithAI = other.analyzeOutcomeWithAI;
     this.analyzeOutcomeWithAIOnError = other.analyzeOutcomeWithAIOnError;
     this.llmProvider = other.llmProvider;
@@ -772,7 +764,6 @@ public class CliContext {
         && clearTxCache == that.clearTxCache
         && allowExampleUrls == that.allowExampleUrls
         && onlyOneEngine == that.onlyOneEngine
-        && xVersion == that.xVersion
         && httpReadOnly == that.httpReadOnly
         && htmlInMarkdownCheck == that.htmlInMarkdownCheck
         && Objects.equals(extensions, that.extensions)
@@ -845,7 +836,6 @@ public class CliContext {
         locations,
         jurisdiction,
         onlyOneEngine,
-        xVersion,
         checkReferences,
         checkReferencesTo,
         resolutionContext,
@@ -905,7 +895,6 @@ public class CliContext {
         ", jurisdiction='" + jurisdiction + '\'' +
         ", igsPreloaded=" + Arrays.toString(igsPreloaded) +
         ", onlyOneEngine=" + onlyOneEngine +
-        ", xVersion=" + xVersion +
         ", httpReadOnly=" + httpReadOnly +
         ", checkReferences=" + checkReferences +
         ", resolutionContext=" + resolutionContext +
@@ -963,7 +952,6 @@ public class CliContext {
     addExtension(ext, "lang", new StringType(this.lang));
     addExtension(ext, "snomedCT", new StringType(this.snomedCT));
     addExtension(ext, "fhirVersion", new StringType(this.fhirVersion));
-    addExtension(ext, "xVersion", new BooleanType(this.xVersion));
     addExtension(ext, "onlyOneEngine", new BooleanType(this.onlyOneEngine));
     addExtension(ext, "ig", new StringType(this.ig));
     // addExtension(ext, "questionnaireMode", new BooleanType(this.questionnaireMode));

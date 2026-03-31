@@ -1,3 +1,8 @@
+2026/04/01 Release 4.1.2
+
+- integrated new xver packages, hl7.fhir.uv.xver#0.1.0 and configure r4 with hl7.fhir.uv.xver-r5.r4 extensions (#502)
+- NOTE: xversion fml mapping package does not work anymore with above extensions pack, support had to be dropped 
+
 2026/03/31 Release 4.1.1
 
 - update org.hl7.fhir.core 6.9.4
