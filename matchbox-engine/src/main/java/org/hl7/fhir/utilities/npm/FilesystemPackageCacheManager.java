@@ -24,6 +24,8 @@ import org.hl7.fhir.utilities.settings.FhirSettings;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import ch.ahdis.matchbox.engine.MatchboxEngine;
+
 /*
   Copyright (c) 2011+, HL7, Inc.
   All rights reserved.
@@ -330,7 +332,50 @@ public class FilesystemPackageCacheManager extends BasePackageCacheManager imple
   }
 
   protected InputStreamWithSrc loadFromPackageServer(String id, String version) throws FileNotFoundException {
-    InputStreamWithSrc retVal = super.loadFromPackageServer(id, version);
+
+    // matchbox-engine PATCH, we do not want to load from a package server for hl7.fhir.xver-extension :
+    if (CommonPackages.ID_XVER.equals(id) || id.equals("hl7.fhir.uv.xver")) {
+      ourLog.info("loading " +id+ " from classpath");
+
+      InputStream stream = null;
+      if ("0.1.0".equals(version)) {
+        stream = getClass().getResourceAsStream("/hl7.fhir.uv.xver#0.1.0.tgz");
+      }
+      if (stream==null) {
+        ourLog.error("Unable to find/resolve/read from classpath (we don't want go to the package server) for :" + id+"#"+version+".tgz");
+        throw new FHIRException("Unable to find/resolve/read from classpath (we don't want go to the package server) for :" + id+"#"+version+".tgz");
+      }
+      return new InputStreamWithSrc(stream, "http://fhir.org/", version);
+    }
+
+    if (id.startsWith("hl7.fhir") && id.endsWith("core")) {
+      ourLog.info("loading from classpath "+id);
+      InputStream stream = getClass().getResourceAsStream("/"+id+".tgz");
+      if (stream==null) {
+        ourLog.error("Unable to find/resolve/read from classpath (we don't want go to the package server) for :" + id+"#"+version+".tgz");
+        throw new FHIRException("Unable to find/resolve/read from classpath (we don't want go to the package server) for :" + id+"#"+version+".tgz");
+      }
+      return new InputStreamWithSrc(stream, "https://hl7.org/", version);
+    }
+
+    String packageName = id + "#" + version;
+    switch (packageName) {
+      case MatchboxEngine.PACKAGE_R4_TERMINOLOGY:
+      case MatchboxEngine.PACKAGE_R5_TERMINOLOGY:
+      case MatchboxEngine.PACKAGE_R4_UV_EXTENSIONS:
+      case MatchboxEngine.PACKAGE_R5_UV_EXTENSIONS:
+      case MatchboxEngine.PACKAGE_UV_XVER:
+      case MatchboxEngine.PACKAGE_UV_XVER54:
+        ourLog.info("loading from classpath "+id);
+        InputStream stream = getClass().getResourceAsStream("/"+packageName+".tgz");
+        if (stream==null) {
+          ourLog.error("Unable to find/resolve/read from classpath (we don't want go to the package server) for :" + id+"#"+version+".tgz");
+          throw new FHIRException("Unable to find/resolve/read from classpath (we don't want go to the package server) for :" + id+"#"+version+".tgz");
+        }
+        return new InputStreamWithSrc(stream, "https://hl7.org/", version);
+    }
+
+  	InputStreamWithSrc retVal = super.loadFromPackageServer(id, version);
     if (retVal != null) {
       return retVal;
     }

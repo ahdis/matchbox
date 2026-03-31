@@ -17,7 +17,6 @@ matchbox:
   fhir:
     context:
 #      txServer: http://tx.fhir.org
-#      xVersion: true
       httpReadOnly: true
       txServer: http://localhost:${server.port}/matchboxv3/tx
       suppressWarnInfo:
