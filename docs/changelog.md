@@ -1,3 +1,7 @@
+2026/04/01 Release 4.1.3
+
+- increase heap size requirement in Docker container to 12G
+
 2026/04/01 Release 4.1.2
 
 - integrated new xver packages, hl7.fhir.uv.xver#0.1.0 and configure r4 with hl7.fhir.uv.xver-r5.r4 extensions (#502)

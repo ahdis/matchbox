@@ -6,7 +6,7 @@
     <parent>
         <artifactId>matchbox</artifactId>
         <groupId>health.matchbox</groupId>
-        <version>4.1.2</version>
+        <version>4.1.3</version>
     </parent>
 
     <artifactId>matchbox-engine</artifactId>
@@ -150,7 +150,7 @@
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
                 <configuration>
-                    <argLine>-Xmx6g</argLine>
+                    <argLine>-Xmx12g</argLine>
                     <reuseForks>true</reuseForks>
                     <forkCount>1</forkCount>
                 </configuration>
