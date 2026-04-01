@@ -20,6 +20,6 @@ ENV HEALTHCHECK_URL=http://localhost:8080/matchboxv3/actuator/health
 HEALTHCHECK --interval=10s --timeout=3s --start-period=30s --retries=3 \
   CMD curl -sf $HEALTHCHECK_URL || exit 1
 
-ENTRYPOINT java -Xmx3072M -Dfhir.settings.path=/config/fhir-settings.json -Dspring.config.additional-location=optional:file:/config/application.yaml,optional:file:application.yaml -jar /matchbox.jar
+ENTRYPOINT java -Xmx12g -Dfhir.settings.path=/config/fhir-settings.json -Dspring.config.additional-location=optional:file:/config/application.yaml,optional:file:application.yaml -jar /matchbox.jar
 
 # used by .github/workflows/
