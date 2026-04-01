@@ -107,7 +107,7 @@ public class TransformSupportServices implements ITransformerServices {
         traceValue.setName("debug");
         traceValue.setValue(new StringType(message));
       } else {
-        log.info(message);
+        log.debug(message);
       }
     }
     

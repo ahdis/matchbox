@@ -3698,7 +3698,7 @@ public abstract class BaseWorkerContext extends I18nBase implements IWorkerConte
         if (Objects.equals(locale, Locale.US)) {
           log.debug("ignoring locale change to US");
         } else {
-          log.info("resetting locale");
+          log.debug("resetting locale");
         }
       }
     }
