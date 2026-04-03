@@ -1,0 +1,147 @@
+@use '../../variables';
+
+
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+
+    thead {
+        border-bottom: 1px solid rgb(209, 213, 219);
+        padding-bottom: 1rem;
+    }
+
+    tbody {
+        tr {
+            &:hover {
+                background: #eee
+            }
+
+            td {
+            border-bottom: 1px solid rgb(229, 231, 235);
+
+                &.text-center {
+                    text-align: center;
+                }
+
+                &.no-entry {
+                    text-align: center;
+                }
+
+                mat-icon {
+                    margin-right: 2px;
+                    vertical-align: bottom;
+
+                    &.error {
+                        color: variables.$issue-error;
+                    }
+
+                    &.warning {
+                        color: variables.$issue-warning;
+                    }
+
+                    &.info {
+                        color: variables.$issue-info;
+                    }
+                }
+            }   
+        }
+        
+    }
+}
+
+.search-params {
+    padding-top: 1rem;
+    padding-bottom: 1rem;
+
+    .param {
+        padding-right: 1rem;
+
+        &.ig {
+            width: 100%;
+        }
+    }
+
+}
+
+.btn-search {
+    margin-right: 1rem;
+}
+
+.operation-outcome-row pre {
+    max-width: 100%;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    background: #bae792;
+}
+
+.pointer {
+    cursor: pointer;
+}
+
+.loading {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding-top: 1rem;
+    padding-bottom: 1rem;
+}
+
+.nav-container {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    padding: 10px 0;
+
+    .page-info {
+        flex: 1;
+    }
+
+    .nav-buttons {
+        flex: 1;
+        display: flex;
+        justify-content: center;
+        gap: 8px;
+    }
+
+    .count-info {
+        flex: 1;
+        text-align: right;
+    }
+}
+
+
+.form-field-group {
+  display: flex;
+  flex-direction: row;
+
+  mat-form-field {
+    width: 100%;
+  }
+}
+
+.multi-line-option {
+    padding-top: .3rem;
+    padding-bottom: .2rem;
+
+  .option-container {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+  }
+
+  p.title {
+    margin: 0;
+    padding: 0;
+    line-height: 1.4;
+  }
+
+  p.canonical {
+    margin: 0;
+    padding: 0;
+    font-size: 0.8rem;
+    color: rgba(0, 0, 0, 0.54); 
+  }
+}
