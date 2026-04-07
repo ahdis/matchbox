@@ -51,7 +51,7 @@ public class MatchboxEngineSupport {
 	protected static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(MatchboxEngineSupport.class);
 
 	private static MatchboxEngine mainEngine = null;
-	private EngineSessionCache sessionCache;
+	private final MatchboxEngineCache engineCache;
 	
 	private boolean initialized = false;
 
@@ -81,8 +81,9 @@ public class MatchboxEngineSupport {
 
 	public MatchboxEngineSupport(final MatchboxFhirContextProperties matchboxFhirContextProperties,
 										  final CliContext cliContext,
-										  @Value("${hapi.fhir.fhir_version}") final FhirVersionEnum serverFhirVersion) {
-		this.sessionCache = new EngineSessionCache();
+										  @Value("${hapi.fhir.fhir_version}") final FhirVersionEnum serverFhirVersion,
+										  final MatchboxEngineCache engineCache) {
+		this.engineCache = Objects.requireNonNull(engineCache);
 		this.matchboxFhirContextProperties = Objects.requireNonNull(matchboxFhirContextProperties);
 		this.serverFhirVersion = serverFhirVersion;
 		this.cliContext = cliContext;
@@ -177,8 +178,8 @@ public class MatchboxEngineSupport {
 	 * @return
 	 */
 	public IBaseResource getCachedResource(final String resource, final @NonNull String id) {
-		for (final String sessionId : this.sessionCache.getSessionIds()) {
-			final var engine = (MatchboxEngine) this.sessionCache.fetchSessionValidatorEngine(sessionId);
+		for (final String sessionId : this.engineCache.getSessionIds()) {
+			final MatchboxEngine engine = this.engineCache.fetchEngine(sessionId);
 			final IBaseResource res = engine.getCanonicalResourceById(resource, id);
 			if (res != null) {
 				return res;
@@ -191,7 +192,7 @@ public class MatchboxEngineSupport {
 															  final @Nullable String ig,
 															  final @NonNull CliContext cliContext) throws MatchboxEngineCreationException {
 		final String forIg = (ig != null) ? "for " + ig : "";
-		log.info("Creating new validate engine {} with parameters {}", forIg, cliContext.hashCode());
+		log.info("Creating new validate engine {} with parameters {}", forIg, cliContext.sessionId());
 
 		final MatchboxEngine validator;
 		try { validator = new MatchboxEngine(engine); }
@@ -220,7 +221,7 @@ public class MatchboxEngineSupport {
 		log.debug("Package Summary: {}", validator.getContext().loadedPackageSummary());
 
 		this.configureValidationEngine(validator, cliContext);
-		log.debug("Finished creating new validate engine for {} with parameters {}", forIg, cliContext.hashCode());
+		log.debug("Finished creating new validate engine for {} with parameters {}", forIg, cliContext.sessionId());
 
 		return validator;
 	}
@@ -353,8 +354,8 @@ public class MatchboxEngineSupport {
 
 			log.info("Cached default engine forever {} with parameters {}",
 						(cliContextMain.getIg() != null ? "for " + cliContextMain.getIg() : ""),
-						cliContextMain.hashCode());
-			this.sessionCache.cacheSessionForEver("" + cliContextMain.hashCode(), mainEngine);
+						cliContextMain.sessionId());
+			this.engineCache.cachePermanentEngine(cliContextMain, mainEngine);
 			this.cliContext.setIg(null); // otherwise we get for reloads the pacakge name instead a new one later  set ahdis/matchbox #144
 
 			if (cliContextMain.getIgsPreloaded() != null) {
@@ -366,14 +367,14 @@ public class MatchboxEngineSupport {
 							log.error("Error generating matchbox engine due to igLoader", e);
 						}
 					} else {
-						CliContext cliContextCp = new CliContext(cliContextMain);
+						final var cliContextCp = new CliContext(cliContextMain);
 						cliContextCp.setIg(ig); // set the ig in the cliContext that hashCode will be
-						if (this.sessionCache.fetchSessionValidatorEngine("" + cliContextCp.hashCode()) == null) {
-							MatchboxEngine created = this.createMatchboxEngine(mainEngine, ig, cliContextCp);
-							this.sessionCache.cacheSessionForEver("" + cliContextCp.hashCode(), created);
+						if (this.engineCache.fetchEngine(cliContextCp) == null) {
+							final MatchboxEngine created = this.createMatchboxEngine(mainEngine, ig, cliContextCp);
+							this.engineCache.cachePermanentEngine(cliContextCp, created);
 							log.info("Cached validate engine forever {} with parameters {}",
 										(ig != null ? "for " + ig : ""),
-										cliContextCp.hashCode());
+										cliContextCp.sessionId());
 						}
 					}
 				}
@@ -422,12 +423,11 @@ public class MatchboxEngineSupport {
 		}
 		
 		// check if we have already a validator in cache for that
-		final var matchboxEngine =
-			(MatchboxEngine) this.sessionCache.fetchSessionValidatorEngine("" + cliRequestedContext.hashCode());
+		final MatchboxEngine matchboxEngine = this.engineCache.fetchEngine(cliRequestedContext);
 		if (matchboxEngine != null && !reload) {
 			log.info("Using cached validate engine {} with parameters {}",
 						(cliRequestedContext.getIg() != null ? "for " + cliRequestedContext.getIg() : ""),
-						cliRequestedContext.hashCode());
+						cliRequestedContext.sessionId());
 			// Runtime runtime = Runtime.getRuntime();
 			// runtime.gc();
 			return matchboxEngine;
@@ -437,7 +437,7 @@ public class MatchboxEngineSupport {
 		if (create && cliRequestedContext.getIg() != null) {
 			log.info("Creating new cached validate engine {} with parameters {}",
 						 (cliRequestedContext.getIg() != null ? "for " + cliRequestedContext.getIg() : ""),
-						 cliRequestedContext.hashCode());
+						 cliRequestedContext.sessionId());
 			MatchboxEngine baseEngine = mainEngine;
 			if (!cliRequestedContext.getFhirVersion().equals(baseEngine.getVersion())) {
 				log.debug("Creating base engine for {} with parameters and fhir Version {}",
@@ -465,7 +465,7 @@ public class MatchboxEngineSupport {
 				}
 			}
 			final var created = this.createMatchboxEngine(baseEngine, cliRequestedContext.getIg(), cliRequestedContext);
-			this.sessionCache.cacheSession("" + cliRequestedContext.hashCode(), created);
+			this.engineCache.cacheTransientEngine(cliRequestedContext, created);
 			// Runtime runtime = Runtime.getRuntime();
 			// runtime.gc();
 			return created;
@@ -474,7 +474,7 @@ public class MatchboxEngineSupport {
 	}
 
 	public String getSessionId(final MatchboxEngine engine) {
-		return this.sessionCache.getSessionId(engine);
+		return this.engineCache.findSessionId(engine);
 	}
 
 	public boolean isInitialized() {
