@@ -1,0 +1,53 @@
+# A profile dedicated to tests
+# The main purpose is to disable unnecessary features and reclaim memory
+
+hapi:
+  fhir:
+    dao_scheduling_enabled: false
+    openapi_enabled: false
+    delete_expunge_enabled: false
+    reuse_cached_search_results_millis: 0
+    retain_cached_searches_mins: 0
+    narrative_enabled: false
+    allow_contains_searches: false
+    enforce_referential_integrity_on_delete: false
+    enforce_referential_integrity_on_write: false
+    etag_support_enabled: false
+    expunge_enabled: false
+    filter_search_enabled: false
+    default_pretty_print: false
+    bundle_batch_pool_size: 1
+    bundle_batch_pool_max_size: 5
+spring:
+  datasource:
+    hikari:
+      maximum-pool-size: 1
+  quartz:
+    auto-startup: false
+  jpa:
+    open-in-view: false
+    properties:
+      hibernate.jdbc.batch_size: 1
+      hibernate.generate_statistics: false
+  task:
+    execution:
+      pool:
+        core-size: 1
+        max-size: 2
+        queue-capacity: 10
+management:
+  endpoints:
+    access:
+      default: none
+    web:
+      exposure:
+        include: ""
+  metrics:
+    enable:
+      all: false
+  prometheus:
+    metrics:
+      export:
+        enabled: false
+# Disable scheduling, as specified in BaseSchedulerServiceImpl
+scheduling_disabled: true
