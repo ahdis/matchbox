@@ -29,7 +29,6 @@ import ca.uhn.fhir.mdm.svc.MdmExpansionCacheSvc;
 import ca.uhn.fhir.parser.IParser;
 import ca.uhn.fhir.jpa.dao.tx.IHapiTransactionService;
 import ca.uhn.fhir.jpa.delete.ThreadSafeResourceDeleterSvc;
-import ca.uhn.fhir.jpa.entity.Search;
 import ca.uhn.fhir.jpa.packages.IHapiPackageCacheManager;
 import ca.uhn.fhir.jpa.packages.IPackageInstallerSvc;
 import ca.uhn.fhir.jpa.partition.IRequestPartitionHelperSvc;
