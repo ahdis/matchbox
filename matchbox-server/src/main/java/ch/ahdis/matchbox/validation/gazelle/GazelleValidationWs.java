@@ -15,7 +15,6 @@ import ch.ahdis.matchbox.validation.gazelle.models.metadata.RestBinding;
 import ch.ahdis.matchbox.validation.gazelle.models.metadata.Service;
 import ch.ahdis.matchbox.validation.gazelle.models.validation.*;
 
-import org.hl7.fhir.r5.model.StringType;
 import org.hl7.fhir.r5.model.StructureDefinition;
 import org.hl7.fhir.utilities.validation.ValidationMessage;
 import org.slf4j.Logger;
@@ -47,7 +46,7 @@ public class GazelleValidationWs {
 	 */
 	private static final String METADATA_PATH = "/metadata";
 	private static final String PROFILES_PATH = "/validation/profiles";
-	private static final String VALIDATE_PATH = "/validation/validate";
+	private static final String VALIDATE_PATH = "/validation/v2/validate";
 
 	private final MatchboxEngineSupport matchboxEngineSupport;
 
@@ -112,6 +111,7 @@ public class GazelleValidationWs {
 				// PATCHed: filename contains the StructureDefinition title.
 				profile.setProfileName("%s (%s)".formatted(packageVersionResource.getFilename(), version));
 				profile.setDomain(packageVersionResource.getPackageVersion().getPackageId());
+				profile.setVersion(version);
 				profiles.add(profile);
 
 				// If the package is current, we also add it version-less
@@ -121,6 +121,7 @@ public class GazelleValidationWs {
 					// PATCHed: filename contains the StructureDefinition title.
 					profile2.setProfileName(packageVersionResource.getFilename());
 					profile2.setDomain(packageVersionResource.getPackageVersion().getPackageId());
+					profile2.setVersion(version);
 					profiles.add(profile2);
 				}
 			});
@@ -140,8 +141,8 @@ public class GazelleValidationWs {
 		final CliContext cliContext = new CliContext(this.baseCliContext);
 
 		final var report = new ValidationReport();
-		report.setValidationItems(new ArrayList<>(validationRequest.getValidationItems().size()));
-		report.setReports(new ArrayList<>(validationRequest.getValidationItems().size()));
+		report.setValidationItems(new ArrayList<>(validationRequest.getInputs().size()));
+		report.setReports(new ArrayList<>(validationRequest.getInputs().size()));
 		report.setDisclaimer("Matchbox disclaims");
 
 		String profileCanonical = validationRequest.getValidationProfileId();
@@ -149,6 +150,7 @@ public class GazelleValidationWs {
 		// Response: create the validation method now, with the info we already have
 		final var method = new ValidationMethod();
 		method.setValidationProfileID(validationRequest.getValidationProfileId());
+		method.setValidationProfileName("FHIR " + validationRequest.getValidationProfileId());
 		method.setValidationServiceName("Matchbox");
 		method.setValidationServiceVersion(VersionUtil.getVersion());
 		report.setValidationMethod(method);
@@ -212,10 +214,10 @@ public class GazelleValidationWs {
 		}
 
 		// Response: add the validation items (requests) to the response
-		report.getValidationItems().addAll(validationRequest.getValidationItems());
+		report.getValidationItems().addAll(validationRequest.getInputs());
 
 		// Perform the validation of all items with the given engine
-		for (final var item : validationRequest.getValidationItems()) {
+		for (final var item : validationRequest.getInputs()) {
 			try {
 				report.addValidationSubReport(this.validateItem(engine, item, profileCanonical));
 			} catch (final Exception exception) {
@@ -257,7 +259,7 @@ public class GazelleValidationWs {
 	 * Performs the validation of the given item with the given engine.
 	 */
 	ValidationSubReport validateItem(final MatchboxEngine engine,
-									         final ValidationItem item,
+									         final Input item,
 												final String profile) {
 		final String content = new String(item.getContent(), StandardCharsets.UTF_8);
 		final var encoding = EncodingEnum.detectEncoding(content);
