@@ -23,7 +23,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  **/
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT)
 @ContextConfiguration(classes = { Application.class })
-@ActiveProfiles("test-r4")
+@ActiveProfiles({"tests", "test-r4"})
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_CLASS)
 public class GazelleApiR4Test extends AbstractGazelleTest {

@@ -41,7 +41,7 @@ import static org.junit.jupiter.api.Assertions.assertNotEquals;
 
 @SpringBootTest(webEnvironment = WebEnvironment.DEFINED_PORT)
 @ContextConfiguration(classes = {Application.class})
-@ActiveProfiles("test-r4")
+@ActiveProfiles({"tests", "test-r4"})
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_CLASS)
 class MatchboxApiR4Test {
@@ -306,7 +306,7 @@ class MatchboxApiR4Test {
 						"        <value value=\"7610000050719\" />\n" + //
 						"    </identifier>\n" + //
 						"</Practitioner>";
-		
+
 		IBaseOperationOutcome operationOutcome = this.validationClient.validate(practitioner,"http://matchbox.health/ig/test/r4/StructureDefinition/practitioner-identifier-required");
 		assertEquals(0, getValidationFailures((OperationOutcome) operationOutcome));
 
@@ -348,7 +348,7 @@ class MatchboxApiR4Test {
 						"    <code value=\"HH\"/>\n" + //
 						"  </class>\n" + //
 						"</Encounter>";
-		
+
 		IBaseOperationOutcome operationOutcome = this.validationClient.validate(encounter,
 																			"http://matchbox.health/ig/test/r4/StructureDefinition/encounter-ext-r5");
 		assertEquals(0, getValidationFailures((OperationOutcome) operationOutcome));
