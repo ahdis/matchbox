@@ -39,7 +39,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 		"hapi.fhir.implementationguides.fhir_terminology.name=",
 		"hapi.fhir.implementationguides.fhir_extensions.name="}) // Unset R4 IGs
 @ContextConfiguration(classes = {Application.class})
-@ActiveProfiles("test-r4b")
+@ActiveProfiles({"tests", "test-r4b"})
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_CLASS)
 public class MatchboxApiR4BTest {
@@ -65,7 +65,7 @@ public class MatchboxApiR4BTest {
 
 	private final FhirContext context = FhirContext.forR4BCached();
 	private final HttpClient httpClient = HttpClient.newHttpClient();
-	
+
 	@BeforeAll
 	void waitUntilStartup() throws Exception {
 		Thread.sleep(10000); // give the server some time to start up
