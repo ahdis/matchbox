@@ -26,12 +26,11 @@ import jakarta.annotation.Nullable;
 import org.apache.commons.collections4.map.PassiveExpiringMap;
 
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 /**
  * @author Oliver Egger
@@ -80,9 +79,13 @@ public class MatchboxEngineCache {
 	}
 
 	public Set<String> getSessionIds() {
-		return Stream.of(this.transientEngines.keySet(), this.permanentEngines.keySet())
-			.flatMap(Set::stream)
-			.collect(Collectors.toUnmodifiableSet());
+		final HashSet<String> sessionIds =
+			HashSet.newHashSet(this.transientEngines.size() + this.permanentEngines.size());
+		sessionIds.addAll(this.permanentEngines.keySet());
+		synchronized (this.transientEngines) {
+			sessionIds.addAll(this.transientEngines.keySet());
+		}
+		return sessionIds;
 	}
 
 	@Nullable
@@ -93,9 +96,11 @@ public class MatchboxEngineCache {
 			}
 		}
 
-		for (final Map.Entry<String, MatchboxEngine> entry : this.transientEngines.entrySet()) {
-			if (entry.getValue() == engine) {
-				return entry.getKey();
+		synchronized (this.transientEngines) {
+			for (final Map.Entry<String, MatchboxEngine> entry : this.transientEngines.entrySet()) {
+				if (entry.getValue() == engine) {
+					return entry.getKey();
+				}
 			}
 		}
 		return null;
