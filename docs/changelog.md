@@ -1,3 +1,7 @@
+Unreleased
+
+- the suppressed warnings and errors are now stored in a Set instead of a List to prevent duplication (#482)
+
 2026/04/01 Release 4.1.3
 
 - increase heap size requirement in Docker container to 12G
