@@ -47,12 +47,12 @@ import ch.ahdis.matchbox.engine.MatchboxEngine.MatchboxEngineBuilder;
 import ch.ahdis.matchbox.engine.ValidationPolicyAdvisor;
 
 public class MatchboxEngineSupport {
-	
+
 	protected static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(MatchboxEngineSupport.class);
 
 	private static MatchboxEngine mainEngine = null;
 	private EngineSessionCache sessionCache;
-	
+
 	private boolean initialized = false;
 
 	@Autowired
@@ -60,16 +60,16 @@ public class MatchboxEngineSupport {
 
 	@Autowired
 	private INpmPackageVersionResourceDao myPackageVersionResourceDao;
-	
+
 	@Autowired
 	private PlatformTransactionManager myTxManager;
-	
+
 	@Autowired
 	private IHapiPackageCacheManager myPackageCacheManager;
 
 	@Autowired
 	private INpmPackageVersionDao myNpmPackageVersionDao;
-	
+
 	@Autowired(required = false)
 	private IBinaryStorageSvc myBinaryStorageSvc;
 
@@ -116,7 +116,7 @@ public class MatchboxEngineSupport {
 			}
 			if (slice.isEmpty()) {
 				return null;
-			} 
+			}
 			if (slice.getContent().size()>1) {
 				log.error("multiple entries with same canonical (version) for "+theCanonicalUrl);
 			}
@@ -139,7 +139,7 @@ public class MatchboxEngineSupport {
 			}
 			if (slice.isEmpty()) {
 				return null;
-			} 
+			}
 			if (slice.getContent().size()>1) {
 				log.error("multiple entries with same canonical (version) for "+theCanonicalUrl);
 			}
@@ -160,7 +160,7 @@ public class MatchboxEngineSupport {
 						Slice<NpmPackageVersionResourceEntity> slice = myPackageVersionResourceDao.findCurrentVersionByLikeCanonicalUrl(PageRequest.of(0, 1), theFhirVersion, canonicalUrlLike);
 						if (slice.isEmpty()) {
 							return null;
-						} 
+						}
 						return slice.getContent().get(0);
 					});
 					return resourceEntity;
@@ -241,7 +241,7 @@ public class MatchboxEngineSupport {
 		}
 		return null;
 	}
-			
+
 	/**
 	 * Returns a Matchbox engine for the specified canonical with cliClontext parameters. It is synchronized and waits
 	 * for the 'initialized' flag.
@@ -420,7 +420,7 @@ public class MatchboxEngineSupport {
 			}
 			return mainEngine;
 		}
-		
+
 		// check if we have already a validator in cache for that
 		final var matchboxEngine =
 			(MatchboxEngine) this.sessionCache.fetchSessionValidatorEngine("" + cliRequestedContext.hashCode());
@@ -543,7 +543,7 @@ public class MatchboxEngineSupport {
 			} catch (final Exception e) {
 				throw new TerminologyServerException("Error while setting while trying to clear the terminology cache", e);
 			}
-		
+
 		}
 
 		validator.setDebug(cli.isDoDebug());
@@ -558,7 +558,7 @@ public class MatchboxEngineSupport {
 			for (final String s : cli.getExtensions()) {
 				if ("any".equals(s)) {
 					validator.setAnyExtensionsAllowed(true);
-				} else {	
+				} else {
 					validator.getExtensionDomains().add(s);
 				}
 			}
@@ -623,12 +623,14 @@ public class MatchboxEngineSupport {
 		// TerminologyCache.setNoCaching(cliContext.isNoInternalCaching());
 
 		// Configure which warnings will be suppressed in the validation results
-		final Map<String, List<String>> suppressedWarnings =
-			Objects.requireNonNullElseGet(this.matchboxFhirContextProperties.getSuppressWarnInfo(),
-													HashMap::new);
-		final Map<String, List<String>> suppressedError =
-			Objects.requireNonNullElseGet(this.matchboxFhirContextProperties.getSuppressError(),
-													HashMap::new);
+		final Map<String, Set<String>> suppressedWarnings = Objects.requireNonNullElseGet(
+			this.matchboxFhirContextProperties.getSuppressWarnInfo(),
+			Collections::emptyMap
+		);
+		final Map<String, Set<String>> suppressedError = Objects.requireNonNullElseGet(
+			this.matchboxFhirContextProperties.getSuppressError(),
+			Collections::emptyMap
+		);
 
 		boolean apiDefinedWarnInfos = cli.getSuppressWarnInfos() != null;
 		boolean apiDefinedErrors = cli.getSuppressErrors() != null;
@@ -637,7 +639,7 @@ public class MatchboxEngineSupport {
 			Arrays.stream(cli.getSuppressWarnInfos())
 				.forEach(pattern -> this.addSuppressedWarnInfoToEngine(pattern, validator));
 			log.info("Suppressing info/warnings over API, not using configuration file");
-		}		
+		}
 		if (apiDefinedErrors) {
 			Arrays.stream(cli.getSuppressErrors())
 				.forEach(pattern -> this.addSuppressedErrorToEngine(pattern, validator));
@@ -648,14 +650,14 @@ public class MatchboxEngineSupport {
 			// If we only have one engine, then ignore all warnings that are defined in the configuration file
 			if (!apiDefinedWarnInfos) {
 				suppressedWarnings.values().stream()
-					.flatMap(List::stream)
+					.flatMap(Set::stream)
 					.forEach(pattern -> this.addSuppressedWarnInfoToEngine(pattern, validator));
 			}
 			if (!apiDefinedErrors) {
 				suppressedError.values().stream()
-					.flatMap(List::stream)
+					.flatMap(Set::stream)
 					.forEach(pattern -> this.addSuppressedErrorToEngine(pattern, validator));
-			}		
+			}
 		} else {
 			// Otherwise, only ignore the warnings that are defined for the IGs that have been loaded in the engine
 			// Note: we remove the hash in the package, because the hash is also removed when reading the YAML
@@ -664,11 +666,11 @@ public class MatchboxEngineSupport {
 				.map(pkg -> pkg.replace("#", ""))
 				.forEach(ig -> {
 					if (!apiDefinedWarnInfos) {
-						suppressedWarnings.getOrDefault(ig, Collections.emptyList())
+						suppressedWarnings.getOrDefault(ig, Collections.emptySet())
 							.forEach(pattern -> this.addSuppressedWarnInfoToEngine(pattern, validator));
 						}
 					if (!apiDefinedErrors) {
-						suppressedError.getOrDefault(ig, Collections.emptyList())
+						suppressedError.getOrDefault(ig, Collections.emptySet())
 							.forEach(pattern -> this.addSuppressedErrorToEngine(pattern, validator));
 					}
 			});
@@ -677,11 +679,11 @@ public class MatchboxEngineSupport {
 				.map(pkg -> pkg.replace("#", ""))
 				.forEach(ig -> {
 					if (!apiDefinedWarnInfos) {
-						suppressedWarnings.getOrDefault(ig, Collections.emptyList())
+						suppressedWarnings.getOrDefault(ig, Collections.emptySet())
 							.forEach(pattern -> this.addSuppressedWarnInfoToEngine(pattern, validator));
 					}
 					if (!apiDefinedErrors) {
-						suppressedError.getOrDefault(ig, Collections.emptyList())
+						suppressedError.getOrDefault(ig, Collections.emptySet())
 							.forEach(pattern -> this.addSuppressedErrorToEngine(pattern, validator));
 					}
 				});

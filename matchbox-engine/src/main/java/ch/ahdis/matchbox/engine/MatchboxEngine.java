@@ -9,9 +9,9 @@ package ch.ahdis.matchbox.engine;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -26,10 +26,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.URISyntaxException;
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
@@ -93,7 +90,7 @@ import ch.ahdis.matchbox.mappinglanguage.TransformSupportServices;
 
 /**
  * Base Engine providing functionality on top of the ValidationEngine
- * 
+ *
  * @author oliveregger
  *
  */
@@ -110,19 +107,19 @@ public class MatchboxEngine extends ValidationEngine {
 
 	protected static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(MatchboxEngine.class);
 
-	protected List<String> suppressedWarnInfoPatterns = new ArrayList<>();
+	protected Set<String> suppressedWarnInfoPatterns = HashSet.newHashSet(8);
 	protected PassiveExpiringSessionCache sessionCache = new PassiveExpiringSessionCache();
-	
+
 	static protected ValidationEngine nullEngine;
 
 	static protected SimpleWorkerContext fmlParseContext = null;
 
-	
+
 	static {
 			try {
 				nullEngine = new ValidationEngineBuilder().fromNothing();
 		} catch (IOException e) {
-				log.error("problem with inizializin", e);		
+				log.error("problem with inizializin", e);
 		}
 	};
 
@@ -132,13 +129,13 @@ public class MatchboxEngine extends ValidationEngine {
 		// all defaults....
 		return ep;
 	  }
-	
+
 	public MatchboxEngine(SimpleWorkerContext context) throws FHIRException, IOException  {
 			super(nullEngine);
 			setContext(context);
 			this.setVersion(context.getVersion());
 	    context.setCanNoTS(true);
-	    
+
 	    NpmPackage npmX = getPcm().loadPackage(CommonPackages.ID_XVER, CommonPackages.VER_XVER);
 	    context.loadFromPackage(npmX, null);
 
@@ -181,11 +178,11 @@ public class MatchboxEngine extends ValidationEngine {
 			throw new MatchboxEngineCreationException(e);
 		}
 	}
-		
+
 
 	/**
 	 * Builder class to instantiate a MappingEngine
-	 * 
+	 *
 	 * @author oliveregger, ahdis ag
 	 *
 	 */
@@ -255,7 +252,7 @@ public class MatchboxEngine extends ValidationEngine {
 
 		/**
 		 * Returns a FHIR R4 engine configured with hl7 terminology
-		 * 
+		 *
 		 * @return
 		 * @throws MatchboxEngineCreationException
 		 */
@@ -263,11 +260,11 @@ public class MatchboxEngine extends ValidationEngine {
 			log.info("Initializing Matchbox Engine (FHIR R4 with terminology provided in classpath)");
 			log.info(VersionUtil.getPoweredBy());
 			final MatchboxEngine engine ;
-			try { 
+			try {
 					engine = new MatchboxEngine(
 									new SimpleWorkerContextBuilder().fromPackage(NpmPackage.fromPackage(getClass().getResourceAsStream("/hl7.fhir.r4.core.tgz")), ValidatorUtils.loaderForVersion("4.0.1"), false));
 			}
-			catch (final Exception e) { throw new MatchboxEngineCreationException(e); } 
+			catch (final Exception e) { throw new MatchboxEngineCreationException(e); }
 			log.info("loaded hl7.fhir.r4.core#4.0.1 from classpath");
 			engine.setVersion(FhirPublication.R4.toCode());
 			try {
@@ -300,7 +297,7 @@ public class MatchboxEngine extends ValidationEngine {
 
 		/**
 		 * Returns a FHIR R4B engine configured with hl7 terminology
-		 * 
+		 *
 		 * @return
 		 * @throws MatchboxEngineCreationException
 		 */
@@ -310,7 +307,7 @@ public class MatchboxEngine extends ValidationEngine {
 			final MatchboxEngine engine ;
 			try { engine = new MatchboxEngine(new SimpleWorkerContextBuilder().fromPackage(NpmPackage.fromPackage(getClass().getResourceAsStream("/hl7.fhir.r4b.core.tgz")), ValidatorUtils.loaderForVersion("4.3.0"), false));
 			}
-			catch (final Exception e) { throw new MatchboxEngineCreationException(e); } 
+			catch (final Exception e) { throw new MatchboxEngineCreationException(e); }
 			log.info("loaded hl7.fhir.r4b.core#4.3.0 from classpath");
 			engine.setVersion(FhirPublication.R4B.toCode());
 			try {
@@ -352,7 +349,7 @@ public class MatchboxEngine extends ValidationEngine {
 			final MatchboxEngine engine;
 			try { engine = new MatchboxEngine(createR5WorkerContext());
 			}
-			catch (final Exception e) { throw new MatchboxEngineCreationException(e); } 
+			catch (final Exception e) { throw new MatchboxEngineCreationException(e); }
 			log.info("loaded hl7.fhir.r5.core#5.0.0 from classpath");
 			engine.setVersion(FhirPublication.R5.toCode());
 			try {
@@ -385,7 +382,7 @@ public class MatchboxEngine extends ValidationEngine {
 
 		/**
 		 * Returns empty engine
-		 * 
+		 *
 		 * @return
 		 * @throws MatchboxEngineCreationException
 		 */
@@ -419,7 +416,7 @@ public class MatchboxEngine extends ValidationEngine {
 		@Override
 		public ValidationEngine fromNothing() throws MatchboxEngineCreationException {
 			try {
-				return super.fromNothing();				
+				return super.fromNothing();
 			} catch (final IOException e) {
 				throw new MatchboxEngineCreationException(e);
 			}
@@ -428,7 +425,7 @@ public class MatchboxEngine extends ValidationEngine {
 		@Override
 		public ValidationEngine fromSource(String src) throws URISyntaxException {
 			try {
-				return super.fromSource(src);				
+				return super.fromSource(src);
 			} catch (final IOException e) {
 				throw new MatchboxEngineCreationException(e);
 			}
@@ -497,7 +494,7 @@ public class MatchboxEngine extends ValidationEngine {
 	/**
 	 * Transforms an input with the map identified by the uri to the output defined
 	 * by the map
-	 * 
+	 *
 	 * @param input     content to be transformed
 	 * @param inputJson true if input is in json (if false xml is expected)
 	 * @param mapUri    canonical url of StructureMap
@@ -513,7 +510,7 @@ public class MatchboxEngine extends ValidationEngine {
 	/**
 	 * Transforms an input with the map identified by the uri to the output defined
 	 * by the map
-	 * 
+	 *
 	 * @param input     content to be transformed
 	 * @param inputJson true if input is in json (if false xml is expected)
 	 * @param mapUri    canonical url of StructureMap
@@ -530,7 +527,7 @@ public class MatchboxEngine extends ValidationEngine {
 		/**
 	 * Transforms an input with the map identified by the uri to the output defined
 	 * by the map
-	 * 
+	 *
 	 * @param input      source in UTF-8 format
 	 * @param inputJson  if input is in json (or xml)
 	 * @param mapUri     map to use for transformation
@@ -541,13 +538,13 @@ public class MatchboxEngine extends ValidationEngine {
 	 */
 	public String transform(String input, boolean inputJson, String mapUri, boolean outputJson)
 			throws FHIRException, IOException {
-		return transform(input, inputJson, mapUri, outputJson, null);	
+		return transform(input, inputJson, mapUri, outputJson, null);
 	}
 
 	/**
 	 * Transforms an input with the map identified by the uri to the output defined
 	 * by the map
-	 * 
+	 *
 	 * @param input      source in UTF-8 format
 	 * @param inputJson  if input is in json (or xml)
 	 * @param mapUri     map to use for transformation
@@ -567,7 +564,7 @@ public class MatchboxEngine extends ValidationEngine {
 			log.error("map not found" + map);
 			return null;
 		}
-		
+
 		String fhirVersionTarget = getFhirVersion(getCanonicalFromStructureMap(map, StructureMap.StructureMapModelMode.TARGET));
 		if (fhirVersionTarget !=null && (fhirVersionTarget.startsWith("4.0") || fhirVersionTarget.startsWith("4.3") || fhirVersionTarget.startsWith("5.0"))  && !fhirVersionTarget.equals(this.getVersion().substring(0, 3))) {
 			log.info("Loading additional FHIR version for Target into context " + fhirVersionTarget);
@@ -614,7 +611,7 @@ public class MatchboxEngine extends ValidationEngine {
 			log.info("Loading additional FHIR version for Source into context " + fhirVersionSource);
 			context = getContextForFhirVersion(fhirVersionSource);
 		}
-		
+
 		org.hl7.fhir.r5.elementmodel.ParserBase parser = Manager.makeParser(context, cntType);
 		StructureDefinition sd = context.fetchResource(StructureDefinition.class, canonicalSource);
 		if (sd.getKind() == StructureDefinitionKind.LOGICAL) {
@@ -636,7 +633,7 @@ public class MatchboxEngine extends ValidationEngine {
 			if (engine == null) {
 				engine = new MatchboxEngineBuilder().getEngineR4();
 				sessionCache.cacheSession(fhirVersion.substring(0,3), engine);
-			} 
+			}
 			contextForFhirVersion = engine.getContext();
 			}
 		if (fhirVersion.startsWith("4.3")) {
@@ -644,7 +641,7 @@ public class MatchboxEngine extends ValidationEngine {
 			if (engine == null) {
 				engine = new MatchboxEngineBuilder().getEngineR4B();
 				sessionCache.cacheSession(fhirVersion.substring(0,3), engine);
-			} 
+			}
 			contextForFhirVersion = engine.getContext();
 		}
 		if (fhirVersion.startsWith("5.0")) {
@@ -652,7 +649,7 @@ public class MatchboxEngine extends ValidationEngine {
 			if (engine == null) {
 				engine = new MatchboxEngineBuilder().getEngineR5();
 				sessionCache.cacheSession(fhirVersion.substring(0,3), engine);
-			} 
+			}
 			contextForFhirVersion = engine.getContext();
 			}
 		if (contextForFhirVersion != null) {
@@ -670,8 +667,8 @@ public class MatchboxEngine extends ValidationEngine {
   						this.getContext().cacheResource(sdn);
 						}
 					}
-				}	
-			} 
+				}
+			}
 		}
 		return contextForFhirVersion;
 	}
@@ -734,7 +731,7 @@ public class MatchboxEngine extends ValidationEngine {
 				break;
 			}
 		}
-		
+
 		return targetTypeUrl;
 	}
 
@@ -779,7 +776,7 @@ public class MatchboxEngine extends ValidationEngine {
 	/**
 	 * adds a canonical resource to the loaded packages, please note that it will
 	 * replace a resource with the same canonical url
-	 * 
+	 *
 	 * @param stream canonical resource to add
 	 * @throws FHIRException FHIR Exception
 	 */
@@ -790,7 +787,7 @@ public class MatchboxEngine extends ValidationEngine {
 	/**
 	 * adds a canonical resource to the loaded packages, please note that it will
 	 * replace a resource with the same canonical url for FHIR R4
-	 * 
+	 *
 	 * @param resource canonical resource to add
 	 * @throws FHIRException FHIR Exception
 	 */
@@ -802,7 +799,7 @@ public class MatchboxEngine extends ValidationEngine {
 	/**
 	 * adds a canonical resource to the loaded packages, please note that it will
 	 * replace a resource with the same canonical url for FHIR R4B
-	 * 
+	 *
 	 * @param resource canonical resource to add
 	 * @throws FHIRException FHIR Exception
 	 */
@@ -814,7 +811,7 @@ public class MatchboxEngine extends ValidationEngine {
 	/**
 	 * adds a canonical resource to the loaded packages, please note that it will
 	 * replace a resource with the same canonical url  for FHIR R5
-	 * 
+	 *
 	 * @param resource canonical resource to add
 	 * @throws FHIRException FHIR Exception
 	 */
@@ -842,7 +839,7 @@ public class MatchboxEngine extends ValidationEngine {
 
 	/**
 	 * validates a FHIR resources and provides OperationOutcome as output
-	 * 
+	 *
 	 * @param resource   FHIR R4 resource
 	 * @param profileUrl profile to validate against
 	 * @return
@@ -887,7 +884,7 @@ public class MatchboxEngine extends ValidationEngine {
 
     /**
 	 * Returns a canonical resource defined by its url
-	 * 
+	 *
 	 * @param canonical
 	 * @param fhirVersion
 	 * @return
@@ -938,7 +935,7 @@ public class MatchboxEngine extends ValidationEngine {
 
 	/**
 	 * Returns a canonical resource defined by its type and uri
-	 * 
+	 *
 	 * @param type resource type
 	 * @param id   resource id
 	 * @return
@@ -961,7 +958,7 @@ public class MatchboxEngine extends ValidationEngine {
 	 * Parses a FHIR Structure Map from the textual representation according to the
 	 * FHIR Mapping Language grammar (see
 	 * http://build.fhir.org/mapping-language.html#grammar) for FHIR release 5
-	 * 
+	 *
 	 * @param content FHIR Mapping Language text
 	 * @return parsed StructureMap resource
 	 * @throws FHIRException FHIR Exception
@@ -990,7 +987,7 @@ public class MatchboxEngine extends ValidationEngine {
 	 * Parses a FHIR Structure Map from the textual representation according to the
 	 * FHIR Mapping Language grammar (see
 	 * http://build.fhir.org/mapping-language.html#grammar)
-	 * 
+	 *
 	 * @param content FHIR Mapping Language text
 	 * @return parsed StructureMap resource
 	 * @throws IOException FHIR Exception
@@ -1003,7 +1000,7 @@ public class MatchboxEngine extends ValidationEngine {
 
 	/**
 	 * creates the snapshot for the provided StructureDefinition
-	 * 
+	 *
 	 * @param sd StructureDefinition with differential
 	 * @return StructureDefinition with snapshot (differential applied to base
 	 *         definition)
@@ -1014,7 +1011,7 @@ public class MatchboxEngine extends ValidationEngine {
 			throws FHIRException, IOException {
 		StructureDefinition sdR5 = (StructureDefinition) VersionConvertorFactory_40_50.convertResource(sd);
 		try {
-			new ContextUtilities(this.getContext()).generateSnapshot(sdR5); 
+			new ContextUtilities(this.getContext()).generateSnapshot(sdR5);
 		  } catch (Exception e) {
 			// not sure what to do in this case?
 			log.error("Unable to generate snapshot for "+sd.getUrl(), e);
@@ -1025,7 +1022,7 @@ public class MatchboxEngine extends ValidationEngine {
 
 	/**
 	 * creates the snapshot for the provided StructureDefinition
-	 * 
+	 *
 	 * @param sd StructureDefinition with differential
 	 * @return StructureDefinition with snapshot (differential applied to base
 	 *         definition)
@@ -1036,7 +1033,7 @@ public class MatchboxEngine extends ValidationEngine {
 			throws FHIRException, IOException {
 		StructureDefinition sdR5 = sd;
 		try {
-			new ContextUtilities(this.getContext()).generateSnapshot(sdR5); 
+			new ContextUtilities(this.getContext()).generateSnapshot(sdR5);
 		  } catch (Exception e) {
 			// not sure what to do in this case?
 			log.error("Unable to generate snapshot for "+sd.getUrl(), e);
@@ -1064,7 +1061,7 @@ public class MatchboxEngine extends ValidationEngine {
 		return fpe.evaluateToString(e, expression);
 		//return fpe.evaluateToString(new ValidatorHostContext(this.getContext(), e), e, e, e, exp);
 	}
-	
+
 
 	public String convert(final @NonNull String input, final boolean inputJson ) throws FHIRException, IOException {
 	    Element e = Manager.parseSingle(this.getContext(), new ByteArrayInputStream(input.getBytes(StandardCharsets.UTF_8)),
@@ -1126,7 +1123,7 @@ public class MatchboxEngine extends ValidationEngine {
 		String[] uls = htmlMessage.split("<ul>");
 		// Parent:        This element does not match any known slice defined in the profile http://hl7.org/fhir/uv/ips/StructureDefinition/Bundle-uv-ips|2.0.0-ballot (this may not be a problem, but you should check that it's not intended to match a slice)
 		// First Message: This element does not match any known slice Defined in the profile http://hl7.org/fhir/uv/ips/StructureDefinition/Bundle-uv-ips|2.0.0-ballot (this may not be a problem, but you should check that it's not intended to match a slice)
-		for (int ul=1; ul<uls.length; ++ul) { // we ignore the first because it as repetition of the origin message 
+		for (int ul=1; ul<uls.length; ++ul) { // we ignore the first because it as repetition of the origin message
 			String[] lis = uls[ul].split("<li>");
 			for (String li: lis) {
 				if (li.length()>0) {
@@ -1168,9 +1165,9 @@ public class MatchboxEngine extends ValidationEngine {
 	}
 
 	/**
-	 * Adds a text to the list of suppressed validation warning/information-level issues.
+	 * Adds a text to the set of suppressed validation warning/information-level issues.
 	 * <p>
-	 * Implementation note: The text is Regex-escaped before being added to the list.
+	 * Implementation note: The text is Regex-escaped before being added to the set.
 	 *
 	 * @param text The text to add.
 	 */
@@ -1179,7 +1176,7 @@ public class MatchboxEngine extends ValidationEngine {
 	}
 
 	/**
-	 * Adds a Regex pattern to the list of suppressed validation warning/information-level issues.
+	 * Adds a Regex pattern to the set of suppressed validation warning/information-level issues.
 	 *
 	 * @param pattern The Regex pattern to add.
 	 */
@@ -1188,16 +1185,16 @@ public class MatchboxEngine extends ValidationEngine {
 	}
 
 	/**
-	 * Returns the list of suppressed validation warning/information-level issues.
+	 * Returns the set of suppressed validation warning/information-level issues.
 	 */
-	public List<String> getSuppressedWarnInfoPatterns() {
+	public Set<String> getSuppressedWarnInfoPatterns() {
 		return this.suppressedWarnInfoPatterns;
 	}
 
 	/**
-	 * Returns the list of suppressed validation error issues.
+	 * Returns the set of suppressed validation error issues.
 	 */
-	public List<String> getSuppressedErrors() {
+	public Set<String> getSuppressedErrors() {
 		IValidationPolicyAdvisor advisor = getPolicyAdvisor();
 		while(advisor != null && !(advisor instanceof ch.ahdis.matchbox.engine.ValidationPolicyAdvisor)) {
 			advisor = advisor.getPolicyAdvisor();
@@ -1205,7 +1202,7 @@ public class MatchboxEngine extends ValidationEngine {
 		if (advisor != null) {
 			return ((ch.ahdis.matchbox.engine.ValidationPolicyAdvisor) advisor).getSuppressedErrorMessages();
 		}
-		return Collections.emptyList();
+		return Collections.emptySet();
 	}
 
 	@Override
@@ -1247,12 +1244,12 @@ public class MatchboxEngine extends ValidationEngine {
 
 
 	/**
-	 * Initializes the terminology cache 
+	 * Initializes the terminology cache
 	 * @param cacheDir
 	 * @throws FileNotFoundException
 	 * @throws FHIRException
 	 * @throws IOException
-	 */	
+	 */
     public void initTxCache(String cacheDir) throws FileNotFoundException, FHIRException, IOException {
 		if (cacheDir !=null) {
 			getContext().initTxCache(cacheDir);
