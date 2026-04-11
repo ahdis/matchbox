@@ -57,6 +57,12 @@
         <dependency>
             <groupId>ca.uhn.hapi.fhir</groupId>
             <artifactId>hapi-fhir-jpaserver-base</artifactId>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.hibernate.search</groupId>
+                    <artifactId>hibernate-search-backend-elasticsearch-aws</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
         <dependency>
             <groupId>ca.uhn.hapi.fhir</groupId>
