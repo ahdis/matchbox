@@ -9,7 +9,6 @@ import ch.ahdis.matchbox.validation.gazelle.models.validation.ValidationReport;
 import ch.ahdis.matchbox.validation.gazelle.models.validation.ValidationRequest;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.commons.io.FileUtils;
-import org.eclipse.jetty.http.MetaData.Failed;
 import org.hl7.fhir.instance.model.api.*;
 import org.hl7.fhir.r4.model.OperationOutcome;
 import org.hl7.fhir.r4.model.OperationOutcome.IssueSeverity;
@@ -306,7 +305,7 @@ class MatchboxApiR4Test {
 						"        <value value=\"7610000050719\" />\n" + //
 						"    </identifier>\n" + //
 						"</Practitioner>";
-		
+
 		IBaseOperationOutcome operationOutcome = this.validationClient.validate(practitioner,"http://matchbox.health/ig/test/r4/StructureDefinition/practitioner-identifier-required");
 		assertEquals(0, getValidationFailures((OperationOutcome) operationOutcome));
 
@@ -348,7 +347,7 @@ class MatchboxApiR4Test {
 						"    <code value=\"HH\"/>\n" + //
 						"  </class>\n" + //
 						"</Encounter>";
-		
+
 		IBaseOperationOutcome operationOutcome = this.validationClient.validate(encounter,
 																			"http://matchbox.health/ig/test/r4/StructureDefinition/encounter-ext-r5");
 		assertEquals(0, getValidationFailures((OperationOutcome) operationOutcome));
