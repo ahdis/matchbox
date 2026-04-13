@@ -14,6 +14,7 @@ import ca.uhn.fhir.interceptor.api.IInterceptorBroadcaster;
 import ca.uhn.fhir.jpa.api.config.JpaStorageSettings;
 import ca.uhn.fhir.jpa.api.config.ThreadPoolFactoryConfig;
 import ca.uhn.fhir.jpa.api.dao.DaoRegistry;
+import ca.uhn.fhir.jpa.api.dao.IFhirResourceDao;
 import ca.uhn.fhir.jpa.api.dao.IFhirSystemDao;
 import ca.uhn.fhir.jpa.batch.models.Batch2JobStartResponse;
 import ca.uhn.fhir.jpa.batch2.JpaJobPersistenceImpl;
@@ -25,8 +26,10 @@ import ca.uhn.fhir.jpa.dao.data.IBatch2JobInstanceRepository;
 import ca.uhn.fhir.jpa.dao.data.IBatch2WorkChunkMetadataViewRepository;
 import ca.uhn.fhir.jpa.dao.data.IBatch2WorkChunkRepository;
 import ca.uhn.fhir.mdm.svc.MdmExpansionCacheSvc;
+import ca.uhn.fhir.parser.IParser;
 import ca.uhn.fhir.jpa.dao.tx.IHapiTransactionService;
 import ca.uhn.fhir.jpa.delete.ThreadSafeResourceDeleterSvc;
+import ca.uhn.fhir.jpa.entity.Search;
 import ca.uhn.fhir.jpa.packages.IHapiPackageCacheManager;
 import ca.uhn.fhir.jpa.packages.IPackageInstallerSvc;
 import ca.uhn.fhir.jpa.partition.IRequestPartitionHelperSvc;
@@ -57,19 +60,36 @@ import ch.ahdis.matchbox.mappinglanguage.StructureMapTransformProvider;
 import ch.ahdis.matchbox.packages.*;
 import ch.ahdis.matchbox.providers.*;
 import ch.ahdis.matchbox.questionnaire.*;
+import ch.ahdis.matchbox.statistics.OperationOutcomeResourceProviderR4;
+import ch.ahdis.matchbox.statistics.OperationOutcomeResourceProviderR4B;
+import ch.ahdis.matchbox.statistics.OperationOutcomeResourceProviderR5;
+import ch.ahdis.matchbox.statistics.SearchParameterResourceProviderR4;
+import ch.ahdis.matchbox.statistics.SearchParameterResourceProviderR4B;
+import ch.ahdis.matchbox.statistics.SearchParameterResourceProviderR5;
 import ch.ahdis.matchbox.util.MatchboxEngineSupport;
 import ch.ahdis.matchbox.util.MatchboxPackageInstallerImpl;
 import ch.ahdis.matchbox.validation.ValidationProvider;
 import jakarta.persistence.EntityManager;
+
+import org.hl7.fhir.r4.model.SearchParameter;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.*;
 import org.springframework.core.env.Environment;
+import org.springframework.core.io.ClassPathResource;
+import org.springframework.core.io.Resource;
 import org.springframework.data.domain.Page;
 
+import com.github.dnault.xmlpatch.internal.Log;
+import com.github.dnault.xmlpatch.repackaged.org.apache.commons.io.FileUtils;
+
 import javax.annotation.Nullable;
+
+import java.io.File;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Optional;
@@ -124,7 +144,14 @@ public class MatchboxJpaConfig extends StarterJpaConfig {
 															 final Optional<ImplementationGuideProviderR4> implementationGuideResourceProviderR4,
 															 final Optional<ImplementationGuideProviderR4B> implementationGuideResourceProviderR4B,
 															 final Optional<ImplementationGuideProviderR5> implementationGuideResourceProviderR5,
-															 final ValidationProvider validationProvider) {
+															 final Optional<OperationOutcomeResourceProviderR4> operationOutcomeResourceProviderR4,
+															 final Optional<OperationOutcomeResourceProviderR4B> operationOutcomeResourceProviderR4B,
+															 final Optional<OperationOutcomeResourceProviderR5> operationOutcomeResourceProviderR5,
+															 final ValidationProvider validationProvider,
+															 final Optional<SearchParameterResourceProviderR4> searchParameterResourceProviderR4,
+															 final Optional<SearchParameterResourceProviderR4B> searchParameterResourceProviderR4B,
+															 final Optional<SearchParameterResourceProviderR5> searchParameterResourceProviderR5
+															) {
 
 		final var fhirServer = super.restfulServer(fhirSystemDao,
 																 appProperties,
@@ -158,7 +185,7 @@ public class MatchboxJpaConfig extends StarterJpaConfig {
 		}
 		fhirServer.registerInterceptor(new MappingLanguageInterceptor(matchboxEngineSupport));
 		fhirServer.registerInterceptor(new ImplementationGuidePackageInterceptor(myPackageCacheManager, fhirContext));
-		fhirServer.registerInterceptor(new MatchboxValidationInterceptor(fhirContext));
+		fhirServer.registerInterceptor(new MatchboxValidationInterceptor());
 
 		fhirServer.registerProviders(
 			validationProvider,
@@ -186,8 +213,38 @@ public class MatchboxJpaConfig extends StarterJpaConfig {
 					fhirServer,
 					implementationGuideResourceProviderR4,
 					assembleProviderR4,
-					questionnaireResponseProviderR4
+					questionnaireResponseProviderR4,
+					operationOutcomeResourceProviderR4,
+					searchParameterResourceProviderR4
 				);
+
+				// if statistics are enabled, we need a few custom search parameters installed
+				if (searchParameterResourceProviderR4.isPresent()) {
+					try {
+						// get Dao
+						IFhirResourceDao<SearchParameter> dao = searchParameterResourceProviderR4.get().getDao();
+
+						// get JSON parser
+						IParser jsonParser = fhirContext.newJsonParser();
+
+						// get Search Parameters from classpath
+						String spIg = getContent("search-parameters/OperationOutcomeIGSearchParameter.json");
+						SearchParameter searchParameterIg = jsonParser.parseResource(SearchParameter.class, spIg);
+						String spIssue = getContent("search-parameters/OperationOutcomeIssueSearchParameter.json");
+						SearchParameter searchParameterIssue = jsonParser.parseResource(SearchParameter.class, spIssue);
+						String spProfile = getContent("search-parameters/OperationOutcomeProfileSearchParameter.json");
+						SearchParameter searchParameterProfile = jsonParser.parseResource(SearchParameter.class, spProfile);
+
+						// create search parameter if it does not already exist
+						dao.create(searchParameterIg, "url=http://matchbox.health/validation/SearchParameter/operationoutcome-ig");
+						dao.create(searchParameterIssue, "url=http://matchbox.health/validation/SearchParameter/operationoutcome-issue");
+						dao.create(searchParameterProfile, "url=http://matchbox.health/validation/SearchParameter/operationoutcome-profile");
+
+					} catch (Exception e) {
+						System.err.println("Error loading custom search parameters");
+						e.printStackTrace();
+					}
+				}
 
 				if (appProperties.getOnly_install_packages() != null && appProperties.getOnly_install_packages()
 					&& appProperties.getImplementationGuides() != null) {
@@ -201,8 +258,32 @@ public class MatchboxJpaConfig extends StarterJpaConfig {
 					fhirServer,
 					implementationGuideResourceProviderR4B,
 					assembleProviderR4B,
-					questionnaireResponseProviderR4B
+					questionnaireResponseProviderR4B,
+					operationOutcomeResourceProviderR4B,
+					searchParameterResourceProviderR4B
 				);
+
+				if (searchParameterResourceProviderR4B.isPresent()) {
+					try {
+						IFhirResourceDao<org.hl7.fhir.r4b.model.SearchParameter> dao = searchParameterResourceProviderR4B.get().getDao();
+
+						IParser jsonParser = fhirContext.newJsonParser();
+
+						String spIg = getContent("search-parameters/OperationOutcomeIGSearchParameter.json");
+						org.hl7.fhir.r4b.model.SearchParameter searchParameterIg = jsonParser.parseResource(org.hl7.fhir.r4b.model.SearchParameter.class, spIg);
+						String spIssue = getContent("search-parameters/OperationOutcomeIssueSearchParameter.json");
+						org.hl7.fhir.r4b.model.SearchParameter searchParameterIssue = jsonParser.parseResource(org.hl7.fhir.r4b.model.SearchParameter.class, spIssue);
+						String spProfile = getContent("search-parameters/OperationOutcomeProfileSearchParameter.json");
+						org.hl7.fhir.r4b.model.SearchParameter searchParameterProfile = jsonParser.parseResource(org.hl7.fhir.r4b.model.SearchParameter.class, spProfile);
+
+						dao.create(searchParameterIg, "url=http://matchbox.health/validation/SearchParameter/operationoutcome-ig");
+						dao.create(searchParameterIssue, "url=http://matchbox.health/validation/SearchParameter/operationoutcome-issue");
+						dao.create(searchParameterProfile, "url=http://matchbox.health/validation/SearchParameter/operationoutcome-profile");
+					} catch (Exception e) {
+						System.err.println("Error loading custom search parameters");
+						e.printStackTrace();
+					}
+				}
 
 				if (appProperties.getOnly_install_packages() != null && appProperties.getOnly_install_packages()
 					&& appProperties.getImplementationGuides() != null) {
@@ -216,8 +297,32 @@ public class MatchboxJpaConfig extends StarterJpaConfig {
 					fhirServer,
 					implementationGuideResourceProviderR5,
 					assembleProviderR5,
-					questionnaireResponseProviderR5
+					questionnaireResponseProviderR5,
+					operationOutcomeResourceProviderR5,
+					searchParameterResourceProviderR5
 				);
+
+				if (searchParameterResourceProviderR5.isPresent()) {
+					try {
+						IFhirResourceDao<org.hl7.fhir.r5.model.SearchParameter> dao = searchParameterResourceProviderR5.get().getDao();
+
+						IParser jsonParser = fhirContext.newJsonParser();
+
+						String spIg = getContent("search-parameters/OperationOutcomeIGSearchParameter.json");
+						org.hl7.fhir.r5.model.SearchParameter searchParameterIg = jsonParser.parseResource(org.hl7.fhir.r5.model.SearchParameter.class, spIg);
+						String spIssue = getContent("search-parameters/OperationOutcomeIssueSearchParameter.json");
+						org.hl7.fhir.r5.model.SearchParameter searchParameterIssue = jsonParser.parseResource(org.hl7.fhir.r5.model.SearchParameter.class, spIssue);
+						String spProfile = getContent("search-parameters/OperationOutcomeProfileSearchParameter.json");
+						org.hl7.fhir.r5.model.SearchParameter searchParameterProfile = jsonParser.parseResource(org.hl7.fhir.r5.model.SearchParameter.class, spProfile);
+
+						dao.create(searchParameterIg, "url=http://matchbox.health/validation/SearchParameter/operationoutcome-ig");
+						dao.create(searchParameterIssue, "url=http://matchbox.health/validation/SearchParameter/operationoutcome-issue");
+						dao.create(searchParameterProfile, "url=http://matchbox.health/validation/SearchParameter/operationoutcome-profile");
+					} catch (Exception e) {
+						System.err.println("Error loading custom search parameters");
+						e.printStackTrace();
+					}
+				}
 
 				if (appProperties.getOnly_install_packages() != null && appProperties.getOnly_install_packages()
 					&& appProperties.getImplementationGuides() != null) {
@@ -431,6 +536,7 @@ public class MatchboxJpaConfig extends StarterJpaConfig {
 		return new StructureMapTransformProvider();
 	}
 
+
 	@Bean
 	@Conditional(OnMatchboxOnlyOneEnginePresent.class)
 	@Primary
@@ -450,10 +556,10 @@ public class MatchboxJpaConfig extends StarterJpaConfig {
 		return new StructureMapListProvider(matchboxEngineSupport, matchboxFhirVersion);
 	}
 
-	@Bean
-	public ValidatorResourceFetcher jpaValidatorResourceFetcher() {
-		return new ValidatorResourceFetcher();
-	}
+	// @Bean
+	// public ValidatorResourceFetcher jpaValidatorResourceFetcher() {
+	// 	return new ValidatorResourceFetcher();
+	// }
 
 	@Bean
 	public ValidatorPolicyAdvisor jpaValidatorPolicyAdvisor() {
@@ -500,5 +606,11 @@ public class MatchboxJpaConfig extends StarterJpaConfig {
 	private static void registerOptionalProviders(final MatchboxRestfulServer fhirServer,
 																 final Optional<?>... providers) {
 		Stream.of(providers).forEach(opt -> opt.ifPresent(fhirServer::registerProvider));
+	}
+
+	private String getContent(String resourceName) throws IOException {
+		Resource resource = new ClassPathResource(resourceName);
+		File file = resource.getFile();
+		return FileUtils.readFileToString(file, StandardCharsets.UTF_8);
 	}
 }

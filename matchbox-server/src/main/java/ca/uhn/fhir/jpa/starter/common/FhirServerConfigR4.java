@@ -1,5 +1,16 @@
 package ca.uhn.fhir.jpa.starter.common;
 
+import ca.uhn.fhir.jpa.starter.annotations.OnStatisticsEnabled;
+import ch.ahdis.matchbox.packages.ImplementationGuideProviderR4;
+import ch.ahdis.matchbox.statistics.OperationOutcomeResourceProviderR4;
+import ch.ahdis.matchbox.statistics.SearchParameterResourceProviderR4;
+import ch.ahdis.matchbox.util.MatchboxEngineSupport;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Conditional;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Import;
+import org.springframework.context.annotation.Primary;
+
 import ca.uhn.fhir.context.FhirContext;
 import ca.uhn.fhir.jpa.api.dao.IFhirResourceDao;
 import ca.uhn.fhir.jpa.config.r4.JpaR4Config;
@@ -7,13 +18,12 @@ import ca.uhn.fhir.jpa.dao.JpaResourceDao;
 import ca.uhn.fhir.jpa.starter.annotations.OnMatchboxOnlyOneEnginePresent;
 import ca.uhn.fhir.jpa.starter.annotations.OnR4Condition;
 import ch.ahdis.matchbox.config.MatchboxJpaConfig;
-import ch.ahdis.matchbox.packages.ImplementationGuideProviderR4;
 import ch.ahdis.matchbox.questionnaire.QuestionnaireAssembleProviderR4;
 import ch.ahdis.matchbox.questionnaire.QuestionnaireResponseExtractProviderR4;
-import ch.ahdis.matchbox.util.MatchboxEngineSupport;
 import org.hl7.fhir.r4.model.ImplementationGuide;
 import org.hl7.fhir.r4.model.StructureMap;
-import org.springframework.context.annotation.*;
+import org.hl7.fhir.r4.model.OperationOutcome;
+import org.hl7.fhir.r4.model.SearchParameter;
 
 @Configuration
 @Conditional(OnR4Condition.class)
@@ -41,6 +51,28 @@ public class FhirServerConfigR4 {
     final var retVal = new JpaResourceDao<ImplementationGuide>();
     retVal.setResourceType(ImplementationGuide.class);
     retVal.setContext(fhirContext);
+    return retVal;
+  }
+    
+  @Bean
+  @Primary
+  @Conditional(OnStatisticsEnabled.class)
+  public OperationOutcomeResourceProviderR4 rpOperationOutcomeR4(final IFhirResourceDao<OperationOutcome> operationOutcomeDao,
+                                                                 final FhirContext fhirContext) {
+    final var retVal = new OperationOutcomeResourceProviderR4();
+    retVal.setContext(fhirContext);
+    retVal.setDao(operationOutcomeDao);
+    return retVal;
+  }
+
+  @Bean
+  @Primary
+  @Conditional(OnStatisticsEnabled.class)
+  public SearchParameterResourceProviderR4 rpSearchParameterR4(final IFhirResourceDao<SearchParameter> searchParameterDao,
+                                                               final FhirContext fhirContext) {
+    final var retVal = new SearchParameterResourceProviderR4();
+    retVal.setContext(fhirContext);
+    retVal.setDao(searchParameterDao);
     return retVal;
   }
 

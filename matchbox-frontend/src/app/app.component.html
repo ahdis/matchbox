@@ -29,6 +29,12 @@
       <mat-icon>rule</mat-icon>
       <span>Validate</span>
     </div>
+    @if (saveStatistics) {
+      <div routerLink="/statistics">
+        <mat-icon>bar_chart</mat-icon>
+        <span>Statistics</span>
+      </div>
+    }
     <div routerLink="/settings">
       <mat-icon>settings</mat-icon>
       <span>Settings</span>
