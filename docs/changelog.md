@@ -1,5 +1,7 @@
-Unreleased
+2026/04/17 Release 4.1.4
 
+- Upgrade thymeleaf from 3.1.2.RELEASE to 3.1.4.RELEASE to fix CVE-2026-40478
+- Add FHIRPath test for data-absent-reason with hasValue() checks
 - the suppressed warnings and errors are now stored in a Set instead of a List to prevent duplication (#482)
 
 2026/04/01 Release 4.1.3
