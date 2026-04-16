@@ -1,6 +1,8 @@
 package ch.ahdis.matchbox.engine.tests;
 
 import ch.ahdis.matchbox.engine.MatchboxEngine;
+
+import org.hl7.fhir.exceptions.FHIRException;
 import org.hl7.fhir.r4.model.OperationOutcome;
 import org.hl7.fhir.r5.elementmodel.Manager;
 import org.hl7.fhir.r5.utils.EOperationOutcome;
@@ -168,6 +170,104 @@ class R4ValidationTests {
 		this.expectValid(resourceWithUnknownExtension, Manager.FhirFormat.JSON, "http://hl7.org/fhir/StructureDefinition/Patient");
 	}
 
+
+	@Test
+	void testFhirPathDataAbsentReason() throws FHIRException, IOException {
+		String patient = """
+			{
+			  "resourceType": "Patient",
+			  "identifier": [
+			    {
+			      "system": "urn:oid:2.16.756.5.32",
+			      "value": "7561234567866"
+			    }
+			  ],
+			  "name": [
+			    {
+			      "_family": {
+			        "extension": [
+			          {
+			            "url": "http://hl7.org/fhir/StructureDefinition/data-absent-reason",
+			            "valueCode": "unknown"
+			          }
+			        ]
+			      },
+			      "_given": [
+			        {
+			          "extension": [
+			            {
+			              "url": "http://hl7.org/fhir/StructureDefinition/data-absent-reason",
+			              "valueCode": "unknown"
+			            }
+			          ]
+			        }
+			      ]
+			    }
+			  ]
+			}
+			""";
+		String expression = "name.where(" +
+			"(given.hasValue() and (''+given.first()).length() = 1 " +
+			"or given.hasValue().not() and given.extension.where(url='http://hl7.org/fhir/StructureDefinition/data-absent-reason').exists()) " +
+			"and " +
+			"(family.hasValue() and (''+family.first()).length() = 1 " +
+			"or family.hasValue().not() and family.extension.where(url='http://hl7.org/fhir/StructureDefinition/data-absent-reason').exists())" +
+			")";
+
+		// Patient with data-absent-reason extensions only (no primitive values)
+		String result = this.engine.evaluateFhirPath(patient, true, expression);
+		log.info("FHIRPath result (data-absent-reason patient): '{}'", result);
+		assertFalse(result.isEmpty(), "Expected data-absent-reason patient to match");
+
+		// Patient with actual name values
+		String patientWithValues = """
+			{
+			  "resourceType": "Patient",
+			  "name": [
+			    {
+			      "family": "M",
+			      "given": ["A"]
+			    }
+			  ]
+			}
+			""";
+		String resultWithValues = this.engine.evaluateFhirPath(patientWithValues, true, expression);
+		log.info("FHIRPath result (patient with values): '{}'", resultWithValues);
+		assertFalse(resultWithValues.isEmpty(), "Expected patient with name values to match");
+
+		// Patient with empty string values (should NOT match - no value and no data-absent-reason)
+		String patientNoName = """
+			{
+			  "resourceType": "Patient",
+			  "name": [
+			    {
+			      "use": "official"
+			    }
+			  ]
+			}
+			""";
+		String resultNoName = this.engine.evaluateFhirPath(patientNoName, true, expression);
+		log.info("FHIRPath result (patient without name): '{}'", resultNoName);
+		assertTrue(resultNoName.isEmpty(), "Expected patient without name or data-absent-reason to NOT match");
+
+		// Patient with actual name values
+		String patientWithMoreThanInitials = """
+			{
+			  "resourceType": "Patient",
+			  "name": [
+			    {
+			      "family": "MA",
+			      "given": ["A"]
+			    }
+			  ]
+			}
+			""";
+		resultWithValues = this.engine.evaluateFhirPath(patientWithMoreThanInitials, true, expression);
+		log.info("FHIRPath result (patient with with more than initials): '{}'", resultWithValues);
+		assertTrue(resultWithValues.isEmpty(), "Expected patient without more than initials to NOT match");
+
+	}
+
 	/**
 	 * The same Patient should be valid if we allow the specific domain of the extension.
 	 * We test different inputs for the domain: from the exact extension URL, to the DNS name only.
@@ -240,4 +340,5 @@ class R4ValidationTests {
 			R4ValidationTests.class.getResourceAsStream("/r4-samples/" + filename).readAllBytes()
 		);
 	}
+
 }
