@@ -456,6 +456,8 @@ GitHub Actions workflows (`.github/workflows/`):
 
 The `upstream` remote points to `hapifhir/hapi-fhir-jpaserver-starter`, which is the upstream HAPI FHIR starter project. The `origin` remote points to `ahdis/matchbox`. **Always create PRs against `ahdis/matchbox`** — use `gh pr create --repo ahdis/matchbox` to ensure the PR targets the correct repository.
 
+**Every PR must include an update to `docs/changelog.md`** — add a summary of the changes under the appropriate release version at the top of the file.
+
 ## Release Process
 
 1. Update versions in `pom.xml`, `package.json`, and documentation
