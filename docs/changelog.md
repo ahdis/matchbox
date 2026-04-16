@@ -1,6 +1,7 @@
 2026/04/17 Release 4.1.4
 
 - Upgrade thymeleaf from 3.1.2.RELEASE to 3.1.4.RELEASE to fix CVE-2026-40478
+- Upgrade Angular to 21.2.9, Angular Material/CDK to 21.2.7, angular-eslint to 21.3.1 (fixes vite 7.3.1 vulnerability via transitive update to vite 7.3.2)
 - Add FHIRPath test for data-absent-reason with hasValue() checks
 - the suppressed warnings and errors are now stored in a Set instead of a List to prevent duplication (#482)
 
