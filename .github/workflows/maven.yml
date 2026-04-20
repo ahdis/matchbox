@@ -23,11 +23,16 @@ jobs:
           distribution: adopt
           cache: maven
 
+      - run: free -h
+      - run: grep -E 'MemTotal|MemFree|MemAvailable|SwapTotal|SwapFree' /proc/meminfo
+      - run: vmstat -s
+      - run: java -XshowSettings:vm -version
+
       - name: Run the tests in Maven
         timeout-minutes: 15
         # We need a timeout here
         env:
-          MAVEN_OPTS: -Xmx12g -Xms4g -XX:MaxMetaspaceSize=1g
+          MAVEN_OPTS: -Xmx20g
         run: mvn --batch-mode --no-transfer-progress --update-snapshots verify
     
       - uses: actions/upload-artifact@v4

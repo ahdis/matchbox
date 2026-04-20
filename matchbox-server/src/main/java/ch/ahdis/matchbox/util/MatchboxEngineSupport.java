@@ -477,6 +477,10 @@ public class MatchboxEngineSupport {
 		return this.sessionCache.getSessionId(engine);
 	}
 
+	public EngineSessionCache getSessionCache() {
+		return this.sessionCache;
+	}
+
 	public boolean isInitialized() {
 		return initialized;
 	}

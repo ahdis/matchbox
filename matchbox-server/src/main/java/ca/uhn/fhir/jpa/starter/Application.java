@@ -1,6 +1,7 @@
 package ca.uhn.fhir.jpa.starter;
 
 import ch.ahdis.matchbox.MatchboxRestfulServer;
+import ch.ahdis.matchbox.config.MatchboxMetricsConfig;
 import ch.ahdis.matchbox.config.MatchboxStaticResourceConfig;
 import ch.ahdis.matchbox.config.MatchboxTxConfig;
 import ch.ahdis.matchbox.spring.MatchboxEventListener;
@@ -39,7 +40,8 @@ import ch.ahdis.matchbox.config.MatchboxJpaConfig;
   RegistryWs.class,
   MatchboxStaticResourceConfig.class,
   McpServerConfig.class,
-  MatchboxTxConfig.class
+  MatchboxTxConfig.class,
+  MatchboxMetricsConfig.class
 })
 public class Application extends SpringBootServletInitializer {
 

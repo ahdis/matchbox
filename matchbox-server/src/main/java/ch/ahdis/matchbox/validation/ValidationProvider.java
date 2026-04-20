@@ -29,6 +29,7 @@ import ca.uhn.fhir.util.StopWatch;
 import ch.ahdis.matchbox.CliContext;
 import ch.ahdis.matchbox.config.MatchboxFhirVersion;
 import ch.ahdis.matchbox.util.MatchboxEngineSupport;
+import ch.ahdis.matchbox.util.metrics.MatchboxMetrics;
 import ch.ahdis.matchbox.validation.matchspark.LLMConnector;
 import ch.ahdis.matchbox.engine.MatchboxEngine;
 import ch.ahdis.matchbox.engine.cli.VersionUtil;
@@ -38,14 +39,10 @@ import org.apache.commons.codec.digest.DigestUtils;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.hl7.fhir.instance.model.api.IBase;
 import org.hl7.fhir.instance.model.api.IBaseResource;
-import org.hl7.fhir.r5.model.CodeableConcept;
+import org.hl7.fhir.r5.model.*;
 import org.hl7.fhir.r5.elementmodel.Manager.FhirFormat;
 import org.hl7.fhir.r5.extensions.ExtensionDefinitions;
-import org.hl7.fhir.r5.model.Duration;
-import org.hl7.fhir.r5.model.OperationOutcome;
-import org.hl7.fhir.r5.model.StringType;
 import org.hl7.fhir.r5.utils.EOperationOutcome;
-import org.hl7.fhir.r5.model.UriType;
 import org.hl7.fhir.r5.utils.OperationOutcomeUtilities;
 import org.hl7.fhir.utilities.validation.ValidationMessage;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -60,6 +57,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 import static ch.ahdis.matchbox.util.MatchboxServerUtils.addExtension;
 
@@ -90,6 +88,9 @@ public class ValidationProvider {
 	@Autowired
 	private PlatformTransactionManager myTxManager;
 
+	@Autowired(required = false)
+	private Optional<MatchboxMetrics> matchboxMetrics;
+
 //	@Operation(name = "$canonical", manualRequest = true, idempotent = true, returnParameters = {
 //			@OperationParam(name = "return", type = IBase.class, min = 1, max = 1) })
 //	public IBaseResource canonical(HttpServletRequest theRequest) {
@@ -114,6 +115,7 @@ public class ValidationProvider {
 		@OperationParam(name = "return", type = IBase.class, min = 1, max = 1)})
 	public IBaseResource validate(final HttpServletRequest theRequest) {
 		log.debug("$validate");
+		this.matchboxMetrics.ifPresent(MatchboxMetrics::addValidation);
 
 		final var sw = new StopWatch();
 		sw.startTask("Total");
@@ -222,6 +224,7 @@ public class ValidationProvider {
 
 		long millis = sw.getMillis();
 		log.debug("Validation time: {}", sw);
+		this.matchboxMetrics.ifPresent(m -> m.addValidationDuration(java.time.Duration.ofMillis(millis)));
 
 		var oo = this.getOperationOutcome(sha3Hex, messages, profile, engine, millis, cliContext);
 

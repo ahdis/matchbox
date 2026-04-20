@@ -121,4 +121,11 @@ public class EngineSessionCache extends PassiveExpiringSessionCache {
         return null;
    }
 
+	public int numberOfPermanentEngines() {
+		return cachedSessionsNoTimeout.size();
+	}
+
+	public int numberOfTransientEngines() {
+		return cachedSessionIds.size();
+	}
 }
