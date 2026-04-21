@@ -34,7 +34,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  **/
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT)
 @ContextConfiguration(classes = {Application.class})
-@ActiveProfiles("test-transform")
+@ActiveProfiles({"tests", "test-transform"})
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_CLASS)
 public class TransformTest {
@@ -94,7 +94,7 @@ public class TransformTest {
 		assertTrue(docRef.contains("<line value=\"rue de la république 10\">"));
 		assertTrue(docRef.contains("<valueString value=\"rue de la république\"/>"));
 	}
-	
+
 	@Test
 	void testTransformEncounterR4() throws Exception {
 		// Test the regular $transform operation with an R4 resource

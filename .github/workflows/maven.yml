@@ -27,11 +27,11 @@ jobs:
         timeout-minutes: 15
         # We need a timeout here
         env:
-          MAVEN_OPTS: -Xmx12g -Xms4g -XX:MaxMetaspaceSize=1g
+          MAVEN_OPTS: -XX:MaxRAMPercentage=100.0 -XX:MinRAMPercentage=40.0
         run: mvn --batch-mode --no-transfer-progress --update-snapshots verify
-    
+
       - uses: actions/upload-artifact@v4
-        if: failure() 
+        if: failure()
         with:
           name: testresults
           path: |

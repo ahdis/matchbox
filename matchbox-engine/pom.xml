@@ -146,11 +146,12 @@
     <build>
         <finalName>matchbox-engine</finalName>
         <plugins>
+            <!-- This is to run the unit tests -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
                 <configuration>
-                    <argLine>-Xmx12g</argLine>
+                    <argLine>-XX:MaxRAMPercentage=100.0 -XX:MinRAMPercentage=40.0</argLine>
                     <reuseForks>true</reuseForks>
                     <forkCount>1</forkCount>
                 </configuration>
@@ -178,6 +179,9 @@
                 <artifactId>maven-failsafe-plugin</artifactId>
                 <configuration>
                     <redirectTestOutputToFile>true</redirectTestOutputToFile>
+                    <argLine>-Xmx20g</argLine>
+                    <forkCount>1</forkCount>
+                    <reuseForks>true</reuseForks>
                 </configuration>
                 <executions>
                     <execution>
