@@ -86,6 +86,7 @@ jobs:
           # Skip Rekor SBOM attestation lookup — rekor.sigstore.dev is flaky and
           # causes the scan to fail with "failed to search rekor records".
           TRIVY_OFFLINE_SCAN: true
+          TRIVY_TIMEOUT: '15m'
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           ACTIONS_RUNTIME_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
