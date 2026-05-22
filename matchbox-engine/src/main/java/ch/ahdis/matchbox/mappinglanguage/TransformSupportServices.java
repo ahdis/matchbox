@@ -34,18 +34,30 @@ import org.hl7.fhir.r5.model.StructureDefinition;
 import org.hl7.fhir.r5.utils.structuremap.ITransformerServices;
 import org.hl7.fhir.utilities.Utilities;
 
+import ch.ahdis.matchbox.engine.MatchboxEngine;
+
 public class TransformSupportServices implements ITransformerServices {
 
   private Parameters.ParametersParameterComponent traceToParameter;
 
   private List<Base> outputs;
   private IWorkerContext context;
+  private MatchboxEngine.TranslateMode translateMode;
   protected static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(TransformSupportServices.class);
 
   public TransformSupportServices(IWorkerContext worker, List<Base> outputs) {
     this.context = worker;
     this.outputs = outputs;
+    this.translateMode = MatchboxEngine.TranslateMode.FALLBACK;
   }
+
+  public TransformSupportServices(IWorkerContext worker, List<Base> outputs, MatchboxEngine.TranslateMode translateMode) {
+    this.context = worker;
+    this.outputs = outputs;
+    this.translateMode = translateMode;
+  }
+
+  public MatchboxEngine.TranslateMode getTranslateMode() { return translateMode; }
 
 
   // matchbox patch https://github.com/ahdis/matchbox/issues/264
@@ -76,7 +88,7 @@ public class TransformSupportServices implements ITransformerServices {
 
   @Override
   public Coding translate(Object appInfo, Coding source, String conceptMapUrl) throws FHIRException {
-    ConceptMapEngine cme = new ConceptMapEngine(context);
+    ConceptMapEngine cme = new ConceptMapEngine(context, translateMode);
     return cme.translate(source, conceptMapUrl);
   }
 

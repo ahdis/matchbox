@@ -96,6 +96,19 @@ import ch.ahdis.matchbox.mappinglanguage.TransformSupportServices;
  */
 public class MatchboxEngine extends ValidationEngine {
 
+	public enum TranslateMode {
+		LOCAL, FALLBACK, SERVER;
+
+		public static TranslateMode fromString(final String s) {
+			if (s == null) return FALLBACK;
+			return switch (s.toLowerCase()) {
+				case "local"  -> LOCAL;
+				case "server" -> SERVER;
+				default       -> FALLBACK;
+			};
+		}
+	}
+
 	// Current packages that are provided with Matchbox Engine
 	public static final String PACKAGE_R4_TERMINOLOGY = "hl7.terminology.r4#7.0.1";
 	public static final String PACKAGE_R5_TERMINOLOGY = "hl7.terminology.r5#7.0.1";
@@ -106,6 +119,11 @@ public class MatchboxEngine extends ValidationEngine {
 	public static final String PACKAGE_CDA_UV_CORE = "hl7.cda.uv.core#2.0.1-sd-202510-matchbox-patch";
 
 	protected static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(MatchboxEngine.class);
+
+	private TranslateMode translateMode = TranslateMode.FALLBACK;
+
+	public TranslateMode getTranslateMode() { return translateMode; }
+	public void setTranslateMode(final TranslateMode translateMode) { this.translateMode = translateMode; }
 
 	protected Set<String> suppressedWarnInfoPatterns = HashSet.newHashSet(8);
 	protected PassiveExpiringSessionCache sessionCache = new PassiveExpiringSessionCache();
@@ -686,7 +704,7 @@ public class MatchboxEngine extends ValidationEngine {
 			throws FHIRException, IOException {
 		SimpleWorkerContext context = this.getContext();
 		List<Base> outputs = new ArrayList<>();
-		TransformSupportServices tss = new TransformSupportServices(targetContext!=null ? targetContext : context, outputs);
+		TransformSupportServices tss = new TransformSupportServices(targetContext!=null ? targetContext : context, outputs, this.translateMode);
 		tss.setTraceToParameter(traceToParameter);
 		StructureMapUtilities scu = new MatchboxStructureMapUtilities(context, tss, this);
 		StructureMap map = context.fetchResource(StructureMap.class, mapUri);

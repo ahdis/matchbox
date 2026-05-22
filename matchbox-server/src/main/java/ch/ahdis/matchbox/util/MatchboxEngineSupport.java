@@ -509,7 +509,8 @@ public class MatchboxEngineSupport {
 	 */
 	private void configureValidationEngine(final MatchboxEngine validator,
 														final CliContext cli) throws MatchboxEngineCreationException {
-		log.info("Terminology server {}", cli.getTxServer());
+		log.info("Terminology server {}, translateMode {}", cli.getTxServer(), cli.getTranslateMode());
+		validator.setTranslateMode(ch.ahdis.matchbox.engine.MatchboxEngine.TranslateMode.fromString(cli.getTranslateMode()));
 		if (cli.getTxServer() == null) {
 			throw new MatchboxEngineCreationException("Terminology server is not set, you need to set it in the configuration file.");
 		}

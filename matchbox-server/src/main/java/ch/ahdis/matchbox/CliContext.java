@@ -127,6 +127,9 @@ public class CliContext {
   @JsonProperty("txUseEcosystem")
   private boolean txUseEcosystem = true;
 
+  @JsonProperty("translateMode")
+  private String translateMode = "fallback";
+
   // @JsonProperty("sv")
   // private String sv = null;
   // @JsonProperty("mapLog")
@@ -410,6 +413,14 @@ public class CliContext {
 
   public boolean isTxUseEcosystem() {
     return txUseEcosystem;
+  }
+
+  public String getTranslateMode() {
+    return translateMode;
+  }
+
+  public void setTranslateMode(String translateMode) {
+    this.translateMode = translateMode;
   }
 
   public boolean isDoNative() {
