@@ -68,7 +68,7 @@ hapi:
       # These are allowed_origin patterns, see: https://docs.spring.io/spring-framework/docs/current/javadoc-api/org/springframework/web/cors/CorsConfiguration.html#setAllowedOriginPatterns-java.util.List-
       allowed_origin:
         - "*"
-#    implementationguides:
+    implementationguides:
       # fhir_r4_core:
       #   name: hl7.fhir.r4.core
       #   version: 4.0.1
@@ -76,6 +76,10 @@ hapi:
     #      ch-core:
     #        name: ch.fhir.ig.ch-core
     #        version: 4.0.0-ballot
+       fhiromop:
+          name: hl7.fhir.uv.omop
+          version: 1.0.0
+          url: file:/Users/croeder/Downloads/hl7.fhir.uv.omop-1.0.0.tgz
     staticLocation: file:/apps/
     openapi_enabled: true
     fhir_version: R4
@@ -85,9 +89,16 @@ hapi:
 matchbox:
   fhir:
     context:
-      txServer: n/a
-#      onlyOneEngine: true
-#      igsPreloaded: ch.fhir.ig.ch-core#4.0.0-ballot
+      txServer: https://echidna.fhir.org/r4
+      # translateMode: local | fallback (default) | server
+      # local    - use only the ConceptMaps loaded from IGs, no terminology server
+      # fallback - use local ConceptMaps first, fall back to tx server on a miss
+      # server   - always use the tx server, bypass local ConceptMaps entirely
+      translateMode: server
+      onlyOneEngine: true
+      igsPreloaded: 
+        - hl7.fhir.uv.omop#1.0.0
+        - ch.fhir.ig.ch-core#4.0.0-ballot
       suppressWarnInfo:
         hl7.fhir.r4.core#4.0.1:
           #- "Constraint failed: dom-6:"
