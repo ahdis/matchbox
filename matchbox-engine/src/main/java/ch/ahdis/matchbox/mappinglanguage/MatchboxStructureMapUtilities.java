@@ -150,6 +150,14 @@ public class MatchboxStructureMapUtilities extends StructureMapUtilities {
 					done = true;
 				}
 			} else {
+				final ch.ahdis.matchbox.engine.MatchboxEngine.TranslateMode translateMode =
+					(engine != null) ? engine.getTranslateMode() : ch.ahdis.matchbox.engine.MatchboxEngine.TranslateMode.FALLBACK;
+				if (translateMode == ch.ahdis.matchbox.engine.MatchboxEngine.TranslateMode.SERVER) {
+					if (getServices() != null) {
+						outcome = getServices().translate(context.getAppInfo(), src, conceptMapUrl);
+					}
+					done = true;
+				} else {
 				List<SourceElementComponentWrapper> list = new ArrayList<SourceElementComponentWrapper>();
 				for (ConceptMapGroupComponent g : cmap.getGroup()) {
 					for (SourceElementComponent e : g.getElement()) {
@@ -164,8 +172,12 @@ public class MatchboxStructureMapUtilities extends StructureMapUtilities {
 							list.add(new SourceElementComponentWrapper(g, e));
 					}
 				}
-				if (list.size() == 0)
+				if (list.size() == 0) {
+					if (translateMode == ch.ahdis.matchbox.engine.MatchboxEngine.TranslateMode.FALLBACK && getServices() != null) {
+						outcome = getServices().translate(context.getAppInfo(), src, conceptMapUrl);
+					}
 					done = true;
+				}
 				else if (list.get(0).getComp().getTarget().size() == 0)
 					message = "Concept map " + su + " found no translation for " + src.getCode();
 				else {
@@ -195,6 +207,7 @@ public class MatchboxStructureMapUtilities extends StructureMapUtilities {
 					if (!done)
 						message = "Concept map " + su + " found no usable translation for " + src.getCode();
 				}
+				} // end else (LOCAL/FALLBACK local lookup)
 			}
 			if (!done)
 				throw new FHIRException(message);

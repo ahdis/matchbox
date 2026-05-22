@@ -31,32 +31,106 @@ package ch.ahdis.matchbox.mappinglanguage;
 
 
 
+import java.lang.reflect.Field;
+import java.lang.reflect.Method;
+
 import org.hl7.fhir.exceptions.FHIRException;
 import org.hl7.fhir.r5.context.IWorkerContext;
+import org.hl7.fhir.r5.model.CodeType;
 import org.hl7.fhir.r5.model.Coding;
 import org.hl7.fhir.r5.model.ConceptMap;
 import org.hl7.fhir.r5.model.ConceptMap.ConceptMapGroupComponent;
 import org.hl7.fhir.r5.model.ConceptMap.SourceElementComponent;
 import org.hl7.fhir.r5.model.ConceptMap.TargetElementComponent;
 import org.hl7.fhir.r5.model.Enumerations.ConceptMapRelationship;
+import org.hl7.fhir.r5.model.Parameters;
+import org.hl7.fhir.r5.model.UriType;
 import org.hl7.fhir.utilities.CanonicalPair;
+
+import ch.ahdis.matchbox.engine.MatchboxEngine;
 
 public class ConceptMapEngine {
 
+  private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(ConceptMapEngine.class);
+
   private IWorkerContext context;
+  private MatchboxEngine.TranslateMode translateMode;
 
   public ConceptMapEngine(IWorkerContext context) {
     this.context = context;
+    this.translateMode = MatchboxEngine.TranslateMode.FALLBACK;
+  }
+
+  public ConceptMapEngine(IWorkerContext context, MatchboxEngine.TranslateMode translateMode) {
+    this.context = context;
+    this.translateMode = translateMode;
   }
 
   public Coding translate(Coding source, String url) throws FHIRException {
     ConceptMap cm = context.fetchResource(ConceptMap.class, url);
     if (cm == null)
       throw new FHIRException("Unable to find ConceptMap '"+url+"'");
-    if (source.hasSystem()) 
-      return translateBySystem(cm, source.getSystem(), source.getCode());
+    if (translateMode == MatchboxEngine.TranslateMode.SERVER)
+      return translateViaTxServer(source, cm);
+    Coding result;
+    if (source.hasSystem())
+      result = translateBySystem(cm, source.getSystem(), source.getCode());
     else
-      return translateByJustCode(cm, source.getCode());
+      result = translateByJustCode(cm, source.getCode());
+    if (result == null && translateMode == MatchboxEngine.TranslateMode.FALLBACK)
+      result = translateViaTxServer(source, cm);
+    return result;
+  }
+
+  private Coding translateViaTxServer(Coding source, ConceptMap cm) {
+    try {
+      // Use reflection to access getTxClientManager() to avoid class-identity issues
+      // between the matchbox-bundled BaseWorkerContext and the external HL7 jar's version.
+      Method getTxClientManager = context.getClass().getMethod("getTxClientManager");
+      Object tcm = getTxClientManager.invoke(context);
+      if (tcm == null) return null;
+
+      Method hasClient = tcm.getClass().getMethod("hasClient");
+      if (!(Boolean) hasClient.invoke(tcm)) {
+        log.warn("No terminology client configured, cannot fall back to tx server for translate");
+        return null;
+      }
+
+      Method getMasterClient = tcm.getClass().getMethod("getMasterClient");
+      Object client = getMasterClient.invoke(tcm);
+      if (client == null) return null;
+
+      String system = source.hasSystem() ? source.getSystem() : null;
+      String targetsystem = null;
+      if (!cm.getGroup().isEmpty()) {
+        ConceptMapGroupComponent group = cm.getGroup().get(0);
+        if (system == null && group.hasSource()) system = group.getSource();
+        if (group.hasTarget()) targetsystem = group.getTarget();
+      }
+
+      Parameters params = new Parameters();
+      if (system != null) params.addParameter("system", new UriType(system));
+      params.addParameter("code", new CodeType(source.getCode()));
+      if (targetsystem != null) params.addParameter("targetsystem", new UriType(targetsystem));
+
+      Method translate = client.getClass().getMethod("translate", Parameters.class);
+      Parameters response = (Parameters) translate.invoke(client, params);
+      boolean matched = response.getParameterBool("result");
+      if (!matched) return null;
+
+      for (Parameters.ParametersParameterComponent p : response.getParameter()) {
+        if ("match".equals(p.getName())) {
+          for (Parameters.ParametersParameterComponent part : p.getPart()) {
+            if ("concept".equals(part.getName()) && part.getValue() instanceof Coding c) {
+              return c;
+            }
+          }
+        }
+      }
+    } catch (Exception e) {
+      log.warn("Terminology server translate failed for ConceptMap {} code {}: {}: {}", cm.getUrl(), source.getCode(), e.getClass().getName(), e.getMessage());
+    }
+    return null;
   }
 
   private Coding translateByJustCode(ConceptMap cm, String code) throws FHIRException {

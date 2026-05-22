@@ -1562,8 +1562,12 @@ public class StructureMapUtilities {
               list.add(new SourceElementComponentWrapper(g, e));
           }
         }
-        if (list.size() == 0)
+        if (list.size() == 0) {
+          if (services != null) {
+            outcome = services.translate(context.getAppInfo(), src, conceptMapUrl);
+          }
           done = true;
+        }
         else if (list.get(0).getComp().getTarget().size() == 0)
           message = "Concept map " + su + " found no translation for " + src.getCode();
         else {
