@@ -148,6 +148,55 @@ kubectl cp matchbox-test-0:fhir.logdir_IS_UNDEFINED ./fhir.logdir/
 
 kubectl cp matchbox-test-app-d684cf865 ./fhir.logdir/
 
+# FHIR-to-OMOP ID Mapping
+
+When running StructureMaps from a FHIR-to-OMOP IG, integer ID assignment is a known infrastructure problem. FHIR uses string logical IDs; OMOP requires integer primary keys. StructureMap has no built-in sequence generator, so the mapping needs external support.
+
+## The problem
+
+OMOP tables require integer primary keys (`person_id`, `visit_occurrence_id`, etc.). When a Condition references `Patient/abc-123`, the resulting `condition_occurrence.person_id` must match whatever integer was assigned to that patient — whether the two resources arrive in the same Bundle or separately.
+
+## Why $translate via the terminology server is not the right fit
+
+Matchbox is configured with a single terminology server (currently Echidna). Routing ID assignment through `$translate` would entangle ID management with terminology lookups on that server. Echidna is a standardized FHIR terminology server and should not need modification for this purpose.
+
+Additionally, `ConceptMapEngine` requires the ConceptMap resource to be loaded locally before it will contact the terminology server — a null ConceptMap causes an immediate exception, not a server fallback.
+
+## Preferred approach: custom StructureMap function
+
+The cleanest solution is a custom function — e.g. `omopId(fhirReference)` — implemented in `FHIRPathHostServices.executeFunction()`. The hooks (`resolveFunction`, `checkFunction`, `executeFunction`) exist in the codebase but are currently stubs. The function would be called directly from StructureMap rules at each integer ID assignment point.
+
+### Hash-based (recommended starting point)
+
+Hash the input string to a 32-bit integer deterministically. Because the hash is a pure function, the same FHIR reference always produces the same OMOP integer across any number of separate `$transform` calls — no state or persistence required. Collision probability is negligible at OMOP data scales.
+
+### Database-backed
+
+Use Matchbox's existing H2/PostgreSQL to store a `fhir_id → omop_id` mapping table. Adds auditability and supports truly sequential IDs if needed downstream, at the cost of a persistent dependency.
+
+## Logical IDs vs. business identifiers
+
+This choice of hash input matters for deployments that aggregate data from multiple FHIR servers.
+
+**Logical IDs** (`resource.id`) are server-relative. `Patient/abc-123` on server A is unrelated to `Patient/abc-123` on server B. Hashing a bare logical ID is only safe in single-source deployments.
+
+**Business identifiers** (`resource.identifier`, a system+value pair — e.g. SSN, MRN, NPI) can be globally unique when the `system` is a well-known namespace. Hashing the composite `system|value` produces a stable integer that survives server migrations and re-ingestion across sources.
+
+In practice: use a business identifier where one is reliably present; fall back to a server-qualified logical ID (e.g. `https://myserver.org/fhir/Patient/abc-123`) otherwise. Not all resource types carry usable business identifiers (Observation, Condition often do not).
+
+## OMOP's own pattern
+
+OMOP provides `person_source_value` (and equivalent `*_source_value` fields on other tables) specifically for storing the original source key for lineage. The integer surrogate key is separate. The recommended pattern is therefore:
+
+1. Store the business identifier or qualified FHIR ID in `*_source_value`
+2. Derive the integer ID by hashing `*_source_value`
+
+This cleanly separates identity tracking from surrogate key generation and keeps both the StructureMap logic and the hash function simple.
+
+## StructureMap changes
+
+Whichever approach is chosen, the StructureMaps in the IG will need to be updated to call `omopId()` (or equivalent) at each integer ID assignment point rather than leaving the ID unset or using the FHIR string directly.
+
 # MVN run unit tests
 
 mvn -Dtest=CapabilityStatementTests test
