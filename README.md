@@ -156,6 +156,24 @@ When running StructureMaps from a FHIR-to-OMOP IG, integer ID assignment is a kn
 
 OMOP tables require integer primary keys (`person_id`, `visit_occurrence_id`, etc.). When a Condition references `Patient/abc-123`, the resulting `condition_occurrence.person_id` must match whatever integer was assigned to that patient — whether the two resources arrive in the same Bundle or separately.
 
+## What the HL7 FHIR-to-OMOP IG says
+
+The [HL7 FHIR-to-OMOP IG](https://build.fhir.org/ig/HL7/fhir-omop-ig/en/) explicitly acknowledges this as an unsolved problem:
+
+> "There is no single approach that can be uniformly applied to transformation of FHIR identifiers to OMOP."
+
+Its recommended approach is an external mapping table linking `[ResourceType]/[Resource.id]` to OMOP-generated integer IDs, maintained outside the core OMOP schema. No concrete implementation is provided.
+
+The IG's own StructureMaps reflect this gap. The Condition map (`StructureMap/ConditionMap`) uses hardcoded placeholder values for all three integer ID fields:
+
+```
+src.id as id    -> tgt.condition_occurrence_id = '1';
+src.subject     -> tgt.person_id = '1';
+src.encounter   -> tgt.visit_occurrence_id = '1';
+```
+
+Comments in the map note that these should be "a map from FHIR ID to an external key." The IG explicitly leaves implementation to the deployer. Notable: the IG also populates `condition_source_value` from the coding display text rather than from a FHIR identifier, so it does not follow a `*_source_value`-for-traceability pattern.
+
 ## Why $translate via the terminology server is not the right fit
 
 Matchbox is configured with a single terminology server (currently Echidna). Routing ID assignment through `$translate` would entangle ID management with terminology lookups on that server. Echidna is a standardized FHIR terminology server and should not need modification for this purpose.
@@ -165,6 +183,14 @@ Additionally, `ConceptMapEngine` requires the ConceptMap resource to be loaded l
 ## Preferred approach: custom StructureMap function
 
 The cleanest solution is a custom function — e.g. `omopId(fhirReference)` — implemented in `FHIRPathHostServices.executeFunction()`. The hooks (`resolveFunction`, `checkFunction`, `executeFunction`) exist in the codebase but are currently stubs. The function would be called directly from StructureMap rules at each integer ID assignment point.
+
+The StructureMap change is minimal and mechanical — replacing each `= '1'` placeholder with a function call:
+
+```
+src.id as id    -> tgt.condition_occurrence_id = omopId(id);
+src.subject     -> tgt.person_id = omopId(src.subject);
+src.encounter   -> tgt.visit_occurrence_id = omopId(src.encounter);
+```
 
 ### Hash-based (recommended starting point)
 
@@ -183,19 +209,6 @@ This choice of hash input matters for deployments that aggregate data from multi
 **Business identifiers** (`resource.identifier`, a system+value pair — e.g. SSN, MRN, NPI) can be globally unique when the `system` is a well-known namespace. Hashing the composite `system|value` produces a stable integer that survives server migrations and re-ingestion across sources.
 
 In practice: use a business identifier where one is reliably present; fall back to a server-qualified logical ID (e.g. `https://myserver.org/fhir/Patient/abc-123`) otherwise. Not all resource types carry usable business identifiers (Observation, Condition often do not).
-
-## OMOP's own pattern
-
-OMOP provides `person_source_value` (and equivalent `*_source_value` fields on other tables) specifically for storing the original source key for lineage. The integer surrogate key is separate. The recommended pattern is therefore:
-
-1. Store the business identifier or qualified FHIR ID in `*_source_value`
-2. Derive the integer ID by hashing `*_source_value`
-
-This cleanly separates identity tracking from surrogate key generation and keeps both the StructureMap logic and the hash function simple.
-
-## StructureMap changes
-
-Whichever approach is chosen, the StructureMaps in the IG will need to be updated to call `omopId()` (or equivalent) at each integer ID assignment point rather than leaving the ID unset or using the FHIR string directly.
 
 # MVN run unit tests
 
