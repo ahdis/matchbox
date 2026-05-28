@@ -13,6 +13,18 @@ a public development server is hosted at [https://test.ahdis.ch/matchbox/fhir](h
 
 a public test server is hosted at [https://test.ahdis.ch/matchboxv3/fhir](https://test.ahdis.ch/matchboxv3/fhir) with a corresponding gui [https://test.ahdis.ch/matchboxv3/](https://test.ahdis.ch/matchboxv3/#)
 
+## croeder-fhir-to-omop ecosystem
+
+This repo is a fork of [ahdis/matchbox](https://github.com/ahdis/matchbox) used as the FHIR transformation server in the [croeder-fhir-to-omop](https://github.com/croeder-fhir-to-omop) FHIR→OMOP pipeline:
+
+| Repo | Role |
+|---|---|
+| **[matchbox](https://github.com/croeder-fhir-to-omop/matchbox)** | **FHIR server with OMOP IG (fork of ahdis/matchbox) ← you are here** |
+| [matchbox_docker](https://github.com/croeder-fhir-to-omop/matchbox_docker) | Docker config and IGs for matchbox |
+| [matchbox_scripts](https://github.com/croeder-fhir-to-omop/matchbox_scripts) | Transform functions, ETL script, and FHIR fixtures |
+| [jupyter_docker](https://github.com/croeder-fhir-to-omop/jupyter_docker) | Interactive Jupyter notebook environment |
+| [dqd_docker](https://github.com/croeder-fhir-to-omop/dqd_docker) | Automated ETL + OHDSI Data Quality Dashboard |
+
 ## containers
 
 The docker file will create a docker image with no preloaded implementation guides. A list of implementation guides to load can be passed as config-map.
