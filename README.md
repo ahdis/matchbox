@@ -13,65 +13,6 @@ a public development server is hosted at [https://test.ahdis.ch/matchbox/fhir](h
 
 a public test server is hosted at [https://test.ahdis.ch/matchboxv3/fhir](https://test.ahdis.ch/matchboxv3/fhir) with a corresponding gui [https://test.ahdis.ch/matchboxv3/](https://test.ahdis.ch/matchboxv3/#)
 
-## This fork add configuration options for using a remote terminology server.
-The code may seem redundant with what is in hapi-fhir-server, but that code is not used here. More detail from Claude:
-
- Reconciliation: Three Distinct Terminology Mechanisms
-
-  These are not redundant — they serve different layers and are largely independent.
-
-  1. matchbox.fhir.context.txServer — HL7 FHIR Core validator's terminology server
-
-  Path: application.yaml → CliContext → MatchboxEngineSupport.configureValidationEngine() → engine.setTerminologyServer() → BaseWorkerContext (org.hl7.fhir.r5)
-
-  This wires the official HL7 FHIR reference validator to an external tx server. It's used when matchbox validates a resource against a profile — the validator calls out to e.g. http://tx.fhir.org to expand
-  ValueSets and validate codes during structural validation. Setting txServer=n/a disables it entirely and runs offline. This is matchbox's primary and mandatory terminology integration.
-
-  2. hapi.fhir.remote_terminology_service — HAPI's ValidationSupportChain
-
-  Path: application.yaml → AppProperties → TerminologyConfig (conditional bean) → RemoteTerminologyServiceValidationSupport inserted into HAPI's ValidationSupportChain
-
-  This makes HAPI's own validation support chain forward $validate-code / $lookup / $expand calls to a remote server. Matchbox's codebase does not reference TerminologyConfig or OnRemoteTerminologyPresent at all —
-  those classes come from hapi-fhir-jpaserver-starter but matchbox overrides the validation chain wiring (see JpaConfig.java and StarterJpaConfig.java). Unless you explicitly configure this in matchbox's
-  application.yaml, it is disabled.
-  
-  3. Matchbox's embedded /tx endpoint — local terminology server
-
-  Path: MatchboxTxConfig → MatchboxTxServer (a lightweight RestfulServer) → mounted at /tx/* in Application.java
-
-  Matchbox ships its own built-in terminology server at /tx backed by InMemoryTerminologyServerValidationSupport + TxValidationCache. This is primarily for serving terminology to matchbox's own validation pipeline
-  and for clients that point at matchbox itself as a tx server (e.g., another matchbox instance could point txServer here). It does not depend on the external txServer config — it serves only what's loaded into
-  matchbox's in-memory store.
-  
-  ---
-  Is anything redundant?
-  
-  ┌──────────────────────────────────────┬───────────────────────┬─────────────────────────────┬───────────────────────────────────────────────────────────────────────────────────────────────────────┐
-  │              Mechanism               │         Layer         │            Owner            │                                             Could be cut?                                             │
-  ├──────────────────────────────────────┼───────────────────────┼─────────────────────────────┼───────────────────────────────────────────────────────────────────────────────────────────────────────┤
-  │ matchbox.fhir.context.txServer       │ HL7 Core validator    │ matchbox                    │ No — required; null throws an exception                                                               │
-  ├──────────────────────────────────────┼───────────────────────┼─────────────────────────────┼───────────────────────────────────────────────────────────────────────────────────────────────────────┤
-  │ hapi.fhir.remote_terminology_service │ HAPI validation chain │ hapi-fhir-jpaserver-starter │ Effectively unused in matchbox; matchbox bypasses HAPI's validation chain for the $validate operation │
-  ├──────────────────────────────────────┼───────────────────────┼─────────────────────────────┼───────────────────────────────────────────────────────────────────────────────────────────────────────┤
-  │ Matchbox local /tx endpoint          │ Built-in server       │ matchbox                    │ No — serves matchbox's own clients                                                                    │
-  └──────────────────────────────────────┴───────────────────────┴─────────────────────────────┴───────────────────────────────────────────────────────────────────────────────────────────────────────┘
-  
-  The hapi.fhir.remote_terminology_service mechanism is the one that's closest to "redundant" in a matchbox context. Matchbox's $validate operation goes through MatchboxEngineSupport → MatchboxEngine → HL7 Core
-  validator, bypassing HAPI's ValidationSupportChain entirely. Unless you're using HAPI's native $validate endpoint (not matchbox's), that config block would have no effect.
-
-
-## croeder-fhir-to-omop ecosystem
-
-This repo is a fork of [ahdis/matchbox](https://github.com/ahdis/matchbox) used as the FHIR transformation server in the [croeder-fhir-to-omop](https://github.com/croeder-fhir-to-omop) FHIR→OMOP pipeline:
-
-| Repo | Role |
-|---|---|
-| **[matchbox](https://github.com/croeder-fhir-to-omop/matchbox)** | **FHIR server with OMOP IG (fork of ahdis/matchbox) ← you are here** |
-| [matchbox_docker](https://github.com/croeder-fhir-to-omop/matchbox_docker) | Docker config and IGs for matchbox |
-| [matchbox_scripts](https://github.com/croeder-fhir-to-omop/matchbox_scripts) | Transform functions, ETL script, and FHIR fixtures |
-| [jupyter_docker](https://github.com/croeder-fhir-to-omop/jupyter_docker) | Interactive Jupyter notebook environment |
-| [dqd_docker](https://github.com/croeder-fhir-to-omop/dqd_docker) | Automated ETL + OHDSI Data Quality Dashboard |
-
 ## containers
 
 The docker file will create a docker image with no preloaded implementation guides. A list of implementation guides to load can be passed as config-map.
@@ -206,68 +147,6 @@ docs are then available at https://ahdis.github.io/matchbox/
 kubectl cp matchbox-test-0:fhir.logdir_IS_UNDEFINED ./fhir.logdir/
 
 kubectl cp matchbox-test-app-d684cf865 ./fhir.logdir/
-
-# FHIR-to-OMOP ID Mapping
-
-When running StructureMaps from a FHIR-to-OMOP IG, integer ID assignment is a known infrastructure problem. FHIR uses string logical IDs; OMOP requires integer primary keys. StructureMap has no built-in sequence generator, so the mapping needs external support.
-
-## The problem
-
-OMOP tables require integer primary keys (`person_id`, `visit_occurrence_id`, etc.). When a Condition references `Patient/abc-123`, the resulting `condition_occurrence.person_id` must match whatever integer was assigned to that patient — whether the two resources arrive in the same Bundle or separately.
-
-## What the HL7 FHIR-to-OMOP IG says
-
-The [HL7 FHIR-to-OMOP IG](https://build.fhir.org/ig/HL7/fhir-omop-ig/en/) explicitly acknowledges this as an unsolved problem:
-
-> "There is no single approach that can be uniformly applied to transformation of FHIR identifiers to OMOP."
-
-Its recommended approach is an external mapping table linking `[ResourceType]/[Resource.id]` to OMOP-generated integer IDs, maintained outside the core OMOP schema. No concrete implementation is provided.
-
-The IG's own StructureMaps reflect this gap. The Condition map (`StructureMap/ConditionMap`) uses hardcoded placeholder values for all three integer ID fields:
-
-```
-src.id as id    -> tgt.condition_occurrence_id = '1';
-src.subject     -> tgt.person_id = '1';
-src.encounter   -> tgt.visit_occurrence_id = '1';
-```
-
-Comments in the map note that these should be "a map from FHIR ID to an external key." The IG explicitly leaves implementation to the deployer. Notable: the IG also populates `condition_source_value` from the coding display text rather than from a FHIR identifier, so it does not follow a `*_source_value`-for-traceability pattern.
-
-## Why $translate via the terminology server is not the right fit
-
-Matchbox is configured with a single terminology server (currently Echidna). Routing ID assignment through `$translate` would entangle ID management with terminology lookups on that server. Echidna is a standardized FHIR terminology server and should not need modification for this purpose.
-
-Additionally, `ConceptMapEngine` requires the ConceptMap resource to be loaded locally before it will contact the terminology server — a null ConceptMap causes an immediate exception, not a server fallback.
-
-## Preferred approach: custom StructureMap function
-
-The cleanest solution is a custom function — e.g. `omopId(fhirReference)` — implemented in `FHIRPathHostServices.executeFunction()`. The hooks (`resolveFunction`, `checkFunction`, `executeFunction`) exist in the codebase but are currently stubs. The function would be called directly from StructureMap rules at each integer ID assignment point.
-
-The StructureMap change is minimal and mechanical — replacing each `= '1'` placeholder with a function call:
-
-```
-src.id as id    -> tgt.condition_occurrence_id = omopId(id);
-src.subject     -> tgt.person_id = omopId(src.subject);
-src.encounter   -> tgt.visit_occurrence_id = omopId(src.encounter);
-```
-
-### Hash-based (recommended starting point)
-
-Hash the input string to a 32-bit integer deterministically. Because the hash is a pure function, the same FHIR reference always produces the same OMOP integer across any number of separate `$transform` calls — no state or persistence required. Collision probability is negligible at OMOP data scales.
-
-### Database-backed
-
-Use Matchbox's existing H2/PostgreSQL to store a `fhir_id → omop_id` mapping table. Adds auditability and supports truly sequential IDs if needed downstream, at the cost of a persistent dependency.
-
-## Logical IDs vs. business identifiers
-
-This choice of hash input matters for deployments that aggregate data from multiple FHIR servers.
-
-**Logical IDs** (`resource.id`) are server-relative. `Patient/abc-123` on server A is unrelated to `Patient/abc-123` on server B. Hashing a bare logical ID is only safe in single-source deployments.
-
-**Business identifiers** (`resource.identifier`, a system+value pair — e.g. SSN, MRN, NPI) can be globally unique when the `system` is a well-known namespace. Hashing the composite `system|value` produces a stable integer that survives server migrations and re-ingestion across sources.
-
-In practice: use a business identifier where one is reliably present; fall back to a server-qualified logical ID (e.g. `https://myserver.org/fhir/Patient/abc-123`) otherwise. Not all resource types carry usable business identifiers (Observation, Condition often do not).
 
 # MVN run unit tests
 
