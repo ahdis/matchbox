@@ -13,6 +13,53 @@ a public development server is hosted at [https://test.ahdis.ch/matchbox/fhir](h
 
 a public test server is hosted at [https://test.ahdis.ch/matchboxv3/fhir](https://test.ahdis.ch/matchboxv3/fhir) with a corresponding gui [https://test.ahdis.ch/matchboxv3/](https://test.ahdis.ch/matchboxv3/#)
 
+## This fork add configuration options for using a remote terminology server.
+The code may seem redundant with what is in hapi-fhir-server, but that code is not used here. More detail from Claude:
+
+ Reconciliation: Three Distinct Terminology Mechanisms
+
+  These are not redundant — they serve different layers and are largely independent.
+
+  1. matchbox.fhir.context.txServer — HL7 FHIR Core validator's terminology server
+
+  Path: application.yaml → CliContext → MatchboxEngineSupport.configureValidationEngine() → engine.setTerminologyServer() → BaseWorkerContext (org.hl7.fhir.r5)
+
+  This wires the official HL7 FHIR reference validator to an external tx server. It's used when matchbox validates a resource against a profile — the validator calls out to e.g. http://tx.fhir.org to expand
+  ValueSets and validate codes during structural validation. Setting txServer=n/a disables it entirely and runs offline. This is matchbox's primary and mandatory terminology integration.
+
+  2. hapi.fhir.remote_terminology_service — HAPI's ValidationSupportChain
+
+  Path: application.yaml → AppProperties → TerminologyConfig (conditional bean) → RemoteTerminologyServiceValidationSupport inserted into HAPI's ValidationSupportChain
+
+  This makes HAPI's own validation support chain forward $validate-code / $lookup / $expand calls to a remote server. Matchbox's codebase does not reference TerminologyConfig or OnRemoteTerminologyPresent at all —
+  those classes come from hapi-fhir-jpaserver-starter but matchbox overrides the validation chain wiring (see JpaConfig.java and StarterJpaConfig.java). Unless you explicitly configure this in matchbox's
+  application.yaml, it is disabled.
+  
+  3. Matchbox's embedded /tx endpoint — local terminology server
+
+  Path: MatchboxTxConfig → MatchboxTxServer (a lightweight RestfulServer) → mounted at /tx/* in Application.java
+
+  Matchbox ships its own built-in terminology server at /tx backed by InMemoryTerminologyServerValidationSupport + TxValidationCache. This is primarily for serving terminology to matchbox's own validation pipeline
+  and for clients that point at matchbox itself as a tx server (e.g., another matchbox instance could point txServer here). It does not depend on the external txServer config — it serves only what's loaded into
+  matchbox's in-memory store.
+  
+  ---
+  Is anything redundant?
+  
+  ┌──────────────────────────────────────┬───────────────────────┬─────────────────────────────┬───────────────────────────────────────────────────────────────────────────────────────────────────────┐
+  │              Mechanism               │         Layer         │            Owner            │                                             Could be cut?                                             │
+  ├──────────────────────────────────────┼───────────────────────┼─────────────────────────────┼───────────────────────────────────────────────────────────────────────────────────────────────────────┤
+  │ matchbox.fhir.context.txServer       │ HL7 Core validator    │ matchbox                    │ No — required; null throws an exception                                                               │
+  ├──────────────────────────────────────┼───────────────────────┼─────────────────────────────┼───────────────────────────────────────────────────────────────────────────────────────────────────────┤
+  │ hapi.fhir.remote_terminology_service │ HAPI validation chain │ hapi-fhir-jpaserver-starter │ Effectively unused in matchbox; matchbox bypasses HAPI's validation chain for the $validate operation │
+  ├──────────────────────────────────────┼───────────────────────┼─────────────────────────────┼───────────────────────────────────────────────────────────────────────────────────────────────────────┤
+  │ Matchbox local /tx endpoint          │ Built-in server       │ matchbox                    │ No — serves matchbox's own clients                                                                    │
+  └──────────────────────────────────────┴───────────────────────┴─────────────────────────────┴───────────────────────────────────────────────────────────────────────────────────────────────────────┘
+  
+  The hapi.fhir.remote_terminology_service mechanism is the one that's closest to "redundant" in a matchbox context. Matchbox's $validate operation goes through MatchboxEngineSupport → MatchboxEngine → HL7 Core
+  validator, bypassing HAPI's ValidationSupportChain entirely. Unless you're using HAPI's native $validate endpoint (not matchbox's), that config block would have no effect.
+
+
 ## croeder-fhir-to-omop ecosystem
 
 This repo is a fork of [ahdis/matchbox](https://github.com/ahdis/matchbox) used as the FHIR transformation server in the [croeder-fhir-to-omop](https://github.com/croeder-fhir-to-omop) FHIR→OMOP pipeline:
