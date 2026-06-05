@@ -229,6 +229,7 @@ database/h2.trace.db
 **/charts/*.tgz
 
 .apt_generated_tests
+matchbox-server/application.yaml
 matchbox-server/tx.html
 matchbox-server/test.html
 matchbox-server/src/main/resources/static/3rdpartylicenses.txt
