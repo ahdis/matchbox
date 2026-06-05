@@ -5,7 +5,7 @@
     <parent>
         <artifactId>matchbox</artifactId>
         <groupId>health.matchbox</groupId>
-        <version>4.1.5</version>
+        <version>4.1.9</version>
     </parent>
 
     <artifactId>matchbox-server</artifactId>
@@ -14,6 +14,10 @@
         capture health data into HL7® FHIR®
     </description>
     <packaging>jar</packaging>
+
+    <properties>
+        <maven.compiler.release>21</maven.compiler.release>
+    </properties>
 
     <dependencies>
         <dependency>
@@ -282,7 +286,7 @@
         <dependency>
             <groupId>org.springframework.ai</groupId>
             <artifactId>spring-ai-mcp</artifactId>
-            <version>1.0.2</version>
+            <version>1.0.7</version>
         </dependency>
         <!--
         This will be included as well as using Spring Automatic Configuration
@@ -313,6 +317,22 @@
         <finalName>matchbox</finalName>
 
         <plugins>
+            <!-- Tell Maven which Java source version you want to use -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <configuration>
+                    <release>${maven.compiler.release}</release>
+                    <encoding>${project.build.sourceEncoding}</encoding>
+                    <annotationProcessorPaths>
+                        <path>
+                            <groupId>org.projectlombok</groupId>
+                            <artifactId>lombok</artifactId>
+                            <version>${lombok_version}</version>
+                        </path>
+                    </annotationProcessorPaths>
+                </configuration>
+            </plugin>
 
             <!-- The configuration here tells the WAR plugin to include the FHIR Tester overlay. You can omit it if you are not using that feature. -->
             <plugin>
@@ -447,6 +467,27 @@
                 <dependency>
                     <groupId>org.springframework.boot</groupId>
                     <artifactId>spring-boot-starter-undertow</artifactId>
+                    <exclusions>
+                        <!-- Since Undertow 2.4.0 the servlet/websocket modules moved to
+                             io.undertow.ee (UNDERTOW-2646). Drop the old transitives that
+                             Spring Boot still pulls in and bring in the new artifacts below. -->
+                        <exclusion>
+                            <groupId>io.undertow</groupId>
+                            <artifactId>undertow-servlet</artifactId>
+                        </exclusion>
+                        <exclusion>
+                            <groupId>io.undertow</groupId>
+                            <artifactId>undertow-websockets-jsr</artifactId>
+                        </exclusion>
+                    </exclusions>
+                </dependency>
+                <dependency>
+                    <groupId>io.undertow.ee</groupId>
+                    <artifactId>undertow-servlet</artifactId>
+                </dependency>
+                <dependency>
+                    <groupId>io.undertow.ee</groupId>
+                    <artifactId>undertow-websockets</artifactId>
                 </dependency>
             </dependencies>
             <build>
