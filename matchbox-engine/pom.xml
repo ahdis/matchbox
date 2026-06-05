@@ -6,7 +6,7 @@
     <parent>
         <artifactId>matchbox</artifactId>
         <groupId>health.matchbox</groupId>
-        <version>4.1.5</version>
+        <version>4.1.9</version>
     </parent>
 
     <artifactId>matchbox-engine</artifactId>
@@ -15,6 +15,10 @@
         capture health data into HL7® FHIR®
     </description>
     <packaging>jar</packaging>
+
+    <properties>
+        <maven.compiler.release>17</maven.compiler.release>
+    </properties>
 
     <dependencies>
         <dependency>
@@ -146,6 +150,22 @@
     <build>
         <finalName>matchbox-engine</finalName>
         <plugins>
+            <!-- Tell Maven which Java source version you want to use -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <configuration>
+                    <release>${maven.compiler.release}</release>
+                    <encoding>${project.build.sourceEncoding}</encoding>
+                    <annotationProcessorPaths>
+                        <path>
+                            <groupId>org.projectlombok</groupId>
+                            <artifactId>lombok</artifactId>
+                            <version>${lombok_version}</version>
+                        </path>
+                    </annotationProcessorPaths>
+                </configuration>
+            </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>

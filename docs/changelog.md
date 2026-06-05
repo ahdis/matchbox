@@ -1,6 +1,29 @@
-2026/05/xx Release 4.1.6
+2026/05/27 Release 4.1.9
 
+- Upgrade Undertow from 2.3.24.Final to 2.4.1.Final to fix DoS via multipart/form-data parsing on HTTP GET requests (CVE-2026-3260). Since Undertow 2.4.0 the servlet and websocket modules were extracted to `io.undertow.ee` (UNDERTOW-2646); we now use `io.undertow.ee:undertow-servlet:1.0.0.Final` and `io.undertow.ee:undertow-websockets:1.0.0.Final` for Jakarta EE 10 compatibility (Spring Framework 6.2).
+- Upgrade Spring Framework from 6.2.17 to 6.2.18 to fix DoS via static resource resolution on Windows (CVE-2026-22745)
+- Update spring ai to 1.0.7 for CVE-2026-41712 
+
+2026/05/26 Release 4.1.8
+
+- Fix for loading custom SearchParameter -Exception during startup (#520) when matchbox.validation.save-statistics is enabled
+- Update frontend dependencies
+- Update org.hl7.fhir.core to 6.9.8
+
+2026/05/11 Release 4.1.7
+
+- Force opennlp-tools >= 2.5.9 to fix CVE-2026-40682, CVE-2026-42027, CVE-2026-42440 (transitive via langchain4j)
+- Fix Trivy Docker image scan failing due to rekor.sigstore.dev timeout: replace TRIVY_OFFLINE_SCAN with TRIVY_SBOM_SOURCES='' to skip SBOM attestation lookups
+- Pin @babel/plugin-transform-modules-systemjs >= 7.29.4 to fix CVE-2026-44728 (arbitrary code generation via malicious input)
+- Pin fast-uri >= 3.1.1 to fix CVE-2026-6321 (path traversal via percent-encoded dot segments)
+
+2026/05/07 Release 4.1.6
+
+- Re-add support for the JRE 17 in matchbox-engine (#510)
 - Add validation statistics feature (#462)
+- Upgrade Spring Boot from 3.5.12 to 3.5.14 to fix predictable temp directory vulnerability (CVE-2026-40973)
+- Upgrade Thymeleaf from 3.1.4.RELEASE to 3.1.5.RELEASE to fix improper recognition of unauthorized syntax patterns (CVE-2026-40478)
+- Upgrade PostgreSQL JDBC driver from 42.7.10 to 42.7.11 to fix SCRAM-SHA-256 authentication DoS vulnerability (CVE-2026-42198)
 
 2026/04/20 Release 4.1.5
 
