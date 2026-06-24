@@ -29,7 +29,6 @@ import ca.uhn.fhir.mdm.svc.MdmExpansionCacheSvc;
 import ca.uhn.fhir.parser.IParser;
 import ca.uhn.fhir.jpa.dao.tx.IHapiTransactionService;
 import ca.uhn.fhir.jpa.delete.ThreadSafeResourceDeleterSvc;
-import ca.uhn.fhir.jpa.entity.Search;
 import ca.uhn.fhir.jpa.packages.IHapiPackageCacheManager;
 import ca.uhn.fhir.jpa.packages.IPackageInstallerSvc;
 import ca.uhn.fhir.jpa.partition.IRequestPartitionHelperSvc;
@@ -41,7 +40,6 @@ import ca.uhn.fhir.jpa.starter.AppProperties;
 import ca.uhn.fhir.jpa.starter.annotations.OnMatchboxOnlyOneEnginePresent;
 import ca.uhn.fhir.jpa.starter.common.StarterJpaConfig;
 import ca.uhn.fhir.jpa.validation.ValidatorPolicyAdvisor;
-import ca.uhn.fhir.jpa.validation.ValidatorResourceFetcher;
 import ca.uhn.fhir.mdm.provider.MdmProviderLoader;
 import ca.uhn.fhir.rest.api.server.RequestDetails;
 import ca.uhn.fhir.rest.server.exceptions.InvalidRequestException;
@@ -66,6 +64,7 @@ import ch.ahdis.matchbox.statistics.OperationOutcomeResourceProviderR5;
 import ch.ahdis.matchbox.statistics.SearchParameterResourceProviderR4;
 import ch.ahdis.matchbox.statistics.SearchParameterResourceProviderR4B;
 import ch.ahdis.matchbox.statistics.SearchParameterResourceProviderR5;
+import ch.ahdis.matchbox.util.MatchboxEngineCache;
 import ch.ahdis.matchbox.util.MatchboxEngineSupport;
 import ch.ahdis.matchbox.util.MatchboxPackageInstallerImpl;
 import ch.ahdis.matchbox.validation.ValidationProvider;
@@ -82,12 +81,8 @@ import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
 import org.springframework.data.domain.Page;
 
-import com.github.dnault.xmlpatch.internal.Log;
-import com.github.dnault.xmlpatch.repackaged.org.apache.commons.io.FileUtils;
-
 import javax.annotation.Nullable;
 
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
@@ -357,10 +352,16 @@ public class MatchboxJpaConfig extends StarterJpaConfig {
 	}
 
 	@Bean
+	public MatchboxEngineCache matchboxEngineCache() {
+		return new MatchboxEngineCache();
+	}
+
+	@Bean
 	public MatchboxEngineSupport getMatchboxEngineSupport(final MatchboxFhirContextProperties matchboxFhirContextProperties,
 																			final CliContext cliContext,
-																			@Value("${hapi.fhir.fhir_version}") final FhirVersionEnum serverFhirVersion) {
-		return new MatchboxEngineSupport(matchboxFhirContextProperties, cliContext, serverFhirVersion);
+																			@Value("${hapi.fhir.fhir_version}") final FhirVersionEnum serverFhirVersion,
+																			final MatchboxEngineCache matchboxEngineCache) {
+		return new MatchboxEngineSupport(matchboxFhirContextProperties, cliContext, serverFhirVersion, matchboxEngineCache);
 	}
 
 	@Bean
