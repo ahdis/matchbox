@@ -11,11 +11,11 @@ import { ITarEntry } from './tar-entry';
 import { Issue, OperationResult } from '../util/operation-result';
 import { FormControl, Validators } from '@angular/forms';
 import { StructureDefinition } from './structure-definition';
-import { ToastrService } from 'ngx-toastr';
 import { ValidationCodeEditor } from './validation-code-editor';
 import { Base64 } from 'js-base64';
 import { from, forkJoin, ReplaySubject, take } from 'rxjs';
 import { UploadedFile } from '../upload/uploaded-file';
+import { HotToastService } from '@ngxpert/hot-toast';
 
 const INDENT_SPACES = 2;
 
@@ -66,7 +66,7 @@ export class ValidateComponent implements AfterViewInit {
   constructor(
     data: FhirConfigService,
     private cd: ChangeDetectorRef,
-    private toastr: ToastrService
+    private toast: HotToastService,
   ) {
     this.client = data.getFhirClient();
 
@@ -550,9 +550,9 @@ export class ValidateComponent implements AfterViewInit {
    * @private
    */
   private showErrorToast(title: string, message: string) {
-    this.toastr.error(message, title, {
-      closeButton: true,
-      timeOut: 5000,
+    this.toast.error(`<b>${title}</b>: ${message}`, {
+      dismissible: true,
+      duration: 5000,
     });
   }
 
@@ -563,9 +563,9 @@ export class ValidateComponent implements AfterViewInit {
    * @private
    */
   private showWarnToast(title: string, message: string) {
-    this.toastr.warning(message, title, {
-      closeButton: true,
-      timeOut: 5000,
+    this.toast.warning(`<b>${title}</b>: ${message}`, {
+      dismissible: true,
+      duration: 5000,
     });
   }
 
@@ -649,9 +649,9 @@ export class ValidateComponent implements AfterViewInit {
       }
 
       this.validateResource(filename, resource, contentType, !hasSetProfile && !this.profileLocked);
-      this.toastr.info('Validation', 'The validation of your resource has started', {
-        closeButton: true,
-        timeOut: 3000,
+      this.toast.info('<b>Validation</b>: the validation of your resource has started', {
+        dismissible: true,
+        duration: 3000,
       });
     }
   }

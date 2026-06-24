@@ -8,9 +8,9 @@ import StructureMap = fhir.r4.StructureMap;
 import OperationOutcome = fhir.r4.OperationOutcome;
 import Bundle = fhir.r4.Bundle;
 import { UploadComponent } from '../upload/upload.component';
-import { ToastrService } from 'ngx-toastr';
 import { parseFhirResource } from '../util/fhir-resource-parser';
 import { UploadedFile } from '../upload/uploaded-file';
+import { HotToastService } from '@ngxpert/hot-toast';
 
 @Component({
   selector: 'app-transform',
@@ -54,7 +54,7 @@ export class TransformComponent {
 
   constructor(
     readonly data: FhirConfigService,
-    private readonly toastr: ToastrService,
+    private readonly toast: HotToastService,
     private readonly changeDetectorRef: ChangeDetectorRef
   ) {
     this.client = data.getFhirClient();
@@ -215,9 +215,9 @@ export class TransformComponent {
   }
 
   private showErrorToast(title: string, message: string) {
-    this.toastr.error(message, title, {
-      closeButton: true,
-      timeOut: 5000,
+    this.toast.error(`<b>${title}</b>: ${message}`, {
+      dismissible: true,
+      duration: 5000,
     });
   }
 }
