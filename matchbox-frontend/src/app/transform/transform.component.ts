@@ -1,4 +1,4 @@
-import { ChangeDetectorRef, Component, ViewChild } from '@angular/core';
+import { ChangeDetectorRef, Component, ViewChild, ChangeDetectionStrategy } from '@angular/core';
 import { FhirConfigService } from '../fhirConfig.service';
 import FhirClient from 'fhir-kit-client';
 import { FormControl } from '@angular/forms';
@@ -16,6 +16,7 @@ import { UploadedFile } from '../upload/uploaded-file';
   selector: 'app-transform',
   templateUrl: './transform.component.html',
   styleUrls: ['./transform.component.scss'],
+  changeDetection: ChangeDetectionStrategy.Eager,
   standalone: false,
 })
 export class TransformComponent {
@@ -230,4 +231,4 @@ type ResourceSource = {
   content: string;
   resourceType: string;
   resourceId: string | null;
-}
+};

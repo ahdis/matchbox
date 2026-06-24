@@ -1,15 +1,16 @@
-import { Component } from '@angular/core';
+import { Component, ChangeDetectionStrategy } from '@angular/core';
 import { FhirConfigService } from '../fhirConfig.service';
 import { UntypedFormControl, Validators } from '@angular/forms';
 import FhirClient from 'fhir-kit-client';
 import { FhirPathService } from '../fhirpath.service';
-import {OperationResult} from "../util/operation-result";
+import { OperationResult } from '../util/operation-result';
 
 @Component({
-    selector: 'app-igs',
-    templateUrl: './igs.component.html',
-    styleUrls: ['./igs.component.scss'],
-    standalone: false
+  selector: 'app-igs',
+  templateUrl: './igs.component.html',
+  styleUrls: ['./igs.component.scss'],
+  changeDetection: ChangeDetectionStrategy.Eager,
+  standalone: false,
 })
 export class IgsComponent {
   public addPackageId: UntypedFormControl;
@@ -75,7 +76,7 @@ export class IgsComponent {
   }
 
   get hasNextPage(): boolean {
-    return this.totalCount !== null && (this.currentOffset + this.pageSize) < this.totalCount;
+    return this.totalCount !== null && this.currentOffset + this.pageSize < this.totalCount;
   }
 
   get currentPage(): number {
@@ -105,10 +106,11 @@ export class IgsComponent {
   }
 
   isCurrent(ig: fhir.r4.ImplementationGuide): boolean {
-    let result  = this.fhirPathService.evaluateToString(
-       ig,
-       "meta.tag.where(system='http://matchbox.health/fhir/CodeSystem/tag').code");
-    return result === "current";
+    let result = this.fhirPathService.evaluateToString(
+      ig,
+      "meta.tag.where(system='http://matchbox.health/fhir/CodeSystem/tag').code"
+    );
+    return result === 'current';
   }
 
   selectRow(ig: fhir.r4.ImplementationGuide) {

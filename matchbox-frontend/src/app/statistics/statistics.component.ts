@@ -1,15 +1,14 @@
-import { AfterViewInit, Component } from '@angular/core';
-import FhirClient from 'fhir-kit-client'
+import { AfterViewInit, Component, ChangeDetectionStrategy } from '@angular/core';
+import FhirClient from 'fhir-kit-client';
 import { FhirConfigService } from '../fhirConfig.service';
 import { FormControl } from '@angular/forms';
-
-
 
 @Component({
   selector: 'app-statistics',
   templateUrl: './statistics.component.html',
   styleUrl: './statistics.component.scss',
-  standalone: false
+  changeDetection: ChangeDetectionStrategy.Eager,
+  standalone: false,
 })
 export class StatisticsComponent implements AfterViewInit {
   client: FhirClient;
@@ -17,17 +16,17 @@ export class StatisticsComponent implements AfterViewInit {
   // Server info
   operationOutcomes: any[] = [];
   implementationGuides: any[] = [];
-  supportedProfiles: Map <string, any> = new Map();
+  supportedProfiles: Map<string, any> = new Map();
   isLoading: boolean = false;
 
-  // OperationOutcome table helpers  
-  selectedOutcomeId: number | null  = null;
+  // OperationOutcome table helpers
+  selectedOutcomeId: number | null = null;
 
   // Search parameters
   filterStartDate = new FormControl<Date | null>(null);
   filterEndDate = new FormControl<Date | null>(null);
-  filterSelectedIssues = new FormControl<string[]>([], { nonNullable: true});
-  filterIGs = new FormControl<string[]>([], {nonNullable: true});
+  filterSelectedIssues = new FormControl<string[]>([], { nonNullable: true });
+  filterIGs = new FormControl<string[]>([], { nonNullable: true });
   filterProfile = new FormControl<string | null>(null);
 
   // Pagination helpers
@@ -36,11 +35,10 @@ export class StatisticsComponent implements AfterViewInit {
   currentBundle: fhir.r4.Bundle;
   currentPage: number = 1;
   totalEntries: number = 0;
-  
+
   // Profile filter helpers
   filteredProfilesList: any[] = [];
   profileFilter: string = '';
-  
 
   constructor(private data: FhirConfigService) {
     this.client = data.getFhirClient();
@@ -53,9 +51,9 @@ export class StatisticsComponent implements AfterViewInit {
       searchParams: {
         _total: 'accurate',
         _count: 20,
-        _sort: '-_lastUpdated'
-      }
-    }
+        _sort: '-_lastUpdated',
+      },
+    };
 
     // load and process search result bundle
     await this.loadBundle(parameters);
@@ -69,13 +67,13 @@ export class StatisticsComponent implements AfterViewInit {
 
   /**
    * Loads a FHIR bundle containing OperationOutcomes based of the search parameters
-   * @param params search parameters for FHIR 
+   * @param params search parameters for FHIR
    */
   async loadBundle(params: any) {
     // enables loading screen
     this.isLoading = true;
     try {
-      const bundle = await this.client.search(params) as fhir.r4.Bundle;
+      const bundle = (await this.client.search(params)) as fhir.r4.Bundle;
 
       // sends search result bundle to get processed
       this.processBundle(bundle);
@@ -102,7 +100,7 @@ export class StatisticsComponent implements AfterViewInit {
     this.currentBundle = bundle;
 
     // maps entries to list
-    this.operationOutcomes = bundle.entry?.map(entry => entry.resource as fhir.r4.OperationOutcome) ?? [];
+    this.operationOutcomes = bundle.entry?.map((entry) => entry.resource as fhir.r4.OperationOutcome) ?? [];
 
     // sets next and previous bundle booleans
     this.checkNextAndPreviousBundle(bundle);
@@ -113,29 +111,32 @@ export class StatisticsComponent implements AfterViewInit {
    */
   getImplementationGuides() {
     // search for IGs
-    this.client.search({
-      resourceType: 'ImplementationGuide',
-      searchParams: {
-        _sort: 'title',
-        _count: 1000
-      }
-    }).then((bundle: fhir.r4.Bundle) => {
-      // map entries to list
-      this.implementationGuides = bundle.entry?.map(entry => entry.resource as fhir.r4.ImplementationGuide);
-    }).catch(error => {
-      console.error('Error getting ImpementationGuides: ', error);
-    })
+    this.client
+      .search({
+        resourceType: 'ImplementationGuide',
+        searchParams: {
+          _sort: 'title',
+          _count: 1000,
+        },
+      })
+      .then((bundle: fhir.r4.Bundle) => {
+        // map entries to list
+        this.implementationGuides = bundle.entry?.map((entry) => entry.resource as fhir.r4.ImplementationGuide);
+      })
+      .catch((error) => {
+        console.error('Error getting ImpementationGuides: ', error);
+      });
   }
 
   /**
-   * Gets the Operation Definition of the server and stores all supported profiles in an internal Map. 
+   * Gets the Operation Definition of the server and stores all supported profiles in an internal Map.
    */
   async getSupportedProfiles() {
     // Gets OperationDefinition
-    const od = await this.client.read({
+    const od = (await this.client.read({
       resourceType: 'OperationDefinition',
-      id: '-s-validate'
-    }) as fhir.r4.OperationDefinition;
+      id: '-s-validate',
+    })) as fhir.r4.OperationDefinition;
 
     // Searches parameters for one with name = profile
     od.parameter?.forEach((parameter: fhir.r4.OperationDefinitionParameter) => {
@@ -159,10 +160,10 @@ export class StatisticsComponent implements AfterViewInit {
    * Helper function to return the string value of an extension
    * @param element the FHIR element
    * @param url the extension url
-   * @returns 
+   * @returns
    */
   getExtensionStringValue(element: fhir.r4.Element, url: string): string {
-    return element.extension?.find(e => e.url === url)?.valueString ?? '';
+    return element.extension?.find((e) => e.url === url)?.valueString ?? '';
   }
 
   /**
@@ -174,8 +175,10 @@ export class StatisticsComponent implements AfterViewInit {
 
     // Creates an array from all entries in supportedProfiles Map
     this.filteredProfilesList = Array.from(this.supportedProfiles.entries())
-    // Filters array to check if search input is in profile title or canonical (url)
-    .filter(([canonical, title]) => canonical.toLowerCase().includes(searchTerm) || title.toLowerCase().includes(searchTerm));
+      // Filters array to check if search input is in profile title or canonical (url)
+      .filter(
+        ([canonical, title]) => canonical.toLowerCase().includes(searchTerm) || title.toLowerCase().includes(searchTerm)
+      );
   }
 
   /**
@@ -201,16 +204,16 @@ export class StatisticsComponent implements AfterViewInit {
     const selectedIssues = this.filterSelectedIssues.value;
     const selectedIgs = this.filterIGs.value;
     const selectedProfile = this.filterProfile.value;
-    
+
     // initialize search parameter object
     const parameter = {
       resourceType: 'OperationOutcome',
       searchParams: {
         _total: 'accurate',
         _count: 20,
-        _sort: '-_lastUpdated'
-      }
-    }
+        _sort: '-_lastUpdated',
+      },
+    };
 
     // check if startDate is present
     if (startDate) {
@@ -234,7 +237,7 @@ export class StatisticsComponent implements AfterViewInit {
       }
     }
 
-    // check if any IGs are selected 
+    // check if any IGs are selected
     if (selectedIgs.length > 0) {
       // create search parameter entry
       parameter.searchParams['ig'] = '';
@@ -259,7 +262,7 @@ export class StatisticsComponent implements AfterViewInit {
     }
 
     // loads search results with search parameters
-    this.loadBundle(parameter);  
+    this.loadBundle(parameter);
   }
 
   /**
@@ -270,7 +273,7 @@ export class StatisticsComponent implements AfterViewInit {
   getInfos(outcome: fhir.r4.OperationOutcome) {
     var infos = 0;
     for (let issue of outcome.issue) {
-      if (issue.severity === "information") {
+      if (issue.severity === 'information') {
         infos++;
       }
     }
@@ -285,7 +288,7 @@ export class StatisticsComponent implements AfterViewInit {
   getWarnings(outcome: fhir.r4.OperationOutcome) {
     var warnings = 0;
     for (let issue of outcome.issue) {
-      if (issue.severity === "warning") {
+      if (issue.severity === 'warning') {
         warnings++;
       }
     }
@@ -300,7 +303,7 @@ export class StatisticsComponent implements AfterViewInit {
   getErrors(outcome: fhir.r4.OperationOutcome) {
     var errors = 0;
     for (let issue of outcome.issue) {
-      if (issue.severity === "error") {
+      if (issue.severity === 'error') {
         errors++;
       }
     }
@@ -315,7 +318,13 @@ export class StatisticsComponent implements AfterViewInit {
   getFormattedDate(outcome: fhir.r4.OperationOutcome) {
     const lastUpdated = outcome.meta.lastUpdated;
     const date = new Date(lastUpdated);
-    const formattedDate = new Intl.DateTimeFormat('de-ch', { year: 'numeric', month: 'numeric', day: 'numeric', hour: 'numeric', minute: 'numeric' }).format(date);
+    const formattedDate = new Intl.DateTimeFormat('de-ch', {
+      year: 'numeric',
+      month: 'numeric',
+      day: 'numeric',
+      hour: 'numeric',
+      minute: 'numeric',
+    }).format(date);
 
     return formattedDate;
   }
@@ -328,9 +337,9 @@ export class StatisticsComponent implements AfterViewInit {
    */
   getSubExtension(outcome: fhir.r4.OperationOutcome, extension: string) {
     // gets main extension from url "http://matchbox.health/validation"
-    const mainExtension = outcome.issue?.[0]?.extension?.find(ext => ext.url === "http://matchbox.health/validation");
+    const mainExtension = outcome.issue?.[0]?.extension?.find((ext) => ext.url === 'http://matchbox.health/validation');
     // searches main extension for extensions with specified url string
-    const subExtension = mainExtension?.extension?.find(ext => ext.url === extension);
+    const subExtension = mainExtension?.extension?.find((ext) => ext.url === extension);
     return subExtension;
   }
 
@@ -370,8 +379,8 @@ export class StatisticsComponent implements AfterViewInit {
    */
   checkNextAndPreviousBundle(bundle: fhir.r4.Bundle) {
     // check if bundle has a next or previous link relation, with support for FHIR R5 "prev" relation
-    const nextLink = bundle.link?.find(l => l.relation === "next");
-    const previousLink = bundle.link?.find(l => l.relation === "previous" || l.relation === "prev");
+    const nextLink = bundle.link?.find((l) => l.relation === 'next');
+    const previousLink = bundle.link?.find((l) => l.relation === 'previous' || l.relation === 'prev');
 
     // sets hasNextBundle boolean according to findings
     if (nextLink) {
@@ -396,9 +405,9 @@ export class StatisticsComponent implements AfterViewInit {
     // gets relation from currentBundle, with support for FHIR R5 "prev" relation
     let link;
     if (relation === 'next') {
-      link = this.currentBundle.link?.find(l => l.relation === "next");
+      link = this.currentBundle.link?.find((l) => l.relation === 'next');
     } else {
-      link = this.currentBundle.link?.find(l => l.relation === "previous" || l.relation === "prev");
+      link = this.currentBundle.link?.find((l) => l.relation === 'previous' || l.relation === 'prev');
     }
     // check if url is present
     if (link?.url) {
@@ -408,7 +417,7 @@ export class StatisticsComponent implements AfterViewInit {
         // extract only the parameters from url (cut everything before "?")
         const urlParameter = new URL(link.url).search;
         // request new bundle from server
-        const bundle = await this.client.request(urlParameter) as fhir.r4.Bundle;
+        const bundle = (await this.client.request(urlParameter)) as fhir.r4.Bundle;
         // process new bundle
         this.processBundle(bundle);
       } catch (error) {
@@ -458,7 +467,7 @@ export class StatisticsComponent implements AfterViewInit {
   }
 
   /**
-   * Gets the total amount of search entries in bundle set. If not able to get from current Bundle, next Bundle gets requested. 
+   * Gets the total amount of search entries in bundle set. If not able to get from current Bundle, next Bundle gets requested.
    * First bundle only has total info, if explicitly set in search parameters. Next / previous bundle always have total info
    * @param bundle FHIR Bundle
    * @returns number
@@ -468,12 +477,12 @@ export class StatisticsComponent implements AfterViewInit {
     if (bundle.total) {
       // return total from current bundle
       return bundle.total;
-    } 
+    }
   }
 
   /**
    * Gets the selected profile title for display in profile filter field
-   * @returns 
+   * @returns
    */
   getSelectedProfileTitle() {
     // gets the currently selected value

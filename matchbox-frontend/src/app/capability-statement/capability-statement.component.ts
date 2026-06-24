@@ -1,18 +1,19 @@
-import { AfterViewInit, Component } from '@angular/core';
+import { AfterViewInit, Component, ChangeDetectionStrategy } from '@angular/core';
 import { FhirConfigService } from '../fhirConfig.service';
 import FhirClient from 'fhir-kit-client';
 import ace, { Ace } from 'ace-builds';
 import 'ace-builds/src-noconflict/mode-json';
 import 'ace-builds/src-noconflict/theme-textmate';
-import {OperationResult} from "../util/operation-result";
+import { OperationResult } from '../util/operation-result';
 
 const INDENT_SPACES = 4;
 
 @Component({
-    selector: 'app-capability-statement',
-    templateUrl: './capability-statement.component.html',
-    styleUrls: ['./capability-statement.component.scss'],
-    standalone: false
+  selector: 'app-capability-statement',
+  templateUrl: './capability-statement.component.html',
+  styleUrls: ['./capability-statement.component.scss'],
+  changeDetection: ChangeDetectionStrategy.Eager,
+  standalone: false,
 })
 export class CapabilityStatementComponent implements AfterViewInit {
   capabilityStatement: string | null = null;

@@ -1,20 +1,20 @@
-import { AfterViewInit, ChangeDetectorRef, Component, ViewChild } from '@angular/core';
-import {FhirConfigService} from '../fhirConfig.service';
+import { AfterViewInit, ChangeDetectorRef, Component, ViewChild, ChangeDetectionStrategy } from '@angular/core';
+import { FhirConfigService } from '../fhirConfig.service';
 import FhirClient from 'fhir-kit-client';
 import pako from 'pako';
 import untar from 'js-untar';
 import { UploadComponent } from '../upload/upload.component';
 import ace from 'ace-builds';
-import {ValidationEntry} from './validation-entry';
-import {ValidationParameter, ValidationParameterDefinition} from './validation-parameter';
-import {ITarEntry} from './tar-entry';
-import {Issue, OperationResult} from '../util/operation-result';
-import {FormControl, Validators} from '@angular/forms';
-import {StructureDefinition} from './structure-definition';
-import {ToastrService} from 'ngx-toastr';
-import {ValidationCodeEditor} from "./validation-code-editor";
-import {Base64} from 'js-base64';
-import {from, forkJoin, ReplaySubject, take } from 'rxjs';
+import { ValidationEntry } from './validation-entry';
+import { ValidationParameter, ValidationParameterDefinition } from './validation-parameter';
+import { ITarEntry } from './tar-entry';
+import { Issue, OperationResult } from '../util/operation-result';
+import { FormControl, Validators } from '@angular/forms';
+import { StructureDefinition } from './structure-definition';
+import { ToastrService } from 'ngx-toastr';
+import { ValidationCodeEditor } from './validation-code-editor';
+import { Base64 } from 'js-base64';
+import { from, forkJoin, ReplaySubject, take } from 'rxjs';
 import { UploadedFile } from '../upload/uploaded-file';
 
 const INDENT_SPACES = 2;
@@ -23,6 +23,7 @@ const INDENT_SPACES = 2;
   selector: 'app-validate',
   templateUrl: './validate.component.html',
   styleUrls: ['./validate.component.scss'],
+  changeDetection: ChangeDetectionStrategy.Eager,
   standalone: false,
 })
 export class ValidateComponent implements AfterViewInit {
@@ -666,8 +667,7 @@ class UploadedValidationFile {
     public content: string,
     public resourceType: string,
     public readonly resourceId: string | null
-  ) {
-  }
+  ) {}
 }
 
 /**

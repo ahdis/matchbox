@@ -1,14 +1,15 @@
-import {Component, EventEmitter, Input, OnInit, Output} from '@angular/core';
-import {DomSanitizer, SafeHtml} from "@angular/platform-browser";
-import {Issue, OperationResult} from "../util/operation-result";
+import { Component, EventEmitter, Input, OnInit, Output, ChangeDetectionStrategy } from '@angular/core';
+import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
+import { Issue, OperationResult } from '../util/operation-result';
 
 const SEVERITY_ORDER = ['fatal', 'error', 'warning', 'information'];
 
 @Component({
-    selector: 'app-operation-result',
-    templateUrl: './operation-result.component.html',
-    styleUrls: ['./operation-result.component.scss'],
-    standalone: false
+  selector: 'app-operation-result',
+  templateUrl: './operation-result.component.html',
+  styleUrls: ['./operation-result.component.scss'],
+  changeDetection: ChangeDetectionStrategy.Eager,
+  standalone: false,
 })
 export class OperationResultComponent implements OnInit {
   @Output() select: EventEmitter<Issue> = new EventEmitter();
@@ -22,8 +23,7 @@ export class OperationResultComponent implements OnInit {
     }
   }
 
-  constructor(private sanitized: DomSanitizer) {
-  }
+  constructor(private sanitized: DomSanitizer) {}
 
   ngOnInit(): void {
     this.reactsToClick = this.select.observed;
@@ -61,9 +61,8 @@ export class OperationResultComponent implements OnInit {
       items.push(`in <code>${issue.expression}</code>`);
     }
     if (items.length) {
-      line += items.join(', ') + ":";
+      line += items.join(', ') + ':';
     }
     return this.sanitized.bypassSecurityTrustHtml(line);
   }
 }
-

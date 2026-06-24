@@ -1,4 +1,4 @@
-import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
+import { ChangeDetectorRef, Component, OnInit, ChangeDetectionStrategy } from '@angular/core';
 import { FhirConfigService } from '../fhirConfig.service';
 import { UntypedFormControl } from '@angular/forms';
 import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
@@ -6,10 +6,11 @@ import FhirClient from 'fhir-kit-client';
 import debug from 'debug';
 
 @Component({
-    selector: 'app-mapping-language',
-    templateUrl: './mapping-language.component.html',
-    styleUrls: ['./mapping-language.component.scss'],
-    standalone: false
+  selector: 'app-mapping-language',
+  templateUrl: './mapping-language.component.html',
+  styleUrls: ['./mapping-language.component.scss'],
+  changeDetection: ChangeDetectionStrategy.Eager,
+  standalone: false,
 })
 export class MappingLanguageComponent implements OnInit {
   static log = debug('app:');
