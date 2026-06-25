@@ -19,14 +19,14 @@ export class MappingLanguageComponent implements OnInit {
   public structureMap: any;
   public transformed: any;
   client: FhirClient;
-  errMsg: string;
+  errMsg: string | null = null;
 
-  operationOutcome: fhir.r4.OperationOutcome;
-  operationOutcomeTransformed: fhir.r4.OperationOutcome;
+  operationOutcome: fhir.r4.OperationOutcome | null = null;
+  operationOutcomeTransformed: fhir.r4.OperationOutcome | null = null;
 
   constructor(
     private cd: ChangeDetectorRef,
-    private data: FhirConfigService
+    data: FhirConfigService
   ) {
     this.client = data.getFhirClient();
     this.source = new UntypedFormControl();

@@ -14,8 +14,8 @@ export class StatisticsComponent implements AfterViewInit {
   client: FhirClient;
 
   // Server info
-  operationOutcomes: any[] = [];
-  implementationGuides: any[] = [];
+  operationOutcomes: fhir.r4.OperationOutcome[] = [];
+  implementationGuides: fhir.r4.ImplementationGuide[] = [];
   supportedProfiles: Map<string, any> = new Map();
   isLoading: boolean = false;
 
@@ -32,7 +32,7 @@ export class StatisticsComponent implements AfterViewInit {
   // Pagination helpers
   hasNextBundle: boolean = false;
   hasPreviousBundle: boolean = false;
-  currentBundle: fhir.r4.Bundle;
+  currentBundle: fhir.r4.Bundle | null = null;
   currentPage: number = 1;
   totalEntries: number = 0;
 
@@ -82,7 +82,7 @@ export class StatisticsComponent implements AfterViewInit {
       this.currentPage = 1;
 
       // extracts total amount of entries for pagination info UI
-      this.totalEntries = await this.getTotalEntries(bundle);
+      this.totalEntries = (await this.getTotalEntries(bundle)) ?? 0;
     } catch (error) {
       console.error('Error getting OperationOutcomes: ', error);
     } finally {
@@ -119,9 +119,10 @@ export class StatisticsComponent implements AfterViewInit {
           _count: 1000,
         },
       })
-      .then((bundle: fhir.r4.Bundle) => {
+      .then((bundle: fhir.r4.Resource) => {
         // map entries to list
-        this.implementationGuides = bundle.entry?.map((entry) => entry.resource as fhir.r4.ImplementationGuide);
+        this.implementationGuides =
+          (bundle as fhir.r4.Bundle).entry?.map((entry) => entry.resource as fhir.r4.ImplementationGuide) ?? [];
       })
       .catch((error) => {
         console.error('Error getting ImpementationGuides: ', error);
@@ -212,7 +213,7 @@ export class StatisticsComponent implements AfterViewInit {
         _total: 'accurate',
         _count: 20,
         _sort: '-_lastUpdated',
-      },
+      } as any,
     };
 
     // check if startDate is present
@@ -242,7 +243,7 @@ export class StatisticsComponent implements AfterViewInit {
       // create search parameter entry
       parameter.searchParams['ig'] = '';
       // parse all selected IGs and append them at the end of the search parameter string with a ','
-      for (var ig of selectedIgs) {
+      for (const ig of selectedIgs) {
         parameter.searchParams['ig'] += ig + ',';
       }
     }
@@ -262,7 +263,7 @@ export class StatisticsComponent implements AfterViewInit {
     }
 
     // loads search results with search parameters
-    this.loadBundle(parameter);
+    this.loadBundle(parameter).then();
   }
 
   /**
@@ -271,7 +272,7 @@ export class StatisticsComponent implements AfterViewInit {
    * @returns number
    */
   getInfos(outcome: fhir.r4.OperationOutcome) {
-    var infos = 0;
+    let infos = 0;
     for (let issue of outcome.issue) {
       if (issue.severity === 'information') {
         infos++;
@@ -286,7 +287,7 @@ export class StatisticsComponent implements AfterViewInit {
    * @returns number
    */
   getWarnings(outcome: fhir.r4.OperationOutcome) {
-    var warnings = 0;
+    let warnings = 0;
     for (let issue of outcome.issue) {
       if (issue.severity === 'warning') {
         warnings++;
@@ -301,7 +302,7 @@ export class StatisticsComponent implements AfterViewInit {
    * @returns number
    */
   getErrors(outcome: fhir.r4.OperationOutcome) {
-    var errors = 0;
+    let errors = 0;
     for (let issue of outcome.issue) {
       if (issue.severity === 'error') {
         errors++;
@@ -316,7 +317,10 @@ export class StatisticsComponent implements AfterViewInit {
    * @returns date
    */
   getFormattedDate(outcome: fhir.r4.OperationOutcome) {
-    const lastUpdated = outcome.meta.lastUpdated;
+    const lastUpdated = outcome.meta?.lastUpdated;
+    if (!lastUpdated) {
+      return '';
+    }
     const date = new Date(lastUpdated);
     const formattedDate = new Intl.DateTimeFormat('de-ch', {
       year: 'numeric',
@@ -402,6 +406,10 @@ export class StatisticsComponent implements AfterViewInit {
    * @param relation string "next" or "previous"
    */
   async navigateBundle(relation: 'next' | 'previous') {
+    if (!this.currentBundle) {
+      console.error('No current bundle available for navigation.');
+      return;
+    }
     // gets relation from currentBundle, with support for FHIR R5 "prev" relation
     let link;
     if (relation === 'next') {
@@ -433,7 +441,7 @@ export class StatisticsComponent implements AfterViewInit {
    * Button action to switch to next bundle. Uses navigateBundle method. Updates page number
    */
   switchToNextSite() {
-    this.navigateBundle('next');
+    this.navigateBundle('next').then();
     this.currentPage++;
   }
 
@@ -441,7 +449,7 @@ export class StatisticsComponent implements AfterViewInit {
    * Button action to switch to previous bundle. Uses navigateBundle method. Updates page number
    */
   switchToPreviousSite() {
-    this.navigateBundle('previous');
+    this.navigateBundle('previous').then();
     this.currentPage--;
   }
 

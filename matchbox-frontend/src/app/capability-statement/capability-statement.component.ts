@@ -19,7 +19,7 @@ export class CapabilityStatementComponent implements AfterViewInit {
   capabilityStatement: string | null = null;
   operationResult: OperationResult | null = null;
   client: FhirClient;
-  editor: Ace.Editor;
+  editor: Ace.Editor | null = null;
   loading = true;
 
   constructor(private data: FhirConfigService) {
@@ -29,7 +29,7 @@ export class CapabilityStatementComponent implements AfterViewInit {
   ngAfterViewInit() {
     this.client
       .capabilityStatement()
-      .then((data: fhir.r4.CapabilityStatement) => {
+      .then((data: fhir.r4.Resource) => {
         this.loading = false;
         this.operationResult = null;
         this.editor = ace.edit('code');

@@ -14,7 +14,7 @@ export class FhirPathService {
     if (result && result instanceof Array && (result as Array<string>).length === 1) {
       return (result as Array<string>)[0];
     }
-    return null;
+    return '';
   }
 
   getOauthUriToken(capabilityStatement: any): string {

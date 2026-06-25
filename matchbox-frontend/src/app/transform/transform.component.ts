@@ -27,14 +27,16 @@ export class TransformComponent {
   public filteredStructureMaps: ReplaySubject<StructureMap[]> = new ReplaySubject<StructureMap[]>(1);
 
   // The form control for the structure map filter
-  public structureMapFilterControl: FormControl<string> = new FormControl<string>('');
+  public structureMapFilterControl: FormControl<string> = new FormControl<string>('', {
+    nonNullable: true,
+  });
 
   // The form control for the selected structure map
-  public structureMapControl: FormControl<string> = new FormControl<string>(null);
+  public structureMapControl: FormControl<string | null> = new FormControl<string | null>(null);
 
-  @ViewChild('resourceUploader') resourceUploader: UploadComponent;
-  @ViewChild('mapUploader') mapUploader: UploadComponent;
-  @ViewChild('modelUploader') modelUploader: UploadComponent;
+  @ViewChild('resourceUploader') resourceUploader: UploadComponent | undefined;
+  @ViewChild('mapUploader') mapUploader: UploadComponent | undefined;
+  @ViewChild('modelUploader') modelUploader: UploadComponent | undefined;
 
   // The content of the resource to transform
   resource: ResourceSource | null = null;
@@ -49,8 +51,8 @@ export class TransformComponent {
   client: FhirClient;
 
   public transformed: any;
-  operationOutcome: OperationOutcome;
-  operationOutcomeTransformed: OperationOutcome;
+  operationOutcome: OperationOutcome | null = null;
+  operationOutcomeTransformed: OperationOutcome | null = null;
 
   constructor(
     readonly data: FhirConfigService,
@@ -70,7 +72,7 @@ export class TransformComponent {
       });
 
     this.structureMapControl.valueChanges.pipe(debounceTime(400), distinctUntilChanged()).subscribe((url) => {
-      this.map = { canonical: url, content: null };
+      this.map = { canonical: url ?? '', content: null };
     });
 
     // Listen for changes in the filter text
@@ -133,7 +135,7 @@ export class TransformComponent {
   }
 
   setMaps(response: Bundle) {
-    this.allStructureMaps = response.entry.map((entry) => <StructureMap>entry.resource);
+    this.allStructureMaps = response.entry?.map((entry) => <StructureMap>entry.resource) ?? [];
   }
 
   async setResource(droppedBlob: UploadedFile) {
@@ -141,7 +143,7 @@ export class TransformComponent {
     const parsed = parseFhirResource(droppedBlob.name, content);
     if (!parsed) {
       this.showErrorToast('Invalid File', 'The uploaded file does not contain a valid FHIR resource.');
-      this.resourceUploader.clear();
+      this.resourceUploader!!.clear();
       this.resource = null;
       return;
     }
@@ -181,7 +183,7 @@ export class TransformComponent {
     const fileContent = await droppedBlob.blob.text();
     if (!parseFhirResource(droppedBlob.name, fileContent)) {
       this.showErrorToast('Invalid Model', 'The uploaded file does not contain a valid FHIR resource.');
-      this.modelUploader.clear();
+      this.modelUploader!!.clear();
       this.model = null;
       return;
     }
@@ -200,7 +202,9 @@ export class TransformComponent {
     }
     search = search.toLowerCase();
     this.filteredStructureMaps.next(
-      this.allStructureMaps.filter((structureMap) => structureMap.title.toLowerCase().indexOf(search) > -1)
+      this.allStructureMaps.filter(
+        (structureMap) => structureMap.title && structureMap.title?.toLowerCase().indexOf(search) > -1
+      )
     );
   }
 

@@ -13,7 +13,7 @@ const SEVERITY_ORDER = ['fatal', 'error', 'warning', 'information'];
 })
 export class OperationResultComponent implements OnInit {
   @Output() select: EventEmitter<Issue> = new EventEmitter();
-  result: OperationResult;
+  result: OperationResult | null = null;
   reactsToClick: boolean = false;
 
   @Input() set operationResult(value: OperationResult) {
@@ -50,7 +50,7 @@ export class OperationResultComponent implements OnInit {
       line += `<span class="code"> [${issue.code}]</span>`;
     }
     line += ': ';
-    const items = [];
+    const items: string[] = [];
     if (issue.line) {
       items.push(`line ${issue.line}`);
     }

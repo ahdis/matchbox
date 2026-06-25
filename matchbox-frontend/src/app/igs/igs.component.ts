@@ -16,13 +16,13 @@ export class IgsComponent {
   public addPackageId: UntypedFormControl;
   public addVersion: UntypedFormControl;
   public addUrl: UntypedFormControl;
-  public selection: fhir.r4.ImplementationGuide;
+  public selection: fhir.r4.ImplementationGuide | null = null;
 
   update: boolean = false;
 
   client: FhirClient;
-  igs: fhir.r4.ImplementationGuide[];
-  errorMessage: string;
+  igs: fhir.r4.ImplementationGuide[] = [];
+  errorMessage: string | null = null;
   operationResult: OperationResult | null = null;
 
   pageSize = 20;
@@ -55,7 +55,7 @@ export class IgsComponent {
         const bundle = <fhir.r4.Bundle>response;
         this.igs = bundle.entry ? bundle.entry.map((entry) => <fhir.r4.ImplementationGuide>entry.resource) : [];
         this.totalCount = bundle.total ?? null;
-        this.selection = undefined;
+        this.selection = null;
         this.addPackageId.setValue('');
         this.addVersion.setValue('');
         this.addUrl.setValue('');
@@ -117,7 +117,7 @@ export class IgsComponent {
     this.selection = ig;
     this.addPackageId.setValue(this.selection.packageId);
     this.addUrl.setValue(this.getPackageUrl(ig));
-    let version: String = this.selection.version;
+    let version = this.selection.version;
     if (version) {
       if (version.endsWith(' (last)')) {
         version = version.substring(0, version.length - 7);
@@ -179,6 +179,10 @@ export class IgsComponent {
 
   onUpdate() {
     this.errorMessage = null;
+    if (!this.selection) {
+      this.errorMessage = 'No Implementation Guide selected';
+      return;
+    }
 
     this.selection.name = this.addPackageId.value;
     this.selection.version = this.addVersion.value;
@@ -186,6 +190,7 @@ export class IgsComponent {
     this.selection.url = this.addUrl.value;
     this.update = true;
 
+    const selection = this.selection;
     this.client
       .update({
         resourceType: this.selection.resourceType,
@@ -198,13 +203,13 @@ export class IgsComponent {
         },
       })
       .then((response) => {
-        this.errorMessage = 'Updated Implementation Guide ' + this.selection.packageId;
+        this.errorMessage = 'Updated Implementation Guide ' + selection.packageId;
         this.operationResult = OperationResult.fromOperationOutcome(response as fhir.r4.OperationOutcome);
         this.currentOffset = 0;
         this.search();
       })
       .catch((error) => {
-        this.errorMessage = 'Error updating Implementation Guide ' + this.selection.packageId;
+        this.errorMessage = 'Error updating Implementation Guide ' + selection.packageId;
         if (error.response?.data) {
           this.operationResult = OperationResult.fromOperationOutcome(error.response.data);
         } else {
@@ -217,11 +222,16 @@ export class IgsComponent {
   onDelete() {
     this.errorMessage = null;
     this.update = true;
+    if (!this.selection) {
+      this.errorMessage = 'No Implementation Guide selected';
+      return;
+    }
 
+    const selection = this.selection;
     this.client
       .delete({
         resourceType: this.selection.resourceType,
-        id: this.selection.id,
+        id: this.selection.id ?? '',
         options: {
           headers: {
             Prefer: 'return=OperationOutcome',
@@ -230,13 +240,13 @@ export class IgsComponent {
         },
       })
       .then((response) => {
-        this.errorMessage = 'Deleted Implementation Guide Resource ' + this.selection.packageId;
+        this.errorMessage = 'Deleted Implementation Guide Resource ' + selection.packageId;
         this.operationResult = OperationResult.fromOperationOutcome(response as fhir.r4.OperationOutcome);
         this.currentOffset = 0;
         this.search();
       })
       .catch((error) => {
-        this.errorMessage = 'Error deleting Implementation Guide ' + this.selection.packageId;
+        this.errorMessage = 'Error deleting Implementation Guide ' + selection.packageId;
         if (error.response?.data) {
           this.operationResult = OperationResult.fromOperationOutcome(error.response.data);
         } else {
