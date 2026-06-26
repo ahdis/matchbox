@@ -1,4 +1,4 @@
-import FhirClient from 'fhir-kit-client';
+import { Client, FhirResource } from 'fhir-kit-client';
 import CapabilityStatement = fhir.r4.CapabilityStatement;
 import Resource = fhir.r4.Resource;
 import OperationDefinition = fhir.r4.OperationDefinition;
@@ -11,39 +11,41 @@ import { ValidationEntry } from '../validate/validation-entry';
  * A wrapper for the FHIR client that provides a simpler API for our needs, with the right types.
  */
 export class FhirClientWrapper {
-  private readonly client: FhirClient;
+  private readonly client: Client;
 
   constructor(readonly baseUrl: string) {
-    this.client = new FhirClient({
+    this.client = new Client({
       baseUrl: baseUrl,
     });
   }
 
-  capabilityStatement(): Promise<CapabilityStatement> {
-    return this.client.capabilityStatement() as Promise<CapabilityStatement>;
+  async capabilityStatement(): Promise<CapabilityStatement> {
+    const result = await this.client.capabilityStatement();
+    return result as unknown as CapabilityStatement;
   }
 
-  search(params: any): Promise<Bundle> {
-    return this.client.search(params) as Promise<Bundle>;
+  async search(params: any): Promise<Bundle> {
+    const result = await this.client.search(params);
+    return result as unknown as Bundle;
   }
 
   create(params: any): Promise<OperationOutcome> {
-    return this.client.create(params) as Promise<OperationOutcome>;
+    return this.client.create(params) as unknown as Promise<OperationOutcome>;
   }
 
   update(params: any): Promise<OperationOutcome> {
-    return this.client.update(params) as Promise<OperationOutcome>;
+    return this.client.update(params) as unknown as Promise<OperationOutcome>;
   }
 
   delete(params: any): Promise<OperationOutcome> {
-    return this.client.delete(params) as Promise<OperationOutcome>;
+    return this.client.delete(params) as unknown as Promise<OperationOutcome>;
   }
 
   transformFromUrl(structureMapUrl: string, resource: Resource): Promise<Resource> {
     return this.client.operation({
       name: 'transform?source=' + encodeURIComponent(structureMapUrl),
       resourceType: 'StructureMap',
-      input: resource,
+      input: resource as FhirResource,
     }) as Promise<Resource>;
   }
 
@@ -51,7 +53,7 @@ export class FhirClientWrapper {
     return this.client.operation({
       name: 'transform',
       resourceType: 'StructureMap',
-      input: parameters,
+      input: parameters as FhirResource,
       options: {
         headers: {
           'content-type': 'application/fhir+json',
@@ -60,30 +62,38 @@ export class FhirClientWrapper {
     }) as Promise<Resource>;
   }
 
-  readOperationDefinition(id: string): Promise<OperationDefinition> {
-    return this.client.read({
+  async readOperationDefinition(id: string): Promise<OperationDefinition> {
+    const result = this.client.read({
       resourceType: 'OperationDefinition',
       id: id,
-    }) as Promise<OperationDefinition>;
+    });
+    return result as unknown as OperationDefinition;
   }
 
-  nextPage(bundle: Bundle): Promise<Bundle> {
-    return this.client.nextPage({ bundle }) as Promise<Bundle>;
+  async nextPage(bundle: Bundle): Promise<Bundle> {
+    const result = this.client.nextPage({
+      bundle: bundle as unknown as BundleWithLink,
+    });
+    return result as unknown as Bundle;
   }
 
-  prevPage(bundle: Bundle): Promise<Bundle> {
-    return this.client.prevPage({ bundle }) as Promise<Bundle>;
+  async prevPage(bundle: Bundle): Promise<Bundle> {
+    const result = this.client.prevPage({
+      bundle: bundle as unknown as BundleWithLink,
+    });
+    return result as unknown as Bundle;
   }
 
-  listStructureMaps(): Promise<Bundle> {
-    return this.client.operation({
+  async listStructureMaps(): Promise<Bundle> {
+    const result = await this.client.operation({
       name: 'list',
       resourceType: 'StructureMap',
       method: 'GET',
-    }) as Promise<Bundle>;
+    });
+    return result as unknown as Bundle;
   }
 
-  validate(entry: ValidationEntry): Promise<OperationOutcome> {
+  async validate(entry: ValidationEntry): Promise<OperationOutcome> {
     const searchParams = new URLSearchParams();
     searchParams.set('profile', entry.validationProfile!!);
     if (entry.ig) {
@@ -93,16 +103,24 @@ export class FhirClientWrapper {
     for (const param of entry.validationParameters) {
       searchParams.append(param.name, param.value);
     }
-    return this.client.operation({
+    const result = this.client.operation({
       name: 'validate?' + searchParams.toString(),
       resourceType: undefined,
-      input: entry.resource,
+      input: JSON.parse(entry.resource) as FhirResource,
       options: {
         headers: {
           accept: 'application/fhir+json',
           'content-type': entry.mimetype,
         },
       },
-    }) as Promise<OperationOutcome>;
+    });
+    return result as unknown as OperationOutcome;
   }
 }
+
+type BundleWithLink = FhirResource & {
+  link: Array<{
+    relation: string;
+    url: string;
+  }>;
+};

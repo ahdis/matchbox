@@ -16,7 +16,7 @@
     "@ngxpert/hot-toast": "^6.3.0",
     "ace-builds": "^1.43.6",
     "debug": "4.4.x",
-    "fhir-kit-client": "1.9.x",
+    "fhir-kit-client": "^2.0.0",
     "fhirpath": "4.11.x",
     "js-base64": "^3.8.0",
     "js-untar": "^2.0.0",
@@ -52,7 +52,7 @@
     "@types/pako": "^2.0.3",
     "@typescript-eslint/eslint-plugin": "8.62.x",
     "@typescript-eslint/parser": "8.62.x",
-    "eslint": "9.39.x",
+    "eslint": "^10.5.0",
     "prettier": "3.8.x",
     "ts-node": "^10.9.2",
     "typescript": "6.0.3"
