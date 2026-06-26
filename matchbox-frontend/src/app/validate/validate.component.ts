@@ -1,8 +1,8 @@
 import { AfterViewInit, ChangeDetectorRef, Component, ViewChild, ChangeDetectionStrategy } from '@angular/core';
 import { FhirConfigService } from '../fhirConfig.service';
 import FhirClient from 'fhir-kit-client';
-import pako from 'pako';
-import untar from 'js-untar';
+import { inflate } from 'pako';
+import untar, { TarFile } from 'js-untar';
 import { UploadComponent } from '../upload/upload.component';
 import ace from 'ace-builds';
 import { ValidationEntry } from './validation-entry';
@@ -226,11 +226,11 @@ export class ValidateComponent implements AfterViewInit {
       // need to run CD since file load runs outside of zone
       this.cd.markForCheck();
       if (this.package != null) {
-        const result = pako.inflate(new Uint8Array(this.package));
+        const result: Uint8Array<ArrayBufferLike> = inflate(new Uint8Array(this.package));
         const dataSource = new Array<ValidationEntry>();
         const pointer = this;
-        untar(result.buffer)
-          .progress((extractedFile) => {
+        untar(result.buffer as ArrayBuffer)
+          .progress((extractedFile: TarFile) => {
             if (extractedFile.name?.indexOf('example') >= 0 && extractedFile.name?.indexOf('.index.json') == -1) {
               let name = extractedFile.name;
               if (name.startsWith('package/example/')) {
@@ -251,14 +251,14 @@ export class ValidateComponent implements AfterViewInit {
             }
           })
           .then(
-            (_) => {
+            (_: TarFile[]) => {
               // onSuccess
-              dataSource.forEach((entry) => {
+              dataSource.forEach((entry: ValidationEntry) => {
                 pointer.validationEntries.unshift(entry);
                 pointer.runValidation(entry);
               });
             },
-            (err) => {
+            (err: any) => {
               // onError
               this.showErrorToast('Unexpected error', err);
               console.error(err);
@@ -288,6 +288,9 @@ export class ValidateComponent implements AfterViewInit {
         entry.extractedProfiles.push(this.selectedProfile);
       }
       entry.validationProfile = this.selectedProfile;
+    } else if (entry.validationProfile == null && entry.extractedProfiles.length > 0) {
+      // No profile is selected in the GUI, let's select the first profile set in the resource
+      entry.validationProfile = entry.extractedProfiles[0];
     }
 
     if (this.selectedIg != this.AUTO_IG_SELECTION) {
@@ -299,8 +302,7 @@ export class ValidateComponent implements AfterViewInit {
     }
 
     if (!entry.validationProfile) {
-      this.showErrorToast('Validation failed', 'No profile was selected');
-      console.error("No profile selected, won't run validation");
+      this.showErrorToast('Validation failed', 'no profile was selected');
       return;
     }
 

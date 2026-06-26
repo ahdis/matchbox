@@ -15,17 +15,13 @@ import { TransformComponent } from './transform/transform.component';
 import { ValidateComponent } from './validate/validate.component';
 import { OperationResultComponent } from './operation-result/operation-result.component';
 import { UploadComponent } from './upload/upload.component';
-import { OAuthModule } from 'angular-oauth2-oidc';
 import { NgxMatSelectSearchModule } from 'ngx-mat-select-search';
 import { HighlightLineNumbers } from 'ngx-highlightjs/line-numbers';
 import { HashUrlRedirectionService } from './util/hash-url-redirection-service';
-import { APP_BASE_HREF, CommonModule } from '@angular/common';
-import { provideMarkdown } from 'ngx-markdown';
+import { APP_BASE_HREF } from '@angular/common';
 import { SortSettingsPipe } from './validate/order-settings.pipe';
 import { StatisticsComponent } from './statistics/statistics.component';
 import { provideHotToastConfig } from '@ngxpert/hot-toast';
-import { BrowserModule } from '@angular/platform-browser';
-import { MatProgressSpinner, MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 
 // The Angular routes
 // All paths defined here must be supported in matchbox-server's MatchboxStaticResourceConfig, otherwise a direct access
@@ -86,7 +82,6 @@ const routes: Routes = [
     RouterModule.forRoot(routes, {
       useHash: false, // Move from HashLocationStrategy to PathLocationStrategy
     }),
-    OAuthModule.forRoot(),
     NgxMatSelectSearchModule,
     HighlightLineNumbers,
     SortSettingsPipe,

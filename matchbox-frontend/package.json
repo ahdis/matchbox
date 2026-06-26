@@ -7,10 +7,7 @@
     "start": "ng serve --configuration development --verbose",
     "build": "ng build --configuration production",
     "build-matchbox": "ng build --configuration production --verbose --output-path ../matchbox-server/src/main/resources/static",
-    "test": "ng test",
-    "test-ci": "ng test --no-watch --no-progress --browsers=ChromeHeadlessNoSandbox --code-coverage",
-    "lint": "ng lint",
-    "e2e": "ng e2e"
+    "lint": "ng lint"
   },
   "private": true,
   "dependencies": {
@@ -18,19 +15,16 @@
     "@ngx-translate/http-loader": "^18.0.0",
     "@ngxpert/hot-toast": "^6.3.0",
     "ace-builds": "^1.43.6",
-    "angular-oauth2-oidc": "^22.0.0",
-    "browserify-zlib": "^0.2.0",
     "debug": "4.4.x",
     "fhir-kit-client": "1.9.x",
     "fhirpath": "4.11.x",
-    "js-base64": "3.7.x",
+    "js-base64": "^3.8.0",
     "js-untar": "^2.0.0",
     "ngx-highlightjs": "14.0.x",
     "ngx-markdown": "22.0.x",
     "ngx-mat-select-search": "8.0.x",
-    "pako": "^2.1.0",
+    "pako": "^3.0.0",
     "rxjs": "^7.8.1",
-    "tslib": "^2.8.1",
     "zone.js": "0.16.x"
   },
   "devDependencies": {
@@ -39,7 +33,6 @@
     "@angular-eslint/eslint-plugin-template": "^22.0.0",
     "@angular-eslint/schematics": "^22.0.0",
     "@angular-eslint/template-parser": "^22.0.0",
-    "@angular/animations": "^22.0.0",
     "@angular/build": "^22.0.0",
     "@angular/cdk": "^22.0.0",
     "@angular/cli": "^22.0.0",
@@ -54,24 +47,13 @@
     "@angular/router": "^22.0.0",
     "@types/ace": "^0.0.52",
     "@types/debug": "^4.1.12",
-    "@types/jasmine": "6.0.x",
     "@types/js-untar": "^2.0.0",
     "@types/node": "^26.0.0",
     "@types/pako": "^2.0.3",
     "@typescript-eslint/eslint-plugin": "8.62.x",
     "@typescript-eslint/parser": "8.62.x",
     "eslint": "9.39.x",
-    "istanbul-lib-instrument": "^6.0.3",
-    "json-patch": "^0.7.0",
-    "karma": "^6.4.4",
-    "karma-chrome-launcher": "^3.2.0",
-    "karma-cli": "~2.0.0",
-    "karma-coverage-istanbul-reporter": "~3.0.2",
-    "karma-jasmine": "^5.1.0",
-    "karma-jasmine-html-reporter": "2.2.x",
-    "picomatch": ">=4.0.4",
     "prettier": "3.8.x",
-    "pretty-quick": "^4.0.0",
     "ts-node": "^10.9.2",
     "typescript": "6.0.3"
   },
@@ -80,11 +62,6 @@
     "os": false,
     "path": false,
     "zlib": false
-  },
-  "husky": {
-    "hooks": {
-      "pre-commit": "pretty-quick --staged"
-    }
   },
   "overrides": {
     "undici": ">=7.24.8",

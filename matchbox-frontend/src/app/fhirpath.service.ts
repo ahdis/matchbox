@@ -16,18 +16,4 @@ export class FhirPathService {
     }
     return '';
   }
-
-  getOauthUriToken(capabilityStatement: any): string {
-    return this.evaluateToString(
-      capabilityStatement,
-      "rest.security.extension.where(url='http://fhir-registry.smarthealthit.org/StructureDefinition/oauth-uris').extension.where(url='token').valueUri"
-    );
-  }
-
-  getOauthUriAuthorize(capabilityStatement: any): string {
-    return this.evaluateToString(
-      capabilityStatement,
-      "rest.security.extension.where(url='http://fhir-registry.smarthealthit.org/StructureDefinition/oauth-uris').extension.where(url='authorize').valueUri"
-    );
-  }
 }
