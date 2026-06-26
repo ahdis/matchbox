@@ -1,6 +1,5 @@
 import { ChangeDetectorRef, Component, ViewChild, ChangeDetectionStrategy } from '@angular/core';
 import { FhirConfigService } from '../fhirConfig.service';
-import FhirClient from 'fhir-kit-client';
 import { FormControl } from '@angular/forms';
 import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
 import { ReplaySubject } from 'rxjs';
@@ -11,6 +10,7 @@ import { UploadComponent } from '../upload/upload.component';
 import { parseFhirResource } from '../util/fhir-resource-parser';
 import { UploadedFile } from '../upload/uploaded-file';
 import { HotToastService } from '@ngxpert/hot-toast';
+import { FhirClientWrapper } from '../util/fhir-client-wrapper';
 
 @Component({
   selector: 'app-transform',
@@ -48,7 +48,7 @@ export class TransformComponent {
   model: string | null = null;
 
   // The FHIR API client
-  client: FhirClient;
+  client: FhirClientWrapper;
 
   public transformed: any;
   operationOutcome: OperationOutcome | null = null;
@@ -60,16 +60,10 @@ export class TransformComponent {
     private readonly changeDetectorRef: ChangeDetectorRef
   ) {
     this.client = data.getFhirClient();
-    this.client
-      .operation({
-        name: 'list',
-        resourceType: 'StructureMap',
-        method: 'GET',
-      })
-      .then((response: Bundle) => {
-        this.setMaps(response);
-        this.filteredStructureMaps.next(this.allStructureMaps.slice());
-      });
+    this.client.listStructureMaps().then((response: Bundle) => {
+      this.setMaps(response);
+      this.filteredStructureMaps.next(this.allStructureMaps.slice());
+    });
 
     this.structureMapControl.valueChanges.pipe(debounceTime(400), distinctUntilChanged()).subscribe((url) => {
       this.map = { canonical: url ?? '', content: null };
@@ -89,36 +83,27 @@ export class TransformComponent {
             valueString: this.resource.content,
           },
         ],
-      };
+      } as fhir.r4.Parameters;
       if (this.map.content != null) {
-        payload.parameter.push({
+        payload.parameter!!.push({
           name: 'map',
           valueString: this.map.content,
         });
       } else {
-        payload.parameter.push({
+        payload.parameter!!.push({
           name: 'source',
           valueString: this.map.canonical,
         });
       }
       if (this.model != null) {
-        payload.parameter.push({
+        payload.parameter!!.push({
           name: 'model',
           valueString: this.model,
         });
       }
 
       this.client
-        .operation({
-          name: 'transform',
-          resourceType: 'StructureMap',
-          input: payload,
-          options: {
-            headers: {
-              'content-type': 'application/fhir+json',
-            },
-          },
-        })
+        .transformFromParameters(payload)
         .then((response) => {
           this.operationOutcomeTransformed = null;
           this.transformed = response;

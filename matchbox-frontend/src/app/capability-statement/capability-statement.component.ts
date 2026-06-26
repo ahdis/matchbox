@@ -1,10 +1,10 @@
 import { AfterViewInit, Component, ChangeDetectionStrategy } from '@angular/core';
 import { FhirConfigService } from '../fhirConfig.service';
-import FhirClient from 'fhir-kit-client';
 import ace, { Ace } from 'ace-builds';
 import 'ace-builds/src-noconflict/mode-json';
 import 'ace-builds/src-noconflict/theme-textmate';
 import { OperationResult } from '../util/operation-result';
+import { FhirClientWrapper } from '../util/fhir-client-wrapper';
 
 const INDENT_SPACES = 4;
 
@@ -18,18 +18,18 @@ const INDENT_SPACES = 4;
 export class CapabilityStatementComponent implements AfterViewInit {
   capabilityStatement: string | null = null;
   operationResult: OperationResult | null = null;
-  client: FhirClient;
+  client: FhirClientWrapper;
   editor: Ace.Editor | null = null;
   loading = true;
 
-  constructor(private data: FhirConfigService) {
+  constructor(data: FhirConfigService) {
     this.client = data.getFhirClient();
   }
 
   ngAfterViewInit() {
     this.client
       .capabilityStatement()
-      .then((data: fhir.r4.Resource) => {
+      .then((data: fhir.r4.CapabilityStatement) => {
         this.loading = false;
         this.operationResult = null;
         this.editor = ace.edit('code');

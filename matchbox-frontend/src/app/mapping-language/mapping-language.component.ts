@@ -2,8 +2,9 @@ import { ChangeDetectorRef, Component, OnInit, ChangeDetectionStrategy } from '@
 import { FhirConfigService } from '../fhirConfig.service';
 import { UntypedFormControl } from '@angular/forms';
 import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
-import FhirClient from 'fhir-kit-client';
 import debug from 'debug';
+import { FhirClientWrapper } from '../util/fhir-client-wrapper';
+import Resource = fhir.r4.Resource;
 
 @Component({
   selector: 'app-mapping-language',
@@ -18,8 +19,7 @@ export class MappingLanguageComponent implements OnInit {
   public map: UntypedFormControl;
   public structureMap: any;
   public transformed: any;
-  client: FhirClient;
-  errMsg: string | null = null;
+  client: FhirClientWrapper;
 
   operationOutcome: fhir.r4.OperationOutcome | null = null;
   operationOutcomeTransformed: fhir.r4.OperationOutcome | null = null;
@@ -65,12 +65,8 @@ export class MappingLanguageComponent implements OnInit {
     let res: fhir.r4.Resource = JSON.parse(this.source.value);
     if (this.structureMap != null) {
       this.client
-        .operation({
-          name: 'transform?source=' + encodeURIComponent(this.structureMap.url),
-          resourceType: 'StructureMap',
-          input: res,
-        })
-        .then((response) => {
+        .transformFromUrl(this.structureMap.url, res)
+        .then((response: Resource) => {
           this.operationOutcomeTransformed = null;
           this.transformed = response;
         })

@@ -1,9 +1,10 @@
 import { Component, ChangeDetectionStrategy } from '@angular/core';
 import { FhirConfigService } from '../fhirConfig.service';
 import { UntypedFormControl, Validators } from '@angular/forms';
-import FhirClient from 'fhir-kit-client';
 import { FhirPathService } from '../fhirpath.service';
 import { OperationResult } from '../util/operation-result';
+import { FhirClientWrapper } from '../util/fhir-client-wrapper';
+import Bundle = fhir.r4.Bundle;
 
 @Component({
   selector: 'app-igs',
@@ -20,7 +21,7 @@ export class IgsComponent {
 
   update: boolean = false;
 
-  client: FhirClient;
+  client: FhirClientWrapper;
   igs: fhir.r4.ImplementationGuide[] = [];
   errorMessage: string | null = null;
   operationResult: OperationResult | null = null;
@@ -51,8 +52,7 @@ export class IgsComponent {
     this.query._count = this.pageSize;
     this.client
       .search({ resourceType: 'ImplementationGuide', searchParams: this.query })
-      .then((response) => {
-        const bundle = <fhir.r4.Bundle>response;
+      .then((bundle: Bundle) => {
         this.igs = bundle.entry ? bundle.entry.map((entry) => <fhir.r4.ImplementationGuide>entry.resource) : [];
         this.totalCount = bundle.total ?? null;
         this.selection = null;
@@ -162,7 +162,7 @@ export class IgsComponent {
       })
       .then((response) => {
         this.errorMessage = 'Created Implementation Guide ' + this.addPackageId.value;
-        this.operationResult = OperationResult.fromOperationOutcome(response as fhir.r4.OperationOutcome);
+        this.operationResult = OperationResult.fromOperationOutcome(response);
         this.currentOffset = 0;
         this.search();
       })
@@ -204,7 +204,7 @@ export class IgsComponent {
       })
       .then((response) => {
         this.errorMessage = 'Updated Implementation Guide ' + selection.packageId;
-        this.operationResult = OperationResult.fromOperationOutcome(response as fhir.r4.OperationOutcome);
+        this.operationResult = OperationResult.fromOperationOutcome(response);
         this.currentOffset = 0;
         this.search();
       })
@@ -241,7 +241,7 @@ export class IgsComponent {
       })
       .then((response) => {
         this.errorMessage = 'Deleted Implementation Guide Resource ' + selection.packageId;
-        this.operationResult = OperationResult.fromOperationOutcome(response as fhir.r4.OperationOutcome);
+        this.operationResult = OperationResult.fromOperationOutcome(response);
         this.currentOffset = 0;
         this.search();
       })

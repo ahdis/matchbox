@@ -1,7 +1,7 @@
 import { AfterViewInit, Component, ChangeDetectionStrategy } from '@angular/core';
-import FhirClient from 'fhir-kit-client';
 import { FhirConfigService } from '../fhirConfig.service';
 import { FormControl } from '@angular/forms';
+import { FhirClientWrapper } from '../util/fhir-client-wrapper';
 
 @Component({
   selector: 'app-statistics',
@@ -11,7 +11,7 @@ import { FormControl } from '@angular/forms';
   standalone: false,
 })
 export class StatisticsComponent implements AfterViewInit {
-  client: FhirClient;
+  client: FhirClientWrapper;
 
   // Server info
   operationOutcomes: fhir.r4.OperationOutcome[] = [];
@@ -40,7 +40,7 @@ export class StatisticsComponent implements AfterViewInit {
   filteredProfilesList: any[] = [];
   profileFilter: string = '';
 
-  constructor(private data: FhirConfigService) {
+  constructor(data: FhirConfigService) {
     this.client = data.getFhirClient();
   }
 
@@ -134,10 +134,7 @@ export class StatisticsComponent implements AfterViewInit {
    */
   async getSupportedProfiles() {
     // Gets OperationDefinition
-    const od = (await this.client.read({
-      resourceType: 'OperationDefinition',
-      id: '-s-validate',
-    })) as fhir.r4.OperationDefinition;
+    const od = await this.client.readOperationDefinition('-s-validate');
 
     // Searches parameters for one with name = profile
     od.parameter?.forEach((parameter: fhir.r4.OperationDefinitionParameter) => {
@@ -410,30 +407,19 @@ export class StatisticsComponent implements AfterViewInit {
       console.error('No current bundle available for navigation.');
       return;
     }
-    // gets relation from currentBundle, with support for FHIR R5 "prev" relation
-    let link;
-    if (relation === 'next') {
-      link = this.currentBundle.link?.find((l) => l.relation === 'next');
-    } else {
-      link = this.currentBundle.link?.find((l) => l.relation === 'previous' || l.relation === 'prev');
-    }
-    // check if url is present
-    if (link?.url) {
-      // enable loading screen
-      this.isLoading = true;
-      try {
-        // extract only the parameters from url (cut everything before "?")
-        const urlParameter = new URL(link.url).search;
-        // request new bundle from server
-        const bundle = (await this.client.request(urlParameter)) as fhir.r4.Bundle;
-        // process new bundle
-        this.processBundle(bundle);
-      } catch (error) {
-        console.error('Error navigating bundle: ', error);
-      } finally {
-        // disable loading screen
-        this.isLoading = false;
+
+    this.isLoading = true;
+    try {
+      if (relation === 'next') {
+        this.processBundle(await this.client.nextPage(this.currentBundle));
+      } else {
+        this.processBundle(await this.client.prevPage(this.currentBundle));
       }
+    } catch (error) {
+      console.error('Error navigating bundle: ', error);
+    } finally {
+      // disable loading screen
+      this.isLoading = false;
     }
   }
 

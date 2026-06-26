@@ -1,6 +1,5 @@
 import { AfterViewInit, ChangeDetectorRef, Component, ViewChild, ChangeDetectionStrategy } from '@angular/core';
 import { FhirConfigService } from '../fhirConfig.service';
-import FhirClient from 'fhir-kit-client';
 import { inflate } from 'pako';
 import untar, { TarFile } from 'js-untar';
 import { UploadComponent } from '../upload/upload.component';
@@ -15,6 +14,7 @@ import { Base64 } from 'js-base64';
 import { from, forkJoin, ReplaySubject, take } from 'rxjs';
 import { UploadedFile } from '../upload/uploaded-file';
 import { HotToastService } from '@ngxpert/hot-toast';
+import { FhirClientWrapper } from '../util/fhir-client-wrapper';
 
 const INDENT_SPACES = 2;
 
@@ -36,7 +36,7 @@ export class ValidateComponent implements AfterViewInit {
   selectedEntry: ValidationEntry | null = null;
 
   // About the server
-  client: FhirClient;
+  client: FhirClientWrapper;
   installedIgs: Set<string> = new Set();
   supportedProfiles: Map<string, StructureDefinition> = new Map();
   validatorSettings: Map<string, ValidationParameterDefinition> = new Map();
@@ -71,10 +71,7 @@ export class ValidateComponent implements AfterViewInit {
 
     // Creation of Observables for the two requests
     const validateOperationDefinitionObservable$ = from(
-      this.client.read({
-        resourceType: 'OperationDefinition',
-        id: '-s-validate',
-      }).then((response) => response as fhir.r4.OperationDefinition)
+      this.client.readOperationDefinition('-s-validate')
     );
 
     const implementationGuidesObservable$ = from(
@@ -306,28 +303,8 @@ export class ValidateComponent implements AfterViewInit {
       return;
     }
 
-    const searchParams = new URLSearchParams();
-    searchParams.set('profile', entry.validationProfile);
-    if (entry.ig) {
-      searchParams.set('ig', entry.ig);
-    }
-    // Validation options
-    for (const param of entry.validationParameters) {
-      searchParams.append(param.name, param.value);
-    }
     entry.loading = true;
-    this.client
-      .operation({
-        name: 'validate?' + searchParams.toString(),
-        resourceType: undefined,
-        input: entry.resource,
-        options: {
-          headers: {
-            accept: 'application/fhir+json',
-            'content-type': entry.mimetype,
-          },
-        },
-      })
+    this.client.validate(entry)
       .then((response) => {
         // Got a response that should be an OperationOutcome
         entry.loading = false;
