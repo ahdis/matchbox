@@ -26,7 +26,7 @@ export class AppComponent {
     }
 
     translateService.setFallbackLang('de');
-    translateService.use(translateService.getBrowserLang());
+    translateService.use(translateService.getBrowserLang() ?? 'de');
 
     // Setting the FHIR server URL from the environment configuration.
     // This allows us to switch between different FHIR servers (e.g., for development, testing, production) without changing the code.

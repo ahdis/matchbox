@@ -7,7 +7,6 @@ import { UploadComponent } from '../upload/upload.component';
 import ace from 'ace-builds';
 import { ValidationEntry } from './validation-entry';
 import { ValidationParameter, ValidationParameterDefinition } from './validation-parameter';
-import { ITarEntry } from './tar-entry';
 import { Issue, OperationResult } from '../util/operation-result';
 import { FormControl, Validators } from '@angular/forms';
 import { StructureDefinition } from './structure-definition';
@@ -230,23 +229,8 @@ export class ValidateComponent implements AfterViewInit {
         const result = pako.inflate(new Uint8Array(this.package));
         const dataSource = new Array<ValidationEntry>();
         const pointer = this;
-        untar(result.buffer).then(
-          (_) => {
-            // onSuccess
-            dataSource.forEach((entry) => {
-              pointer.validationEntries.unshift(entry);
-              pointer.runValidation(entry);
-            });
-          },
-          (err) => {
-            // onError
-            this.showErrorToast('Unexpected error', err);
-            console.error(err);
-          },
-          (extractedFile: ITarEntry) => {
-            // onProgress
-            if (extractedFile.name?.indexOf('package.json') >= 0) {
-            }
+        untar(result.buffer)
+          .progress((extractedFile) => {
             if (extractedFile.name?.indexOf('example') >= 0 && extractedFile.name?.indexOf('.index.json') == -1) {
               let name = extractedFile.name;
               if (name.startsWith('package/example/')) {
@@ -255,9 +239,9 @@ export class ValidateComponent implements AfterViewInit {
               if (name.startsWith('example/')) {
                 name = name.substring('example/'.length);
               }
-              let decoder = new TextDecoder('utf-8');
+              const decoder = new TextDecoder('utf-8');
               // maybe better add ig as a parameter, we assume now that ig version is equal to canonical version
-              let entry = new ValidationEntry(
+              const entry = new ValidationEntry(
                 name,
                 decoder.decode(extractedFile.buffer),
                 'application/fhir+json',
@@ -265,8 +249,21 @@ export class ValidateComponent implements AfterViewInit {
               );
               dataSource.push(entry);
             }
-          }
-        );
+          })
+          .then(
+            (_) => {
+              // onSuccess
+              dataSource.forEach((entry) => {
+                pointer.validationEntries.unshift(entry);
+                pointer.runValidation(entry);
+              });
+            },
+            (err) => {
+              // onError
+              this.showErrorToast('Unexpected error', err);
+              console.error(err);
+            }
+          );
       }
     };
   }

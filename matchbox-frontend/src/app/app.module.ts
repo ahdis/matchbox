@@ -89,11 +89,7 @@ const routes: Routes = [
     OAuthModule.forRoot(),
     NgxMatSelectSearchModule,
     HighlightLineNumbers,
-    provideMarkdown(),
     SortSettingsPipe,
-    CommonModule,
-    BrowserModule,
-    MatProgressSpinner,
   ],
   providers: [
     provideTranslateService({

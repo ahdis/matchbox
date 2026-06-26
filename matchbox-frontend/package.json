@@ -34,13 +34,13 @@
     "zone.js": "0.16.x"
   },
   "devDependencies": {
-    "@angular/build": "^22.0.0",
     "@angular-eslint/builder": "^22.0.0",
     "@angular-eslint/eslint-plugin": "^22.0.0",
     "@angular-eslint/eslint-plugin-template": "^22.0.0",
     "@angular-eslint/schematics": "^22.0.0",
     "@angular-eslint/template-parser": "^22.0.0",
     "@angular/animations": "^22.0.0",
+    "@angular/build": "^22.0.0",
     "@angular/cdk": "^22.0.0",
     "@angular/cli": "^22.0.0",
     "@angular/common": "^22.0.0",
@@ -51,7 +51,6 @@
     "@angular/language-service": "^22.0.0",
     "@angular/material": "^22.0.0",
     "@angular/platform-browser": "^22.0.0",
-    "@angular/platform-browser-dynamic": "^22.0.0",
     "@angular/router": "^22.0.0",
     "@types/ace": "^0.0.52",
     "@types/debug": "^4.1.12",
