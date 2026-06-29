@@ -11,44 +11,19 @@ import java.util.List;
  * The model of a validation request, containing a list of items to validate.
  * <p>
  * Copy-pasted from
- * https://gitlab.inria.fr/gazelle/library/validation-service-api/-/blob/master/validation-api/src/main/java/net/ihe/gazelle/validation/api/domain/request/structure/ValidationRequest.java?ref_type=heads
+ * https://gitlab.inria.fr/gazelle/public/core/validation-service-api/-/blob/2.0.0/validation-v2-api/src/main/java/net/ihe/gazelle/validation/v2/api/business/request/ValidationRequest.java
  *
  * @author Achraf Achkari
  * @author Quentin Ligier
  **/
 @JsonRootName(value = "validationRequest")
 public class ValidationRequest {
-	public static final String API_VERSION = "0.1";
-
-	@JsonProperty(value = "apiVersion")
-	private String apiVersion = API_VERSION;
-
-	@JsonProperty(value = "validationServiceName")
-	private String validationServiceName; // given In URL
 
 	@JsonProperty(value = "validationProfileId")
 	private String validationProfileId;
 
-	@JsonProperty(value = "validationItems")
-	private List<ValidationItem> validationItems;
-
-	public String getApiVersion() {
-		return apiVersion;
-	}
-
-	public ValidationRequest setApiVersion(String apiVersion) {
-		this.apiVersion = apiVersion;
-		return this;
-	}
-
-	public String getValidationServiceName() {
-		return validationServiceName;
-	}
-
-	public ValidationRequest setValidationServiceName(String validationServiceName) {
-		this.validationServiceName = validationServiceName;
-		return this;
-	}
+	@JsonProperty(value = "inputs")
+	private List<Input> inputs;
 
 	public String getValidationProfileId() {
 		return validationProfileId;
@@ -59,19 +34,19 @@ public class ValidationRequest {
 		return this;
 	}
 
-	public List<ValidationItem> getValidationItems() {
-		return validationItems;
+	public List<Input> getInputs() {
+		return inputs;
 	}
 
-	public ValidationRequest setValidationItems(List<ValidationItem> validationItems) {
-		this.validationItems = validationItems;
+	public ValidationRequest setInputs(List<Input> inputs) {
+		this.inputs = inputs;
 		return this;
 	}
-	public ValidationRequest addValidationItem(ValidationItem validationItem){
-		if(this.validationItems == null){
-			this.validationItems = new ArrayList<>();
+	public ValidationRequest addInput(Input inputs){
+		if(this.inputs == null) {
+			this.inputs = new ArrayList<>();
 		}
-		this.validationItems.add(validationItem);
+		this.inputs.add(inputs);
 		return this;
 	}
 
@@ -81,23 +56,12 @@ public class ValidationRequest {
 	}
 
 	@JsonIgnore
-	public boolean isValidationServiceNameValid(){
-		return validationServiceName != null && !validationServiceName.isBlank();
-	}
-
-	@JsonIgnore
-	public boolean isValidationItemsValid(){
-		return validationItems != null && !validationItems.isEmpty();
-	}
-
-	@JsonIgnore
-	public boolean isValidationItemsRolesValid(){
-		return validationItems == null || validationItems.size()<2
-			|| validationItems.stream().allMatch(item ->item.getRole() !=null && !item.getRole().isBlank());
+	public boolean isInputsValid(){
+		return inputs != null && !inputs.isEmpty();
 	}
 
 	@JsonIgnore
 	public boolean isValid(){
-		return isValidationItemsValid() && isValidationProfileIdValid() && isValidationServiceNameValid();
+		return isInputsValid() && isValidationProfileIdValid();
 	}
 }

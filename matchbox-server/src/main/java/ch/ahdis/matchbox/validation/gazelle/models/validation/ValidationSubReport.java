@@ -1,6 +1,6 @@
 package ch.ahdis.matchbox.validation.gazelle.models.validation;
 
-import ch.ahdis.matchbox.validation.gazelle.utils.BidMap;
+import ch.ahdis.matchbox.validation.gazelle.utils.BidiMap;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import java.util.ArrayList;
@@ -20,10 +20,10 @@ public class ValidationSubReport {
 	private List<AssertionReport> assertionReports;
 	private ValidationCounters subCounters = new ValidationCounters();
 	private List<UnexpectedError> unexpectedErrors;
-	private static final BidMap<ValidationTestResult, Integer> validationTestResultWeights = BidMap.of(
-            new BidMap.Entry(ValidationTestResult.PASSED, 0),
-				new BidMap.Entry(ValidationTestResult.FAILED, 1),
-				new BidMap.Entry(ValidationTestResult.UNDEFINED, 2));
+	private static final BidiMap<ValidationTestResult, Integer> validationTestResultWeights = BidiMap.of(
+            new BidiMap.Entry(ValidationTestResult.PASSED, 0),
+				new BidiMap.Entry(ValidationTestResult.FAILED, 1),
+				new BidiMap.Entry(ValidationTestResult.UNDEFINED, 2));
 
 	public ValidationSubReport() {
 	}

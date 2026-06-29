@@ -15,9 +15,21 @@ public class ValidationCounters {
 	private Integer numberOfFailedWithWarnings = 0;
 	private Integer numberOfFailedWithErrors = 0;
 	private Integer numberOfUnexpectedErrors = 0;
+	private Integer numberOfUndefined = 0;
+
 
 	public ValidationCounters() {
 	}
+
+	public Integer getNumberOfUndefined() {
+		return numberOfUndefined;
+	}
+
+	public ValidationCounters setNumberOfUndefined(Integer numberOfUndefined) {
+		this.numberOfUndefined = numberOfUndefined;
+		return this;
+	}
+
 
 	public Integer getNumberOfUnexpectedErrors() {
 		return this.numberOfUnexpectedErrors;
@@ -89,12 +101,18 @@ public class ValidationCounters {
 		this.numberOfUnexpectedErrors = this.numberOfUnexpectedErrors + 1;
 	}
 
+	public void incrementUndefined() {
+		Integer var1 = this.numberOfUndefined;
+		this.numberOfUndefined = this.numberOfUndefined + 1;
+	}
+
 	public void addNumbersFromSubCounters(ValidationCounters subCounters) {
 		this.numberOfAssertions = this.numberOfAssertions + subCounters.getNumberOfAssertions();
 		this.numberOfFailedWithInfos = this.numberOfFailedWithInfos + subCounters.getNumberOfFailedWithInfos();
 		this.numberOfFailedWithWarnings = this.numberOfFailedWithWarnings + subCounters.getNumberOfFailedWithWarnings();
 		this.numberOfFailedWithErrors = this.numberOfFailedWithErrors + subCounters.getNumberOfFailedWithErrors();
 		this.numberOfUnexpectedErrors = this.numberOfUnexpectedErrors + subCounters.getNumberOfUnexpectedErrors();
+		this.numberOfUndefined = this.numberOfUndefined + subCounters.getNumberOfUndefined();
 	}
 
 	@JsonIgnore
@@ -142,14 +160,16 @@ public class ValidationCounters {
 				&& Objects.equals(this.numberOfFailedWithInfos, that.numberOfFailedWithInfos)
 				&& Objects.equals(this.numberOfFailedWithWarnings, that.numberOfFailedWithWarnings)
 				&& Objects.equals(this.numberOfFailedWithErrors, that.numberOfFailedWithErrors)
-				&& Objects.equals(this.numberOfUnexpectedErrors, that.numberOfUnexpectedErrors);
+				&& Objects.equals(this.numberOfUnexpectedErrors, that.numberOfUnexpectedErrors)
+				&& Objects.equals(this.numberOfUndefined, that.numberOfUndefined);
 		}
 	}
 
 	public int hashCode() {
 		return Objects.hash(
 			new Object[]{
-				this.numberOfAssertions, this.numberOfFailedWithInfos, this.numberOfFailedWithWarnings, this.numberOfFailedWithErrors, this.numberOfUnexpectedErrors
+				this.numberOfAssertions, this.numberOfFailedWithInfos, this.numberOfFailedWithWarnings,
+				this.numberOfFailedWithErrors, this.numberOfUnexpectedErrors, this.numberOfUndefined
 			}
 		);
 	}
@@ -162,6 +182,7 @@ public class ValidationCounters {
 			.setNumberOfFailedWithInfos(validationCounters.getNumberOfFailedWithInfos())
 			.setNumberOfFailedWithWarnings(validationCounters.getNumberOfFailedWithWarnings())
 			.setNumberOfFailedWithErrors(validationCounters.getNumberOfFailedWithErrors())
-			.setNumberOfUnexpectedErrors(validationCounters.getNumberOfUnexpectedErrors());
+			.setNumberOfUnexpectedErrors(validationCounters.getNumberOfUnexpectedErrors())
+			.setNumberOfUndefined(validationCounters.getNumberOfUndefined());
 	}
 }
