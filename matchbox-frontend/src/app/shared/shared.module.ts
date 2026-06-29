@@ -49,7 +49,6 @@ const modulesToExport = [
   MatRadioModule,
   MatProgressSpinner,
   MatProgressSpinnerModule,
-  BrowserModule,
 ];
 
 const components: any[] = [];

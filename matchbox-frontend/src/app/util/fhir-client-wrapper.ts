@@ -106,7 +106,9 @@ export class FhirClientWrapper {
     const result = this.client.operation({
       name: 'validate?' + searchParams.toString(),
       resourceType: undefined,
-      input: JSON.parse(entry.resource) as FhirResource,
+      // Here we have to cheat because the client expects either a FhirResource or SearchParameters, whereas we want
+      // to send a plain string (the resource JSON or XML serialization).
+      input: entry.resource as unknown as FhirResource,
       options: {
         headers: {
           accept: 'application/fhir+json',

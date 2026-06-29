@@ -12,7 +12,7 @@
     "module": "ES2022",
     "esModuleInterop": true,
     "useDefineForClassFields": false,
-    "noImplicitAny": false,
+    "noImplicitAny": false
   },
   "angularCompilerOptions": {
     "enableIvy": true,

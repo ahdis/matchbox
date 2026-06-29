@@ -74,7 +74,7 @@ export class Issue {
       expression = '';
     }
 
-    const sliceCutIndex = ooIssue.diagnostics?.indexOf('Slice info: 1.)') ?? 0;
+    const sliceCutIndex = ooIssue.diagnostics?.indexOf('Slice info: 1.)') ?? -1;
     let text: string;
     let sliceInfo: string[] | undefined = undefined;
     if (sliceCutIndex >= 0) {
