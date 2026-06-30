@@ -111,38 +111,36 @@ public class ToolFactory {
 	""";
 
 	public static Tool validateFhirResource() throws JsonProcessingException {
-		return new Tool.Builder()
-				.name("validate-fhir-resource")
-				.description("Validate a FHIR resource or logical model against a profile and return a FHIR OperationOutcome indicating the result of the validation")
-				.inputSchema(mapper.readValue(VALIDATE_FHIR_RESOURCE_SCHEMA, McpSchema.JsonSchema.class))
-				.build();
+		return new Tool(
+				"validate-fhir-resource",
+				"Validate a FHIR resource or logical model against a profile and return a FHIR OperationOutcome " +
+					"indicating the result of the validation",
+				mapper.readValue(VALIDATE_FHIR_RESOURCE_SCHEMA, McpSchema.JsonSchema.class)
+		);
 	}
 
 	public static Tool listFhirImplementationGuides() throws JsonProcessingException {
-		return new Tool.Builder()
-				.name("list-fhir-igs")
-				.description("List FHIR Implementation Guides available for validation")
-				.inputSchema(mapper.readValue(LIST_FHIR_IGS_SCHEMA, McpSchema.JsonSchema.class))
-//				.outputSchema(LIST_FHIR_IGS_OUTPUT_SCHEMA)
-				.build();
+		return new Tool(
+				"list-fhir-igs",
+				"List FHIR Implementation Guides available for validation",
+				mapper.readValue(LIST_FHIR_IGS_SCHEMA, McpSchema.JsonSchema.class)
+		);
 	}
 
 	public static Tool listFhirProfilesToValidateFor() throws JsonProcessingException {
-		return new Tool.Builder()
-				.name("list-fhir-profiles-to-validate-for")
-				.description("List FHIR Profiles available for validation")
-				.inputSchema(mapper.readValue(LIST_PROFILES_SCHEMA, McpSchema.JsonSchema.class))
-//				.outputSchema(LIST_FHIR_IGS_OUTPUT_SCHEMA)
-				.build();
+		return new Tool(
+				"list-fhir-profiles-to-validate-for",
+				"List FHIR Profiles available for validation",
+				mapper.readValue(LIST_PROFILES_SCHEMA, McpSchema.JsonSchema.class)
+		);
 	}
 
 	public static Tool listValidationParameters() throws JsonProcessingException {
-		return new Tool.Builder()
-				.name("list-validation-parameters")
-				.description("List additional available parameters for validation")
-				.inputSchema(mapper.readValue(LIST_VALIDATIONPARAMETERS_SCHEMA, McpSchema.JsonSchema.class))
-//				.outputSchema(LIST_FHIR_IGS_OUTPUT_SCHEMA)
-				.build();
+		return new Tool(
+				"list-validation-parameters",
+				"List additional available parameters for validation",
+				mapper.readValue(LIST_VALIDATIONPARAMETERS_SCHEMA, McpSchema.JsonSchema.class)
+		);
 	}
 
 

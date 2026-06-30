@@ -1,12 +1,10 @@
 package ca.uhn.fhir.rest.server;
 
-import ca.uhn.fhir.context.FhirContext;
 import ca.uhn.fhir.jpa.starter.mcp.CallToolResultFactory;
 import ca.uhn.fhir.jpa.starter.mcp.Interaction;
 import ca.uhn.fhir.jpa.starter.mcp.RequestBuilder;
 import ca.uhn.fhir.jpa.starter.mcp.ToolFactory;
 import ch.ahdis.matchbox.CliContext;
-
 import com.fasterxml.jackson.core.JsonProcessingException;
 import io.modelcontextprotocol.server.McpServerFeatures;
 import io.modelcontextprotocol.spec.McpSchema;
@@ -17,100 +15,76 @@ import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 @Component
 public class McpFhirBridge implements McpBridge {
 
-	private static final Logger logger = LoggerFactory.getLogger(McpFhirBridge.class);
+  private static final Logger logger = LoggerFactory.getLogger(McpFhirBridge.class);
 
-	private final RestfulServer restfulServer;
-	private final CliContext cliContext;
+  private final RestfulServer restfulServer;
+  private final CliContext cliContext;
 
-	public McpFhirBridge(RestfulServer restfulServer, CliContext cliContext) {
-		this.restfulServer = restfulServer;
-		this.cliContext = cliContext; 
-	}
+  public McpFhirBridge(RestfulServer restfulServer, CliContext cliContext) {
+    this.restfulServer = restfulServer;
+    this.cliContext = cliContext;
+  }
 
-	public List<McpServerFeatures.SyncToolSpecification> generateTools() {
-		if (cliContext.getOnlyOneEngine()) {	
-			try {
-				if (cliContext != null && cliContext.isHttpReadOnly()) {
-					return List.of(new McpServerFeatures.SyncToolSpecification.Builder()
-									.tool(ToolFactory.readFhirResource())
-									.callHandler((exchange, request) -> getToolResult(request, Interaction.READ))
-									.build(), 					
-									new McpServerFeatures.SyncToolSpecification.Builder()
-									.tool(ToolFactory.searchFhirResources())
-									.callHandler((exchange, request) -> getToolResult(request, Interaction.SEARCH))
-									.build());
-				}
-				return List.of(
-						new McpServerFeatures.SyncToolSpecification.Builder()
-								.tool(ToolFactory.createFhirResource())
-								.callHandler((exchange, request) -> getToolResult(request, Interaction.CREATE))
-								.build(),
-						new McpServerFeatures.SyncToolSpecification.Builder()
-								.tool(ToolFactory.readFhirResource())
-								.callHandler((exchange, request) -> getToolResult(request, Interaction.READ))
-								.build(),
-						new McpServerFeatures.SyncToolSpecification.Builder()
-								.tool(ToolFactory.updateFhirResource())
-								.callHandler((exchange, request) -> getToolResult(request, Interaction.UPDATE))
-								.build(),
-						new McpServerFeatures.SyncToolSpecification.Builder()
-								.tool(ToolFactory.deleteFhirResource())
-								.callHandler((exchange, request) -> getToolResult(request, Interaction.DELETE))
-								.build(),
-						new McpServerFeatures.SyncToolSpecification.Builder()
-								.tool(ToolFactory.conditionalPatchFhirResource())
-								.callHandler((exchange, request) -> getToolResult(request, Interaction.PATCH))
-								.build(),
-						new McpServerFeatures.SyncToolSpecification.Builder()
-								.tool(ToolFactory.searchFhirResources())
-								.callHandler((exchange, request) -> getToolResult(request, Interaction.SEARCH))
-								.build(),
-						new McpServerFeatures.SyncToolSpecification.Builder()
-								.tool(ToolFactory.conditionalUpdateFhirResource())
-								.callHandler((exchange, request) -> getToolResult(request, Interaction.UPDATE))
-								.build(),
-						new McpServerFeatures.SyncToolSpecification.Builder()
-								.tool(ToolFactory.patchFhirResource())
-								.callHandler((exchange, request) -> getToolResult(request, Interaction.PATCH))
-								.build(),
-						new McpServerFeatures.SyncToolSpecification.Builder()
-								.tool(ToolFactory.createFhirTransaction())
-								.callHandler((exchange, request) -> getToolResult(request, Interaction.TRANSACTION))
-								.build());
-			} catch (JsonProcessingException e) {
-				throw new RuntimeException(e);				
-			}
-		}
-		return new ArrayList<>();
-	}
+  public List<McpServerFeatures.SyncToolSpecification> generateTools() {
+    if (cliContext.getOnlyOneEngine()) {
+      try {
+        final var tools = new ArrayList<McpServerFeatures.SyncToolSpecification>(9);
+        tools.add(buildToolSpecification(ToolFactory.readFhirResource(), Interaction.READ));
+        tools.add(buildToolSpecification(ToolFactory.searchFhirResources(), Interaction.SEARCH));
+        if (!cliContext.isHttpReadOnly()) {
+          tools.add(buildToolSpecification(ToolFactory.createFhirResource(), Interaction.CREATE));
+          tools.add(buildToolSpecification(ToolFactory.updateFhirResource(), Interaction.UPDATE));
+          tools.add(buildToolSpecification(ToolFactory.conditionalUpdateFhirResource(), Interaction.UPDATE));
+          tools.add(buildToolSpecification(ToolFactory.deleteFhirResource(), Interaction.DELETE));
+          tools.add(buildToolSpecification(ToolFactory.patchFhirResource(), Interaction.PATCH));
+          tools.add(buildToolSpecification(ToolFactory.conditionalPatchFhirResource(), Interaction.PATCH));
+          tools.add(buildToolSpecification(ToolFactory.createFhirTransaction(), Interaction.TRANSACTION));
+        }
+        return tools;
+      } catch (JsonProcessingException e) {
+        throw new RuntimeException(e);
+      }
+    }
+    return new ArrayList<>();
+  }
 
-	private McpSchema.CallToolResult getToolResult(McpSchema.CallToolRequest contextMap, Interaction interaction) {
+  private McpServerFeatures.SyncToolSpecification buildToolSpecification(final McpSchema.Tool tool,
+                                                                         final Interaction interaction) {
+    return new McpServerFeatures.SyncToolSpecification(
+      tool,
+      (exchange, arguments) -> getToolResult(arguments, interaction)
+    );
+  }
 
-		var response = new MockHttpServletResponse();
-		var request = new RequestBuilder(restfulServer, contextMap.arguments(), interaction).buildRequest();
+  private McpSchema.CallToolResult getToolResult(final Map<String, Object> arguments,
+                                                 final Interaction interaction) {
 
-		try {
-			restfulServer.handleRequest(interaction.asRequestType(), request, response);
-			var status = response.getStatus();
-			var body = response.getContentAsString();
+    var response = new MockHttpServletResponse();
+    var request = new RequestBuilder(restfulServer, arguments, interaction).buildRequest();
 
-			if (status >= 200 && status < 300) {
-				if (body.isBlank()) {
-					return CallToolResultFactory.failure("Empty successful response for " + interaction);
-				}
+    try {
+      restfulServer.handleRequest(interaction.asRequestType(), request, response);
+      var status = response.getStatus();
+      var body = response.getContentAsString();
 
-				return CallToolResultFactory.success(
-						contextMap.arguments().get("resourceType").toString(), interaction, body, status);
-			} else {
-				return CallToolResultFactory.failure(String.format("FHIR server error %d: %s", status, body));
-			}
-		} catch (Exception e) {
-			logger.error(e.getMessage(), e);
-			return CallToolResultFactory.failure("Unexpected error: " + e.getMessage());
-		}
-	}
+      if (status >= 200 && status < 300) {
+        if (body.isBlank()) {
+          return CallToolResultFactory.failure("Empty successful response for " + interaction);
+        }
+
+        return CallToolResultFactory.success(
+          arguments.get("resourceType").toString(), interaction, body, status);
+      } else {
+        return CallToolResultFactory.failure(String.format("FHIR server error %d: %s", status, body));
+      }
+    } catch (Exception e) {
+      logger.error(e.getMessage(), e);
+      return CallToolResultFactory.failure("Unexpected error: " + e.getMessage());
+    }
+  }
 }

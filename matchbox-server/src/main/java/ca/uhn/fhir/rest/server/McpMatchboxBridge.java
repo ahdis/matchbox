@@ -52,36 +52,37 @@ public class McpMatchboxBridge implements McpBridge {
 	public List<McpServerFeatures.SyncToolSpecification> generateTools() {
 		try {
 			return List.of(
-					new McpServerFeatures.SyncToolSpecification.Builder()
-							.tool(ToolFactory.validateFhirResource())
-							.callHandler((exchange, request) -> getValidationResult(exchange, request, Interaction.VALIDATE))
-					 		.build(),
-					new McpServerFeatures.SyncToolSpecification.Builder()
-							.tool(ToolFactory.listFhirImplementationGuides())
-							.callHandler((exchange, request) -> getFhirImplementationGuides(request, Interaction.SEARCH))
-					 		.build(),
-					new McpServerFeatures.SyncToolSpecification.Builder()
-							.tool(ToolFactory.listFhirProfilesToValidateFor())
-							.callHandler((exchange, request) -> getFhirProfilesToValidateFor(request, Interaction.READ))
-					 		.build(),
-					new McpServerFeatures.SyncToolSpecification.Builder()
-							.tool(ToolFactory.listValidationParameters())
-							.callHandler((exchange, request) -> getExtraValidationParameters(request, Interaction.READ))
-					 		.build()
-							);
+        new McpServerFeatures.SyncToolSpecification(
+          ToolFactory.validateFhirResource(),
+          (exchange, arguments) -> getValidationResult(exchange, arguments, Interaction.VALIDATE)
+        ),
+        new McpServerFeatures.SyncToolSpecification(
+          ToolFactory.listFhirImplementationGuides(),
+          (exchange, arguments) -> getFhirImplementationGuides(arguments, Interaction.SEARCH)
+        ),
+        new McpServerFeatures.SyncToolSpecification(
+          ToolFactory.listFhirProfilesToValidateFor(),
+          (exchange, arguments) -> getFhirProfilesToValidateFor(arguments, Interaction.READ)
+        ),
+        new McpServerFeatures.SyncToolSpecification(
+          ToolFactory.listValidationParameters(),
+          (exchange, arguments) -> getExtraValidationParameters(arguments, Interaction.READ)
+        )
+      );
 		} catch (JsonProcessingException e) {
 			throw new RuntimeException(e);
 		}
 	}
 
-	private McpSchema.CallToolResult getFhirProfilesToValidateFor(McpSchema.CallToolRequest contextMap, Interaction interaction) {
+	private McpSchema.CallToolResult getFhirProfilesToValidateFor(final Map<String, Object> arguments,
+                                                                final Interaction interaction) {
 		var response = new MockHttpServletResponse();
-		final String resourceType = (String) contextMap.arguments().get("resourceType");
+		final String resourceType = (String) arguments.get("resourceType");
 		// we need to overwrite it for calling the read interaction
-		contextMap.arguments().put("resourceType", "OperationDefinition");
-		contextMap.arguments().put("id", "-s-validate");
-		final String ig = (String) contextMap.arguments().get("ig");
-		var request = new RequestBuilder(restfulServer, contextMap.arguments(), interaction).buildRequest();
+		arguments.put("resourceType", "OperationDefinition");
+		arguments.put("id", "-s-validate");
+		final String ig = (String) arguments.get("ig");
+		var request = new RequestBuilder(restfulServer, arguments, interaction).buildRequest();
 		try {
 			restfulServer.handleRequest(interaction.asRequestType(), request, response);
 			var status = response.getStatus();
@@ -118,11 +119,12 @@ public class McpMatchboxBridge implements McpBridge {
 		}
 	}
 
-	private McpSchema.CallToolResult getExtraValidationParameters(McpSchema.CallToolRequest contextMap, Interaction interaction) {
+	private McpSchema.CallToolResult getExtraValidationParameters(final Map<String, Object> arguments,
+                                                               final  Interaction interaction) {
 		var response = new MockHttpServletResponse();
-		contextMap.arguments().put("resourceType", "OperationDefinition");
-		contextMap.arguments().put("id", "-s-validate");
-		var request = new RequestBuilder(restfulServer, contextMap.arguments(), interaction).buildRequest();
+		arguments.put("resourceType", "OperationDefinition");
+		arguments.put("id", "-s-validate");
+		var request = new RequestBuilder(restfulServer, arguments, interaction).buildRequest();
 		try {
 			restfulServer.handleRequest(interaction.asRequestType(), request, response);
 			var status = response.getStatus();
@@ -164,22 +166,23 @@ public class McpMatchboxBridge implements McpBridge {
 		}
 	}
 
-	private McpSchema.CallToolResult getFhirImplementationGuides(McpSchema.CallToolRequest contextMap, Interaction interaction) {
+	private McpSchema.CallToolResult getFhirImplementationGuides(final Map<String, Object> arguments,
+                                                               final Interaction interaction) {
 		var response = new MockHttpServletResponse();
-		contextMap.arguments().put("resourceType", "ImplementationGuide");
-		if (contextMap.arguments().containsKey("includeVersions")) {
-			if (contextMap.arguments().get("includeVersions").equals("false")) {
+		arguments.put("resourceType", "ImplementationGuide");
+		if (arguments.containsKey("includeVersions")) {
+			if (arguments.get("includeVersions").equals("false")) {
 				Map<String, Object> map = new java.util.HashMap<>();
 				map.put("_tag", "http://matchbox.health/fhir/CodeSystem/tag|current");
-				contextMap.arguments().put("query", map);
+				arguments.put("query", map);
 			}
-			contextMap.arguments().remove("includeVersions");
+			arguments.remove("includeVersions");
 		} else {
 				Map<String, Object> map = new java.util.HashMap<>();
 				map.put("_tag", "http://matchbox.health/fhir/CodeSystem/tag|current");
-				contextMap.arguments().put("query", map);
+				arguments.put("query", map);
 		}
-		var request = new RequestBuilder(restfulServer, contextMap.arguments(), interaction).buildRequest();
+		var request = new RequestBuilder(restfulServer, arguments, interaction).buildRequest();
 		try {
 			restfulServer.handleRequest(interaction.asRequestType(), request, response);
 			var status = response.getStatus();
@@ -199,15 +202,17 @@ public class McpMatchboxBridge implements McpBridge {
 		}
 	}	
 
-	private McpSchema.CallToolResult getValidationResult(McpSyncServerExchange exchange, McpSchema.CallToolRequest contextMap, Interaction interaction) {
+	private McpSchema.CallToolResult getValidationResult(final McpSyncServerExchange exchange,
+                                                       final Map<String, Object> arguments,
+                                                       final Interaction interaction) {
 
 		// initialize Boolean for AI analysis parameter. null = parameter is missing
 		Boolean analyzeOutcomeWithAIParameterEnabled = null;
 
 		var response = new MockHttpServletResponse();
-		if (contextMap.arguments().containsKey("validationparams")) {
+		if (arguments.containsKey("validationparams")) {
 			Map<String, String> map = new java.util.HashMap<>();
-			String validationParams = (String) contextMap.arguments().get("validationparams");
+			String validationParams = (String) arguments.get("validationparams");
 			// Parse the validationParams string into a Map
 			String[] params = validationParams.split(",");
 
@@ -226,14 +231,14 @@ public class McpMatchboxBridge implements McpBridge {
 			// overwrites validation parameters for AI analysis, since LLM can analyze the outcome itself
 			// "analyzeOutcomeWithAIOnError" is not considered, if "analyzeOutcomeWithAI" is set to false
 			map.put("analyzeOutcomeWithAI", "false");
-			contextMap.arguments().put("query", map);
+			arguments.put("query", map);
 		} else {
 			Map<String, String> map = new java.util.HashMap<>();
 			map.put("analyzeOutcomeWithAI", "false");
-			contextMap.arguments().put("query", map);
+			arguments.put("query", map);
 		}
 
-		var request = new RequestBuilder(restfulServer, contextMap.arguments(), interaction).buildRequest();
+		var request = new RequestBuilder(restfulServer, arguments, interaction).buildRequest();
 
 		try {
 			restfulServer.handleRequest(interaction.asRequestType(), request, response);
