@@ -8,14 +8,11 @@ import ca.uhn.fhir.jpa.starter.mcp.CallToolResultFactory;
 import ca.uhn.fhir.jpa.starter.mcp.Interaction;
 import ca.uhn.fhir.jpa.starter.mcp.RequestBuilder;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import io.modelcontextprotocol.server.McpServerFeatures;
 import io.modelcontextprotocol.server.McpSyncServerExchange;
 import io.modelcontextprotocol.spec.McpSchema;
-import io.modelcontextprotocol.spec.McpSchema.TextContent;
 
 import org.hl7.fhir.r5.model.OperationDefinition.OperationDefinitionParameterComponent;
-import org.hl7.fhir.r5.model.Resource;
 import org.hl7.fhir.r5.model.Enumerations.OperationParameterUse;
 import org.hl7.fhir.r5.model.OperationDefinition;
 import org.slf4j.Logger;
@@ -50,32 +47,29 @@ public class McpMatchboxBridge implements McpBridge {
 	}
 
 	public List<McpServerFeatures.SyncToolSpecification> generateTools() {
-		try {
-			return List.of(
-        new McpServerFeatures.SyncToolSpecification(
-          ToolFactory.validateFhirResource(),
-          (exchange, arguments) -> getValidationResult(exchange, arguments, Interaction.VALIDATE)
-        ),
-        new McpServerFeatures.SyncToolSpecification(
-          ToolFactory.listFhirImplementationGuides(),
-          (exchange, arguments) -> getFhirImplementationGuides(arguments, Interaction.SEARCH)
-        ),
-        new McpServerFeatures.SyncToolSpecification(
-          ToolFactory.listFhirProfilesToValidateFor(),
-          (exchange, arguments) -> getFhirProfilesToValidateFor(arguments, Interaction.READ)
-        ),
-        new McpServerFeatures.SyncToolSpecification(
-          ToolFactory.listValidationParameters(),
-          (exchange, arguments) -> getExtraValidationParameters(arguments, Interaction.READ)
-        )
-      );
-		} catch (JsonProcessingException e) {
-			throw new RuntimeException(e);
-		}
+    return List.of(
+      new McpServerFeatures.SyncToolSpecification(
+        ToolFactory.validateFhirResource(),
+        (exchange, request) -> getValidationResult(exchange, request, Interaction.VALIDATE)
+      ),
+      new McpServerFeatures.SyncToolSpecification(
+        ToolFactory.listFhirImplementationGuides(),
+        (exchange, request) -> getFhirImplementationGuides(request, Interaction.SEARCH)
+      ),
+      new McpServerFeatures.SyncToolSpecification(
+        ToolFactory.listFhirProfilesToValidateFor(),
+        (exchange, request) -> getFhirProfilesToValidateFor(request, Interaction.READ)
+      ),
+      new McpServerFeatures.SyncToolSpecification(
+        ToolFactory.listValidationParameters(),
+        (exchange, request) -> getExtraValidationParameters(request, Interaction.READ)
+      )
+    );
 	}
 
-	private McpSchema.CallToolResult getFhirProfilesToValidateFor(final Map<String, Object> arguments,
+	private McpSchema.CallToolResult getFhirProfilesToValidateFor(final McpSchema.CallToolRequest toolRequest,
                                                                 final Interaction interaction) {
+    final var arguments = toolRequest.arguments();
 		var response = new MockHttpServletResponse();
 		final String resourceType = (String) arguments.get("resourceType");
 		// we need to overwrite it for calling the read interaction
@@ -119,8 +113,9 @@ public class McpMatchboxBridge implements McpBridge {
 		}
 	}
 
-	private McpSchema.CallToolResult getExtraValidationParameters(final Map<String, Object> arguments,
-                                                               final  Interaction interaction) {
+	private McpSchema.CallToolResult getExtraValidationParameters(final McpSchema.CallToolRequest toolRequest,
+                                                                final Interaction interaction) {
+    final var arguments = toolRequest.arguments();
 		var response = new MockHttpServletResponse();
 		arguments.put("resourceType", "OperationDefinition");
 		arguments.put("id", "-s-validate");
@@ -166,8 +161,9 @@ public class McpMatchboxBridge implements McpBridge {
 		}
 	}
 
-	private McpSchema.CallToolResult getFhirImplementationGuides(final Map<String, Object> arguments,
+	private McpSchema.CallToolResult getFhirImplementationGuides(final McpSchema.CallToolRequest toolRequest,
                                                                final Interaction interaction) {
+    final var arguments = toolRequest.arguments();
 		var response = new MockHttpServletResponse();
 		arguments.put("resourceType", "ImplementationGuide");
 		if (arguments.containsKey("includeVersions")) {
@@ -203,8 +199,9 @@ public class McpMatchboxBridge implements McpBridge {
 	}	
 
 	private McpSchema.CallToolResult getValidationResult(final McpSyncServerExchange exchange,
-                                                       final Map<String, Object> arguments,
+                                                       final McpSchema.CallToolRequest toolRequest,
                                                        final Interaction interaction) {
+    final var arguments = toolRequest.arguments();
 
 		// initialize Boolean for AI analysis parameter. null = parameter is missing
 		Boolean analyzeOutcomeWithAIParameterEnabled = null;

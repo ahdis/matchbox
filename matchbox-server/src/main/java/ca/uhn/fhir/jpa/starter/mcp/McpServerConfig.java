@@ -5,10 +5,14 @@ import ca.uhn.fhir.rest.server.McpFhirBridge;
 import ca.uhn.fhir.rest.server.McpMatchboxBridge;
 import ch.ahdis.matchbox.CliContext;
 import ch.ahdis.matchbox.MatchboxRestfulServer;
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import io.modelcontextprotocol.server.McpServer;
 import io.modelcontextprotocol.server.McpSyncServer;
 import io.modelcontextprotocol.server.transport.HttpServletSseServerTransportProvider;
+import io.modelcontextprotocol.server.transport.HttpServletStreamableServerTransportProvider;
 import io.modelcontextprotocol.spec.McpServerTransportProvider;
+import io.modelcontextprotocol.spec.McpStreamableServerTransportProvider;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.web.servlet.ServletRegistrationBean;
 import org.springframework.context.annotation.Bean;
@@ -34,10 +38,8 @@ public class McpServerConfig {
   private static final String SSE_MESSAGE_ENDPOINT = "/mcp/message";
 
   @Bean
-  public McpSyncServer syncServer(
-    final List<McpBridge> mcpBridges,
-    final McpServerTransportProvider transportProvider
-  ) {
+  public McpSyncServer syncServer(final List<McpBridge> mcpBridges,
+                                  final McpStreamableServerTransportProvider transportProvider) {
     return McpServer.sync(transportProvider)
       .requestTimeout(Duration.ofSeconds(60))
       .tools(mcpBridges.stream()
@@ -57,18 +59,16 @@ public class McpServerConfig {
   }
 
   @Bean
-  public HttpServletSseServerTransportProvider servletSseServerTransportProvider() {
-    return HttpServletSseServerTransportProvider.builder()
-      .messageEndpoint(SSE_MESSAGE_ENDPOINT)
-      .sseEndpoint(SSE_ENDPOINT)
-      //.objectMapper(new ObjectMapper().configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false))
+  public HttpServletStreamableServerTransportProvider servletSseServerTransportProvider() {
+    return HttpServletStreamableServerTransportProvider.builder()
+      .disallowDelete(false)
+      .mcpEndpoint(SSE_MESSAGE_ENDPOINT)
+      // .contextExtractor((serverRequest, context) -> context)
       .build();
   }
 
   @Bean
-  public ServletRegistrationBean<?> customServletBean(
-    final HttpServletSseServerTransportProvider transportProvider
-  ) {
+  public ServletRegistrationBean<?> customServletBean(final HttpServletStreamableServerTransportProvider transportProvider) {
     return new ServletRegistrationBean<>(transportProvider, SSE_MESSAGE_ENDPOINT, SSE_ENDPOINT);
   }
 }

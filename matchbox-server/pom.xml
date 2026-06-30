@@ -254,7 +254,6 @@
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-test</artifactId>
-            <version>${spring_boot_version}</version>
             <scope>test</scope>
         </dependency>
         <dependency>
@@ -277,13 +276,11 @@
         <dependency>
             <groupId>org.springframework.ai</groupId>
             <artifactId>spring-ai-starter-mcp-server</artifactId>
-            <version>1.0.2</version>
         </dependency>
 
         <dependency>
             <groupId>org.springframework</groupId>
             <artifactId>spring-test</artifactId>
-            <version>${spring_version}</version>
         </dependency>
 
     </dependencies>
