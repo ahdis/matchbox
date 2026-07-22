@@ -145,7 +145,7 @@ public class FHIRPathHostServices implements IHostApplicationServices {
 
   @Override
   public ValueSet resolveValueSet(FHIRPathEngine engine, Object appContext, String url) {
-	  return structureMapUtilities.getWorker().findTxResource(ValueSet.class, url, IWorkerContext.VersionResolutionRules.defaultRule());
+    return structureMapUtilities.getWorker().findTxResource(ValueSet.class, url, IWorkerContext.VersionResolutionRules.defaultRule());
   }
 
   @Override

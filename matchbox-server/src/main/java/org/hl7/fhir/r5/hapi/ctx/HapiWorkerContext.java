@@ -12,10 +12,8 @@ import ca.uhn.fhir.system.HapiSystemProperties;
 import org.apache.commons.lang3.Validate;
 import org.fhir.ucum.UcumService;
 import org.hl7.fhir.exceptions.FHIRException;
-import org.hl7.fhir.exceptions.TerminologyServiceException;
 import org.hl7.fhir.r5.context.ExpansionOptions;
-import org.hl7.fhir.r5.context.IContextResourceLoader;
-import org.hl7.fhir.r5.context.IOIDServices.OIDSummary;
+import org.hl7.fhir.r5.context.IOIDServices;
 import org.hl7.fhir.r5.context.IWorkerContext;
 import org.hl7.fhir.r5.context.IWorkerContextManager;
 import org.hl7.fhir.r5.model.CodeSystem;
@@ -23,7 +21,6 @@ import org.hl7.fhir.r5.model.CodeSystem.ConceptDefinitionComponent;
 import org.hl7.fhir.r5.model.CodeableConcept;
 import org.hl7.fhir.r5.model.Coding;
 import org.hl7.fhir.r5.model.ElementDefinition.ElementDefinitionBindingComponent;
-import org.hl7.fhir.r5.model.NamingSystem;
 import org.hl7.fhir.r5.model.OperationOutcome;
 import org.hl7.fhir.r5.model.PackageInformation;
 import org.hl7.fhir.r5.model.Parameters;
@@ -31,7 +28,6 @@ import org.hl7.fhir.r5.model.Resource;
 import org.hl7.fhir.r5.model.ResourceType;
 import org.hl7.fhir.r5.model.StructureDefinition;
 import org.hl7.fhir.r5.model.ValueSet;
-import org.hl7.fhir.r5.model.ValueSet.ConceptSetComponent;
 import org.hl7.fhir.r5.profilemodel.PEBuilder;
 import org.hl7.fhir.r5.terminologies.client.TerminologyClientManager;
 import org.hl7.fhir.r5.terminologies.expansion.ValueSetExpansionOutcome;
@@ -39,26 +35,19 @@ import org.hl7.fhir.r5.terminologies.utilities.CodingValidationRequest;
 import org.hl7.fhir.r5.terminologies.utilities.ValidationResult;
 import org.hl7.fhir.r5.utils.validation.IResourceValidator;
 import org.hl7.fhir.r5.utils.validation.ValidationContextCarrier;
-import org.hl7.fhir.utilities.FhirPublication;
 import org.hl7.fhir.utilities.TimeTracker;
 import org.hl7.fhir.utilities.i18n.I18nBase;
-import org.hl7.fhir.utilities.npm.BasePackageCacheManager;
-import org.hl7.fhir.utilities.npm.NpmPackage;
 import org.hl7.fhir.utilities.validation.ValidationMessage.IssueSeverity;
 import org.hl7.fhir.utilities.validation.ValidationOptions;
 
-import java.io.FileNotFoundException;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
-import java.util.Map;
 import java.util.Set;
 
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
-// replaced because of matchbox patch: methods added for org.hl7.fhir.core 6.9.1 VersionResolutionRules API
 public final class HapiWorkerContext extends I18nBase implements IWorkerContext {
 	private final FhirContext myCtx;
 	private final Cache<String, Resource> myFetchedResourceCache;
@@ -80,8 +69,8 @@ public final class HapiWorkerContext extends I18nBase implements IWorkerContext 
 		setValidationMessageLanguage(getLocale());
 	}
 
-
-	public CodeSystem fetchCodeSystem(String theSystem) {
+	@Override
+	public CodeSystem fetchCodeSystem(String theSystem, IWorkerContext.VersionResolutionRules rules) {
 		if (myValidationSupport == null) {
 			return null;
 		} else {
@@ -89,8 +78,19 @@ public final class HapiWorkerContext extends I18nBase implements IWorkerContext 
 		}
 	}
 
+	@Override
+	public CodeSystem fetchCodeSystem(
+		String theSystem, IWorkerContext.VersionResolutionRules rules, String version, Resource sourceOfReference) {
+		return fetchCodeSystem(theSystem, rules, version, sourceOfReference, true);
+	}
 
-	public CodeSystem fetchCodeSystem(String theSystem, String version) {
+	@Override
+	public CodeSystem fetchCodeSystem(
+		String theSystem,
+		IWorkerContext.VersionResolutionRules rules,
+		String version,
+		Resource sourceOfReference,
+		boolean checkForImplicits) {
 		if (myValidationSupport == null) {
 			return null;
 		} else {
@@ -98,57 +98,22 @@ public final class HapiWorkerContext extends I18nBase implements IWorkerContext 
 		}
 	}
 
-
-	public CodeSystem fetchCodeSystem(String system, FhirPublication fhirVersion) {
-		throw new UnsupportedOperationException(Msg.code(2456));
-	}
-
-
-	public CodeSystem fetchCodeSystem(String system, String version, FhirPublication fhirVersion) {
-		throw new UnsupportedOperationException(Msg.code(2457));
-	}
-
-	// matchbox patch: methods added for org.hl7.fhir.core 6.9.1 VersionResolutionRules API
-	public CodeSystem fetchCodeSystem(String system, IWorkerContext.VersionResolutionRules rules) {
-		return fetchCodeSystem(system);
-	}
-
-	public CodeSystem fetchCodeSystem(String system, IWorkerContext.VersionResolutionRules rules, String version, Resource sourceOfReference) {
-		return fetchCodeSystem(system, version);
-	}
-
-	public CodeSystem fetchCodeSystem(String system, IWorkerContext.VersionResolutionRules rules, String version, Resource sourceOfReference, boolean useSupplements) {
-		return fetchCodeSystem(system, version);
-	}
-
-	public CodeSystem fetchSupplementedCodeSystem(String theS) {
+	@Override
+	public CodeSystem fetchSupplementedCodeSystem(String theS, IWorkerContext.VersionResolutionRules rules) {
 		return null;
 	}
 
-
-	public CodeSystem fetchSupplementedCodeSystem(String theS, String theS1) {
+	@Override
+	public CodeSystem fetchSupplementedCodeSystem(
+		String system,
+		IWorkerContext.VersionResolutionRules rules,
+		String version,
+		List<String> specifiedSupplements,
+		Resource sourceOfReference) {
 		return null;
 	}
 
-
-	public CodeSystem fetchSupplementedCodeSystem(String system, FhirPublication fhirVersion) {
-		throw new UnsupportedOperationException(Msg.code(2458));
-	}
-
-
-	public CodeSystem fetchSupplementedCodeSystem(String system, String version, FhirPublication fhirVersion) {
-		throw new UnsupportedOperationException(Msg.code(2459));
-	}
-
-	public CodeSystem fetchSupplementedCodeSystem(String system, IWorkerContext.VersionResolutionRules rules) {
-		throw new UnsupportedOperationException(Msg.code(2459));
-	}
-
-	public CodeSystem fetchSupplementedCodeSystem(String system, IWorkerContext.VersionResolutionRules rules, String version, List<String> supplements, Resource sourceOfReference) {
-		throw new UnsupportedOperationException(Msg.code(2459));
-	}
-
-
+	@Override
 	public List<String> getResourceNames() {
 		List<String> result = new ArrayList<>();
 		for (ResourceType next : ResourceType.values()) {
@@ -158,43 +123,17 @@ public final class HapiWorkerContext extends I18nBase implements IWorkerContext 
 		return result;
 	}
 
-
-	public List<String> getResourceNames(FhirPublication fhirVersion) {
-		throw new UnsupportedOperationException(Msg.code(2460));
-	}
-
-
+	@Override
 	public IResourceValidator newValidator() {
 		throw new UnsupportedOperationException(Msg.code(206));
 	}
 
-
-	public Map<String, NamingSystem> getNSUrlMap() {
-		throw new UnsupportedOperationException(Msg.code(2241));
-	}
-
-
-	public boolean supportsSystem(String theSystem) {
-		if (myValidationSupport == null) {
-			return false;
-		} else {
-			return myValidationSupport.isCodeSystemSupported(
-					new ValidationSupportContext(myValidationSupport), theSystem);
-		}
-	}
-
-
-	public boolean supportsSystem(String system, FhirPublication fhirVersion) throws TerminologyServiceException {
-		if (!fhirVersion.equals(FhirPublication.R5)) {
-			throw new UnsupportedOperationException(Msg.code(2461));
-		}
-		return supportsSystem(system);
-	}
-
-	public SystemSupportInformation getTxSupportInfo(String system) {
+	@Override
+	public SystemSupportInformation getTxSupportInfo(String system, String version) {
 		return null;
 	}
 
+	@Override
 	public ValidationResult validateCode(ValidationOptions theOptions, CodeableConcept theCode, ValueSet theVs) {
 		for (Coding next : theCode.getCoding()) {
 			ValidationResult retVal = validateCode(theOptions, next, theVs);
@@ -205,6 +144,8 @@ public final class HapiWorkerContext extends I18nBase implements IWorkerContext 
 
 		return new ValidationResult(IssueSeverity.ERROR, null, null);
 	}
+
+	@Override
 	public ValidationResult validateCode(ValidationOptions theOptions, Coding theCode, ValueSet theVs) {
 		String system = theCode.getSystem();
 		String code = theCode.getCode();
@@ -212,52 +153,26 @@ public final class HapiWorkerContext extends I18nBase implements IWorkerContext 
 		return validateCode(theOptions, system, null, code, display, theVs);
 	}
 
-
+	@Override
 	public ValidationResult validateCode(
-			ValidationOptions options, Coding code, ValueSet vs, ValidationContextCarrier ctxt) {
+		ValidationOptions options, Coding code, ValueSet vs, ValidationContextCarrier ctxt) {
 		return validateCode(options, code, vs);
 	}
 
-
+	@Override
 	public void validateCodeBatch(
-			ValidationOptions options, List<? extends CodingValidationRequest> codes, ValueSet vs, boolean isGuess) {
-		throw new UnsupportedOperationException(Msg.code(209));
-	}
+		ValidationOptions options, List<? extends CodingValidationRequest> codes, ValueSet vs, boolean passVS) {}
 
-
-	public void validateCodeBatchByRef(
-			ValidationOptions validationOptions, List<? extends CodingValidationRequest> list, String s) {
-		throw new UnsupportedOperationException(Msg.code(2430));
-	}
-
-
-	public ValueSetExpansionOutcome expandVS(
-			ValueSet theValueSet, boolean cacheOk, boolean heiarchical, boolean incompleteOk) {
-		return null;
-	}
-
-	public ValueSetExpansionOutcome expandVS(ExpansionOptions options, String url) {
-		throw new UnsupportedOperationException(Msg.code(2128));
-	}
-
-	public ValueSetExpansionOutcome expandVS(ValueSet theValueSet, boolean cacheOk, boolean hierarchical, int limit) {
-		throw new UnsupportedOperationException(Msg.code(2128));
-	}
-
-	public ValueSetExpansionOutcome expandVS(ExpansionOptions options, ValueSet theValueSet) {
-		throw new UnsupportedOperationException(Msg.code(2128));
-	}
-
-
+	@Override
 	public ValidationResult validateCode(
-			ValidationOptions theOptions, String theSystem, String theVersion, String theCode, String theDisplay) {
+		ValidationOptions theOptions, String theSystem, String theVersion, String theCode, String theDisplay) {
 		IValidationSupport.CodeValidationResult result = myValidationSupport.validateCode(
-				new ValidationSupportContext(myValidationSupport),
-				convertConceptValidationOptions(theOptions),
-				theSystem,
-				theCode,
-				theDisplay,
-				null);
+			new ValidationSupportContext(myValidationSupport),
+			convertConceptValidationOptions(theOptions),
+			theSystem,
+			theCode,
+			theDisplay,
+			null);
 		if (result == null) {
 			return null;
 		}
@@ -269,31 +184,31 @@ public final class HapiWorkerContext extends I18nBase implements IWorkerContext 
 		return new ValidationResult(severity, result.getMessage(), theSystem, theVersion, definition, null, null);
 	}
 
-
+	@Override
 	public ValidationResult validateCode(
-			ValidationOptions theOptions,
-			String theSystem,
-			String theVersion,
-			String theCode,
-			String theDisplay,
-			ValueSet theVs) {
+		ValidationOptions theOptions,
+		String theSystem,
+		String theVersion,
+		String theCode,
+		String theDisplay,
+		ValueSet theVs) {
 		IValidationSupport.CodeValidationResult outcome;
 		if (isNotBlank(theVs.getUrl())) {
 			outcome = myValidationSupport.validateCode(
-					new ValidationSupportContext(myValidationSupport),
-					convertConceptValidationOptions(theOptions),
-					theSystem,
-					theCode,
-					theDisplay,
-					theVs.getUrl());
+				new ValidationSupportContext(myValidationSupport),
+				convertConceptValidationOptions(theOptions),
+				theSystem,
+				theCode,
+				theDisplay,
+				theVs.getUrl());
 		} else {
 			outcome = myValidationSupport.validateCodeInValueSet(
-					new ValidationSupportContext(myValidationSupport),
-					convertConceptValidationOptions(theOptions),
-					theSystem,
-					theCode,
-					theDisplay,
-					theVs);
+				new ValidationSupportContext(myValidationSupport),
+				convertConceptValidationOptions(theOptions),
+				theSystem,
+				theCode,
+				theDisplay,
+				theVs);
 		}
 
 		if (outcome != null && outcome.isOk()) {
@@ -304,134 +219,142 @@ public final class HapiWorkerContext extends I18nBase implements IWorkerContext 
 		}
 
 		return new ValidationResult(
-				IssueSeverity.ERROR,
-				"Unknown code[" + theCode + "] in system[" + Constants.codeSystemWithDefaultDescription(theSystem)
-						+ "]",
-				null);
+			IssueSeverity.ERROR,
+			"Unknown code[" + theCode + "] in system[" + Constants.codeSystemWithDefaultDescription(theSystem)
+				+ "]",
+			null);
 	}
 
-
+	@Override
 	public ValidationResult validateCode(ValidationOptions theOptions, String code, ValueSet vs) {
 		return validateCode(theOptions, null, null, code, null, vs);
 	}
 
-
+	@Override
 	public Parameters getExpansionParameters() {
 		return myExpansionProfile;
-	}
-
-
-	public void setExpansionParameters(Parameters expParameters) {
-		setExpansionProfile(expParameters);
 	}
 
 	public void setExpansionProfile(Parameters theExpParameters) {
 		myExpansionProfile = theExpParameters;
 	}
 
-
+	@Override
 	public ValueSetExpansionOutcome expandVS(ValueSet theSource, boolean theCacheOk, boolean theHierarchical) {
 		throw new UnsupportedOperationException(Msg.code(2128));
 	}
 
-
-	public ValueSetExpansionOutcome expandVS(ConceptSetComponent theInc, boolean theHierarchical, boolean theNoInactive)
-			throws TerminologyServiceException {
-		ValueSet input = new ValueSet();
-		input.getCompose().setInactive(!theNoInactive); // TODO GGG/DO is this valid?
-		input.getCompose().addInclude(theInc);
-		IValidationSupport.ValueSetExpansionOutcome output =
-				myValidationSupport.expandValueSet(new ValidationSupportContext(myValidationSupport), null, input);
-		return new ValueSetExpansionOutcome(
-				(ValueSet) output.getValueSet(), output.getError(), null, output.getErrorIsFromServer());
+	@Override
+	public ValueSetExpansionOutcome expandVS(ExpansionOptions options, ValueSet source) {
+		throw new UnsupportedOperationException(Msg.code(2823));
 	}
 
+	@Override
+	public ValueSetExpansionOutcome expandVS(ValueSet theSource, boolean theCacheOk, boolean theHierarchical, int i) {
+		throw new UnsupportedOperationException(Msg.code(2650));
+	}
 
+	@Override
+	public ValueSetExpansionOutcome expandVS(ExpansionOptions options, String uri) {
+		throw new UnsupportedOperationException(Msg.code(2824));
+	}
+
+	@Override
 	public Locale getLocale() {
 		return Locale.getDefault();
 	}
 
-
+	@Override
 	public void setLocale(Locale locale) {
 		// ignore
 	}
 
-
+	@Override
 	public org.hl7.fhir.r5.context.ILoggingService getLogger() {
 		throw new UnsupportedOperationException(Msg.code(213));
 	}
 
-
-	public void setLogger(org.hl7.fhir.r5.context.ILoggingService theLogger) {
-		throw new UnsupportedOperationException(Msg.code(214));
-	}
-
-
+	@Override
 	public String getVersion() {
 		return myCtx.getVersion().getVersion().getFhirVersionString();
 	}
 
+	@Override
+	public long getDefinitionsVersion() {
+		/* 	This is not called in 6.8.2 of org.hl7.fhir.core except within implementations of
+		storeAnalysis/retrieveAnalysis, which we do not implement in HAPI -dotasek
+		*/
+		throw new UnsupportedOperationException(Msg.code(2861));
+	}
 
+	@Override
+	public void storeAnalysis(Class className, Object analysis) {
+		// Unimplemented: see retrieveAnalysis for details.
+	}
+
+	@Override
+	public Object retrieveAnalysis(Class className) {
+		/*  org.hl7.fhir.core will produce the necessary analysis on-demand if this returns null, at a performance cost.
+			If performance in validation or FHIRPath execution becomes an issue, this will have to be implemented in a
+			thread-safe manner. -dotasek
+		*/
+		return null;
+	}
+
+	@Override
 	public UcumService getUcumService() {
 		throw new UnsupportedOperationException(Msg.code(216));
 	}
 
-
-	public void setUcumService(UcumService ucumService) {
-		throw new UnsupportedOperationException(Msg.code(217));
+	@Override
+	public IOIDServices oidServices() {
+		throw new UnsupportedOperationException(Msg.code(2825));
 	}
 
+	@Override
+	public IWorkerContextManager getManager() {
+		throw new UnsupportedOperationException(Msg.code(2826));
+	}
 
+	@Override
 	public boolean isNoTerminologyServer() {
 		return false;
 	}
 
-
+	@Override
 	public Set<String> getCodeSystemsUsed() {
 		throw new UnsupportedOperationException(Msg.code(218));
 	}
 
-
+	@Override
 	public StructureDefinition fetchTypeDefinition(String typeName) {
 		return fetchResource(StructureDefinition.class, "http://hl7.org/fhir/StructureDefinition/" + typeName);
 	}
 
-
+	@Override
 	public boolean isPrimitiveType(String s) {
 		throw new UnsupportedOperationException(Msg.code(2462));
 	}
 
-
+	@Override
 	public boolean isDataType(String s) {
 		throw new UnsupportedOperationException(Msg.code(2463));
 	}
 
-
-	public StructureDefinition fetchTypeDefinition(String typeName, FhirPublication fhirVersion) {
-		throw new UnsupportedOperationException(Msg.code(2464));
-	}
-
-
+	@Override
 	public List<StructureDefinition> fetchTypeDefinitions(String n) {
 		throw new UnsupportedOperationException(Msg.code(234));
 	}
 
-
-	public List<StructureDefinition> fetchTypeDefinitions(String n, FhirPublication fhirPublication) {
-		throw new UnsupportedOperationException(Msg.code(2465));
+	@Override
+	public <T extends Resource> T fetchResourceRaw(
+		Class<T> class_, String uri, IWorkerContext.VersionResolutionRules rules) {
+		return fetchResource(class_, uri, rules);
 	}
 
-
-	public <T extends Resource> T fetchResourceRaw(Class<T> class_, String uri) {
-		return fetchResource(class_, uri);
-	}
-
-	public <T extends Resource> T fetchResourceRaw(Class<T> class_, String uri, IWorkerContext.VersionResolutionRules rules) {
-		return fetchResource(class_, uri);
-	}
-
-
-	public <T extends org.hl7.fhir.r5.model.Resource> T fetchResource(Class<T> theClass, String theUri) {
+	@Override
+	public <T extends org.hl7.fhir.r5.model.Resource> T fetchResource(
+		Class<T> theClass, String theUri, IWorkerContext.VersionResolutionRules rules) {
 		if (myValidationSupport == null || theUri == null) {
 			return null;
 		} else {
@@ -441,192 +364,128 @@ public final class HapiWorkerContext extends I18nBase implements IWorkerContext 
 		}
 	}
 
-	public <T extends Resource> T fetchResource(Class<T> class_, String uri, FhirPublication fhirVersion) {
-		throw new UnsupportedOperationException(Msg.code(2466));
-	}
-
-	public <T extends Resource> T fetchResource(Class<T> class_, String uri, IWorkerContext.VersionResolutionRules rules) {
-		return fetchResource(class_, uri);
-	}
-
-	public <T extends Resource> T fetchResource(Class<T> class_, String uri, IWorkerContext.VersionResolutionRules rules, String version, Resource sourceOfReference) {
-		return fetchResource(class_, uri);
-	}
-
-
-	public <T extends org.hl7.fhir.r5.model.Resource> T fetchResourceWithException(Class<T> theClass, String theUri)
-			throws FHIRException {
-		T retVal = fetchResource(theClass, theUri);
+	@Override
+	public <T extends org.hl7.fhir.r5.model.Resource> T fetchResourceWithException(
+		Class<T> theClass, String theUri, IWorkerContext.VersionResolutionRules rules) throws FHIRException {
+		T retVal = fetchResource(theClass, theUri, rules);
 		if (retVal == null) {
 			throw new FHIRException(Msg.code(224) + "Could not find resource: " + theUri);
 		}
 		return retVal;
 	}
 
-
-	public <T extends Resource> T fetchResourceWithException(Class<T> theClass, String uri, Resource sourceOfReference)
-			throws FHIRException {
+	@Override
+	public <T extends Resource> T fetchResourceWithException(
+		Class<T> theClass,
+		String uri,
+		IWorkerContext.VersionResolutionRules rules,
+		String version,
+		Resource sourceOfReference)
+		throws FHIRException {
 		throw new UnsupportedOperationException(Msg.code(2213));
 	}
 
-	public <T extends Resource> T fetchResourceWithException(Class<T> theClass, String uri, IWorkerContext.VersionResolutionRules rules)
-			throws FHIRException {
-		return fetchResourceWithException(theClass, uri);
-	}
-
-	public <T extends Resource> T fetchResourceWithException(Class<T> theClass, String uri, IWorkerContext.VersionResolutionRules rules, String version, Resource sourceOfReference)
-			throws FHIRException {
-		return fetchResourceWithException(theClass, uri);
-	}
-
-
-	public <T extends Resource> T fetchResource(Class<T> theClass, String theUri, String theVersion) {
-		return fetchResource(theClass, theUri + "|" + theVersion);
-	}
-
-
+	@Override
 	public <T extends Resource> T fetchResource(
-			Class<T> class_, String uri, String version, FhirPublication fhirVersion) {
-		throw new UnsupportedOperationException(Msg.code(2467));
+		Class<T> theClass,
+		String theUri,
+		IWorkerContext.VersionResolutionRules rules,
+		String theVersion,
+		Resource sourceOfReference) {
+		if (theVersion == null) {
+			return fetchResource(theClass, theUri, rules);
+		}
+		return fetchResource(theClass, theUri + "|" + theVersion, rules);
 	}
 
-
-	public <T extends Resource> T fetchResource(Class<T> class_, String uri, Resource canonicalForSource) {
-		return fetchResource(class_, uri);
-	}
-
-
-	public <T extends Resource> List<T> fetchResourcesByType(Class<T> class_, FhirPublication fhirVersion) {
-		throw new UnsupportedOperationException(Msg.code(2468));
-	}
-
-
+	@Override
 	public org.hl7.fhir.r5.model.Resource fetchResourceById(String theType, String theUri) {
 		throw new UnsupportedOperationException(Msg.code(226));
 	}
 
-
-	public Resource fetchResourceById(String type, String uri, FhirPublication fhirVersion) {
-		throw new UnsupportedOperationException(Msg.code(2469));
-	}
-
-
+	@Override
 	public <T extends org.hl7.fhir.r5.model.Resource> boolean hasResource(Class<T> theClass_, String theUri) {
 		throw new UnsupportedOperationException(Msg.code(227));
 	}
 
-
-	public <T extends Resource> boolean hasResource(Class<T> class_, String uri, Resource sourceOfReference) {
+	@Override
+	public <T extends Resource> boolean hasResource(
+		Class<T> class_, String uri, String version, Resource sourceOfReference) {
 		throw new UnsupportedOperationException(Msg.code(2470));
 	}
 
-	public <T extends Resource> boolean hasResource(Class<T> class_, String uri, String version, Resource sourceOfReference) {
-		throw new UnsupportedOperationException(Msg.code(2470));
-	}
-
-	public <T extends Resource> List<T> fetchResourceVersions(Class<T> class_, String url) {
-		throw new UnsupportedOperationException(Msg.code(2470));
-	}
-
-
-	public <T extends Resource> boolean hasResource(Class<T> class_, String uri, FhirPublication fhirVersion) {
-		throw new UnsupportedOperationException(Msg.code(2471));
-	}
-
-
-	public void cacheResource(org.hl7.fhir.r5.model.Resource theRes) throws FHIRException {
-		throw new UnsupportedOperationException(Msg.code(228));
-	}
-
-
-	public void cacheResourceFromPackage(Resource res, PackageInformation packageDetails) throws FHIRException {
-		throw new UnsupportedOperationException(Msg.code(229));
-	}
-
-
-	public void cachePackage(PackageInformation packageInformation) {}
-
-
+	@Override
 	public Set<String> getResourceNamesAsSet() {
 		return myCtx.getResourceTypes();
 	}
 
-	public Set<String> getResourceNamesAsSet(FhirPublication fhirVersion) {
-		throw new UnsupportedOperationException(Msg.code(2472));
-	}
-
-
+	@Override
 	public ValueSetExpansionOutcome expandVS(
-			Resource src, ElementDefinitionBindingComponent theBinding, boolean theCacheOk, boolean theHierarchical)
-			throws FHIRException {
+		Resource src, ElementDefinitionBindingComponent theBinding, boolean theCacheOk, boolean theHierarchical)
+		throws FHIRException {
 		throw new UnsupportedOperationException(Msg.code(230));
 	}
 
-
+	@Override
 	public Set<String> getBinaryKeysAsSet() {
 		throw new UnsupportedOperationException(Msg.code(2115));
 	}
 
-
+	@Override
 	public boolean hasBinaryKey(String s) {
 		throw new UnsupportedOperationException(Msg.code(2129));
 	}
 
-
+	@Override
 	public byte[] getBinaryForKey(String s) {
 		throw new UnsupportedOperationException(Msg.code(2199));
 	}
 
-	public int loadFromPackage(NpmPackage pi, IContextResourceLoader loader) throws FHIRException {
-		throw new UnsupportedOperationException(Msg.code(233));
-	}
-
-	public int loadFromPackage(NpmPackage pi, IContextResourceLoader loader, List<String> types)
-			throws FileNotFoundException, IOException, FHIRException {
-		throw new UnsupportedOperationException(Msg.code(2328));
-	}
-
-	public int loadFromPackageAndDependencies(NpmPackage pi, IContextResourceLoader loader, BasePackageCacheManager pcm)
-			throws FHIRException {
-		throw new UnsupportedOperationException(Msg.code(235));
-	}
-
-
+	@Override
 	public boolean hasPackage(String id, String ver) {
 		throw new UnsupportedOperationException(Msg.code(236));
 	}
 
-
+	@Override
 	public boolean hasPackage(PackageInformation packageVersion) {
 		return false;
 	}
 
-
+	@Override
 	public PackageInformation getPackage(String id, String ver) {
 		return null;
 	}
 
-
+	@Override
 	public int getClientRetryCount() {
 		throw new UnsupportedOperationException(Msg.code(237));
 	}
 
-
+	@Override
 	public IWorkerContext setClientRetryCount(int value) {
 		throw new UnsupportedOperationException(Msg.code(238));
 	}
 
-
+	@Override
 	public TimeTracker clock() {
 		return null;
 	}
 
+	// Matchbox: this method was copied from master, so this file can probably be deleted at the next HAPI-FHIR update.
+	@Override
+	public TerminologyClientManager getTerminologyClientManager() {
+		// This is only used in one place in org.hl7.fhir.core:
+		// https://github.com/hapifhir/org.hl7.fhir.core/blob/10bcacefd50a0a00db98562ed65e6d7287f8842d/org.hl7.fhir.validation/src/main/java/org/hl7/fhir/validation/instance/type/CompliesWithChecker.java#L486
+		// In that instance, non-null values could enter incomplete code that will throw an Error.
+		return null;
+	}
 
+	@Override
 	public IWorkerContextManager.IPackageLoadingTracker getPackageTracker() {
 		throw new UnsupportedOperationException(Msg.code(2112));
 	}
 
-
+	@Override
 	public PackageInformation getPackageForUrl(String s) {
 		return null;
 	}
@@ -639,7 +498,7 @@ public final class HapiWorkerContext extends I18nBase implements IWorkerContext 
 		return retVal;
 	}
 
-
+	@Override
 	public <T extends Resource> List<T> fetchResourcesByType(Class<T> theClass) {
 		if (theClass.equals(StructureDefinition.class)) {
 			return myValidationSupport.fetchAllStructureDefinitions();
@@ -648,82 +507,55 @@ public final class HapiWorkerContext extends I18nBase implements IWorkerContext 
 		throw new UnsupportedOperationException(Msg.code(2113) + "Can't fetch all resources of type: " + theClass);
 	}
 
-	public <T extends Resource> List<T> fetchResourceVersionsByTypeAndUrl(Class<T> class_, String url) {
-		throw new UnsupportedOperationException(
-				Msg.code(2796) + "Can't fetch all resources of type : " + class_ + " and url: " + url);
+	@Override
+	public <T extends Resource> List<T> fetchResourceVersions(Class<T> class_, String url) {
+		throw new UnsupportedOperationException(Msg.code(2827));
 	}
 
-
-	public <T extends Resource> List<T> fetchResourcesByUrl(Class<T> class_, String url) {
-		throw new UnsupportedOperationException(Msg.code(2508) + "Can't fetch all resources of url: " + url);
-	}
-
-
+	@Override
 	public IWorkerContext setPackageTracker(IWorkerContextManager.IPackageLoadingTracker theIPackageLoadingTracker) {
 		throw new UnsupportedOperationException(Msg.code(220));
 	}
 
-
+	@Override
 	public String getSpecUrl() {
 		return "";
 	}
 
-
+	@Override
 	public PEBuilder getProfiledElementBuilder(
-			PEBuilder.PEElementPropertiesPolicy thePEElementPropertiesPolicy, boolean theB) {
+		PEBuilder.PEElementPropertiesPolicy thePEElementPropertiesPolicy, boolean theB) {
 		throw new UnsupportedOperationException(Msg.code(2261));
 	}
 
-
+	@Override
 	public boolean isForPublication() {
 		return false;
 	}
 
-
+	@Override
 	public void setForPublication(boolean b) {
 		throw new UnsupportedOperationException(Msg.code(2350));
 	}
 
-	public OIDSummary urlsForOid(String oid, String resourceType) {
-		throw new UnsupportedOperationException(Msg.code(2473));
+	@Override
+	public <T extends Resource> T findTxResource(
+		Class<T> class_,
+		String canonical,
+		IWorkerContext.VersionResolutionRules rules,
+		String version,
+		Resource sourceOfReference) {
+		throw new UnsupportedOperationException(Msg.code(2829));
 	}
 
 	@Override
-	public <T extends Resource> T findTxResource(Class<T> arg0, String arg1, VersionResolutionRules arg2, String arg3,
-			Resource arg4) {
-		throw new UnsupportedOperationException("Unimplemented method 'findTxResource'");
-	}
-
-	public <T extends Resource> T findTxResource(Class<T> class_, String canonical, IWorkerContext.VersionResolutionRules rules) {
-		throw new UnsupportedOperationException(Msg.code(2491));
-	}
-
-	public <T extends Resource> T findTxResource(Class<T> class_, String canonical) {
+	public <T extends Resource> T findTxResource(
+		Class<T> class_, String canonical, IWorkerContext.VersionResolutionRules rules) {
 		throw new UnsupportedOperationException(Msg.code(2492));
 	}
 
-	public <T extends Resource> T findTxResource(Class<T> class_, String canonical, String version) {
-		throw new UnsupportedOperationException(Msg.code(2493));
-	}
-
+	@Override
 	public Boolean subsumes(ValidationOptions optionsArg, Coding parent, Coding child) {
-		throw new UnsupportedOperationException(Msg.code(2488));
-	}
-
-	public long getDefinitionsVersion() {
-		return 0;
-	}
-
-	public org.hl7.fhir.r5.context.IOIDServices oidServices() {
-		return null;
-	}
-
-	public IWorkerContextManager getManager() {
-		throw new UnsupportedOperationException(Msg.code(2488));
-	}
-
-	// matchbox patch: methods added in org.hl7.fhir.core 6.9.1
-	public IWorkerContext.SystemSupportInformation getTxSupportInfo(String system, String version) {
 		throw new UnsupportedOperationException(Msg.code(2488));
 	}
 
@@ -731,21 +563,4 @@ public final class HapiWorkerContext extends I18nBase implements IWorkerContext 
 	public OperationOutcome validateTxResource(ValidationOptions options, Resource resource) {
 		throw new UnsupportedOperationException(Msg.code(2734));
 	}
-	private final java.util.Map<String, Object> analyses = new java.util.HashMap<>();
-
-
-	public void storeAnalysis(Class className, Object analysis) {
-		analyses.put(className.getName(), analysis);
-	}
-
-
-	public Object retrieveAnalysis(Class className) {
-		return analyses.get(className.getName());
-	}
-
-	@Override
-	public TerminologyClientManager getTerminologyClientManager() {
-		throw new UnsupportedOperationException("Unimplemented method 'getTerminologyClientManager'");
-	}
-
 }

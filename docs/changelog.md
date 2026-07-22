@@ -1,3 +1,8 @@
+Unreleased
+
+- Update org.hl7.fhir.core to 6.9.12
+- Update HAPI FHIR to 8.10.0
+
 2026/07/01 Release 4.1.11
 
 - Fix for issue #528: Validation through MCP with AI analysis via Sampling will only get the result of the AI analysis back, not the full OperationOutcome

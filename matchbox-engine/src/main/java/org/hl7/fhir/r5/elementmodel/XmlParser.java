@@ -46,10 +46,14 @@ import javax.xml.XMLConstants;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.SAXParserFactory;
+import javax.xml.transform.SourceLocator;
 import javax.xml.transform.Transformer;
+import javax.xml.transform.TransformerException;
 import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.dom.DOMResult;
 import javax.xml.transform.sax.SAXSource;
+import javax.xml.xpath.XPathException;
+
 
 import org.hl7.fhir.exceptions.DefinitionException;
 import org.hl7.fhir.exceptions.FHIRException;
@@ -167,10 +171,9 @@ public class XmlParser extends ParserBase {
         doc = builder.parse(stream);
       }
     } catch (Exception e) {
-      if (e.getMessage().contains("lineNumber:") && e.getMessage().contains("columnNumber:")) {
-        int line = Utilities.parseInt(extractVal(e.getMessage(), "lineNumber"), 0); 
-        int col = Utilities.parseInt(extractVal(e.getMessage(), "columnNumber"), 0); 
-        logError(focusFragment.getErrors(), ValidationMessage.NO_RULE_DATE, line, col, "(xml)", IssueType.INVALID, e.getMessage().substring(e.getMessage().lastIndexOf(";")+1).trim(), IssueSeverity.FATAL);
+
+      if (e instanceof TransformerException transformerException) {
+        logTransformerException(e, transformerException, focusFragment);
       } else {
         logError(focusFragment.getErrors(), ValidationMessage.NO_RULE_DATE, 0, 0, "(xml)", IssueType.INVALID, e.getMessage(), IssueSeverity.FATAL);
       }
@@ -182,6 +185,28 @@ public class XmlParser extends ParserBase {
     List<ValidatedFragment> res = new ArrayList<>();
     res.add(focusFragment);
     return res;
+  }
+
+  private void logTransformerException(Exception e, TransformerException transformerException, ValidatedFragment focusFragment) {
+    SourceLocator locator = transformerException.getLocator();
+    final int line;
+    final int col;
+    if (locator != null) {
+      line = locator.getLineNumber();
+      col = locator.getColumnNumber();
+    } else {
+      line = 0;
+      col = 0;
+    }
+
+    final String message;
+    final String xmlParserBoilerPlate = "Error reported by XML parser:";
+    if (e.getMessage().contains(xmlParserBoilerPlate)) {
+      message = e.getMessage().substring(e.getMessage().indexOf(xmlParserBoilerPlate) + xmlParserBoilerPlate.length()).trim();
+    } else {
+      message = e.getMessage();
+    }
+    logError(focusFragment.getErrors(), ValidationMessage.NO_RULE_DATE, line, col, "(xml)", IssueType.INVALID, message, IssueSeverity.FATAL);
   }
 
 
@@ -196,7 +221,7 @@ public class XmlParser extends ParserBase {
       while (node != null) {
         if (node.getNodeType() == Node.PROCESSING_INSTRUCTION_NODE)
           logError(errors, ValidationMessage.NO_RULE_DATE, line(document, false), col(document, false), "(document)", IssueType.INVALID, context.formatMessage(
-              I18nConstants.NO_PROCESSING_INSTRUCTIONS_ALLOWED_IN_RESOURCES), IssueSeverity.ERROR);
+            I18nConstants.NO_PROCESSING_INSTRUCTIONS_ALLOWED_IN_RESOURCES), IssueSeverity.ERROR);
         node = node.getNextSibling();
       }
     }
@@ -253,7 +278,7 @@ public class XmlParser extends ParserBase {
       return "h:";
     if (ns.equals("urn:hl7-org:v3"))
       return "v3:";
-    if (ns.equals("urn:hl7-org:sdtc")) 
+    if (ns.equals("urn:hl7-org:sdtc"))
       return "sdtc:";
     if (ns.equals("urn:ihe:pharm"))
       return "pharm:";
@@ -305,15 +330,15 @@ public class XmlParser extends ParserBase {
         if (!Utilities.noString(xsiType)) {
           String actualType = prop.getXmlTypeName();
           if (xsiType.equals(actualType)) {
-            logError(errors, "2023-10-12", line(element, false), col(element, false), path, IssueType.INVALID, context.formatMessage(I18nConstants.XSI_TYPE_UNNECESSARY), IssueSeverity.INFORMATION);            
+            logError(errors, "2023-10-12", line(element, false), col(element, false), path, IssueType.INVALID, context.formatMessage(I18nConstants.XSI_TYPE_UNNECESSARY), IssueSeverity.INFORMATION);
           } else {
             StructureDefinition sd = findLegalConstraint(xsiType, actualType);
             if (sd != null) {
               e.setType(sd.getType());
               e.setExplicitType(xsiType);
             } else {
-              logError(errors, "2023-10-12", line(element, false), col(element, false), path, IssueType.INVALID, context.formatMessage(I18nConstants.XSI_TYPE_WRONG, xsiType, actualType), IssueSeverity.ERROR);           
-            }  
+              logError(errors, "2023-10-12", line(element, false), col(element, false), path, IssueType.INVALID, context.formatMessage(I18nConstants.XSI_TYPE_WRONG, xsiType, actualType), IssueSeverity.ERROR);
+            }
           }
         }
       }
@@ -410,7 +435,7 @@ public class XmlParser extends ParserBase {
           }
           n = n.getNextSibling();
         }
-      }    		
+      }
     }
 
     for (int i = 0; i < node.getAttributes().getLength(); i++) {
@@ -429,7 +454,7 @@ public class XmlParser extends ParserBase {
 						av = av.trim();
 					}
           if (ExtensionUtilities.hasExtension(property.getDefinition(), ExtensionDefinitions.EXT_DATE_FORMAT))
-            av = convertForDateFormatFromExternal(ExtensionUtilities.readStringExtension(property.getDefinition(), ExtensionDefinitions.EXT_DATE_FORMAT), av);          
+            av = convertForDateFormatFromExternal(ExtensionUtilities.readStringExtension(property.getDefinition(), ExtensionDefinitions.EXT_DATE_FORMAT), av);
           if (property.getName().equals("value") && element.isPrimitive())
             element.setValue(av);
           else {
@@ -450,7 +475,7 @@ public class XmlParser extends ParserBase {
           boolean ok = false;
           if (FormatUtilities.FHIR_NS.equals(node.getNamespaceURI())) {
             if (attr.getLocalName().equals("schemaLocation") && FormatUtilities.NS_XSI.equals(attr.getNamespaceURI())) {
-              ok = ok || allowXsiLocation; 
+              ok = ok || allowXsiLocation;
             }
           } else {
             ok = ok || (attr.getLocalName().equals("schemaLocation")); // xsi:schemalocation allowed for non FHIR content
@@ -486,7 +511,7 @@ public class XmlParser extends ParserBase {
               xhtml = xp.parseHtmlNode((org.w3c.dom.Element) child);
               if (policy == ValidationPolicy.EVERYTHING) {
                 for (StringPair s : xp.getValidationIssues()) {
-                  logError(errors, "2022-11-17", line(child, false), col(child, false), path, IssueType.INVALID, context.formatMessage(s.getName(), s.getValue()), IssueSeverity.ERROR);                
+                  logError(errors, "2022-11-17", line(child, false), col(child, false), path, IssueType.INVALID, context.formatMessage(s.getName(), s.getValue()), IssueSeverity.ERROR);
                 }
               }
             }
@@ -501,7 +526,7 @@ public class XmlParser extends ParserBase {
             }
             Element n = new Element(name, property).markLocation(line(child, false), col(child, false)).setFormat(FhirFormat.XML).setNativeObject(child);
             if (property.isList()) {
-              n.setPath(element.getPath()+"."+property.getName()+"["+repeatCount+"]");    				  
+              n.setPath(element.getPath()+"."+property.getName()+"["+repeatCount+"]");
             } else {
               n.setPath(element.getPath()+"."+property.getName());
             }
@@ -554,7 +579,7 @@ public class XmlParser extends ParserBase {
               String npath = path+"/"+pathPrefix(cgProp.getXmlNamespace())+cgProp.getName();
               String name = cgProp.getName();
               Element cgn = new Element(cgProp.getName(), cgProp).setFormat(FhirFormat.XML);
-              cgn.setPath(element.getPath()+"."+cgProp.getName()+"["+repeatCount+"]"); 
+              cgn.setPath(element.getPath()+"."+cgProp.getName()+"["+repeatCount+"]");
               element.getChildren().add(cgn);
 
               npath = npath+"/"+pathPrefix(child.getNamespaceURI())+child.getLocalName();
@@ -581,7 +606,7 @@ public class XmlParser extends ParserBase {
         String npath = path+"/"+pathPrefix(cgProp.getXmlNamespace())+cgProp.getName();
         String name = cgProp.getName();
         Element cgn = new Element(cgProp.getName(), cgProp).setFormat(FhirFormat.XML);
-        cgn.setPath(element.getPath()+"."+cgProp.getName()+"["+repeatCount+"]"); 
+        cgn.setPath(element.getPath()+"."+cgProp.getName()+"["+repeatCount+"]");
         element.getChildren().add(cgn);
 
         npath = npath+"/text()";
@@ -639,15 +664,15 @@ public class XmlParser extends ParserBase {
     // first scan, by namespace
     for (Property p : propsSortedByLongestFirst) {
       if (!p.getDefinition().hasRepresentation(PropertyRepresentation.XMLATTR) && !p.getDefinition().hasRepresentation(PropertyRepresentation.XMLTEXT)) {
-        if (p.getXmlName().equals(nodeName) && p.getXmlNamespace().equals(namespace)) 
+        if (p.getXmlName().equals(nodeName) && p.getXmlNamespace().equals(namespace))
           return p;
       }
     }
     for (Property p : propsSortedByLongestFirst) {
       if (!p.getDefinition().hasRepresentation(PropertyRepresentation.XMLATTR) && !p.getDefinition().hasRepresentation(PropertyRepresentation.XMLTEXT)) {
-        if (p.getXmlName().equals(nodeName)) 
+        if (p.getXmlName().equals(nodeName))
           return p;
-        if (p.getName().endsWith("[x]") && nodeName.length() > p.getName().length()-3 && p.getName().substring(0, p.getName().length()-3).equals(nodeName.substring(0, p.getName().length()-3))) 
+        if (p.getName().endsWith("[x]") && nodeName.length() > p.getName().length()-3 && p.getName().substring(0, p.getName().length()-3).equals(nodeName.substring(0, p.getName().length()-3)))
           return p;
       }
     }
@@ -666,7 +691,7 @@ public class XmlParser extends ParserBase {
       for (Property p : properties) {
         if (p.getXmlName().equals(nodeName) && p.getDefinition().hasRepresentation(PropertyRepresentation.XMLATTR)) {
           return p;
-        }    
+        }
       }
     }
     return null;
@@ -674,7 +699,7 @@ public class XmlParser extends ParserBase {
 
   private Property getTextProp(List<Property> properties) {
     for (Property p : properties)
-      if (p.getDefinition().hasRepresentation(PropertyRepresentation.XMLTEXT)) 
+      if (p.getDefinition().hasRepresentation(PropertyRepresentation.XMLTEXT))
         return p;
     return null;
   }
@@ -840,7 +865,7 @@ public class XmlParser extends ParserBase {
       if (Utilities.isAbsoluteUrl(type)) {
         type = type.substring(type.lastIndexOf("/")+1);
       }
-      xml.attribute("xsi:type",type);    
+      xml.attribute("xsi:type",type);
     }
   }
 
@@ -975,31 +1000,31 @@ public class XmlParser extends ParserBase {
       else {
         setXsiTypeIfIsTypeAttr(xml, element);
         Set<String> handled = new HashSet<>();
-      for (Element child : element.getChildren()) {
-        if (!handled.contains(child.getName()) && isAttr(child.getProperty()) && wantCompose(element.getPath(), child)) {
-          handled.add(child.getName());
-          if (isElideElements() && child.isElided())
-            xml.attributeElide();
-          else {
-            String av = child.getValue();
-            if (child.getProperty().isList()) {
-              for (Element c2 : element.getChildren()) {
-                if (c2 != child && c2.getName().equals(child.getName())) {
-                  if (c2.isElided())
-                    av = av + " ...";
-                  else
-                    av = av + " " + c2.getValue();
+        for (Element child : element.getChildren()) {
+          if (!handled.contains(child.getName()) && isAttr(child.getProperty()) && wantCompose(element.getPath(), child)) {
+            handled.add(child.getName());
+            if (isElideElements() && child.isElided())
+              xml.attributeElide();
+            else {
+              String av = child.getValue();
+              if (child.getProperty().isList()) {
+                for (Element c2 : element.getChildren()) {
+                  if (c2 != child && c2.getName().equals(child.getName())) {
+                    if (c2.isElided())
+                      av = av + " ...";
+                    else
+                      av = av + " " + c2.getValue();
+                  }
                 }
               }
+              if (linkResolver != null)
+                xml.link(linkResolver.resolveType(child.getType()));
+              if (ExtensionUtilities.hasExtension(child.getProperty().getDefinition(), ExtensionDefinitions.EXT_DATE_FORMAT))
+                av = convertForDateFormatToExternal(ExtensionUtilities.readStringExtension(child.getProperty().getDefinition(), ExtensionDefinitions.EXT_DATE_FORMAT), av);
+              xml.attribute(child.getProperty().getXmlNamespace(), child.getProperty().getXmlName(), av);
             }
-            if (linkResolver != null)
-              xml.link(linkResolver.resolveType(child.getType()));
-            if (ExtensionUtilities.hasExtension(child.getProperty().getDefinition(), ExtensionDefinitions.EXT_DATE_FORMAT))
-              av = convertForDateFormatToExternal(ExtensionUtilities.readStringExtension(child.getProperty().getDefinition(), ExtensionDefinitions.EXT_DATE_FORMAT), av);
-            xml.attribute(child.getProperty().getXmlNamespace(), child.getProperty().getXmlName(), av);
           }
         }
-      }
       }
       if (!element.getProperty().getDefinition().hasExtension(ExtensionDefinitions.EXT_ID_CHOICE_GROUP)) {
         if (linkResolver != null)
@@ -1062,7 +1087,7 @@ public class XmlParser extends ParserBase {
   private String urlRoot(String elementName) {
     return elementName.substring(0, elementName.lastIndexOf("/"));
   }
-  
+
   private String makeNamespaceAbbrev(Property property, IXMLWriter xml) {
     // it's a cosmetic thing, but we're going to try to come up with a nice namespace
 
@@ -1109,7 +1134,7 @@ public class XmlParser extends ParserBase {
         b.append((char) i1);
         b.append((char) i2);
       } else if (i0 == 60) { // just plain old XML with no header
-        return "1.0";        
+        return "1.0";
       } else {
         throw new Exception(context.formatMessage(I18nConstants.XML_ENCODING_INVALID));
       }
@@ -1127,7 +1152,7 @@ public class XmlParser extends ParserBase {
         i = header.indexOf("encoding='");
         if (i > -1) {
           e = header.substring(i+10, i+15);
-        } 
+        }
       }
       if (e != null && !"UTF-8".equalsIgnoreCase(e)) {
         logError(errors, ValidationMessage.NO_RULE_DATE, 0, 0, "XML", IssueType.INVALID, context.formatMessage(I18nConstants.XML_ENCODING_INVALID, e), IssueSeverity.ERROR);
@@ -1139,8 +1164,8 @@ public class XmlParser extends ParserBase {
       } else {
         i = header.indexOf("version='");
         if (i > -1) {
-          return header.substring(i+9, i+12);          
-        } 
+          return header.substring(i+9, i+12);
+        }
       }
       return "?xml-p1?";
     } catch (Exception e) {

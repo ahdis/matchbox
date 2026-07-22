@@ -7,6 +7,8 @@ import ca.uhn.fhir.jpa.starter.AppProperties;
 import ca.uhn.fhir.mdm.api.IMdmSettings;
 import ca.uhn.fhir.mdm.rules.config.MdmRuleValidator;
 import ca.uhn.fhir.mdm.rules.config.MdmSettings;
+import ca.uhn.fhir.mdm.rules.matcher.IMatcherFactory;
+import ca.uhn.fhir.mdm.rules.similarity.ISimilarityFactory;
 import ca.uhn.fhir.rest.server.util.ISearchParamRegistry;
 import com.google.common.base.Charsets;
 import org.apache.commons.io.IOUtils;
@@ -30,8 +32,11 @@ import java.io.IOException;
 public class MdmConfig {
 
 	@Bean
-	MdmRuleValidator mdmRuleValidator(FhirContext theFhirContext, ISearchParamRegistry theSearchParamRegistry) {
-		return new MdmRuleValidator(theFhirContext, theSearchParamRegistry);
+	MdmRuleValidator mdmRuleValidator(FhirContext theFhirContext,
+                                    ISearchParamRegistry theSearchParamRegistry,
+                                    IMatcherFactory theMatcherFactory,
+                                    ISimilarityFactory theSimilarityFactory) {
+		return new MdmRuleValidator(theFhirContext, theSearchParamRegistry, theMatcherFactory, theSimilarityFactory);
 	}
 
 	@Bean
