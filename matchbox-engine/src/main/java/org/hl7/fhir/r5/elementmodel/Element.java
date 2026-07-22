@@ -76,11 +76,11 @@ import org.hl7.fhir.utilities.xhtml.XhtmlNode;
 
 /**
  * This class represents the underlying reference model of FHIR
- * 
+ *
  * A resource is nothing but a set of elements, where every element has a 
  * name, maybe a stated type, maybe an id, and either a value or child elements 
  * (one or the other, but not both or neither)
- * 
+ *
  * @author Grahame Grieve
  *
  */
@@ -116,7 +116,7 @@ public class Element extends Base implements NamedItem {
   private static final HashSet<String> extensionList = new HashSet<>(Arrays.asList("extension", "modifierExtension"));
 
   public enum SpecialElement {
-		CONTAINED, BUNDLE_ENTRY, BUNDLE_OUTCOME, BUNDLE_ISSUES, PARAMETER, LOGICAL;
+    CONTAINED, BUNDLE_ENTRY, BUNDLE_OUTCOME, BUNDLE_ISSUES, PARAMETER, LOGICAL;
 
     public static SpecialElement fromProperty(Property property) {
       if (property.getStructure().getType().equals("Parameters"))
@@ -127,7 +127,7 @@ public class Element extends Base implements NamedItem {
         return BUNDLE_OUTCOME;
       if (property.getStructure().getType().equals("Bundle") && property.getName().equals("issues"))
         return BUNDLE_ISSUES;
-      if (property.getName().equals("contained")) 
+      if (property.getName().equals("contained"))
         return CONTAINED;
       if (property.getStructure().getKind() == StructureDefinitionKind.LOGICAL)
         return LOGICAL;
@@ -136,36 +136,36 @@ public class Element extends Base implements NamedItem {
 
     public String toHuman() {
       switch (this) {
-      case BUNDLE_ENTRY: return "entry";
-      case BUNDLE_OUTCOME: return "outcome";
-      case BUNDLE_ISSUES: return "issues";
-      case CONTAINED: return "contained";
-      case PARAMETER: return "parameter";
-      case LOGICAL: return "logical";
-      default: return "??";        
+        case BUNDLE_ENTRY: return "entry";
+        case BUNDLE_OUTCOME: return "outcome";
+        case BUNDLE_ISSUES: return "issues";
+        case CONTAINED: return "contained";
+        case PARAMETER: return "parameter";
+        case LOGICAL: return "logical";
+        default: return "??";
       }
     }
-	}
+  }
 
-	private List<String> comments;// not relevant for production, but useful in documentation
-	private String name;
-	private String type;
-	private String value;
-	private int index = -1;
-	private NamedItemList<Element> children;
-	private Property property;
+  private List<String> comments;// not relevant for production, but useful in documentation
+  private String name;
+  private String type;
+  private String value;
+  private int index = -1;
+  private NamedItemList<Element> children;
+  private Property property;
   private Property elementProperty; // this is used when special is set to true - it tracks the underlying element property which is used in a few places
-	private int line;
-	private int col;
-	private SpecialElement special;
-	private XhtmlNode xhtml; // if this is populated, then value will also hold the string representation
-	private String explicitType; // for xsi:type attribute
-	private Element parentForValidator;
-	private boolean hasParentForValidator;
-	private String path;
-	private List<ValidationMessage> messages;
-	private boolean prohibited;
-	private boolean required;
+  private int line;
+  private int col;
+  private SpecialElement special;
+  private XhtmlNode xhtml; // if this is populated, then value will also hold the string representation
+  private String explicitType; // for xsi:type attribute
+  private Element parentForValidator;
+  private boolean hasParentForValidator;
+  private String path;
+  private List<ValidationMessage> messages;
+  private boolean prohibited;
+  private boolean required;
   private int descendentCount;
   private int instanceId;
   private boolean isNull;
@@ -176,11 +176,11 @@ public class Element extends Base implements NamedItem {
   private List<SliceDefinition> sliceDefinitions;
   private boolean elided;
   @Getter @Setter private String resourceDefinition;
-  
-	public Element(String name) {
-		super();
-		this.name = name;
-	}
+
+  public Element(String name) {
+    super();
+    this.name = name;
+  }
 
   public Element(Element other) {
     super();
@@ -190,33 +190,33 @@ public class Element extends Base implements NamedItem {
     elementProperty = other.elementProperty;
     special = other.special;
   }
-  
+
   public Element(String name, Property property) {
-		super();
-		this.name = name;
-		this.property = property;
-		if (property.isResource()) {
-		  children = new NamedItemList<>();
-		}
-	}
+    super();
+    this.name = name;
+    this.property = property;
+    if (property.isResource()) {
+      children = new NamedItemList<>();
+    }
+  }
 
-	public Element(String name, Property property, String type, String value) {
-		super();
-		this.name = name;
-		this.property = property;
-		this.type = type;
-		this.value = value;
-	}
+  public Element(String name, Property property, String type, String value) {
+    super();
+    this.name = name;
+    this.property = property;
+    this.type = type;
+    this.value = value;
+  }
 
-	public void updateProperty(Property property, SpecialElement special, Property elementProperty) {
-		this.property = property;
+  public void updateProperty(Property property, SpecialElement special, Property elementProperty) {
+    this.property = property;
     this.elementProperty = elementProperty;
-		this.special = special;
-	}
+    this.special = special;
+  }
 
-	public SpecialElement getSpecial() {
-		return special;
-	}
+  public SpecialElement getSpecial() {
+    return special;
+  }
 
   public String getName() {
     return name;
@@ -226,55 +226,55 @@ public class Element extends Base implements NamedItem {
     return property.getJsonName();
   }
 
-	public String getType() {
-		if (type == null)
-			return property.getType(name);
-		else
-		  return type;
-	}
+  public String getType() {
+    if (type == null)
+      return property.getType(name);
+    else
+      return type;
+  }
 
-	public String getValue() {
-	  if (xhtml != null) {
-	    throw new Error("Don't use getValue() for xhtml");
-	  }
-		return value;
-	}
+  public String getValue() {
+    if (xhtml != null) {
+      throw new Error("Don't use getValue() for xhtml");
+    }
+    return value;
+  }
 
-	public boolean hasChildren() {
-		return !(children == null || children.isEmpty());
-	}
+  public boolean hasChildren() {
+    return !(children == null || children.isEmpty());
+  }
 
-	public NamedItemList<Element> getChildren() {
-		if (children == null)
-			children = new NamedItemList<Element>();
-		return children;
-	}
+  public NamedItemList<Element> getChildren() {
+    if (children == null)
+      children = new NamedItemList<Element>();
+    return children;
+  }
 
-	public boolean hasComments() {
-		return !(comments == null || comments.isEmpty());
-	}
+  public boolean hasComments() {
+    return !(comments == null || comments.isEmpty());
+  }
 
-	public List<String> getComments() {
-		if (comments == null)
-			comments = new ArrayList<String>();
-		return comments;
-	}
+  public List<String> getComments() {
+    if (comments == null)
+      comments = new ArrayList<String>();
+    return comments;
+  }
 
-	public Property getProperty() {
-		return property;
-	}
+  public Property getProperty() {
+    return property;
+  }
 
-	public void setValue(String value) {
-		this.value = value;
-	}
+  public void setValue(String value) {
+    this.value = value;
+  }
 
-	public Element setType(String type) {
-		this.type = type;
-		return this;
+  public Element setType(String type) {
+    this.type = type;
+    return this;
 
-	}
+  }
 
-	public boolean isNull() {
+  public boolean isNull() {
     return isNull;
   }
 
@@ -283,60 +283,60 @@ public class Element extends Base implements NamedItem {
   }
 
   public boolean hasValue() {
-		return value != null;
-	}
+    return value != null;
+  }
 
-	public List<Element> getChildrenByName(String name) {
-		return children.getByName(name);
-	}
+  public List<Element> getChildrenByName(String name) {
+    return children.getByName(name);
+  }
 
-	public void numberChildren() {
-		if (children == null)
-			return;
-		
-		String last = "";
-		int index = 0;
-		for (Element child : children) {
-			if (child.getProperty().isList()) {
-			  if (last.equals(child.getName())) {
-			  	index++;
-			  } else {
-			  	last = child.getName();
-			  	index = 0;
-			  }
-		  	child.index = index;
-			} else {
-				child.index = -1;
-			}
-			child.numberChildren();
-		}	
-	}
+  public void numberChildren() {
+    if (children == null)
+      return;
 
-	public int getIndex() {
-		return index;
-	}
+    String last = "";
+    int index = 0;
+    for (Element child : children) {
+      if (child.getProperty().isList()) {
+        if (last.equals(child.getName())) {
+          index++;
+        } else {
+          last = child.getName();
+          index = 0;
+        }
+        child.index = index;
+      } else {
+        child.index = -1;
+      }
+      child.numberChildren();
+    }
+  }
 
-	public boolean hasIndex() {
-		return index > -1;
-	}
+  public int getIndex() {
+    return index;
+  }
 
-	public void setIndex(int index) {
-		this.index = index;
-	}
+  public boolean hasIndex() {
+    return index > -1;
+  }
 
-	public String getChildValue(String name) {
-		if (children == null)
-			return null;
-		for (Element child : children) {
-			if (name.equals(child.getName()))
-				return child.getValue();
-		}
-		for (Element child : children) {
+  public void setIndex(int index) {
+    this.index = index;
+  }
+
+  public String getChildValue(String name) {
+    if (children == null)
+      return null;
+    for (Element child : children) {
+      if (name.equals(child.getName()))
+        return child.getValue();
+    }
+    for (Element child : children) {
       if (name.equals(child.getNameBase()))
         return child.getValue();
     }
-  	return null;
-	}
+    return null;
+  }
 
   private String getNameBase() {
     if (property.isChoice()) {
@@ -384,7 +384,7 @@ public class Element extends Base implements NamedItem {
   }
 
   public List<Element> getChildren(String name) {
-    List<Element> res = new ArrayList<Element>(); 
+    List<Element> res = new ArrayList<Element>();
     if (children != null) {
       if (children.size() > 20) {
         List<Element> l = children.getByName(name);
@@ -398,8 +398,8 @@ public class Element extends Base implements NamedItem {
         }
       }
     }
-		return res;
-	}
+    return res;
+  }
 
   public boolean hasType() {
     if (type == null)
@@ -414,56 +414,56 @@ public class Element extends Base implements NamedItem {
   }
 
   @Override
-	public Base[] getProperty(int hash, String name, boolean checkValid) throws FHIRException {
-  	if (isPrimitive() && (hash == "value".hashCode()) && !Utilities.noString(value)) {
+  public Base[] getProperty(int hash, String name, boolean checkValid) throws FHIRException {
+    if (isPrimitive() && (hash == "value".hashCode()) && !Utilities.noString(value)) {
 //  		String tn = getType();
 //  		throw new Error(tn+" not done yet");
-  	  Base[] b = new Base[1];
-  	  b[0] = new StringType(value);
-  	  return b;
-  	}
-  		
-  	List<Base> result = new ArrayList<Base>();
-  	if (children != null) {
-  	  if (children.size() > 20) {
+      Base[] b = new Base[1];
+      b[0] = new StringType(value);
+      return b;
+    }
+
+    List<Base> result = new ArrayList<Base>();
+    if (children != null) {
+      if (children.size() > 20) {
         List<Element> l = children.getByName(name);
         if (l != null) {
           result.addAll(l);
         }
-  	  } else {
-      	for (Element child : children) {
-  	    	if (child.getName().equals(name)) {
-  			    result.add(child);
-  	    	}
-      		if (child.getName().startsWith(name) && child.getProperty().isChoice() && child.getProperty().getName().equals(name+"[x]")) {
-  	    		result.add(child);
-      		}
-      	}
-  	  }
-  	}
-  	if (result.isEmpty() && checkValid) {
+      } else {
+        for (Element child : children) {
+          if (child.getName().equals(name)) {
+            result.add(child);
+          }
+          if (child.getName().startsWith(name) && child.getProperty().isChoice() && child.getProperty().getName().equals(name+"[x]")) {
+            result.add(child);
+          }
+        }
+      }
+    }
+    if (result.isEmpty() && checkValid) {
 //  		throw new FHIRException("not determined yet");
-  	}
-  	return result.toArray(new Base[result.size()]);
-	}
+    }
+    return result.toArray(new Base[result.size()]);
+  }
 
-	@Override
-	protected void listChildren(List<org.hl7.fhir.r5.model.Property> childProps) {
-	  if (children != null) {
-	    Map<String, org.hl7.fhir.r5.model.Property> map = new HashMap<String, org.hl7.fhir.r5.model.Property>();
-	    for (Element c : children) {
-	      org.hl7.fhir.r5.model.Property p = map.get(c.getName());
-	      if (p == null) {
-  	      p = new org.hl7.fhir.r5.model.Property(c.getName(), c.fhirType(), c.getProperty().getDefinition().getDefinition(), c.getProperty().getDefinition().getMin(), maxToInt(c.getProperty().getDefinition().getMax()), c);
+  @Override
+  protected void listChildren(List<org.hl7.fhir.r5.model.Property> childProps) {
+    if (children != null) {
+      Map<String, org.hl7.fhir.r5.model.Property> map = new HashMap<String, org.hl7.fhir.r5.model.Property>();
+      for (Element c : children) {
+        org.hl7.fhir.r5.model.Property p = map.get(c.getName());
+        if (p == null) {
+          p = new org.hl7.fhir.r5.model.Property(c.getName(), c.fhirType(), c.getProperty().getDefinition().getDefinition(), c.getProperty().getDefinition().getMin(), maxToInt(c.getProperty().getDefinition().getMax()), c);
           childProps.add(p);
           map.put(c.getName(), p);
-  	      
-	      } else
-	        p.getValues().add(c);
-	    }
-	  }
-	}
-	
+
+        } else
+          p.getValues().add(c);
+      }
+    }
+  }
+
   @Override
   public Base setProperty(int hash, String name, Base value) throws FHIRException {
     if ("xhtml".equals(getType()) && (hash == "value".hashCode())) {
@@ -475,7 +475,7 @@ public class Element extends Base implements NamedItem {
       this.value = TypeConvertor.castToString(value).asStringValue();
       return this;
     }
-    
+
     if (!value.isPrimitive() && !(value instanceof Element)) {
       if (isDataType(value)) {
         // matchbox patch: also check for choice type name[x] when name doesn't match
@@ -487,11 +487,11 @@ public class Element extends Base implements NamedItem {
       } else
         throw new FHIRException("Cannot set property "+name+" on "+this.name+" - value is not a primitive type ("+value.fhirType()+") or an ElementModel type");
     }
-    
+
     if (children == null)
       children = new NamedItemList<Element>();
     Element childForValue = null;
-    
+
     // look through existing children
     for (Element child : children) {
       if (child.getName().equals(name)) {
@@ -532,7 +532,7 @@ public class Element extends Base implements NamedItem {
         }
       }
     }
-    
+
     if (childForValue == null)
       throw new Error("Cannot set property "+name+" on "+this.name);
     else if (value.isPrimitive()) {
@@ -553,7 +553,7 @@ public class Element extends Base implements NamedItem {
       if (ve.children != null) {
         if (childForValue.children == null)
           childForValue.children = new NamedItemList<Element>();
-        else 
+        else
           childForValue.children.clear();
         childForValue.children.addAll(ve.children);
       }
@@ -589,7 +589,7 @@ public class Element extends Base implements NamedItem {
   public Element makeElement(String name) throws FHIRException {
     if (children == null)
       children = new NamedItemList<Element>();
-    
+
     // look through existing children
     for (Element child : children) {
       if (child.getName().equals(name)) {
@@ -620,24 +620,24 @@ public class Element extends Base implements NamedItem {
         children.add(ne);
         ne.index = children.getSizeByName(ne.getListName()) - 1;
         return ne;
-        
+
       }
     }
-      
-    throw new Error("Unrecognised name "+name+" on "+this.name); 
+
+    throw new Error("Unrecognised name "+name+" on "+this.name);
   }
 
   public Element forceElement(String name) throws FHIRException {
     if (children == null)
       children = new NamedItemList<Element>();
-    
+
     // look through existing children
     for (Element child : children) {
       if (child.getName().equals(name)) {
         return child;
       }
     }
-    
+
     int index = -1;
 
     for (Property p : property.getChildProperties(this.name, type)) {
@@ -646,7 +646,7 @@ public class Element extends Base implements NamedItem {
         children.add(index+1, ne);
         for (int i = 0; i < children.size(); i++) {
           children.get(i).index = i;
-        }        
+        }
         return ne;
       } else {
         for (int i = 0; i < children.size(); i++) {
@@ -656,64 +656,64 @@ public class Element extends Base implements NamedItem {
         }
       }
     }
-      
-    throw new Error("Unrecognised name "+name+" on "+this.name); 
+
+    throw new Error("Unrecognised name "+name+" on "+this.name);
   }
 
 
-	private int maxToInt(String max) {
+  private int maxToInt(String max) {
     if (max.equals("*"))
       return Integer.MAX_VALUE;
     else
       return Integer.parseInt(max);
-	}
+  }
 
-	@Override
-	public boolean isPrimitive() {
-		return type != null ? property.isPrimitive(type) : property.isPrimitive(property.getType(name));
-	}
-	
+  @Override
+  public boolean isPrimitive() {
+    return type != null ? property.isPrimitive(type) : property.isPrimitive(property.getType(name));
+  }
+
   @Override
   public boolean isBooleanPrimitive() {
     return isPrimitive() && ("boolean".equals(type) || "boolean".equals(property.getType(name)));
   }
- 
+
   @Override
   public boolean isResource() {
     return property.isResource();
   }
-  
+
 
   @Override
   public boolean hasPrimitiveValue() {
     //return property.isPrimitiveName(name) || property.IsLogicalAndHasPrimitiveValue(name);
     return super.hasPrimitiveValue();
   }
-  
+
   @Override
   public boolean canHavePrimitiveValue() {
     return property.isPrimitiveName(name) || property.IsLogicalAndHasPrimitiveValue(name);
   }
-  
 
-	@Override
-	public String primitiveValue() {
+
+  @Override
+  public String primitiveValue() {
     if (isPrimitive() || value != null)
       return value;
     else if (hasXhtml()) {
       return new XhtmlComposer(XhtmlComposer.XML, false).setCanonical(false).compose(xhtml);
     } else {
-			if (canHavePrimitiveValue() && children != null) {
-				for (Element c : children) {
-					if (c.getName().equals("value"))
-						return c.primitiveValue();
-				}
-			}
-			return null;
-		}
-	}
-	
-	// for the validator
+      if (canHavePrimitiveValue() && children != null) {
+        for (Element c : children) {
+          if (c.getName().equals("value"))
+            return c.primitiveValue();
+        }
+      }
+      return null;
+    }
+  }
+
+  // for the validator
   public int line() {
     return line;
   }
@@ -722,47 +722,47 @@ public class Element extends Base implements NamedItem {
     return col;
   }
 
-	public Element markLocation(int line, int col) {
-		this.line = line;
-		this.col = col;	
-		return this;
-	}
+  public Element markLocation(int line, int col) {
+    this.line = line;
+    this.col = col;
+    return this;
+  }
 
   public Element markLocation(SourceLocation loc) {
     this.line = loc.getLine();
-    this.col = loc.getColumn(); 
+    this.col = loc.getColumn();
     return this;
   }
 
   public Element markLocation(Element src) {
     this.line = src.line();
-    this.col = src.col(); 
+    this.col = src.col();
     return this;
   }
 
-	public void clearDecorations() {
-	  clearUserData(UserDataNames.rendering_xml_decorations);
-	  for (Element e : children) {
-	    e.clearDecorations();	  
-	  }
-	}
-	
-	public void markValidation(StructureDefinition profile, ElementDefinition definition) {
-	  @SuppressWarnings("unchecked")
+  public void clearDecorations() {
+    clearUserData(UserDataNames.rendering_xml_decorations);
+    for (Element e : children) {
+      e.clearDecorations();
+    }
+  }
+
+  public void markValidation(StructureDefinition profile, ElementDefinition definition) {
+    @SuppressWarnings("unchecked")
     List<ElementDecoration> decorations = (List<ElementDecoration>) getUserData(UserDataNames.rendering_xml_decorations);
-	  if (decorations == null) {
-	    decorations = new ArrayList<>();
-	    setUserData(UserDataNames.rendering_xml_decorations, decorations);
-	  }
-	  decorations.add(new ElementDecoration(DecorationType.TYPE, profile.getWebPath(), definition.getPath()));
-	  if (definition.getId() != null && tail(definition.getId()).contains(":")) {
-	    @SuppressWarnings("checkstyle:stringImplicitPatternUsage")
-    //single literal character split
-    String[] details = tail(definition.getId()).split(":");
-	    decorations.add(new ElementDecoration(DecorationType.SLICE, null, details[1]));
-	  }
-	}
-	
+    if (decorations == null) {
+      decorations = new ArrayList<>();
+      setUserData(UserDataNames.rendering_xml_decorations, decorations);
+    }
+    decorations.add(new ElementDecoration(DecorationType.TYPE, profile.getWebPath(), definition.getPath()));
+    if (definition.getId() != null && tail(definition.getId()).contains(":")) {
+      @SuppressWarnings("checkstyle:stringImplicitPatternUsage")
+      //single literal character split
+      String[] details = tail(definition.getId()).split(":");
+      decorations.add(new ElementDecoration(DecorationType.SLICE, null, details[1]));
+    }
+  }
+
   private String tail(String id) {
     return id.contains(".") ? id.substring(id.lastIndexOf(".")+1) : id;
   }
@@ -825,16 +825,16 @@ public class Element extends Base implements NamedItem {
   }
 
   public void getNamedChildren(String name, List<Element> list) {
-  	if (children != null)
-  	  if (children.size() > 20) {
+    if (children != null)
+      if (children.size() > 20) {
         List<Element> l = children.getByName(name);
         if (l != null) {
           list.addAll(l);
         }
       } else {
-  		  for (Element child : children) 
-  			  if (child.getName().equals(name))
-  				  list.add(child);
+        for (Element child : children)
+          if (child.getName().equals(name))
+            list.add(child);
       }
   }
 
@@ -873,7 +873,7 @@ public class Element extends Base implements NamedItem {
 
     String start = string.substring(0, string.length() - 3);
     if (children != null) {
-      for (Element child : children) { 
+      for (Element child : children) {
         if (child.getName().startsWith(start)) {
           values.add(child);
         }
@@ -881,32 +881,32 @@ public class Element extends Base implements NamedItem {
     }
   }
 
-  
-	public XhtmlNode getXhtml() {
-		return xhtml;
-	}
 
-	public Element setXhtml(XhtmlNode xhtml) {
-		this.xhtml = xhtml;
+  public XhtmlNode getXhtml() {
+    return xhtml;
+  }
+
+  public Element setXhtml(XhtmlNode xhtml) {
+    this.xhtml = xhtml;
     value = new XhtmlComposer(true, false).compose(xhtml);
-		return this;
- 	}
+    return this;
+  }
 
-	@Override
-	public boolean isEmpty() {
-  	// GG: this used to also test !"".equals(value). 
+  @Override
+  public boolean isEmpty() {
+    // GG: this used to also test !"".equals(value). 
     // the condition where "" is empty and there are no children is an error, and so this really only manifested as an issue in corner cases technical testing of the validator / FHIRPath.
-	  // it should not cause any problems in real life.
-		if (value != null) {   
-			return false;
-		}
-		for (Element next : getChildren()) {
-			if (!next.isEmpty()) {
-				return false;
-			}
-		}
-		return true;
-	}
+    // it should not cause any problems in real life.
+    if (value != null) {
+      return false;
+    }
+    for (Element next : getChildren()) {
+      if (!next.isEmpty()) {
+        return false;
+      }
+    }
+    return true;
+  }
 
   public Property getElementProperty() {
     return elementProperty;
@@ -933,11 +933,11 @@ public class Element extends Base implements NamedItem {
     return false;
   }
 
-  
-  
+
+
   public boolean hasChildren(String name) {
     if (children != null)
-      for (Element child : children) 
+      for (Element child : children)
         if (child.getName().equals(name))
           return true;
     return false;
@@ -947,7 +947,7 @@ public class Element extends Base implements NamedItem {
   public String toString() {
     if (name.equals(fhirType()) && isResource()) {
       return fhirType()+"/"+getIdBase() + "["+(children == null || hasValue() ? value : Integer.toString(children.size())+" children")+"]";
-      
+
     } else if (isResource()) {
       return name+"="+fhirType()+"/"+getIdBase()+ "["+(children == null || hasValue() ? value : Integer.toString(children.size())+" children")+"]";
     } else {
@@ -1030,14 +1030,14 @@ public class Element extends Base implements NamedItem {
     else
       return property.isList();
   }
-  
+
   public boolean isBaseList() {
     if (elementProperty != null)
       return elementProperty.isBaseList();
     else
       return property.isBaseList();
   }
-  
+
   @Override
   public String[] getTypesForProperty(int hash, String name) throws FHIRException {
     Property p = property.getChildSimpleName(this.name, name);
@@ -1075,7 +1075,7 @@ public class Element extends Base implements NamedItem {
       else
         children = property.getStructure().getSnapshot().getElement();
     }
-    
+
     @Override
     public int compare(Element e0, Element e1) {
       int i0 = find(e0);
@@ -1084,7 +1084,7 @@ public class Element extends Base implements NamedItem {
     }
     private int find(Element e0) {
       int i =  e0.elementProperty != null ? children.indexOf(e0.elementProperty.getDefinition()) :  children.indexOf(e0.property.getDefinition());
-      return i; 
+      return i;
     }
 
   }
@@ -1118,7 +1118,7 @@ public class Element extends Base implements NamedItem {
       return display;
     }
     public boolean hasSystem() {
-      return !Utilities.noString(system); 
+      return !Utilities.noString(system);
     }
     public boolean hasVersion() {
       return !Utilities.noString(version);
@@ -1140,7 +1140,7 @@ public class Element extends Base implements NamedItem {
     }
     public boolean supportsDisplay() {
       return doesDisplay;
-    }    
+    }
   }
 
   public ICoding getAsICoding() throws FHIRException {
@@ -1167,7 +1167,7 @@ public class Element extends Base implements NamedItem {
       }
       if (c.system == null)
         return null;
-      return c;   
+      return c;
     } else if ("Coding".equals(fhirType())) {
       ICodingImpl c = new ICodingImpl(true, true, true, true);
       c.system = getNamedChildValue("system", false);
@@ -1180,7 +1180,7 @@ public class Element extends Base implements NamedItem {
       c.system = getNamedChildValue("system", false);
       c.code = getNamedChildValue("code", false);
       return c;
-    } else 
+    } else
       return null;
   }
 
@@ -1196,7 +1196,7 @@ public class Element extends Base implements NamedItem {
     if (children != null) {
       for (Element child : children) {
         if (element == child || child.hasDescendant(element)) {
-          return true;        
+          return true;
         }
       }
     }
@@ -1298,7 +1298,7 @@ public class Element extends Base implements NamedItem {
     this.parentForValidator = parentForValidator;
     this.hasParentForValidator = true;
   }
-  
+
   public boolean hasParentForValidator() {
     return hasParentForValidator;
   }
@@ -1318,8 +1318,8 @@ public class Element extends Base implements NamedItem {
 
   public void setPath(String path) {
     this.path = path;
-  }  
-  
+  }
+
   public void addMessage(ValidationMessage vm) {
     if (messages == null) {
       messages = new ArrayList<>();
@@ -1417,7 +1417,7 @@ public class Element extends Base implements NamedItem {
     return source != null;
   }
 
-  
+
   public Base getSource() {
     return source;
   }
@@ -1433,7 +1433,7 @@ public class Element extends Base implements NamedItem {
 
   public void printToOutput(PrintStream stream) {
     printToOutput(stream, "");
-    
+
   }
 
   private void printToOutput(PrintStream out, String indent) {
@@ -1441,7 +1441,7 @@ public class Element extends Base implements NamedItem {
     if (isNull) {
       s = s + " = (null)";
     } else if (value != null) {
-      s = s + " = '"+value+"'";      
+      s = s + " = '"+value+"'";
     } else if (xhtml != null) {
       s = s + " = (xhtml)";
     }
@@ -1461,7 +1461,7 @@ public class Element extends Base implements NamedItem {
         child.printToOutput(out, indent+"  ");
       }
     }
-    
+
   }
 
   private String msgCounts() {
@@ -1470,22 +1470,22 @@ public class Element extends Base implements NamedItem {
     int h = 0;
     for (ValidationMessage msg : messages) {
       switch (msg.getLevel()) {
-      case ERROR:
-        e++;
-        break;
-      case FATAL:
-        e++;
-        break;
-      case INFORMATION:
-        h++;
-        break;
-      case NULL:
-        break;
-      case WARNING:
-        w++;
-        break;
-      default:
-        break;      
+        case ERROR:
+          e++;
+          break;
+        case FATAL:
+          e++;
+          break;
+        case INFORMATION:
+          h++;
+          break;
+        case NULL:
+          break;
+        case WARNING:
+          w++;
+          break;
+        default:
+          break;
       }
     }
     return "e:"+e+",w:"+w+",h:"+h;
@@ -1501,7 +1501,7 @@ public class Element extends Base implements NamedItem {
         n.populatePaths(path+"."+n.getName());
       }
     }
-    
+
   }
 
   public String fhirTypeRoot() {
@@ -1513,7 +1513,7 @@ public class Element extends Base implements NamedItem {
   }
 
   public void setElement(String string, Element map) {
-    throw new Error("Not done yet");    
+    throw new Error("Not done yet");
   }
 
   public Element addElement(String name) {
@@ -1527,7 +1527,7 @@ public class Element extends Base implements NamedItem {
       }
       if (p.getName().equals(name)) {
         if (!p.isList() && hasChild(name, false)) {
-          throw new Error(name+" on "+this.name+" is not a list, so can't add an element"); 
+          throw new Error(name+" on "+this.name+" is not a list, so can't add an element");
         }
         Element ne = new Element(name, p).setFormat(format);
         children.add(insertionPoint, ne);
@@ -1536,7 +1536,7 @@ public class Element extends Base implements NamedItem {
       // polymorphic support
       if (p.getName().endsWith("[x]")) {
         String base = p.getName().substring(0, p.getName().length()-3);
-        
+
         if (name.startsWith(base)) {
           String type = name.substring(base.length());
           if (p.getContextUtils().isPrimitiveType(Utilities.uncapitalize(type))) {
@@ -1552,7 +1552,7 @@ public class Element extends Base implements NamedItem {
       }
     }
 
-    throw new Error("Unrecognised property '"+name+"' on "+this.name); 
+    throw new Error("Unrecognised property '"+name+"' on "+this.name);
   }
 
   private boolean nameMatches(String elementName, String propertyName) {
@@ -1576,7 +1576,7 @@ public class Element extends Base implements NamedItem {
   @Override
   public void copyValues(Base dst) {
     super.copyValues(dst);
-    
+
     Element dest = (Element) dst;
     if (comments != null) {
       dest.comments = new ArrayList<>();
@@ -1592,7 +1592,7 @@ public class Element extends Base implements NamedItem {
       }
     } else {
       dest.children = null;
-    }    
+    }
     dest.line = line;
     dest.col = col;
     dest.xhtml = xhtml;
@@ -1608,7 +1608,7 @@ public class Element extends Base implements NamedItem {
     dest.source = source;
     dest.format = format;
   }
-  
+
   public Base setProperty(String name, Base value) throws FHIRException {
     setChildValue(name, value.primitiveValue());
     return this;
@@ -1626,7 +1626,7 @@ public class Element extends Base implements NamedItem {
       }
     }
   }
-  
+
 
   private String webPath;
   public boolean hasWebPath() {
@@ -1713,7 +1713,7 @@ public class Element extends Base implements NamedItem {
     Element ext = t.addElement("extension");
     ext.addElement("url").setValue("lang");
     ext.addElement("valueCode").setValue(lang);
-   
+
     ext = t.addElement("extension");
     ext.addElement("url").setValue("content");
     ext.addElement("valueString").setValue(translation);
@@ -1788,7 +1788,7 @@ public class Element extends Base implements NamedItem {
   public boolean isElided() {
     return this.elided;
   }
-  
+
   public void stripLocations() {
     line = -1;
     col = -1;

@@ -8,9 +8,16 @@ import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
 
+import ca.uhn.fhir.batch2.jobs.installpackage.model.PackageInstallationJobParameters;
+import ca.uhn.fhir.batch2.model.JobInstanceStartRequest;
+import ca.uhn.fhir.jpa.batch.models.Batch2JobStartResponse;
 import ca.uhn.fhir.jpa.binary.api.IBinaryStorageSvc;
 import ca.uhn.fhir.jpa.dao.data.INpmPackageVersionResourceDao;
+import ca.uhn.fhir.jpa.dao.tx.IHapiTransactionService;
 import ca.uhn.fhir.jpa.model.entity.NpmPackageVersionResourceEntity;
+import ca.uhn.fhir.jpa.packages.*;
+import ca.uhn.fhir.rest.api.server.RequestDetails;
+import ca.uhn.fhir.util.Batch2JobDefinitionConstants;
 import jakarta.annotation.PostConstruct;
 
 import org.hl7.fhir.exceptions.FHIRException;
@@ -43,13 +50,6 @@ import ca.uhn.fhir.jpa.dao.data.INpmPackageVersionDao;
 import ca.uhn.fhir.jpa.model.config.PartitionSettings;
 import ca.uhn.fhir.jpa.model.entity.NpmPackageVersionEntity;
 import ca.uhn.fhir.jpa.model.util.JpaConstants;
-import ca.uhn.fhir.jpa.packages.IHapiPackageCacheManager;
-import ca.uhn.fhir.jpa.packages.IPackageInstallerSvc;
-import ca.uhn.fhir.jpa.packages.ImplementationGuideInstallationException;
-import ca.uhn.fhir.jpa.packages.JpaPackageCache;
-import ca.uhn.fhir.jpa.packages.PackageDeleteOutcomeJson;
-import ca.uhn.fhir.jpa.packages.PackageInstallOutcomeJson;
-import ca.uhn.fhir.jpa.packages.PackageInstallationSpec;
 import ca.uhn.fhir.jpa.searchparam.SearchParameterMap;
 import ca.uhn.fhir.rest.api.server.IBundleProvider;
 import ca.uhn.fhir.rest.api.server.SystemRequestDetails;
@@ -87,15 +87,13 @@ public class MatchboxPackageInstallerImpl implements IPackageInstallerSvc {
 	@Autowired
 	private IHapiPackageCacheManager myPackageCacheManager;
 	@Autowired
-	private PlatformTransactionManager myTxManager;
+	private IHapiTransactionService myTxService;
 	@Autowired
 	private INpmPackageVersionDao myPackageVersionDao;
 	@Autowired
 	private INpmPackageVersionResourceDao myPackageVersionResourceDao;
 	@Autowired
 	private PartitionSettings myPartitionSettings;
-	@Autowired
-	private IBinaryStorageSvc myBinaryStorageSvc;
 
 	/**
 	 * Constructor
@@ -127,9 +125,9 @@ public class MatchboxPackageInstallerImpl implements IPackageInstallerSvc {
 	public PackageDeleteOutcomeJson uninstall(PackageInstallationSpec theInstallationSpec)
 			throws ImplementationGuideInstallationException {
 		PackageInstallOutcomeJson retVal = new PackageInstallOutcomeJson();
-		boolean exists = new TransactionTemplate(myTxManager).execute(tx -> {
-			Optional<NpmPackageVersionEntity> existing = myPackageVersionDao
-					.findByPackageIdAndVersion(theInstallationSpec.getName(), theInstallationSpec.getVersion());
+		boolean exists = myTxService.withRequest(createRequestDetails()).execute(() -> {
+			Optional<NpmPackageVersionEntity> existing = myPackageVersionDao.findByPackageIdAndVersion(
+				theInstallationSpec.getName(), theInstallationSpec.getVersion());
 			return existing.isPresent();
 		});
 		if (exists) {
@@ -162,10 +160,9 @@ public class MatchboxPackageInstallerImpl implements IPackageInstallerSvc {
 		PackageInstallOutcomeJson retVal = new PackageInstallOutcomeJson();
 		if (enabled) {
 			try {
-
-				boolean exists = new TransactionTemplate(myTxManager).execute(tx -> {
-					Optional<NpmPackageVersionEntity> existing = myPackageVersionDao
-							.findByPackageIdAndVersion(theInstallationSpec.getName(), theInstallationSpec.getVersion());
+				boolean exists = myTxService.withRequest(createRequestDetails()).execute(() -> {
+					Optional<NpmPackageVersionEntity> existing = myPackageVersionDao.findByPackageIdAndVersion(
+						theInstallationSpec.getName(), theInstallationSpec.getVersion());
 					return existing.isPresent();
 				});
 				if (exists) {
@@ -540,4 +537,41 @@ public class MatchboxPackageInstallerImpl implements IPackageInstallerSvc {
 		myFhirContext = theCtx;
 	}
 
+	@VisibleForTesting
+	RequestDetails createRequestDetails() {
+		SystemRequestDetails requestDetails = new SystemRequestDetails();
+		if (myPartitionSettings.isPartitioningEnabled()) {
+			requestDetails.setRequestPartitionId(myPartitionSettings.getDefaultRequestPartitionId());
+		}
+		return requestDetails;
+	}
+
+	/**
+	 * Starts an asynchronous batch job to install a package asynchronously as a background process
+	 * @param theInstallationSpec the specification defining the package to install
+	 * @return the instance id of the job, needed for polling for updates
+	 */
+	@Override
+	public String installAsynchronously(PackageInstallationSpec theInstallationSpec) {
+		throw new UnsupportedOperationException("Asynchronous package installation is not supported in this implementation");
+	}
+
+	@Override
+	public PackageInstallationStatusJson checkInstallationStatus(final String theJobId) {
+		throw new UnsupportedOperationException("Installation status is not supported in this implementation");
+	}
+
+	@Override
+	public NpmPackage substituteVersionSpecificPackageIfNeeded(final NpmPackage theDependency,
+	                                                           final String theId,
+	                                                           final String theVersion) {
+		throw new UnsupportedOperationException("Package substitution is not supported in this implementation");
+	}
+
+	@Override
+	public void installPackage(final NpmPackage npmPackage,
+	                           final PackageInstallationSpec theInstallationSpec,
+	                           final PackageInstallOutcomeJson theOutcome) {
+		throw new UnsupportedOperationException("Package installation is not supported in this implementation");
+	}
 }

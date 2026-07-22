@@ -20,9 +20,14 @@
 package ca.uhn.fhir.jpa.config;
 
 import ca.uhn.fhir.batch2.api.IJobCoordinator;
+import ca.uhn.fhir.batch2.api.IJobMaintenanceService;
 import ca.uhn.fhir.batch2.api.IJobPersistence;
+import ca.uhn.fhir.batch2.api.IReductionStepExecutorService;
+import ca.uhn.fhir.batch2.channel.BatchJobSender;
+import ca.uhn.fhir.batch2.coordinator.JobDefinitionRegistry;
 import ca.uhn.fhir.batch2.jobs.export.BulkDataExportProvider;
 import ca.uhn.fhir.batch2.jobs.expunge.DeleteExpungeJobSubmitterImpl;
+import ca.uhn.fhir.batch2.maintenance.JobMaintenanceServiceImpl;
 import ca.uhn.fhir.batch2.util.Batch2TaskHelper;
 import ca.uhn.fhir.context.FhirContext;
 import ca.uhn.fhir.context.FhirVersionEnum;
@@ -36,6 +41,7 @@ import ca.uhn.fhir.jpa.api.dao.DaoRegistry;
 import ca.uhn.fhir.jpa.api.model.ExpungeOptions;
 import ca.uhn.fhir.jpa.api.svc.IIdHelperService;
 import ca.uhn.fhir.jpa.api.svc.ISearchUrlJobMaintenanceSvc;
+import ca.uhn.fhir.jpa.batch2.JpaBatch2Config;
 import ca.uhn.fhir.jpa.binary.interceptor.BinaryStorageInterceptor;
 import ca.uhn.fhir.jpa.binary.provider.BinaryAccessProvider;
 import ca.uhn.fhir.jpa.bulk.export.api.IBulkDataExportJobSchedulingHelper;
@@ -171,10 +177,7 @@ import ca.uhn.fhir.jpa.term.api.ITermConceptMappingSvc;
 import ca.uhn.fhir.jpa.term.api.ITermReadSvc;
 import ca.uhn.fhir.jpa.term.api.ITermReindexingSvc;
 import ca.uhn.fhir.jpa.term.config.TermCodeSystemConfig;
-import ca.uhn.fhir.jpa.util.JpaHapiTransactionService;
-import ca.uhn.fhir.jpa.util.MemoryCacheService;
-import ca.uhn.fhir.jpa.util.PartitionedIdModeVerificationSvc;
-import ca.uhn.fhir.jpa.util.PersistenceContextProvider;
+import ca.uhn.fhir.jpa.util.*;
 import ca.uhn.fhir.jpa.validation.JpaValidationSupportChain;
 import ca.uhn.fhir.jpa.validation.ResourceLoaderImpl;
 import ca.uhn.fhir.jpa.validation.ValidationSettings;
@@ -955,6 +958,7 @@ public class JpaConfig {
 			ReplaceReferencesPatchBundleSvc theReplaceReferencesPatchBundle,
 			Batch2TaskHelper theBatch2TaskHelper,
 			JpaStorageSettings theStorageSettings,
+      PartitionSettings thePartitionSettings,
 			ca.uhn.fhir.replacereferences.ReplaceReferencesProvenanceSvc theReplaceReferencesProvenanceSvc) {
 		return new ReplaceReferencesSvcImpl(
 				theDaoRegistry,
@@ -964,6 +968,7 @@ public class JpaConfig {
 				theReplaceReferencesPatchBundle,
 				theBatch2TaskHelper,
 				theStorageSettings,
+        thePartitionSettings,
 				theReplaceReferencesProvenanceSvc);
 	}
 
@@ -992,8 +997,9 @@ public class JpaConfig {
 	public PartitionedIdModeVerificationSvc partitionedIdModeVerificationSvc(
 			PartitionSettings thePartitionSettings,
 			HibernatePropertiesProvider theHibernatePropertiesProvider,
-			PlatformTransactionManager theTxManager) {
-		return new PartitionedIdModeVerificationSvc(thePartitionSettings, theHibernatePropertiesProvider, theTxManager);
+			PlatformTransactionManager theTxManager,
+      DialectSvc theDialectSvc) {
+		return new PartitionedIdModeVerificationSvc(thePartitionSettings, theHibernatePropertiesProvider, theTxManager, theDialectSvc);
 	}
 
 	@Bean
@@ -1093,6 +1099,30 @@ public class JpaConfig {
 			@jakarta.annotation.Nonnull java.util.List<IResourcePersistentId<?>> theResourceIds,
 			@Nullable Date theRangeStartInclusive,
 			@jakarta.annotation.Nonnull Date theRangeEndInclusive) {
-		return new HistoryBuilder(theResourceType, theResourceIds, theRangeStartInclusive, theRangeEndInclusive);
-	}
+    return new HistoryBuilder(theResourceType, theResourceIds, theRangeStartInclusive, theRangeEndInclusive);
+  }
+  
+  @Bean
+  public IJobMaintenanceService jobMaintenanceService() {
+    return new IJobMaintenanceService() {
+      @Override
+      public boolean triggerMaintenancePass() {
+        return false;
+      }
+
+      @Override
+      public void runMaintenancePass() {}
+
+      @Override
+      public void forceMaintenancePass() {}
+
+      @Override
+      public void enableMaintenancePass(final boolean thetoEnable) {}
+    };
+  }
+
+  @Bean
+  public DialectSvc dialectSvc(HibernatePropertiesProvider theHibernatePropertiesProvider) {
+    return new DialectSvc(theHibernatePropertiesProvider);
+  }
 }

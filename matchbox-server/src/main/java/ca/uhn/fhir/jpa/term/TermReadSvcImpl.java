@@ -57,7 +57,6 @@ import ca.uhn.fhir.jpa.entity.TermConceptDesignation;
 import ca.uhn.fhir.jpa.entity.TermConceptParentChildLink;
 import ca.uhn.fhir.jpa.entity.TermConceptParentChildLink.RelationshipTypeEnum;
 import ca.uhn.fhir.jpa.entity.TermConceptProperty;
-import ca.uhn.fhir.jpa.entity.TermConceptPropertyTypeEnum;
 import ca.uhn.fhir.jpa.entity.TermValueSet;
 import ca.uhn.fhir.jpa.entity.TermValueSetConcept;
 import ca.uhn.fhir.jpa.entity.TermValueSetPreExpansionStatusEnum;
@@ -116,6 +115,7 @@ import org.hibernate.search.mapper.orm.common.EntityReference;
 import org.hibernate.search.mapper.orm.session.SearchSession;
 import org.hibernate.search.mapper.pojo.massindexing.impl.PojoMassIndexingLoggingMonitor;
 import org.hl7.fhir.common.hapi.validation.support.InMemoryTerminologyServerValidationSupport;
+import org.hl7.fhir.common.hapi.validation.util.TermConceptPropertyTypeEnum;
 import org.hl7.fhir.convertors.advisors.impl.BaseAdvisor_40_50;
 import org.hl7.fhir.convertors.context.ConversionContext40_50;
 import org.hl7.fhir.convertors.conv40_50.VersionConvertor_40_50;
@@ -126,20 +126,7 @@ import org.hl7.fhir.instance.model.api.IBaseDatatype;
 import org.hl7.fhir.instance.model.api.IBaseResource;
 import org.hl7.fhir.instance.model.api.IIdType;
 import org.hl7.fhir.instance.model.api.IPrimitiveType;
-import org.hl7.fhir.r4.model.BooleanType;
-import org.hl7.fhir.r4.model.CanonicalType;
-import org.hl7.fhir.r4.model.CodeSystem;
-import org.hl7.fhir.r4.model.CodeableConcept;
-import org.hl7.fhir.r4.model.Coding;
-import org.hl7.fhir.r4.model.DateTimeType;
-import org.hl7.fhir.r4.model.DecimalType;
-import org.hl7.fhir.r4.model.DomainResource;
-import org.hl7.fhir.r4.model.Enumerations;
-import org.hl7.fhir.r4.model.Extension;
-import org.hl7.fhir.r4.model.InstantType;
-import org.hl7.fhir.r4.model.IntegerType;
-import org.hl7.fhir.r4.model.StringType;
-import org.hl7.fhir.r4.model.ValueSet;
+import org.hl7.fhir.r4.model.*;
 import org.hl7.fhir.r4.model.codesystems.ConceptSubsumptionOutcome;
 import org.quartz.JobExecutionContext;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -2065,8 +2052,26 @@ public class TermReadSvcImpl implements ITermReadSvc, IHasScheduledJobs {
 				.getMessage(
 						TermReadSvcImpl.class, "valueSetPreExpansionInvalidated", termValueSet.getUrl(), totalConcepts);
 	}
+  
+  // Matchbox: dummy implementation of this method, which is removed from the interface in the master code
+  @Override
+  public int invalidatePreCalculatedExpansionOfValueSetsContainingCodeSystem(final String theCodeSystemUrl) {
+    return 0;
+  }
 
-	@Override
+  // Matchbox: dummy implementation of this method, which is removed from the interface in the master code
+  @Override
+  public void invalidateCodeSystemCaches() {}
+
+  // Matchbox: dummy implementation of this method, which is removed from the interface in the master code
+  @Override
+  public void invalidateValueSetCaches() {}
+
+  // Matchbox: dummy implementation of this method, which is removed from the interface in the master code
+  @Override
+  public void updateCodeSystemVersionCache(final String theCodeSystemUrl, final TermCodeSystemVersion theVersion) {}
+
+  @Override
 	@Transactional(readOnly = true)
 	public boolean isValueSetPreExpandedForCodeValidation(ValueSet theValueSet) {
 		Optional<TermValueSet> optionalTermValueSet = fetchValueSetEntity(theValueSet);
@@ -3423,80 +3428,81 @@ public class TermReadSvcImpl implements ITermReadSvc, IHasScheduledJobs {
 		return retVal;
 	}
 
-	@Nonnull
-	static TermConcept toTermConcept(
-			CodeSystem.ConceptDefinitionComponent theConceptDefinition, TermCodeSystemVersion theCodeSystemVersion) {
-		TermConcept termConcept = new TermConcept();
-		termConcept.setCode(theConceptDefinition.getCode());
-		termConcept.setCodeSystemVersion(theCodeSystemVersion);
-		termConcept.setDisplay(theConceptDefinition.getDisplay());
+  @Nonnull
+  static TermConcept toTermConcept(
+    CodeSystem.ConceptDefinitionComponent theConceptDefinition, TermCodeSystemVersion theCodeSystemVersion) {
+    TermConcept termConcept = new TermConcept();
+    termConcept.setCode(theConceptDefinition.getCode());
+    termConcept.setCodeSystemVersion(theCodeSystemVersion);
+    termConcept.setDisplay(theConceptDefinition.getDisplay());
 
-		termConcept.addChildren(
-				toPersistedConcepts(theConceptDefinition.getConcept(), theCodeSystemVersion), RelationshipTypeEnum.ISA);
+    termConcept.addChildren(
+      toPersistedConcepts(theConceptDefinition.getConcept(), theCodeSystemVersion), RelationshipTypeEnum.ISA);
 
-		for (CodeSystem.ConceptDefinitionDesignationComponent designationComponent :
-				theConceptDefinition.getDesignation()) {
-			if (isNotBlank(designationComponent.getValue())) {
-				TermConceptDesignation designation = termConcept.addDesignation();
-				designation.setLanguage(designationComponent.hasLanguage() ? designationComponent.getLanguage() : null);
-				if (designationComponent.hasUse()) {
-					designation.setUseSystem(
-							designationComponent.getUse().hasSystem()
-									? designationComponent.getUse().getSystem()
-									: null);
-					designation.setUseCode(
-							designationComponent.getUse().hasCode()
-									? designationComponent.getUse().getCode()
-									: null);
-					designation.setUseDisplay(
-							designationComponent.getUse().hasDisplay()
-									? designationComponent.getUse().getDisplay()
-									: null);
-				}
-				designation.setValue(designationComponent.getValue());
-			}
-		}
+    for (CodeSystem.ConceptDefinitionDesignationComponent designationComponent :
+      theConceptDefinition.getDesignation()) {
+      if (isNotBlank(designationComponent.getValue())) {
+        TermConceptDesignation designation = termConcept.addDesignation();
+        designation.setLanguage(designationComponent.hasLanguage() ? designationComponent.getLanguage() : null);
+        if (designationComponent.hasUse()) {
+          designation.setUseSystem(
+            designationComponent.getUse().hasSystem()
+              ? designationComponent.getUse().getSystem()
+              : null);
+          designation.setUseCode(
+            designationComponent.getUse().hasCode()
+              ? designationComponent.getUse().getCode()
+              : null);
+          designation.setUseDisplay(
+            designationComponent.getUse().hasDisplay()
+              ? designationComponent.getUse().getDisplay()
+              : null);
+        }
+        designation.setValue(designationComponent.getValue());
+      }
+    }
 
-		for (CodeSystem.ConceptPropertyComponent next : theConceptDefinition.getProperty()) {
-			TermConceptProperty property = new TermConceptProperty();
+    for (CodeSystem.ConceptPropertyComponent next : theConceptDefinition.getProperty()) {
+      TermConceptProperty property = new TermConceptProperty();
 
-			property.setKey(next.getCode());
-			property.setConcept(termConcept);
-			property.setCodeSystemVersion(theCodeSystemVersion);
+      property.setKey(next.getCode());
+      property.setConcept(termConcept);
+      property.setCodeSystemVersion(theCodeSystemVersion);
 
-			if (next.getValue() instanceof StringType) {
-				property.setType(TermConceptPropertyTypeEnum.STRING);
-				property.setValue(next.getValueStringType().getValue());
-			} else if (next.getValue() instanceof BooleanType) {
-				property.setType(TermConceptPropertyTypeEnum.BOOLEAN);
-				property.setValue(((BooleanType) next.getValue()).getValueAsString());
-			} else if (next.getValue() instanceof IntegerType) {
-				property.setType(TermConceptPropertyTypeEnum.INTEGER);
-				property.setValue(((IntegerType) next.getValue()).getValueAsString());
-			} else if (next.getValue() instanceof DecimalType) {
-				property.setType(TermConceptPropertyTypeEnum.DECIMAL);
-				property.setValue(((DecimalType) next.getValue()).getValueAsString());
-			} else if (next.getValue() instanceof DateTimeType) {
-				// DateType is not supported because it's not
-				// supported in CodeSystem.setValue
-				property.setType(TermConceptPropertyTypeEnum.DATETIME);
-				property.setValue(((DateTimeType) next.getValue()).getValueAsString());
-			} else if (next.getValue() instanceof Coding) {
-				Coding nextCoding = next.getValueCoding();
-				property.setType(TermConceptPropertyTypeEnum.CODING);
-				property.setCodeSystem(nextCoding.getSystem());
-				property.setValue(nextCoding.getCode());
-				property.setDisplay(nextCoding.getDisplay());
-			} else if (next.getValue() != null) {
-				ourLog.warn("Don't know how to handle properties of type: "
-						+ next.getValue().getClass());
-				continue;
-			}
+      if (next.getValue() instanceof CodeType) {
+        property.setType(TermConceptPropertyTypeEnum.CODE);
+        property.setValue(((CodeType) next.getValue()).getValueAsString());
+      } else if (next.getValue() instanceof StringType) {
+        property.setType(TermConceptPropertyTypeEnum.STRING);
+        property.setValue(next.getValueStringType().getValue());
+      } else if (next.getValue() instanceof BooleanType) {
+        property.setType(TermConceptPropertyTypeEnum.BOOLEAN);
+        property.setValue(((BooleanType) next.getValue()).getValueAsString());
+      } else if (next.getValue() instanceof IntegerType) {
+        property.setType(TermConceptPropertyTypeEnum.INTEGER);
+        property.setValue(((IntegerType) next.getValue()).getValueAsString());
+      } else if (next.getValue() instanceof DecimalType) {
+        property.setType(TermConceptPropertyTypeEnum.DECIMAL);
+        property.setValue(((DecimalType) next.getValue()).getValueAsString());
+      } else if (next.getValue() instanceof DateTimeType) {
+        property.setType(TermConceptPropertyTypeEnum.DATETIME);
+        property.setValue(((DateTimeType) next.getValue()).getValueAsString());
+      } else if (next.getValue() instanceof Coding) {
+        Coding nextCoding = next.getValueCoding();
+        property.setType(TermConceptPropertyTypeEnum.CODING);
+        property.setCodeSystem(nextCoding.getSystem());
+        property.setValue(nextCoding.getCode());
+        property.setDisplay(nextCoding.getDisplay());
+      } else if (next.getValue() != null) {
+        ourLog.warn("Don't know how to handle properties of type: "
+                      + next.getValue().getClass());
+        continue;
+      }
 
-			termConcept.getProperties().add(property);
-		}
-		return termConcept;
-	}
+      termConcept.getProperties().add(property);
+    }
+    return termConcept;
+  }
 
 	static boolean isDisplayLanguageMatch(String theReqLang, String theStoredLang) {
 		// NOTE: return the designation when one of then is not specified.

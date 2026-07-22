@@ -1060,7 +1060,7 @@ public abstract class BaseWorkerContext extends I18nBase implements IWorkerConte
       } else {
         ParametersParameterComponent existing = null;
         if (Utilities.existsInList(pp.getName(), "system-version", "check-system-version", "force-system-version",
-          "default-valueset-version", "check-valueset-version", "force-valueset-version") && pp.hasValue() && pp.getValue().isPrimitive()) {
+                                   "default-valueset-version", "check-valueset-version", "force-valueset-version") && pp.hasValue() && pp.getValue().isPrimitive()) {
           String url = pp.getValue().primitiveValue();
           if (url.contains("|")) {
             url = url.substring(0, url.indexOf("|") + 1);
@@ -3543,7 +3543,7 @@ public abstract class BaseWorkerContext extends I18nBase implements IWorkerConte
     txCache.unload();
     // release any server-side terminology caches we started (best-effort)
     if (terminologyClientManager != null) {
-      terminologyClientManager.endCaches();
+      terminologyClientManager.shutdown();
     }
   }
 

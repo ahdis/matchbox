@@ -298,7 +298,7 @@ public class FilesystemPackageCacheManager extends BasePackageCacheManager imple
         FileUtilities.atomicDeleteDirectory(f.getAbsolutePath());
       } else if (!f.getName().equals("packages.ini")
         // These files are package locks. They could interfere with running processes.
-        ) {
+      ) {
         if (FilesystemPackageCacheManagerLocks.isLockFile(f.getName())) {
           log.warn("Encountered package lock while clearing cache: {} It is possible that another process is modifying this cache. Lock-file deletion was not attempted.", f.getAbsolutePath());
         } else {
@@ -375,7 +375,7 @@ public class FilesystemPackageCacheManager extends BasePackageCacheManager imple
         return new InputStreamWithSrc(stream, "https://hl7.org/", version);
     }
 
-  	InputStreamWithSrc retVal = super.loadFromPackageServer(id, version);
+    InputStreamWithSrc retVal = super.loadFromPackageServer(id, version);
     if (retVal != null) {
       return retVal;
     }
@@ -516,10 +516,10 @@ public class FilesystemPackageCacheManager extends BasePackageCacheManager imple
     locks.getPackageLock(sid + "#" + version).doWriteWithLock(() -> {
 
       String f = Utilities.path(cacheFolder, sid + "#" + version);
-        File ff = ManagedFileAccess.file(f);
-        if (ff.exists()) {
-          FileUtilities.atomicDeleteDirectory(f);
-        }
+      File ff = ManagedFileAccess.file(f);
+      if (ff.exists()) {
+        FileUtilities.atomicDeleteDirectory(f);
+      }
       return null;
     }, lockParameters);
   }
@@ -591,7 +591,7 @@ public class FilesystemPackageCacheManager extends BasePackageCacheManager imple
             output.checkIndexed(path);
             return output;
           }, lockParameters);
-          }
+        }
       }
     }
     if ("dev".equals(version))
@@ -641,9 +641,9 @@ public class FilesystemPackageCacheManager extends BasePackageCacheManager imple
       log.info("Installing " + stripAlias(actualId) + "#" + version);
 
       if (!suppressErrors && extractedNpm.name() != null && actualId != null &&
-          !fileSystemId.equalsIgnoreCase(encodeIdForFilesystem(extractedNpm.name())) &&
-          !fileSystemId.equalsIgnoreCase(encodeIdForFilesystem(extractedNpm.name())+"."+VersionUtilities.getNameForVersion(extractedNpm.fhirVersion()))) {
-          throw new IOException("Attempt to import a mis-identified package. Expected " + actualId + ", got " + extractedNpm.name());
+        !fileSystemId.equalsIgnoreCase(encodeIdForFilesystem(extractedNpm.name())) &&
+        !fileSystemId.equalsIgnoreCase(encodeIdForFilesystem(extractedNpm.name())+"."+VersionUtilities.getNameForVersion(extractedNpm.fhirVersion()))) {
+        throw new IOException("Attempt to import a mis-identified package. Expected " + actualId + ", got " + extractedNpm.name());
       }
 
       NpmPackage npmPackage;
