@@ -1,7 +1,7 @@
 Unreleased
 
 - Update org.hl7.fhir.core to 6.9.12
-- Update HAPI FHIR to 8.10.0
+- Update HAPI FHIR to 8.10.1
 
 2026/07/01 Release 4.1.11
 
