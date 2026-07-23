@@ -40,7 +40,7 @@
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
 
         <fhir.core.version>6.9.12</fhir.core.version>
-        <hapi.fhir.version>8.10.0</hapi.fhir.version>
+        <hapi.fhir.version>8.10.1</hapi.fhir.version>
 
 
         <!-- The following section closely matches the one of HAPI-FHIR (for easier version comparison/upgrade).
