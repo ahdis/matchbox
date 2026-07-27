@@ -16,6 +16,9 @@ export class FhirClientWrapper {
   constructor(readonly baseUrl: string) {
     this.client = new Client({
       baseUrl: baseUrl,
+      requestSigner: (_url, requestInit) => {
+        requestInit.keepalive = false;
+      }
     });
   }
 
