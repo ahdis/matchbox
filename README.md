@@ -9,11 +9,13 @@
 
 the server can be run in two configurations, development (allowing updating resources, set flag in application.yaml in matchbox.fhir.context.onlyOneEngine to true) or deployment (default), see also additional [documentation](https://ahdis.github.io/matchbox)
 
-a public development server is hosted at [https://test.ahdis.ch/matchbox/fhir](https://test.ahdis.ch/matchbox/fhir) with a corresponding gui [https://test.ahdis.ch/matchbox/](https://test.ahdis.ch/matchbox/#)
+A public development server is hosted at [https://test.ahdis.ch/matchbox/fhir](https://test.ahdis.ch/matchbox/fhir) 
+with a corresponding GUI at [https://test.ahdis.ch/matchbox/](https://test.ahdis.ch/matchbox/).
 
-a public test server is hosted at [https://test.ahdis.ch/matchboxv3/fhir](https://test.ahdis.ch/matchboxv3/fhir) with a corresponding gui [https://test.ahdis.ch/matchboxv3/](https://test.ahdis.ch/matchboxv3/#)
+A public test server is hosted at [https://test.ahdis.ch/matchboxv3/fhir](https://test.ahdis.ch/matchboxv3/fhir) 
+with a corresponding GUI at [https://test.ahdis.ch/matchboxv3/](https://test.ahdis.ch/matchboxv3/).
 
-## containers
+## Containers
 
 The docker file will create a docker image with no preloaded implementation guides. A list of implementation guides to load can be passed as config-map.
 
@@ -29,7 +31,7 @@ The easiest way to run this server entirely depends on your environment requirem
 
 ## using prebuilt image
 
-```
+```bash
 docker run -d --name matchbox -p 8080:8080  europe-west6-docker.pkg.dev/ahdis-ch/ahdis/matchbox:v3.9.10 -v /Users/oegger/Documents/github/matchbox/matchbox-server/with-settings:/config matchbox
 ```
 
@@ -51,11 +53,11 @@ mvn clean install -DskipTests spring-boot:run -Dspring-boot.run.arguments=--spri
 
 or
 
-```
+```bash
 java -Dspring.config.additional-location=file:with-preload/application.yaml -jar target/matchbox.jar
 ```
 
-```
+```bash
 mvn clean install -DskipTests spring-boot:run -Dspring-boot.run.jvmArguments="-Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=y,address=5005"
 ```
 
@@ -66,7 +68,7 @@ or
 [http://localhost:8080/matchbox/#/](http://localhost:8080/matchboxv3/#/)
 
 
-## building with Docker
+## Building with Docker
 
 ### Configurable base image:
 
@@ -97,13 +99,13 @@ Change to either with-posgres directory or the with-preload directory (contains 
 
 For the first time, you might need to do
 
-```
+```bash
 docker-compose up matchbox-db
 ```
 
 that the database gets initialized before matchbox is starting up (needs a fix)
 
-```
+```bash
 mkdir data
 mvn clean package -DskipTests
 docker build -t matchbox .
@@ -115,42 +117,45 @@ Matchbox-gui will be available at [http://localhost:8080/matchboxv3/#/](http://l
 
 Export the DB data:
 
-```
+```bash
 docker-compose exec -T matchbox-test-db pg_dump -Fc -U matchbox matchbox > mydump
 ```
 
 Reimport the DB data:
 
-```
+```bash
 docker-compose exec -T matchbox-test-db pg_restore -c -U matchbox -d matchbox < mydump
 ```
 
-### making container available
+### Making container available
 
-```
+```bash
 docker tag matchbox eu.gcr.io/fhir-ch/matchbox:4.0.12
-
 docker push eu.gcr.io/fhir-ch/matchbox:v4.0.12
 ```
 
 ### publish docs
 
-documentation is maintained in docs folder using [mkdocs-material](https://squidfunk.github.io/mkdocs-material/):
+The documentation is maintained in the `docs/` folder using [mkdocs-material](https://squidfunk.github.io/mkdocs-material/):
 
-- develop docs: mkdocs serve
-- publish docs: mkdocs gh-deploy --force
+- develop docs: `mkdocs serve`
+- publish docs: `mkdocs gh-deploy --force`
 
-docs are then available at https://ahdis.github.io/matchbox/
+Docs are then available at https://ahdis.github.io/matchbox/
 
 # Kubernetes
 
+```bash
 kubectl cp matchbox-test-0:fhir.logdir_IS_UNDEFINED ./fhir.logdir/
 
 kubectl cp matchbox-test-app-d684cf865 ./fhir.logdir/
+```
 
 # MVN run unit tests
 
+```bash
 mvn -Dtest=CapabilityStatementTests test
+```
 
 # Making a release
 

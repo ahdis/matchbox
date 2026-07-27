@@ -3,7 +3,7 @@
 You can run matchbox directly in docker.
 
 ```bash
-docker run -d --name europe-west6-docker.pkg.dev/ahdis-ch/ahdis/matchbox:latest -p 8080:8080 -e matchbox.fhir.context.onlyOneEngine=true -v ${PWD}/config/:/config/ matchbox
+docker run -d --name matchbox -p 8080:8080 -e matchbox.fhir.context.onlyOneEngine=true -v ${PWD}/config/:/config/ europe-west6-docker.pkg.dev/ahdis-ch/ahdis/matchbox:latest
 docker logs --follow matchbox
 ```
 If you see A 'FHIR has been lit on this server' you can point your browser to http://localhost:8080/matchboxv3/fhir/metadata.
@@ -14,7 +14,7 @@ The parameter (matchbox.fhir.context.onlyOneEngine) is to set development enviro
 
 We recommend to put at least 2.5 GB of RAM for the container instance, depending on how many ImplementationGuides's you plan to install and want to use.
 
-## Live and Readyness checks
+## Live and Readiness checks
 
 To check if the container is live and ready you can check the health:
 
@@ -45,7 +45,7 @@ To check the amount of memory used by the jvm use: /actuator/metrics/jvm.memory.
 
 ## Using docker-compose with a persistent postgreSQL database
 
-To use docker-compose with Matchbox you need to checkout Matchbox from [github](https://github.com/ahdis/matchbox).
+To use docker-compose with Matchbox you need to check out Matchbox from [github](https://github.com/ahdis/matchbox).
 
 The database will be stored in the "data" directory. The configuration can be found in the "with-postgres" directory or in the "with-preload" directory.
 
@@ -79,11 +79,11 @@ Reimport the DB data:
 docker-compose exec -T matchbox-test-db pg_restore -c -U matchbox -d matchbox < mydump
 ```
 
-## Configure a own docker image with preinstalled packages
+## Configure an own docker image with preinstalled packages
 
 During a regular container startup all implementation guides will be deployed to the database. This packages can be provided by the
 
-1. fhir package servers
+1. FHIR package servers
 2. absolute http address to package
 3. classpath
 4. filesystem
