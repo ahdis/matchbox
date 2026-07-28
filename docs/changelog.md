@@ -5,6 +5,7 @@ Unreleased
 - Update HAPI FHIR to 8.10.1
 - Fix the GUI not able to send resources larger than 64 KiB (#542)
 - Fix requests larger than 2 MiB being rejected by Undertow (`UT000020`): the maximum request body size is now 100 MB, configurable with `server.undertow.max-http-post-size` (#543)
+- Update hl7.terminology to 7.3.0 and hl7.fhir.uv.extensions to 5.3.0
 
 2026/07/01 Release 4.1.11
 
