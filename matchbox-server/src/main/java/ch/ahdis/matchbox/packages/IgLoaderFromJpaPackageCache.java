@@ -180,24 +180,24 @@ public class IgLoaderFromJpaPackageCache extends IgLoader {
 
 		switch (FhirVersionEnum.forVersionString(this.getVersion())) {
 			case R4, R4B -> {
-				if (src.startsWith("hl7.terminology#7.0.1")) {
+				if (src.startsWith("hl7.terminology#7.3.0")) {
 					log.info("Requesting to load '{}', loading '{}' instead'", src, PACKAGE_R4_TERMINOLOGY);
 					loadIg(igs, binaries, PACKAGE_R4_TERMINOLOGY, recursive);
 					return;
 				}
-				if (src.startsWith("hl7.fhir.uv.extensions#5.2.0")) {
+				if (src.startsWith("hl7.fhir.uv.extensions#5.3.0")) {
 					log.info("Requesting to load '{}', loading '{}' instead'", src, PACKAGE_R4_UV_EXTENSIONS);
 					loadIg(igs, binaries, PACKAGE_R4_UV_EXTENSIONS, recursive);
 					return;
 				}
 			}
 			case R5 -> {
-				if (src.startsWith("hl7.terminology#7.0.1")) {
+				if (src.startsWith("hl7.terminology#7.3.0")) {
 					log.info("Requesting to load '{}', loading '{}' instead'", src, PACKAGE_R5_TERMINOLOGY);
 					loadIg(igs, binaries, PACKAGE_R5_TERMINOLOGY, recursive);
 					return;
 				}
-				if (src.startsWith("hl7.fhir.uv.extensions#5.2.0")) {
+				if (src.startsWith("hl7.fhir.uv.extensions#5.3.0")) {
 					log.info("Requesting to load '{}', loading from classpath '{}' instead'", src, PACKAGE_R5_UV_EXTENSIONS);
 					loadIg(igs, binaries, PACKAGE_R5_UV_EXTENSIONS, recursive);
 					return;
