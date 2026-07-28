@@ -1,4 +1,4 @@
-import { Client, FhirResource } from 'fhir-kit-client';
+import { Client, CreateParams, DeleteParams, FhirResource, UpdateParams } from 'fhir-kit-client';
 import CapabilityStatement = fhir.r4.CapabilityStatement;
 import Resource = fhir.r4.Resource;
 import OperationDefinition = fhir.r4.OperationDefinition;
@@ -9,16 +9,16 @@ import { ValidationEntry } from '../validate/validation-entry';
 
 /**
  * A wrapper for the FHIR client that provides a simpler API for our needs, with the right types.
+ *
+ * We intentionally disable keepalive for operations where a large body is expected, because `fetch()` has a hard limit
+ * of 64 KiB for the request when keepalive is enabled.
  */
 export class FhirClientWrapper {
   private readonly client: Client;
 
   constructor(readonly baseUrl: string) {
     this.client = new Client({
-      baseUrl: baseUrl,
-      requestSigner: (_url, requestInit) => {
-        requestInit.keepalive = false;
-      }
+      baseUrl: baseUrl
     });
   }
 
@@ -32,15 +32,15 @@ export class FhirClientWrapper {
     return result as unknown as Bundle;
   }
 
-  create(params: any): Promise<OperationOutcome> {
+  create(params: CreateParams): Promise<OperationOutcome> {
     return this.client.create(params) as unknown as Promise<OperationOutcome>;
   }
 
-  update(params: any): Promise<OperationOutcome> {
+  update(params: UpdateParams): Promise<OperationOutcome> {
     return this.client.update(params) as unknown as Promise<OperationOutcome>;
   }
 
-  delete(params: any): Promise<OperationOutcome> {
+  delete(params: DeleteParams): Promise<OperationOutcome> {
     return this.client.delete(params) as unknown as Promise<OperationOutcome>;
   }
 
@@ -49,6 +49,9 @@ export class FhirClientWrapper {
       name: 'transform?source=' + encodeURIComponent(structureMapUrl),
       resourceType: 'StructureMap',
       input: resource as FhirResource,
+      options: {
+        keepalive: false,
+      }
     }) as Promise<Resource>;
   }
 
@@ -58,6 +61,7 @@ export class FhirClientWrapper {
       resourceType: 'StructureMap',
       input: parameters as FhirResource,
       options: {
+        keepalive: false,
         headers: {
           'content-type': 'application/fhir+json',
         },
@@ -113,6 +117,7 @@ export class FhirClientWrapper {
       // to send a plain string (the resource JSON or XML serialization).
       input: entry.resource as unknown as FhirResource,
       options: {
+        keepalive: false,
         headers: {
           accept: 'application/fhir+json',
           'content-type': entry.mimetype,

@@ -38,9 +38,12 @@ export class MappingLanguageComponent implements OnInit {
         .create({
           resourceType: 'StructureMap',
           body: mapText,
-          headers: {
-            accept: 'application/fhir+json',
-            'content-type': 'text/fhir-mapping',
+          options: {
+            keepalive: false,
+            headers: {
+              accept: 'application/fhir+json',
+              'content-type': 'text/fhir-mapping',
+            },
           },
         })
         .then((response) => {

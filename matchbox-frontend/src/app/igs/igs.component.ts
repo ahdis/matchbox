@@ -5,6 +5,7 @@ import { FhirPathService } from '../fhirpath.service';
 import { OperationResult } from '../util/operation-result';
 import { FhirClientWrapper } from '../util/fhir-client-wrapper';
 import Bundle = fhir.r4.Bundle;
+import { FhirResource } from 'fhir-kit-client';
 
 @Component({
   selector: 'app-igs',
@@ -195,8 +196,9 @@ export class IgsComponent {
       .update({
         resourceType: this.selection.resourceType,
         id: this.selection.id,
-        body: this.selection,
+        body: this.selection as unknown as FhirResource,
         options: {
+          keepalive: false,
           headers: {
             Prefer: 'return=OperationOutcome',
           },
