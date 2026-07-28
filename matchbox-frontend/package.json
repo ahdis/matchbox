@@ -52,7 +52,7 @@
     "@types/pako": "^2.0.3",
     "@typescript-eslint/eslint-plugin": "8.65.x",
     "@typescript-eslint/parser": "8.65.x",
-    "eslint": "^10.6.0",
+    "eslint": "^10.7.0",
     "prettier": "3.9.x",
     "ts-node": "^10.9.2",
     "typescript": "6.0.x"
