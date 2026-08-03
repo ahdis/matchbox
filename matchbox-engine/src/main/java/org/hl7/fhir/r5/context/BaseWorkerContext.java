@@ -421,17 +421,17 @@ public abstract class BaseWorkerContext extends I18nBase implements IWorkerConte
           return;
         }
         // matchbox patch for duplicate resources, see https://github.com/ahdis/matchbox/issues/227 and issues/452
-        CanonicalResource ex = fetchResourceWithException(r.getType(), url, VersionResolutionRules.defaultRule());
-        boolean forceDrop = false;
-        if (url.startsWith("http://terminology.hl7.org/") && ex.getVersion()!=null && ex.getSourcePackage()!=null && ex.getVersion().equals(ex.getSourcePackage().getVersion()) ) {
-            forceDrop = true;
-        }
-        if (forceDrop || (packageInfo!=null && packageInfo.getVersion()!=null && !packageInfo.getVersion().equals(r.getVersion()))) {
-            dropResource(r.getType(), r.getId());
-            dropResource(r.getType(), url);
-        } else {
-            return;
-        }
+        // CanonicalResource ex = fetchResourceWithException(r.getType(), url, VersionResolutionRules.defaultRule());
+        // boolean forceDrop = false;
+        // if (url.startsWith("http://terminology.hl7.org/") && ex.getVersion()!=null && ex.getSourcePackage()!=null && ex.getVersion().equals(ex.getSourcePackage().getVersion()) ) {
+        //     forceDrop = true;
+        // }
+        // if (forceDrop || (packageInfo!=null && packageInfo.getVersion()!=null && !packageInfo.getVersion().equals(r.getVersion()))) {
+        //     dropResource(r.getType(), r.getId());
+        //     dropResource(r.getType(), url);
+        // } else {
+        //     return;
+        // }
         // END matchbox patch
       }
       boolean added = registerResource(r, packageInfo);
@@ -583,17 +583,17 @@ public abstract class BaseWorkerContext extends I18nBase implements IWorkerConte
             return;
           }
           // matchbox patch for duplicate resources, see https://github.com/ahdis/matchbox/issues/227 and issues/452
-          CanonicalResource ex = (CanonicalResource) fetchResourceWithException(r.getClass(), url, VersionResolutionRules.defaultRule());
-          boolean forceDrop = false;
-          if (url.startsWith("http://terminology.hl7.org/") && ex.getVersion()!=null && ex.getSourcePackage()!=null && ex.getVersion().equals(ex.getSourcePackage().getVersion()) ) {
-              forceDrop = true;
-          }
-          if (forceDrop || (m.getSourcePackage()!=null && m.getSourcePackage().getVersion()!=null && !m.getSourcePackage().getVersion().equals(m.getVersion()))) {
-              dropResource(m.fhirType(), m.getId());
-              dropResource(m.fhirType(), url);
-          } else {
-              return;
-          }
+          // CanonicalResource ex = (CanonicalResource) fetchResourceWithException(r.getClass(), url, VersionResolutionRules.defaultRule());
+          // boolean forceDrop = false;
+          // if (url.startsWith("http://terminology.hl7.org/") && ex.getVersion()!=null && ex.getSourcePackage()!=null && ex.getVersion().equals(ex.getSourcePackage().getVersion()) ) {
+          //     forceDrop = true;
+          // }
+          // if (forceDrop || (m.getSourcePackage()!=null && m.getSourcePackage().getVersion()!=null && !m.getSourcePackage().getVersion().equals(m.getVersion()))) {
+          //     dropResource(m.fhirType(), m.getId());
+          //     dropResource(m.fhirType(), url);
+          // } else {
+          //     return;
+          // }
           // END matchbox patch
         }
         if (r instanceof StructureDefinition) {
