@@ -75,6 +75,16 @@ hapi:
 Some more configuration parameters used by validation are described in the
 [Validation](validation.md#configuration-parameters) page.
 
+### Maximum request size
+
+Matchbox runs on Undertow, which rejects request bodies larger than 2 MiB by default with
+`RequestTooBigException: UT000020: Connection terminated as request was larger than 2097152`.
+Matchbox raises that limit to 100 MB; if you have to send larger resources, increase
+`server.undertow.max-http-post-size` (e.g. with the environment variable
+`SERVER_UNDERTOW_MAX_HTTP_POST_SIZE`). The value must be positive, Undertow cannot be configured for
+unlimited request bodies through Spring Boot. Note that a reverse proxy in front of Matchbox may
+enforce its own, smaller limit.
+
 ## Read-only mode {: #read-only}
 
 When enabling `httpReadOnly`, the server will reject any operation that would modify its state.

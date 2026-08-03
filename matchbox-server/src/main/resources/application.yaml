@@ -53,6 +53,12 @@ spring:
 server:
   servlet:
     context-path: /matchboxv3
+  undertow:
+    # Undertow rejects request bodies larger than 2 MiB by default (UndertowOptions.MAX_ENTITY_SIZE),
+    # which is too small for FHIR resources such as documents or large bundles. Override with the
+    # environment variable SERVER_UNDERTOW_MAX_HTTP_POST_SIZE if needed; the value must be positive,
+    # Undertow cannot be configured for unlimited request bodies through Spring Boot.
+    max-http-post-size: 100MB
 management:
   endpoint:
     health:
