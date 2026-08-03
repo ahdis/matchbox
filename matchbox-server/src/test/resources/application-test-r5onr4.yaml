@@ -19,6 +19,7 @@ matchbox:
     context:
       httpReadOnly: true
       txServer: http://localhost:${server.port}/matchboxv3/tx
+      ssrfProtectionEnabled: false # Needed for the localhost TX URL
       suppressError:
         hl7.fhir.r4.core#4.0.1:
           - "Extension_EXTP_Context_Wrong@^RelatedPerson"

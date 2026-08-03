@@ -72,6 +72,7 @@ import ch.ahdis.matchbox.validation.ValidationProvider;
 import jakarta.persistence.EntityManager;
 
 import org.hl7.fhir.r4.model.SearchParameter;
+import org.hl7.fhir.utilities.http.ManagedWebAccess;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
@@ -207,6 +208,9 @@ public class MatchboxJpaConfig extends StarterJpaConfig {
 			// The operation $install-npm-package is enabled if the httpReadOnly mode is disabled
 			fhirServer.registerProvider(installNpmPackageOperationProvider);
 		}
+
+		// Configure SSRF protection
+		ManagedWebAccess.setSsrfProtectionEnabled(cliContext.isSsrfProtectionEnabled());
 
 		matchboxFhirVersion.execute(
 			() -> {

@@ -38,19 +38,9 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
 
-import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
@@ -115,8 +105,6 @@ import org.hl7.fhir.utilities.npm.NpmPackage;
 import org.hl7.fhir.utilities.validation.ValidationMessage.IssueSeverity;
 import org.hl7.fhir.utilities.validation.ValidationMessage.IssueType;
 import org.hl7.fhir.utilities.validation.ValidationOptions;
-
-import com.google.gson.JsonObject;
 
 @Slf4j
 @MarkedToMoveToAdjunctPackage
@@ -1198,6 +1186,21 @@ public abstract class BaseWorkerContext extends I18nBase implements IWorkerConte
 
   // --- validate code -------------------------------------------------------------------------------
 
+  /**
+   * The language to pass to the ecosystem when routing a validation. A request that carries a
+   * display language is language sensitive by definition: even when no display is provided to
+   * check, the display in the response comes back in the requested language and callers use it
+   * (e.g. the renderers' display lookups), so the request must be routed to a server that can
+   * supply that language (language specific claims are invisible to language-free requests -
+   * see 'Language Specific Claims' in the tx ecosystem IG)
+   */
+  private String findValidationLanguage(ValidationOptions options) {
+    if (options == null || !options.hasLanguages()) {
+      return null;
+    }
+    return options.getLanguages().getSource();
+  }
+
   @Override
   public ValidationResult validateCode(ValidationOptions options, String system, String version, String code, String display) {
     assert options != null;
@@ -1294,7 +1297,7 @@ public abstract class BaseWorkerContext extends I18nBase implements IWorkerConte
     }
 
     if (items.size() > 0) {
-      TerminologyClientContext tc = terminologyClientManager.chooseServer(vs, systems, false);
+      TerminologyClientContext tc = terminologyClientManager.chooseServer(vs, systems, false, findValidationLanguage(options));
       Parameters resp = processBatch(tc, batch, systems, items.size());
       List<ParametersParameterComponent> validations = resp.getParameters("validation");
       for (int i = 0; i < items.size(); i++) {
@@ -1556,7 +1559,7 @@ public abstract class BaseWorkerContext extends I18nBase implements IWorkerConte
     }
 
     Set<String> systems = findRelevantSystems(code, vs);
-    TerminologyClientContext tc = terminologyClientManager.chooseServer(vs, systems, false);
+    TerminologyClientContext tc = terminologyClientManager.chooseServer(vs, systems, false, findValidationLanguage(options));
 
     String csumm = cachingAllowed && txCache != null ? txCache.summary(code) : null;
     if (cachingAllowed && txCache != null) {
@@ -1816,7 +1819,7 @@ public abstract class BaseWorkerContext extends I18nBase implements IWorkerConte
       return new ValidationResult(IssueSeverity.ERROR, "Error validating code: running without terminology services", TerminologyServiceErrorClass.NOSERVICE, null);
     }
     Set<String> systems = findRelevantSystems(code, vs);
-    TerminologyClientContext tc = terminologyClientManager.chooseServer(vs, systems, false);
+    TerminologyClientContext tc = terminologyClientManager.chooseServer(vs, systems, false, findValidationLanguage(options));
 
     txLog("$validate " + txCache.summary(code) + " for " + txCache.summary(vs) + " on " + tc.getAddress());
     try {
@@ -2117,7 +2120,7 @@ public abstract class BaseWorkerContext extends I18nBase implements IWorkerConte
 
   public ValidationResult processValidationResult(Parameters pOut, String vs, String server) {
     boolean ok = false;
-    String message = "No Message returned";
+    String message = null;
     String display = null;
     String system = null;
     String code = null;
@@ -2213,8 +2216,35 @@ public abstract class BaseWorkerContext extends I18nBase implements IWorkerConte
         }
       }
     }
+    if (!ok && message == null) {
+      // the server didn't return a message, but it did fail. Servers are allowed to convey the reason for
+      // failure in the issues alone, so build a message from them: error issues if there are any, otherwise
+      // whatever issues there are (better than reporting an anonymous failure)
+      List<String> msgs = new ArrayList<>();
+      for (OperationOutcomeIssueComponent iss : issues) {
+        if ((iss.getSeverity() == org.hl7.fhir.r5.model.OperationOutcome.IssueSeverity.FATAL ||
+          iss.getSeverity() == org.hl7.fhir.r5.model.OperationOutcome.IssueSeverity.ERROR)
+          && iss.getDetails().hasText() && !msgs.contains(iss.getDetails().getText())) {
+          msgs.add(iss.getDetails().getText());
+        }
+      }
+      if (msgs.isEmpty()) {
+        for (OperationOutcomeIssueComponent iss : issues) {
+          if (iss.getDetails().hasText() && !msgs.contains(iss.getDetails().getText())) {
+            msgs.add(iss.getDetails().getText());
+          }
+        }
+      }
+      if (!msgs.isEmpty()) {
+        Collections.sort(msgs);
+        message = String.join("; ", msgs);
+      }
+    }
     ValidationResult res = null;
     if (!ok) {
+      if (message == null) {
+        message = "The server did not return an error message";
+      }
       res = new ValidationResult(IssueSeverity.ERROR, message, err, null).setTxLink(txLog == null ? null : txLog.getLastId());
       if (code != null) {
         res.setDefinition(new ConceptDefinitionComponent().setDisplay(display).setCode(code));
@@ -2226,7 +2256,7 @@ public abstract class BaseWorkerContext extends I18nBase implements IWorkerConte
       if (version != null) {
         res.setVersion(version);
       }
-    } else if (message != null && !message.equals("No Message returned")) {
+    } else if (message != null) {
       res = new ValidationResult(IssueSeverity.WARNING, message, system, version, new ConceptDefinitionComponent().setDisplay(display).setCode(code), display, null).setTxLink(txLog == null ? null : txLog.getLastId());
     } else if (display != null) {
       res = new ValidationResult(system, version, new ConceptDefinitionComponent().setDisplay(display).setCode(code), display).setTxLink(txLog == null ? null : txLog.getLastId());

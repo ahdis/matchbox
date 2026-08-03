@@ -15,6 +15,7 @@ matchbox:
     context:
       httpReadOnly: true
       txServer: http://localhost:${server.port}/matchboxv3/tx
+      ssrfProtectionEnabled: false # Needed for the localhost TX URL
       suppressWarnInfo:
         hl7.fhir.r45.core#5.0.0:
           - "Constraint failed: dom-6:"

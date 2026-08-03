@@ -295,6 +295,9 @@ public class CliContext {
   @JsonProperty("analyzeOutcomeWithAIOnError")
   private Boolean analyzeOutcomeWithAIOnError;
 
+  @JsonProperty("ssrfProtectionEnabled")
+  private boolean ssrfProtectionEnabled = true;
+
   @Autowired
   public CliContext(Environment environment) {
     this.extensions = environment.getProperty("matchbox.fhir.context.extensions", String[].class, new String[]{"any"});
@@ -328,6 +331,7 @@ public class CliContext {
     this.igsPreloaded = environment.getProperty("matchbox.fhir.context.igsPreloaded", String[].class);
     this.onlyOneEngine = environment.getProperty("matchbox.fhir.context.onlyOneEngine", Boolean.class, false);
     this.httpReadOnly = environment.getProperty("matchbox.fhir.context.httpReadOnly", Boolean.class, false);
+    this.ssrfProtectionEnabled = environment.getProperty("matchbox.fhir.context.ssrfProtectionEnabled", Boolean.class, true);
   }
 
   public CliContext(CliContext other) {
@@ -354,6 +358,7 @@ public class CliContext {
     this.suppressErrors = other.suppressErrors;
     this.suppressWarnInfos = other.suppressWarnInfos;
     this.igs = other.igs;
+	 this.ssrfProtectionEnabled = other.ssrfProtectionEnabled;
   }
 
   public String getIg() {
@@ -735,8 +740,15 @@ public class CliContext {
     this.r5BundleRelativeReferencePolicy = r5BundleRelativeReferencePolicy;
   }
 
+	public boolean isSsrfProtectionEnabled() {
+		return this.ssrfProtectionEnabled;
+	}
 
-  @Override
+	public void setSsrfProtectionEnabled(final boolean ssrfProtectionEnabled) {
+		this.ssrfProtectionEnabled = ssrfProtectionEnabled;
+	}
+
+	@Override
   public boolean equals(final Object o) {
     if (this == o)
       return true;
@@ -794,7 +806,8 @@ public class CliContext {
         && Arrays.equals(suppressErrors, that.suppressErrors)
         && Arrays.equals(suppressWarnInfos, that.suppressWarnInfos)
         && Arrays.equals(igs, that.igs)
-        && Objects.equals(r5BundleRelativeReferencePolicy, that.r5BundleRelativeReferencePolicy);
+        && Objects.equals(r5BundleRelativeReferencePolicy, that.r5BundleRelativeReferencePolicy)
+		  && ssrfProtectionEnabled == that.ssrfProtectionEnabled;
   }
 
   @Override
@@ -845,7 +858,8 @@ public class CliContext {
         llmApiKey,
         checkIpsCodes,
         bundle,
-        r5BundleRelativeReferencePolicy);
+        r5BundleRelativeReferencePolicy,
+		  ssrfProtectionEnabled);
     result = 31 * result + Arrays.hashCode(igsPreloaded);
     result = 31 * result + Arrays.hashCode(extensions);
     result = 31 * result + Arrays.hashCode(suppressErrors);
@@ -909,6 +923,7 @@ public class CliContext {
         ", suppressErrors=" + Arrays.toString(suppressErrors) +
         ", suppressWarnInfos=" + Arrays.toString(suppressWarnInfos) +
         ", igs=" + Arrays.toString(igs) +
+        ", ssrfProtectionEnabled=" + ssrfProtectionEnabled +
         '}';
   }
 
@@ -975,6 +990,7 @@ public class CliContext {
     addExtension(ext, "llmModelName", new StringType(this.llmModelName));
     addExtension(ext, "check-ips-codes", new BooleanType(this.checkIpsCodes));
     addExtension(ext, "bundle", new StringType(this.bundle));
+	 addExtension(ext, "ssrf-protection-enabled", new BooleanType(this.ssrfProtectionEnabled));
     if (this.extensions != null && this.extensions.length > 0) {
       for( var extension : this.extensions) {
         addExtension(ext, "extensions", new StringType(extension));
