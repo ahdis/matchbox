@@ -254,6 +254,13 @@ public class InstanceValidator extends BaseValidator implements IResourceValidat
           return null;
         }
       }
+      if (!(appContext instanceof ValidationContext)) {
+        // the FHIRPath engine now consults the host services for implicit constant names during type
+        // checking, using whatever appInfo the caller supplied; if it isn't a ValidationContext, there
+        // are no constants to resolve (and returning null beats a ClassCastException swallowed into
+        // a validation message)
+        return null;
+      }
       ValidationContext c = (ValidationContext) appContext;
       if (externalHostServices != null)
         return externalHostServices.resolveConstantType(engine, c.getAppContext(), name, mode);
@@ -3380,7 +3387,7 @@ public class InstanceValidator extends BaseValidator implements IResourceValidat
             oidPortion = oidPortion.substring(0, oidPortion.indexOf("|"));
           }
           ok = rule(errors, NO_RULE_DATE, IssueType.INVALID, e.line(), e.col(), path,
-            // OIDs roots shorter than 4 chars are almost never valid for namespaces except for 1.3.x
+                    // OIDs roots shorter than 4 chars are almost never valid for namespaces except for 1.3.x
                     OIDUtilities.isValidOID(oidPortion) && ((oidPortion.lastIndexOf('.') >= 4 || oidPortion.startsWith("1.3"))),
                     I18nConstants.TYPE_SPECIFIC_CHECKS_DT_OID_VALID, oidPortion) && ok;
         }
@@ -4127,7 +4134,7 @@ public class InstanceValidator extends BaseValidator implements IResourceValidat
                                     "Coding.system",
                                     "ImplementationGuide.definition.page.source[x]", "ImplementationGuide.definition.page.name",  "ImplementationGuide.definition.page.name[x]",
                                     "Requirements.statement.satisfiedBy", "Bundle.entry.request.url",
-                                    "Attachment.url",
+                                    "Attachment.url", "Endpoint.address",
                                     "CapabilityStatement.implementation.url",
                                     "StructureDefinition.type", "ElementDefinition.fixed[x]", "ElementDefinition.pattern[x]", "ImplementationGuide.dependsOn.uri", "StructureDefinition.mapping.uri",
                                     "MessageHeader.source.endpoint", "MessageHeader.source.endpoint[x]", "MessageHeader.destination.endpoint", "MessageHeader.destination.endpoint[x]",
@@ -4137,7 +4144,7 @@ public class InstanceValidator extends BaseValidator implements IResourceValidat
       return Utilities.existsInList(context.getBase().getPath(),
                                     "Extension.url", // extension urls are validated elsewhere
                                     "ImplementationGuide.definition.page.source[x]", "ImplementationGuide.definition.page.name", "ImplementationGuide.definition.page.name[x]",
-                                    "Requirements.statement.satisfiedBy", "Bundle.entry.request.url",
+                                    "Requirements.statement.satisfiedBy", "Bundle.entry.request.url",  "Endpoint.address",
                                     "StructureDefinition.type", "ElementDefinition.fixed[x]", "ElementDefinition.pattern[x]"
       );
     }

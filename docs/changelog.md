@@ -1,6 +1,7 @@
 Unreleased
 
-- Update org.hl7.fhir.core to 6.9.12
+- Update org.hl7.fhir.core to 6.10.0
+- Added the parameter `matchbox.fhir.context.ssrfProtectionEnabled` to control the new HAPI SSRF protection mechanism
 - Update HAPI FHIR to 8.10.1
 - Fix the GUI not able to send resources larger than 64 KiB (#542)
 
