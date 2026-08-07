@@ -41,9 +41,13 @@ import ca.uhn.fhir.jpa.model.entity.ResourceTable;
 import ca.uhn.fhir.jpa.model.util.JpaConstants;
 import ca.uhn.fhir.jpa.packages.loader.NpmPackageData;
 import ca.uhn.fhir.jpa.packages.loader.PackageLoaderSvc;
+import ca.uhn.fhir.jpa.searchparam.SearchParameterMap;
 import ca.uhn.fhir.rest.api.Constants;
 import ca.uhn.fhir.rest.api.EncodingEnum;
+import ca.uhn.fhir.rest.api.server.IBundleProvider;
 import ca.uhn.fhir.rest.api.server.SystemRequestDetails;
+import ca.uhn.fhir.rest.param.TokenOrListParam;
+import ca.uhn.fhir.rest.param.TokenParam;
 import ca.uhn.fhir.rest.server.exceptions.InternalErrorException;
 import ca.uhn.fhir.rest.server.exceptions.InvalidRequestException;
 import ca.uhn.fhir.rest.server.exceptions.ResourceNotFoundException;
@@ -51,6 +55,7 @@ import ca.uhn.fhir.util.BinaryUtil;
 import ca.uhn.fhir.util.ResourceUtil;
 import ca.uhn.fhir.util.StringUtil;
 import ch.ahdis.matchbox.packages.MatchboxJpaPackageCache;
+import ch.ahdis.matchbox.packages.MbInstalledStructureDefinitionMigration;
 import jakarta.annotation.Nonnull;
 import jakarta.annotation.Nullable;
 import jakarta.persistence.EntityManager;
@@ -78,6 +83,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.annotation.Propagation;
@@ -138,6 +144,9 @@ public class JpaPackageCache extends BasePackageCacheManager implements IHapiPac
 
 	@Autowired(required = false) // It is possible that some implementers will not create such a bean.
 	private IBinaryStorageSvc myBinaryStorageSvc;
+
+  @Autowired
+  private MatchboxJpaPackageCache matchboxJpaPackageCache;
 
 	@Override
 	public void addPackageServer(@Nonnull PackageServer thePackageServer) {
@@ -410,9 +419,11 @@ public class JpaPackageCache extends BasePackageCacheManager implements IHapiPac
 						}
 						resourceEntity.setCanonicalVersion(version);
 					}
-          // PATCH MATCHBOX: the next line is our customization hook: https://github.com/ahdis/matchbox/issues/341
-          MatchboxJpaPackageCache.customizeNpmPackageVersionResourceEntity(resourceEntity, resource);
+          // MATCHBOX PATCH: the two calls to matchboxJpaPackageCache are our customization hook:
+          //                 https://github.com/ahdis/matchbox/issues/341
+          this.matchboxJpaPackageCache.interceptEntityBeforeSaving(resourceEntity, resource);
 					myPackageVersionResourceDao.save(resourceEntity);
+          this.matchboxJpaPackageCache.interceptEntityAfterSaving(resourceEntity, resource);
 
 					String resType = packageContext.getResourceType(resource);
 					String msg = "Indexing " + resType + " Resource[" + dirName + '/' + nextFile + "] with URL: "
@@ -479,7 +490,7 @@ public class JpaPackageCache extends BasePackageCacheManager implements IHapiPac
 
 	@Nonnull
 	public FhirContext getFhirContext(FhirVersionEnum theFhirVersion) {
-		return myVersionToContext.computeIfAbsent(theFhirVersion, v -> new FhirContext(v));
+		return myVersionToContext.computeIfAbsent(theFhirVersion, FhirContext::forCached);
 	}
 
 	private IBaseBinary createPackageBinary(byte[] theBytes) {

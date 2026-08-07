@@ -2,6 +2,7 @@ package ch.ahdis.matchbox.gazelle;
 
 import ca.uhn.fhir.jpa.starter.Application;
 import ch.ahdis.matchbox.validation.gazelle.models.validation.SeverityLevel;
+import ch.ahdis.matchbox.validation.gazelle.models.validation.ValidationProfile;
 import ch.ahdis.matchbox.validation.gazelle.models.validation.ValidationReport;
 import ch.ahdis.matchbox.validation.gazelle.models.validation.ValidationTestResult;
 import ch.ahdis.matchbox.test.CompareUtil;
@@ -13,7 +14,11 @@ import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.ContextConfiguration;
 
+import java.util.List;
+import java.util.Set;
+
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
@@ -40,6 +45,37 @@ public class GazelleApiR4Test extends AbstractGazelleTest {
 	void testProfiles() throws Exception {
 		final var profiles = this.client.getProfiles();
 		assertTrue(profiles.size() > 300);
+
+		// Every returned profile must have complete, non-blank metadata
+		profiles.forEach(profile -> assertTrue(profile.isValid(), "Invalid profile: " + profile.getProfileID()));
+
+		// The list must not contain duplicate profile IDs
+		final List<String> profileIds = profiles.stream().map(ValidationProfile::getProfileID).toList();
+		assertEquals(profileIds.size(), Set.copyOf(profileIds).size(), "Duplicate profile IDs found");
+
+		// A base FHIR core resource profile must be listed, both version-less (current) and versioned
+		assertTrue(profileIds.contains("http://hl7.org/fhir/StructureDefinition/Patient"));
+		assertTrue(profileIds.contains("http://hl7.org/fhir/StructureDefinition/Patient|4.0.1"));
+		final ValidationProfile patientProfile = profiles.stream()
+			.filter(profile -> "http://hl7.org/fhir/StructureDefinition/Patient".equals(profile.getProfileID()))
+			.findFirst()
+			.orElseThrow();
+		assertEquals("hl7.fhir.r4.core", patientProfile.getDomain());
+
+		// A profile from the custom test IG must also be listed, both version-less and versioned
+		final String testIgProfile = "http://matchbox.health/ig/test/r4/StructureDefinition/practitioner-identifier-required";
+		assertTrue(profileIds.contains(testIgProfile));
+		assertTrue(profileIds.contains(testIgProfile + "|0.2.0"));
+		final ValidationProfile testIgValidationProfile = profiles.stream()
+			.filter(profile -> testIgProfile.equals(profile.getProfileID()))
+			.findFirst()
+			.orElseThrow();
+		assertEquals("matchbox.health.test.ig.r4", testIgValidationProfile.getDomain());
+
+		// Extensions, primitive types and complex types are not validatable and must not be listed as profiles
+		assertFalse(profileIds.contains("http://hl7.org/fhir/StructureDefinition/patient-citizenship"));
+		assertFalse(profileIds.contains("http://hl7.org/fhir/StructureDefinition/string"));
+		assertFalse(profileIds.contains("http://hl7.org/fhir/StructureDefinition/Address"));
 	}
 
 	@Test

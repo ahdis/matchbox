@@ -18,13 +18,12 @@ import ca.uhn.fhir.jpa.api.dao.IFhirResourceDao;
 import ca.uhn.fhir.jpa.api.dao.IFhirSystemDao;
 import ca.uhn.fhir.jpa.batch.models.Batch2JobStartResponse;
 import ca.uhn.fhir.jpa.batch2.JpaJobPersistenceImpl;
+import ca.uhn.fhir.jpa.binary.api.IBinaryStorageSvc;
 import ca.uhn.fhir.jpa.binary.interceptor.BinaryStorageInterceptor;
 import ca.uhn.fhir.jpa.binary.provider.BinaryAccessProvider;
 import ca.uhn.fhir.jpa.bulk.export.api.IBulkExportProcessor;
 import ca.uhn.fhir.jpa.bulk.export.model.ExportPIDIteratorParameters;
-import ca.uhn.fhir.jpa.dao.data.IBatch2JobInstanceRepository;
-import ca.uhn.fhir.jpa.dao.data.IBatch2WorkChunkMetadataViewRepository;
-import ca.uhn.fhir.jpa.dao.data.IBatch2WorkChunkRepository;
+import ca.uhn.fhir.jpa.dao.data.*;
 import ca.uhn.fhir.mdm.svc.MdmExpansionCacheSvc;
 import ca.uhn.fhir.parser.IParser;
 import ca.uhn.fhir.jpa.dao.tx.IHapiTransactionService;
@@ -122,6 +121,7 @@ public class MatchboxJpaConfig extends StarterJpaConfig {
 															 final IPackageInstallerSvc packageInstallerSvc,
 															 final ThreadSafeResourceDeleterSvc theThreadSafeResourceDeleterSvc,
 															 final IHapiPackageCacheManager myPackageCacheManager,
+															 final MbInstalledStructureDefinitionRepository installedStructureDefinitionRepository,
 
 															 // Matchbox providers
 															 final InstallNpmPackageProvider installNpmPackageOperationProvider,
@@ -345,7 +345,8 @@ public class MatchboxJpaConfig extends StarterJpaConfig {
 																												  fhirServer,
 																												  structureDefinitionProvider,
 																												  cliContext,
-																												  matchboxFhirVersion));
+																												  matchboxFhirVersion,
+																												  installedStructureDefinitionRepository));
 
 		return fhirServer;
 	}
@@ -610,6 +611,30 @@ public class MatchboxJpaConfig extends StarterJpaConfig {
 	@Primary
 	public CodeSystemResourceProvider codeSystemResourceProvider() {
 		return new CodeSystemResourceProvider();
+	}
+
+	@Bean
+	public MatchboxJpaPackageCache matchboxJpaPackageCache(final MbInstalledStructureDefinitionRepository installedStructureDefinitionRepository) {
+		return new MatchboxJpaPackageCache(installedStructureDefinitionRepository);
+	}
+
+	/**
+	 * Prototype-scoped: this bean only does one-time startup work in {@code ApplicationRunner#run}, and it'll be
+	 * destroyed after. See JavaDoc of {@link MbInstalledStructureDefinitionMigration} for details.
+	 */
+	@Bean
+	@Scope("prototype")
+	public MbInstalledStructureDefinitionMigration mbInstalledStructureDefinitionMigration(
+		final MbInstalledStructureDefinitionRepository installedStructureDefinitionRepository,
+		final MatchboxJpaPackageCache matchboxJpaPackageCache,
+		final INpmPackageVersionResourceDao myPackageVersionResourceDao,
+		final IBinaryStorageSvc myBinaryStorageSvc,
+		final DaoRegistry myDaoRegistry) {
+		return new MbInstalledStructureDefinitionMigration(installedStructureDefinitionRepository,
+																			matchboxJpaPackageCache,
+																			myPackageVersionResourceDao,
+																			myBinaryStorageSvc,
+																			myDaoRegistry);
 	}
 
 	private static void registerOptionalProvider(final MatchboxRestfulServer fhirServer,
