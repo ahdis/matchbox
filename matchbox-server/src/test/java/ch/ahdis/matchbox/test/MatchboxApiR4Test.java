@@ -10,6 +10,9 @@ import ch.ahdis.matchbox.validation.gazelle.models.validation.ValidationRequest;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.commons.io.FileUtils;
 import org.hl7.fhir.instance.model.api.*;
+import org.hl7.fhir.r4.model.CanonicalType;
+import org.hl7.fhir.r4.model.CapabilityStatement;
+import org.hl7.fhir.r4.model.OperationDefinition;
 import org.hl7.fhir.r4.model.OperationOutcome;
 import org.hl7.fhir.r4.model.OperationOutcome.IssueSeverity;
 import org.hl7.fhir.r4.model.OperationOutcome.OperationOutcomeIssueComponent;
@@ -36,7 +39,9 @@ import java.nio.charset.StandardCharsets;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @SpringBootTest(webEnvironment = WebEnvironment.DEFINED_PORT)
 @ContextConfiguration(classes = {Application.class})
@@ -82,6 +87,55 @@ class MatchboxApiR4Test {
 
 		String sessionIdF2nd = getSessionId(operationOutcome);
 		assertEquals(sessionIdFirst, sessionIdF2nd);
+	}
+
+	@Test
+	void testValidateOperationDefinitionProfiles() {
+		final CapabilityStatement capabilityStatement =
+			this.validationClient.capabilities().ofType(CapabilityStatement.class).execute();
+
+		final String validateOperationDefinitionUrl = capabilityStatement.getRestFirstRep().getOperation().stream()
+			.filter(operation -> "validate".equals(operation.getName()))
+			.findFirst()
+			.orElseThrow()
+			.getDefinition();
+		assertNotEquals(null, validateOperationDefinitionUrl);
+
+		final OperationDefinition operationDefinition = this.validationClient.read()
+			.resource(OperationDefinition.class)
+			.withUrl(validateOperationDefinitionUrl)
+			.execute();
+
+		final List<CanonicalType> profiles = operationDefinition.getParameter().stream()
+			.filter(parameter -> "profile".equals(parameter.getName()))
+			.findFirst()
+			.orElseThrow()
+			.getTargetProfile();
+		assertTrue(profiles.size() > 150);
+
+		final List<String> profileUrls = profiles.stream().map(CanonicalType::getValue).toList();
+
+		// A base FHIR core resource profile must be listed
+		assertTrue(profileUrls.contains("http://hl7.org/fhir/StructureDefinition/Patient"));
+		final CanonicalType patientProfile = profiles.stream()
+			.filter(canonical -> "http://hl7.org/fhir/StructureDefinition/Patient".equals(canonical.getValue()))
+			.findFirst()
+			.orElseThrow();
+		assertEquals("hl7.fhir.r4.core", patientProfile.getExtensionString("ig-id"));
+
+		// A profile from the custom test IG must also be listed
+		final String testIgProfile = "http://matchbox.health/ig/test/r4/StructureDefinition/practitioner-identifier-required";
+		assertTrue(profileUrls.contains(testIgProfile));
+		final CanonicalType testIgCanonical = profiles.stream()
+			.filter(canonical -> testIgProfile.equals(canonical.getValue()))
+			.findFirst()
+			.orElseThrow();
+		assertEquals("matchbox.health.test.ig.r4", testIgCanonical.getExtensionString("ig-id"));
+
+		// Extensions, primitive types and complex types are not validatable and must not be listed as profiles
+		assertFalse(profileUrls.contains("http://hl7.org/fhir/StructureDefinition/patient-citizenship"));
+		assertFalse(profileUrls.contains("http://hl7.org/fhir/StructureDefinition/string"));
+		assertFalse(profileUrls.contains("http://hl7.org/fhir/StructureDefinition/Address"));
 	}
 
 	@Test

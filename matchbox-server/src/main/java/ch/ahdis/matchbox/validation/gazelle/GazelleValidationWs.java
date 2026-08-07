@@ -1,5 +1,7 @@
 package ch.ahdis.matchbox.validation.gazelle;
 
+import ca.uhn.fhir.jpa.dao.data.MbInstalledStructureDefinitionRepository;
+import ca.uhn.fhir.jpa.model.entity.MbInstalledStructureDefinitionEntity;
 import ca.uhn.fhir.jpa.model.entity.NpmPackageVersionResourceEntity;
 import ca.uhn.fhir.rest.api.EncodingEnum;
 import ca.uhn.fhir.util.StopWatch;
@@ -15,7 +17,6 @@ import ch.ahdis.matchbox.validation.gazelle.models.metadata.RestBinding;
 import ch.ahdis.matchbox.validation.gazelle.models.metadata.Service;
 import ch.ahdis.matchbox.validation.gazelle.models.validation.*;
 
-import org.hl7.fhir.r5.model.StringType;
 import org.hl7.fhir.r5.model.StructureDefinition;
 import org.hl7.fhir.utilities.validation.ValidationMessage;
 import org.slf4j.Logger;
@@ -29,8 +30,6 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
-
-import static ch.ahdis.matchbox.packages.MatchboxJpaPackageCache.structureDefinitionIsValidatable;
 
 /**
  * The WebService for validation with the new Gazelle Validation API.
@@ -53,15 +52,19 @@ public class GazelleValidationWs {
 
 	private final StructureDefinitionResourceProvider structureDefinitionProvider;
 
+	private final MbInstalledStructureDefinitionRepository installedStructureDefinitionRepository;
+
 	// The base CLI context, with the default parameters
 	private final CliContext baseCliContext;
 
 	public GazelleValidationWs(final MatchboxEngineSupport matchboxEngineSupport,
 										final CliContext baseCliContext,
-										final StructureDefinitionResourceProvider structureDefinitionProvider) {
+										final StructureDefinitionResourceProvider structureDefinitionProvider,
+										final MbInstalledStructureDefinitionRepository installedStructureDefinitionRepository) {
 		this.matchboxEngineSupport = Objects.requireNonNull(matchboxEngineSupport);
 		this.baseCliContext = Objects.requireNonNull(baseCliContext);
 		this.structureDefinitionProvider = Objects.requireNonNull(structureDefinitionProvider);
+		this.installedStructureDefinitionRepository = Objects.requireNonNull(installedStructureDefinitionRepository);
 	}
 
 	/**
@@ -98,32 +101,27 @@ public class GazelleValidationWs {
 	 */
 	@GetMapping(path = PROFILES_PATH, produces = MediaType.APPLICATION_JSON_VALUE)
 	public List<ValidationProfile> getProfiles() {
-		// Filter the extensions, because they won't be validated directly
-		final List<NpmPackageVersionResourceEntity> entities =
-			this.structureDefinitionProvider.getPackageResources().stream()
-			.filter(packageVersionResource -> structureDefinitionIsValidatable(packageVersionResource.getFilename()))
-			.toList();
+		final List<MbInstalledStructureDefinitionEntity> entities =
+			this.installedStructureDefinitionRepository.findAllValidatable();
 
 		final var profiles = new ArrayList<ValidationProfile>(entities.size()*2);
-		entities.forEach(packageVersionResource -> {
-				final var profile = new ValidationProfile();
-				final var version = packageVersionResource.getCanonicalVersion();
-				profile.setProfileID("%s|%s".formatted(packageVersionResource.getCanonicalUrl(), version));
-				// PATCHed: filename contains the StructureDefinition title.
-				profile.setProfileName("%s (%s)".formatted(packageVersionResource.getFilename(), version));
-				profile.setDomain(packageVersionResource.getPackageVersion().getPackageId());
-				profiles.add(profile);
+		entities.forEach(installedStructDef  -> {
+			final var profile = new ValidationProfile();
+			final var version = installedStructDef.getPackageVersion();
+			profile.setProfileID("%s|%s".formatted(installedStructDef.getCanonicalUrl(), version));
+			profile.setProfileName("%s (%s)".formatted(installedStructDef.getTitle(), version));
+			profile.setDomain(installedStructDef.getPackageId());
+			profiles.add(profile);
 
-				// If the package is current, we also add it version-less
-				if (packageVersionResource.getPackageVersion().isCurrentVersion()) {
-					final var profile2 = new ValidationProfile();
-					profile2.setProfileID(packageVersionResource.getCanonicalUrl());
-					// PATCHed: filename contains the StructureDefinition title.
-					profile2.setProfileName(packageVersionResource.getFilename());
-					profile2.setDomain(packageVersionResource.getPackageVersion().getPackageId());
-					profiles.add(profile2);
-				}
-			});
+			// If the package is current, we also add it version-less
+			if (installedStructDef.isCurrent()) {
+				final var profile2 = new ValidationProfile();
+				profile2.setProfileID(installedStructDef.getCanonicalUrl());
+				profile2.setProfileName(installedStructDef.getTitle());
+				profile2.setDomain(installedStructDef.getPackageId());
+				profiles.add(profile2);
+			}
+		});
 		return profiles;
 	}
 

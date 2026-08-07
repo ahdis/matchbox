@@ -9,7 +9,7 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 
 /**
- * matchbox
+ * Some utility methods for the Gazelle API tests.
  *
  * @author Quentin Ligier
  **/
@@ -20,6 +20,9 @@ public abstract class AbstractGazelleTest {
 	}
 
 	public static String getMetadata(final ValidationReport report, final String metadataName) {
+		if (report.getAdditionalMetadata() == null) {
+			return null;
+		}
 		for (final Metadata metadata : report.getAdditionalMetadata()) {
 			if (metadataName.equals(metadata.getName())) {
 				return metadata.getValue();

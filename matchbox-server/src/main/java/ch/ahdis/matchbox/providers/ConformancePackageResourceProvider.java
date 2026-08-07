@@ -373,50 +373,6 @@ public class ConformancePackageResourceProvider<R4 extends MetadataResource, R4B
 		}
 	}
 
-	/**
-	 * Returns the list of installed StructureDefinitions, as a list of R5 CanonicalTypes.
-	 */
-	public List<org.hl7.fhir.r5.model.CanonicalType> getCanonicalsR5() {
-		return new TransactionTemplate(myTxManager).execute(tx -> {
-			final var page = PageRequest.of(0, 2147483646);
-
-			// Find the IDs of the current StructureDefinitions.
-			final var currentEntityIds =
-				this.myPackageVersionResourceDao.findCurrentByResourceType(page, this.resourceType)
-					.stream()
-					.map(NpmPackageVersionResourceEntity::getId)
-					.collect(Collectors.toUnmodifiableSet());
-
-			return this.myPackageVersionResourceDao.findByResourceType(page, this.resourceType)
-				.stream()
-				.peek(entity -> {
-					// NB: getCanonicalVersion() may be null is rare cases, but getPackageVersion().getVersionId() should not
-					if (entity.getCanonicalVersion() == null) {
-						entity.setCanonicalVersion(entity.getPackageVersion().getVersionId());
-					}
-				})
-				// Sort the StructureDefinitions by canonical URL first, and then by version
-				.sorted(Comparator
-							  .comparing(NpmPackageVersionResourceEntity::getCanonicalUrl)
-							  .thenComparing(NpmPackageVersionResourceEntity::getCanonicalVersion))
-				.map(entity -> {
-					final var canonical = new CanonicalType(entity.getCanonicalUrl());
-					// Add custom extensions to the CanonicalType to store additional information
-					addExtension(canonical, "ig-id", new StringType(entity.getPackageVersion().getPackageId()));
-					addExtension(canonical, "ig-version", new StringType(entity.getCanonicalVersion()));
-					addExtension(canonical, "ig-current", new BooleanType(currentEntityIds.contains(entity.getId())));
-					addExtension(canonical, "sd-canonical", new StringType(entity.getCanonicalUrl()));
-					if (entity.getFilename() != null && !entity.getFilename().isBlank()) {
-						addExtension(canonical, "sd-title", new StringType(entity.getFilename()));
-					} else {
-						addExtension(canonical, "sd-title", new StringType(entity.getCanonicalUrl()));
-					}
-					return canonical;
-				})
-				.toList();
-		});
-	}
-
 	public String getFhirVersion(IBaseResource theResource) {
 		return getFhirVersion(theResource.getStructureFhirVersionEnum().getFhirVersionString());
 	}
