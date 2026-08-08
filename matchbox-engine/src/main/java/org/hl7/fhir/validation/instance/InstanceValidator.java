@@ -5141,7 +5141,14 @@ public class InstanceValidator extends BaseValidator implements IResourceValidat
                 for (ValidationMessage vm : goodProfiles.values().iterator().next()) {
                   if (!errors.contains(vm)) {
                     errors.add(vm);
-                    ok = false;
+                    // matchbox patch #543 start: only errors from a referenced resource may fail the referring
+                    // resource. Warnings/hints (e.g. the dom-6 best practice warning) set ok=false in the upstream
+                    // code, which makes validateResource() return false without any error message; validateContains()
+                    // then throws java.lang.Error("failed to validate, but no errors")
+                    if (vm.isError()) {
+                      ok = false;
+                    }
+                    // matchbox patch #543 end
                   }
                 }
               }
@@ -5162,7 +5169,11 @@ public class InstanceValidator extends BaseValidator implements IResourceValidat
                   for (ValidationMessage vm : messages) {
                     if (!errors.contains(vm)) {
                       errors.add(vm);
-                      ok = false;
+                      // matchbox patch #543 start: only errors may fail the referring resource
+                      if (vm.isError()) {
+                        ok = false;
+                      }
+                      // matchbox patch #543 end
                     }
                   }
                 }
@@ -5183,7 +5194,11 @@ public class InstanceValidator extends BaseValidator implements IResourceValidat
                   for (ValidationMessage vm : messages) {
                     if (!errors.contains(vm)) {
                       errors.add(vm);
-                      ok = false;
+                      // matchbox patch #543 start: only errors may fail the referring resource
+                      if (vm.isError()) {
+                        ok = false;
+                      }
+                      // matchbox patch #543 end
                     }
                   }
                 }

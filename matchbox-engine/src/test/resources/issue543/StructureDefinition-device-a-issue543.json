@@ -1,0 +1,24 @@
+{
+  "resourceType": "StructureDefinition",
+  "id": "device-a-issue543",
+  "url": "http://matchbox.health/test/StructureDefinition/device-a-issue543",
+  "version": "1.0.0",
+  "name": "DeviceaIssue543",
+  "status": "active",
+  "fhirVersion": "4.0.1",
+  "kind": "resource",
+  "abstract": false,
+  "type": "Device",
+  "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Device",
+  "derivation": "constraint",
+  "differential": {
+    "element": [
+      {
+        "id": "Device.owner",
+        "path": "Device.owner",
+        "min": 0,
+        "max": "1"
+      }
+    ]
+  }
+}

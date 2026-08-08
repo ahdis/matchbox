@@ -1,0 +1,68 @@
+{
+  "resourceType": "StructureDefinition",
+  "id": "bundle-issue543",
+  "url": "http://matchbox.health/test/StructureDefinition/bundle-issue543",
+  "version": "1.0.0",
+  "name": "BundleIssue543",
+  "status": "active",
+  "fhirVersion": "4.0.1",
+  "kind": "resource",
+  "abstract": false,
+  "type": "Bundle",
+  "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Bundle",
+  "derivation": "constraint",
+  "differential": {
+    "element": [
+      {
+        "id": "Bundle.entry",
+        "path": "Bundle.entry",
+        "slicing": {
+          "discriminator": [
+            {
+              "type": "type",
+              "path": "resource"
+            }
+          ],
+          "ordered": false,
+          "rules": "open"
+        }
+      },
+      {
+        "id": "Bundle.entry:device",
+        "path": "Bundle.entry",
+        "sliceName": "device",
+        "min": 0,
+        "max": "*"
+      },
+      {
+        "id": "Bundle.entry:device.resource",
+        "path": "Bundle.entry.resource",
+        "type": [
+          {
+            "code": "Device",
+            "profile": [
+              "http://matchbox.health/test/StructureDefinition/device-a-issue543",
+              "http://matchbox.health/test/StructureDefinition/device-b-issue543"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "Bundle.entry:organization",
+        "path": "Bundle.entry",
+        "sliceName": "organization",
+        "min": 0,
+        "max": "*"
+      },
+      {
+        "id": "Bundle.entry:organization.resource",
+        "path": "Bundle.entry.resource",
+        "type": [
+          {
+            "code": "Organization"
+          }
+        ]
+      }
+    ]
+  }
+}

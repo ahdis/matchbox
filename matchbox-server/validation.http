@@ -1,5 +1,5 @@
-@host = https://test.ahdis.ch/matchboxv3/fhir
-### @host = http://localhost:8083/matchboxv3/fhir
+### @host = https://test.ahdis.ch/matchboxv3/fhir
+@host = http://localhost:8080/matchboxv3/fhir
 ### @host = http://hapi.fhir.org/baseR4
 ### @host = http://localhost:18002/eprik-fhir/camel/matchbox/matchboxv3/fhir
 
@@ -97,6 +97,63 @@ POST {{host}}/$validate?profile=http://hl7.org/fhir/uv/ips/StructureDefinition/B
 Content-Type: application/fhir+json
 
 < ./examples/ips-minimal-err-patnobirthdate.json
+
+
+### LRR_Bunlde
+POST {{host}}/$validate?profile=http://hl7.org/fhir/StructureDefinition/Bundle&extensions=any HTTP/1.1
+Content-Type: application/fhir+json
+
+< ./LRR_Bundle.json
+
+
+### LRR_Bunlde
+POST {{host}}/$validate?profile=http://fhir.ehdsi.eu/laboratory/StructureDefinition/Bundle-lab-myhealtheu&extensions=any HTTP/1.1
+Content-Type: application/fhir+json
+
+< ./LRR_Bundle.json
+
+
+### LRR_Bunlde
+POST {{host}}/$validate?profile=http://fhir.ehdsi.eu/laboratory/StructureDefinition/Bundle-lab-myhealtheu&extensions=any HTTP/1.1
+Content-Type: application/fhir+json
+
+< ./LRR_Bundle_device_only_model_name.json
+
+
+### LRR_Bunlde
+POST {{host}}/$validate?profile=http://fhir.ehdsi.eu/laboratory/StructureDefinition/Bundle-lab-myhealtheu&extensions=any HTTP/1.1
+Content-Type: application/fhir+json
+
+< ./LRR_Bundle_device_no_name.json
+
+
+### LRR_Bunlde
+POST {{host}}/$validate?profile=http://fhir.ehdsi.eu/laboratory/StructureDefinition/Bundle-lab-myhealtheu&extensions=any HTTP/1.1
+Content-Type: application/fhir+json
+
+< ./LRR_Bundle_no_device.json
+
+
+### LRR_Bundle minimal reproduction of "failed to validate, but no errors" (Device slice with 2 candidate profiles + dom-6 best practice warning)
+POST {{host}}/$validate?profile=http://fhir.ehdsi.eu/laboratory/StructureDefinition/Bundle-lab-myhealtheu&extensions=any HTTP/1.1
+Content-Type: application/fhir+json
+
+< ./LRR_Bundle_minimal.json
+
+
+### same minimal bundle, but with showMessagesFromReferences=false (upstream validator default): no exception
+POST {{host}}/$validate?profile=http://fhir.ehdsi.eu/laboratory/StructureDefinition/Bundle-lab-myhealtheu&extensions=any&showMessagesFromReferences=false HTTP/1.1
+Content-Type: application/fhir+json
+
+< ./LRR_Bundle_minimal.json
+
+
+### same minimal bundle, but with narrative on Device and Organization: no exception
+POST {{host}}/$validate?profile=http://fhir.ehdsi.eu/laboratory/StructureDefinition/Bundle-lab-myhealtheu&extensions=any HTTP/1.1
+Content-Type: application/fhir+json
+
+< ./LRR_Bundle_minimal_with_narrative.json
+
 
 
 ### lenient-display-validation does not work with displayLanguage de-CH: "Wrong Display Name 'PRESCRIPTIONS' for http://loinc.org#57828-6. There are no valid display names found for language(s) 'de-CH'. Default display is 'Prescription list'

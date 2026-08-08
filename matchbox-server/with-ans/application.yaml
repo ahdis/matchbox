@@ -13,11 +13,15 @@ hapi:
       ans_fr_tddui:
         name: ans.fhir.fr.tddui
         version: 2.1.0-ballot
+      myhealth_eu_fhir_laboratory:
+        name: myhealth.eu.fhir.laboratory
+        version: 9.1.1
 matchbox:
   fhir:
     context:
 #      txServer: http://tx.fhir.org
       httpReadOnly: true
+      ssrfProtectionEnabled: false
       txServer: http://localhost:${server.port}/matchboxv3/tx
       suppressWarnInfo:
         hl7.fhir.r4.core#4.0.1:
