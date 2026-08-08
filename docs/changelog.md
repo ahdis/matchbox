@@ -4,8 +4,10 @@ Unreleased
 - Added the parameter `matchbox.fhir.context.ssrfProtectionEnabled` to control the new HAPI SSRF protection mechanism
 - Update HAPI FHIR to 8.10.1
 - Fix the GUI not able to send resources larger than 64 KiB (#542)
+- Fix `Ambiguous type id` validation errors: the FHIR core package of another FHIR version (e.g. `hl7.fhir.r5.core#5.0.0` for an R4 validation) is no longer loaded when it is declared as a dependency of an IG, matching the behaviour of the FHIR validator
 - Fix requests larger than 2 MiB being rejected by Undertow (`UT000020`): the maximum request body size is now 100 MB, configurable with `server.undertow.max-http-post-size` (#543)
 - Update hl7.terminology to 7.3.0 and hl7.fhir.uv.extensions to 5.3.0
+- Fix `java.lang.Error: failed to validate, but no errors` when validating a bundle whose entry slice allows several profiles and that contains a reference to another bundle entry (#543): with `showMessagesFromReferences` (enabled by default in matchbox), warnings and hints from the referenced resource, such as the `dom-6` best practice warning, no longer make the referring resource fail validation
 
 2026/07/01 Release 4.1.11
 

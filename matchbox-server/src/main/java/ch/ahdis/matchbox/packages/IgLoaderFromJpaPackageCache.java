@@ -47,6 +47,7 @@ import org.hl7.fhir.r5.model.PackageInformation;
 import org.hl7.fhir.r5.model.Resource;
 import org.hl7.fhir.utilities.ByteProvider;
 import org.hl7.fhir.utilities.FileUtilities;
+import org.hl7.fhir.utilities.VersionUtilities;
 import org.hl7.fhir.utilities.npm.FilesystemPackageCacheManager;
 import org.hl7.fhir.utilities.npm.NpmPackage;
 import org.hl7.fhir.validation.IgLoader;
@@ -232,9 +233,13 @@ public class IgLoaderFromJpaPackageCache extends IgLoader {
 				return null;
 			}
 			for (final String dependency : npm.dependencies()) {
-				if (id.startsWith("hl7.terminology") && src.startsWith("hl7.fhir")) {
-					// FHIR Core should be loaded manually, see MatchboxEngineSupport.getMatchboxEngineNotSynchronized()
-					log.info("Ignoring dependency '{}' for '{}', circular dependency", dependency, id);
+				if (VersionUtilities.isCorePackage(dependency)) {
+					// The FHIR core package is loaded manually for the FHIR version of the engine, see
+					// MatchboxEngineSupport.getMatchboxEngineNotSynchronized(). Loading the core package of another FHIR
+					// version as a dependency would add a second set of type definitions to the context, which makes the
+					// validation fail with 'Ambiguous type id'. The official validator skips core packages in the
+					// dependencies too, see org.hl7.fhir.validation.IgLoader#loadIg(..).
+					log.info("Ignoring core dependency '{}' for '{}'", dependency, src);
 					continue;
 				}
 				log.debug("Loading depending package " + dependency + " for "+src);
@@ -247,6 +252,10 @@ public class IgLoaderFromJpaPackageCache extends IgLoader {
 			}
 			// Load internal dependencies declared in the ImplementationGuide resource (see #481)
 			for (final String internalDep : getInternalDependencies(npm)) {
+				if (VersionUtilities.isCorePackage(internalDep)) {
+					log.info("Ignoring core internal dependency '{}' for '{}'", internalDep, src);
+					continue;
+				}
 				log.debug("Loading internal dependency " + internalDep + " for " + src);
 				try {
 					loadIg(igs, binaries, internalDep, recursive);
