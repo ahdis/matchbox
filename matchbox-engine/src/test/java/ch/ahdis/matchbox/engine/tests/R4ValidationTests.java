@@ -97,8 +97,11 @@ class R4ValidationTests {
 	void testIgnoreErrors() throws Exception {
 		final var errors = this.expectInvalid(this.relatedPerson, Manager.FhirFormat.JSON, "http://hl7.org/fhir/StructureDefinition/RelatedPerson");
 		assertEquals(1, errors.size());
+		// patient-birthPlace has 'Patient' as its only context, so it is not allowed on a RelatedPerson. It replaced
+		// patient-citizenship in this test, whose context was widened to Patient|RelatedPerson|Person in
+		// hl7.fhir.uv.extensions 5.3.0.
 		// Since core 6.9.1, extensionUrlVersioned includes version, so message text includes "v4.0.1"
-		assertTrue(errors.get(0).getDetails().getText().startsWith("The extension http://hl7.org/fhir/StructureDefinition/patient-citizenship"));
+		assertTrue(errors.get(0).getDetails().getText().startsWith("The extension http://hl7.org/fhir/StructureDefinition/patient-birthPlace"));
 		engine.addSuppressedError("Extension_EXTP_Context_Wrong", "RelatedPerson");
  		expectValid(this.relatedPerson, Manager.FhirFormat.JSON, "http://hl7.org/fhir/StructureDefinition/RelatedPerson");
 	}

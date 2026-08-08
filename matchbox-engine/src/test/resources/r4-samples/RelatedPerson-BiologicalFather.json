@@ -1,17 +1,11 @@
 {
   "resourceType" : "RelatedPerson",
   "extension" : [{
-    "extension" : [{
-      "url" : "code",
-      "valueCodeableConcept" : {
-        "coding" : [{
-          "system" : "urn:iso:std:iso:3166",
-          "code" : "CH",
-          "display" : "Switzerland"
-        }]
-      }
-    }],
-    "url" : "http://hl7.org/fhir/StructureDefinition/patient-citizenship"
+    "url" : "http://hl7.org/fhir/StructureDefinition/patient-birthPlace",
+    "valueAddress" : {
+      "city" : "Bern",
+      "country" : "CH"
+    }
   }],
   "patient" : {
     "display" : "Ungeborenes Kind"
