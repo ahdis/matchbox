@@ -1,7 +1,7 @@
-Unreleased
+2026/08/11 Release 4.1.12
 
 - Update org.hl7.fhir.core to 6.10.0
-- Added the parameter `matchbox.fhir.context.ssrfProtectionEnabled` to control the new HAPI SSRF protection mechanism
+- Added the parameter `matchbox.fhir.context.ssrfProtectionEnabled` to control the new HAPI SSRF protection mechanism (Important: if you use a local terminology server you need to put that parameter)
 - Update HAPI FHIR to 8.10.1
 - Fix the GUI not able to send resources larger than 64 KiB (#542)
 - Fix `Ambiguous type id` validation errors: the FHIR core package of another FHIR version (e.g. `hl7.fhir.r5.core#5.0.0` for an R4 validation) is no longer loaded when it is declared as a dependency of an IG, matching the behaviour of the FHIR validator
@@ -9,6 +9,8 @@ Unreleased
 - Update hl7.terminology to 7.3.0 and hl7.fhir.uv.extensions to 5.3.0. Note that 5.3.0 widens the context of some extensions, e.g. `patient-citizenship` is now allowed on `Patient`, `RelatedPerson` and `Person`; validations that expected an `Extension_EXTP_Context_Wrong` error for these extensions will no longer report it
 - Fix `java.lang.Error: failed to validate, but no errors` when validating a bundle whose entry slice allows several profiles and that contains a reference to another bundle entry (#543): with `showMessagesFromReferences` (enabled by default in matchbox), warnings and hints from the referenced resource, such as the `dom-6` best practice warning, no longer make the referring resource fail validation
 - Optimize listing validatable profiles by caching them to a new database table. It will be automatically created on the first startup after the update.
+- Fix copy() aliasing bug in StructureMap transforms (#552) thanks @mrunibe for PR's !
+- Upgrade Spring Boot from 3.5.14 to 3.5.16, which brings Micrometer 1.15.12 to fix two DoS vulnerabilities in `micrometer-core` (CVE-2026-40983 via specially crafted gRPC requests, CVE-2026-40984 via specially crafted HTTP requests)
 
 2026/07/01 Release 4.1.11
 

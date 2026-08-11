@@ -9,7 +9,7 @@
 
     <groupId>health.matchbox</groupId>
     <artifactId>matchbox</artifactId>
-    <version>4.1.11</version>
+    <version>4.1.12</version>
     <packaging>pom</packaging>
     <name>matchbox</name>
     <description>An open-source implementation to support testing and implementation of FHIR based solutions and map or
@@ -59,7 +59,7 @@
         <log4j_to_slf4j_version>2.26.1</log4j_to_slf4j_version>
         <spring_version>6.2.19</spring_version>
         <spring_context_version>6.2.19</spring_context_version>
-        <spring_boot_version>3.5.14</spring_boot_version>
+        <spring_boot_version>3.5.16</spring_boot_version>
         <thymeleaf.version>3.1.5.RELEASE</thymeleaf.version>
         <testcontainers_version>1.21.4</testcontainers_version>
         <ucum_version>1.0.10</ucum_version>
