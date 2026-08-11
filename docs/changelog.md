@@ -11,7 +11,7 @@
 - Optimize listing validatable profiles by caching them to a new database table. It will be automatically created on the first startup after the update.
 - Fix copy() aliasing bug in StructureMap transforms (#552) thanks @mrunibe for PR's !
 - Upgrade Spring Boot from 3.5.14 to 3.5.16, which brings Micrometer 1.15.12 to fix two DoS vulnerabilities in `micrometer-core` (CVE-2026-40983 via specially crafted gRPC requests, CVE-2026-40984 via specially crafted HTTP requests)
-- Fix the unit tests being killed by the OOM killer on the CI runner: the forked test JVMs were allowed to grow to 100% of the machine's memory (`-XX:MaxRAMPercentage`), so the garbage of the already-dirtied Spring test contexts was never reclaimed; the heap is now capped at 70% in both modules, and the Maven process itself at 25%
+- Fix the unit tests being killed by the OOM killer on the CI runner: the forked test JVMs were allowed to grow to 100% of the machine's memory (`-XX:MaxRAMPercentage`), so the garbage of the already-dirtied Spring test contexts was never reclaimed; the heap is now capped at 70% in both modules, and the Maven processes of the unit and integration test workflows are sized down so they cannot claim the memory the test JVMs need
 
 2026/07/01 Release 4.1.11
 
