@@ -20,6 +20,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
 import org.springframework.transaction.annotation.Transactional;
 
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
 import java.nio.charset.StandardCharsets;
 
 import static java.util.Objects.requireNonNull;
@@ -50,6 +52,9 @@ public class MbInstalledStructureDefinitionMigration implements ApplicationRunne
 	private final INpmPackageVersionResourceDao myPackageVersionResourceDao;
 	private final IBinaryStorageSvc myBinaryStorageSvc;
 	private final IFhirResourceDao<IBaseBinary> binaryDao;
+
+	@PersistenceContext
+	private EntityManager entityManager;
 
 	public MbInstalledStructureDefinitionMigration(final MbInstalledStructureDefinitionRepository installedStructureDefinitionRepository,
 																  final MatchboxJpaPackageCache matchboxJpaPackageCache,
@@ -90,7 +95,7 @@ public class MbInstalledStructureDefinitionMigration implements ApplicationRunne
 		Pageable page = PageRequest.of(0, 50);
 		Slice<NpmPackageVersionResourceEntity> slice;
 		do {
-			slice = this.myPackageVersionResourceDao.findByResourceType(page, "StructureDefinition");
+			slice = this.myPackageVersionResourceDao.findByResourceTypeOrdered(page, "StructureDefinition");
 			for (final NpmPackageVersionResourceEntity entity : slice.getContent()) {
 				try {
 					// Yes, that's a SQL N+1 query here, but we can live with it.
@@ -106,6 +111,9 @@ public class MbInstalledStructureDefinitionMigration implements ApplicationRunne
 						entity.getId(), e);
 				}
 			}
+			// Flush the pending entity inserts and clear the persistence context before loading the next page
+			this.entityManager.flush();
+			this.entityManager.clear();
 			page = page.next();
 		} while (slice.hasNext());
 	}

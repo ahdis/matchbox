@@ -109,7 +109,9 @@ public class GazelleValidationWs {
 			final var profile = new ValidationProfile();
 			final var version = installedStructDef.getPackageVersion();
 			profile.setProfileID("%s|%s".formatted(installedStructDef.getCanonicalUrl(), version));
-			profile.setProfileName("%s (%s)".formatted(installedStructDef.getTitle(), version));
+			profile.setProfileName("%s: %s (%s)".formatted(installedStructDef.getType(),
+																		  installedStructDef.getTitle(),
+																		  version));
 			profile.setDomain(installedStructDef.getPackageId());
 			profiles.add(profile);
 
