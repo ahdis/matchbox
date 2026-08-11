@@ -1,0 +1,13 @@
+{
+  "resourceType": "Bundle",
+  "type": "collection",
+  "entry": [
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "abc123",
+        "active": false
+      }
+    }
+  ]
+}
