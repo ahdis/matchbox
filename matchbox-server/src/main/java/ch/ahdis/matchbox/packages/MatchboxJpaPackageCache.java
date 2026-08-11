@@ -8,6 +8,8 @@ import ca.uhn.fhir.util.FhirTerser;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hl7.fhir.instance.model.api.IBase;
 import org.hl7.fhir.instance.model.api.IBaseResource;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 /**
@@ -18,6 +20,7 @@ import org.springframework.stereotype.Service;
  **/
 @Service
 public class MatchboxJpaPackageCache {
+	private static final Logger log = LoggerFactory.getLogger(MatchboxJpaPackageCache.class);
 
 	/**
 	 * The Repository to access Matchbox's copy of the installed StructureDefinitions.
@@ -99,15 +102,26 @@ public class MatchboxJpaPackageCache {
 		// 2. Create our own entity for the StructureDefinition
 		final var entity = new MbInstalledStructureDefinitionEntity();
 		entity.setCanonicalUrl(npmPackageVersionResourceEntity.getCanonicalUrl());
-		entity.setTitle(title);
+		entity.setTitle(truncateTitle(title, npmPackageVersionResourceEntity.getCanonicalUrl()));
 		entity.setPackageId(npmPackageVersionResourceEntity.getPackageVersion().getPackageId());
 		entity.setPackageVersion(npmPackageVersionResourceEntity.getPackageVersion().getVersionId());
 		entity.setType(type);
 		entity.setKind(kind);
-		entity.setCurrent(npmPackageVersionResourceEntity.getPackageVersion().isCurrentVersion());
 		entity.setValidatable(isValidatable);
 		entity.setNpmPackageVersionResourceEntity(npmPackageVersionResourceEntity);
 		this.installedStructureDefinitionRepository.save(entity);
+	}
+
+	/**
+	 * Truncates a title to {@link MbInstalledStructureDefinitionEntity#TITLE_MAX_LENGTH}.
+	 */
+	private static String truncateTitle(final String title, final String canonicalUrl) {
+		if (title == null || title.length() <= MbInstalledStructureDefinitionEntity.TITLE_MAX_LENGTH) {
+			return title;
+		}
+		log.warn("The title of the StructureDefinition '{}' is longer than {} characters, it will be truncated",
+			canonicalUrl, MbInstalledStructureDefinitionEntity.TITLE_MAX_LENGTH);
+		return title.substring(0, MbInstalledStructureDefinitionEntity.TITLE_MAX_LENGTH - 2) + "…";
 	}
 
 	/**

@@ -1,6 +1,7 @@
 package ca.uhn.fhir.jpa.model.entity;
 
 import jakarta.persistence.*;
+import org.hibernate.annotations.Formula;
 import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.OnDeleteAction;
 
@@ -21,6 +22,11 @@ import java.util.Objects;
 public class MbInstalledStructureDefinitionEntity implements Serializable {
 
   /**
+   * The maximum length of {@link #title}.
+   */
+  public static final int TITLE_MAX_LENGTH = 300;
+
+  /**
    * A primary key for the table.
    */
   @Id
@@ -32,13 +38,13 @@ public class MbInstalledStructureDefinitionEntity implements Serializable {
   /**
    * StructureDefinition.url
    */
-  @Column(name = "CANONICAL_URL", length = 200, nullable = false)
+  @Column(name = "CANONICAL_URL", length = 500, nullable = false)
   private String canonicalUrl;
 
   /**
    * StructureDefinition.title or StructureDefinition.name
    */
-  @Column(name = "TITLE", length = 200, nullable = false)
+  @Column(name = "TITLE", length = TITLE_MAX_LENGTH, nullable = false)
   private String title;
 
   /**
@@ -67,8 +73,15 @@ public class MbInstalledStructureDefinitionEntity implements Serializable {
 
   /**
    * Whether the package version is the current one (i.e. the most recent one) or not.
+   * <p>
+   * This is computed live from NPM_PACKAGE_VER.CURRENT_VERSION on every read, instead of being copied at row
+   * creation time: that flag can flip after this row was created (e.g. a newer version of the same package gets
+   * installed, or the current version gets uninstalled), and a copy would go stale since nothing else in this
+   * table would ever be notified of that change. This should be fast, only using indexed data.
    */
-  @Column(name = "IS_CURRENT", nullable = false)
+  @Formula("(SELECT npv.CURRENT_VERSION FROM NPM_PACKAGE_VER_RES npr "
+    + "INNER JOIN NPM_PACKAGE_VER npv ON npv.PID = npr.PACKVER_PID "
+    + "WHERE npr.PID = NPM_PACKAGE_VER_RES_ID)")
   private Boolean isCurrent;
 
   /**
@@ -146,10 +159,6 @@ public class MbInstalledStructureDefinitionEntity implements Serializable {
     return this.isCurrent;
   }
 
-  public void setCurrent(final Boolean current) {
-    isCurrent = current;
-  }
-
   public Boolean isValidatable() {
     return this.isValidatable;
   }
@@ -173,7 +182,9 @@ public class MbInstalledStructureDefinitionEntity implements Serializable {
       && packageVersion.equals(that.packageVersion)
       && type.equals(that.type)
       && kind.equals(that.kind)
-      && isCurrent.equals(that.isCurrent)
+      // isCurrent is formula-computed, so it's null until the entity is loaded from the database (e.g. still
+      // unset on a freshly-constructed, not-yet-persisted instance): compare it null-safely.
+      && Objects.equals(isCurrent, that.isCurrent)
       && isValidatable.equals(that.isValidatable);
   }
 

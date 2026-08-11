@@ -78,6 +78,11 @@ public interface INpmPackageVersionResourceDao
 	Slice<NpmPackageVersionResourceEntity> findByResourceType(Pageable thePage,
 																				 @Param("resourceType") String theResourceType);
 
+  // MATCHBOX: added for our needs
+	@Query("SELECT e FROM NpmPackageVersionResourceEntity e WHERE e.myResourceType = :resourceType ORDER BY e.myCanonicalUrl ASC")
+	Slice<NpmPackageVersionResourceEntity> findByResourceTypeOrdered(Pageable thePage,
+																				 @Param("resourceType") String theResourceType);
+
 	@Query("SELECT e FROM NpmPackageVersionResourceEntity e WHERE e.myResourceType = :resourceType AND e.myId = :id")
 	Slice<NpmPackageVersionResourceEntity> findByResourceTypeById(Pageable thePage,
 																					  @Param("resourceType") String theResourceType,

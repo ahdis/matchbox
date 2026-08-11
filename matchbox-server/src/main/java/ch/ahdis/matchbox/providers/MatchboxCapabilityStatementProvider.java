@@ -188,7 +188,7 @@ public class MatchboxCapabilityStatementProvider extends ServerCapabilityStateme
 				canonical.addExtension("ig-version", new StringType(entity.getPackageVersion()));
 				canonical.addExtension("ig-current", new BooleanType(entity.isCurrent()));
 				canonical.addExtension("sd-canonical", new StringType(entity.getCanonicalUrl()));
-				canonical.addExtension("sd-title", new StringType(entity.getTitle()));
+				canonical.addExtension("sd-title", new StringType(entity.getType() + ": " + entity.getTitle()));
 				return canonical;
 			}).toList();
 		validateOperationDefinition.addParameter()
