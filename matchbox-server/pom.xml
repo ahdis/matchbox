@@ -333,7 +333,11 @@
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
                 <configuration>
-                    <argLine>-XX:MaxRAMPercentage=100.0 -XX:MinRAMPercentage=40.0</argLine>
+                    <!-- All test classes share one forked JVM, and each @SpringBootTest boots its own context with a
+                         full set of validation engines and IG packages. The contexts are dirtied after each class, but
+                         the heap must stay below the machine's physical memory for the GC to actually reclaim them:
+                         with MaxRAMPercentage=100 the JVM just kept expanding until the OOM killer took it down. -->
+                    <argLine>-XX:MaxRAMPercentage=70.0 -XX:MinRAMPercentage=40.0</argLine>
                     <reuseForks>true</reuseForks>
                     <forkCount>1</forkCount>
                 </configuration>
