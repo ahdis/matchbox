@@ -27,7 +27,10 @@ jobs:
         timeout-minutes: 40
         # We need a timeout here
         env:
-          MAVEN_OPTS: -XX:MaxRAMPercentage=100.0 -XX:MinRAMPercentage=40.0
+          # This only sizes the Maven process itself; the tests run in forked JVMs that get their heap from the
+          # surefire argLine in the module POMs. Maven needs little, and leaving it uncapped means it can balloon
+          # into the memory those forks need.
+          MAVEN_OPTS: -XX:MaxRAMPercentage=25.0
         run: mvn --batch-mode --no-transfer-progress --update-snapshots verify
 
       - uses: actions/upload-artifact@v4

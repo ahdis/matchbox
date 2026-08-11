@@ -171,7 +171,10 @@
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
                 <configuration>
-                    <argLine>-XX:MaxRAMPercentage=100.0 -XX:MinRAMPercentage=40.0</argLine>
+                    <!-- The heap must stay below the machine's physical memory: all test classes share one forked JVM
+                         and each loads its own engines and IG packages, so with MaxRAMPercentage=100 the JVM keeps
+                         expanding instead of collecting, until the OOM killer takes it down (see matchbox-server). -->
+                    <argLine>-XX:MaxRAMPercentage=70.0 -XX:MinRAMPercentage=40.0</argLine>
                     <reuseForks>true</reuseForks>
                     <forkCount>1</forkCount>
                 </configuration>
