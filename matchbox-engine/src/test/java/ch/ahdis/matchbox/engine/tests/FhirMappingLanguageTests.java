@@ -21,6 +21,7 @@ package ch.ahdis.matchbox.engine.tests;
  */
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -1350,5 +1351,25 @@ class FhirMappingLanguageTests {
 		}
 	}
 
+	// https://github.com/hapifhir/org.hl7.fhir.core/issues/2541 - copy() must not alias the source element
+	@Test
+	void testCopyDoesNotAliasSource() throws FHIRException, IOException {
+		MatchboxEngine engine = new MatchboxEngine(FhirMappingLanguageTests.engine);
+		StructureMap sm = engine.parseMap(getFileAsStringFromResources("/copyaliasingbug.map"));
+		assertTrue(sm != null);
+		engine.addCanonicalResource(sm);
+		Resource res = engine.transformToFhir(getFileAsStringFromResources("/copyaliasingbug-source.json"), true,
+				"http://ahdis.ch/matchbox/fml/copyaliasingbug");
+		assertTrue(res != null);
+		assertEquals("Bundle", res.getResourceType().name());
+		Bundle bundle = (Bundle) res;
+		assertEquals(2, bundle.getEntry().size());
+
+		Patient plainCopy = (Patient) bundle.getEntry().get(0).getResource();
+		Patient mutatedCopy = (Patient) bundle.getEntry().get(1).getResource();
+
+		assertFalse(plainCopy.getActive(), "the untouched copy must keep the source's original 'active: false'");
+		assertTrue(mutatedCopy.getActive(), "the mutated copy must have 'active: true'");
+	}
 
 }

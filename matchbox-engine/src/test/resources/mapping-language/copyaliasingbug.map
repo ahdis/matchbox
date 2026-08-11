@@ -1,0 +1,22 @@
+map "http://ahdis.ch/matchbox/fml/copyaliasingbug" = "copyaliasingbug"
+
+uses "http://hl7.org/fhir/StructureDefinition/Bundle" alias Bundle as source
+uses "http://hl7.org/fhir/StructureDefinition/Bundle" alias BundleTarget as target
+
+group main(source src : Bundle, target tgt : BundleTarget) {
+    // Entry 1: a plain, untouched copy() of the Patient - built and "done" first
+    src.entry as e where $this.resource.ofType(FHIR.Patient) -> tgt.entry as te1 then copyPlain(e, te1) "plain-copy";
+
+    // Entry 2: copy() the SAME Patient again, then flip an existing field (active) on THIS copy only
+    src.entry as e where $this.resource.ofType(FHIR.Patient) -> tgt.entry as te2 then copyAndMutate(e, te2) "mutate-copy";
+}
+
+group copyPlain(source srcEntry, target tgtEntry) {
+    srcEntry.resource as srcRes -> tgtEntry.resource = copy(srcRes) "copy";
+}
+
+group copyAndMutate(source srcEntry, target tgtEntry) {
+    srcEntry.resource as srcRes -> tgtEntry.resource = copy(srcRes) as tgtRes then {
+        srcRes -> tgtRes.active = true "set-active";
+    } "copy-then-mutate";
+}
