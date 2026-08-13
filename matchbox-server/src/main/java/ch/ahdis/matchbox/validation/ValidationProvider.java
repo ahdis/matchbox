@@ -34,10 +34,12 @@ import ch.ahdis.matchbox.statistics.OperationOutcomeResourceProviderR4;
 import ch.ahdis.matchbox.statistics.OperationOutcomeResourceProviderR4B;
 import ch.ahdis.matchbox.statistics.OperationOutcomeResourceProviderR5;
 import ch.ahdis.matchbox.util.MatchboxEngineSupport;
+import ch.ahdis.matchbox.util.metrics.MatchboxMetrics;
 import ch.ahdis.matchbox.validation.matchspark.LlmConnector;
 import ch.ahdis.matchbox.engine.MatchboxEngine;
 import ch.ahdis.matchbox.engine.cli.VersionUtil;
 import ch.ahdis.matchbox.packages.MatchboxImplementationGuideProvider;
+import dev.langchain4j.model.chat.listener.ChatModelListener;
 import org.apache.commons.beanutils.BeanUtils;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.checkerframework.checker.nullness.qual.NonNull;
@@ -107,6 +109,17 @@ public class ValidationProvider {
 	@Autowired(required = false)
 	private Optional<OperationOutcomeResourceProviderR5> operationOutcomeResourceProviderR5;
 
+	@Autowired(required = false)
+	private Optional<MatchboxMetrics> matchboxMetrics;
+
+	/**
+	 * The langchain4j {@link ChatModelListener} beans (e.g. Micrometer/Observation listeners registered in
+	 * {@link ch.ahdis.matchbox.config.MatchboxMetricsConfig}) to attach to the AI chat model built by
+	 * {@link LLMConnector}, so that gen_ai.* metrics are actually recorded.
+	 */
+	@Autowired(required = false)
+	private List<ChatModelListener> chatModelListeners = List.of();
+
 //	@Operation(name = "$canonical", manualRequest = true, idempotent = true, returnParameters = {
 //			@OperationParam(name = "return", type = IBase.class, min = 1, max = 1) })
 //	public IBaseResource canonical(HttpServletRequest theRequest) {
@@ -157,6 +170,7 @@ public class ValidationProvider {
 
 	private OperationOutcome getValidation(final HttpServletRequest theRequest) {
 		log.debug("$validate");
+		this.matchboxMetrics.ifPresent(MatchboxMetrics::addValidation);
 
 		final var sw = new StopWatch();
 		sw.startTask("Total");
@@ -265,6 +279,7 @@ public class ValidationProvider {
 
 		long millis = sw.getMillis();
 		log.debug("Validation time: {}", sw);
+		this.matchboxMetrics.ifPresent(m -> m.addValidationDuration(java.time.Duration.ofMillis(millis)));
 
 		final OperationOutcome oo = this.getOperationOutcome(sha3Hex, messages, profile, engine, millis, cliContext);
 
@@ -295,7 +310,7 @@ public class ValidationProvider {
 					.setDiagnostics("The error outcome analysis was requested but the LLM configuration is invalid");
 			} else {
 				try {
-					final var openAIConnector = LlmConnector.getConnector(llmConnectorConfig);
+					final var openAIConnector = LlmConnector.getConnector(llmConnectorConfig, this.chatModelListeners);
 					final String json = FhirContext.forR5Cached().newJsonParser().encodeResourceToString(oo);
 					final String aiResult = openAIConnector.interpretWithMatchbox(contentString, json);
 					this.addAIIssueToOperationOutcome(oo, aiResult);

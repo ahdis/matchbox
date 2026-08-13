@@ -520,6 +520,10 @@ public class MatchboxEngineSupport {
 		}
 	}
 
+	public MatchboxEngineCache getSessionCache() {
+		return this.engineCache;
+	}
+
 	public boolean isInitialized() {
 		return initialized;
 	}

@@ -2,13 +2,12 @@ package ch.ahdis.matchbox.validation.gazelle;
 
 import ca.uhn.fhir.jpa.dao.data.MbInstalledStructureDefinitionRepository;
 import ca.uhn.fhir.jpa.model.entity.MbInstalledStructureDefinitionEntity;
-import ca.uhn.fhir.jpa.model.entity.NpmPackageVersionResourceEntity;
 import ca.uhn.fhir.rest.api.EncodingEnum;
 import ca.uhn.fhir.util.StopWatch;
+import ch.ahdis.matchbox.util.metrics.MatchboxMetrics;
 import ch.ahdis.matchbox.validation.ValidationProvider;
 import ch.ahdis.matchbox.CliContext;
 import ch.ahdis.matchbox.util.MatchboxEngineSupport;
-import ch.ahdis.matchbox.providers.StructureDefinitionResourceProvider;
 import ch.ahdis.matchbox.engine.MatchboxEngine;
 import ch.ahdis.matchbox.engine.cli.VersionUtil;
 import ch.ahdis.matchbox.engine.exception.MatchboxEngineCreationException;
@@ -30,6 +29,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 
 /**
  * The WebService for validation with the new Gazelle Validation API.
@@ -50,7 +50,7 @@ public class GazelleValidationWs {
 
 	private final MatchboxEngineSupport matchboxEngineSupport;
 
-	private final StructureDefinitionResourceProvider structureDefinitionProvider;
+	private final Optional<MatchboxMetrics> matchboxMetrics;;
 
 	private final MbInstalledStructureDefinitionRepository installedStructureDefinitionRepository;
 
@@ -59,11 +59,11 @@ public class GazelleValidationWs {
 
 	public GazelleValidationWs(final MatchboxEngineSupport matchboxEngineSupport,
 										final CliContext baseCliContext,
-										final StructureDefinitionResourceProvider structureDefinitionProvider,
+										final Optional<MatchboxMetrics> matchboxMetrics,
 										final MbInstalledStructureDefinitionRepository installedStructureDefinitionRepository) {
 		this.matchboxEngineSupport = Objects.requireNonNull(matchboxEngineSupport);
 		this.baseCliContext = Objects.requireNonNull(baseCliContext);
-		this.structureDefinitionProvider = Objects.requireNonNull(structureDefinitionProvider);
+		this.matchboxMetrics = Objects.requireNonNull(matchboxMetrics);
 		this.installedStructureDefinitionRepository = Objects.requireNonNull(installedStructureDefinitionRepository);
 	}
 
@@ -133,6 +133,7 @@ public class GazelleValidationWs {
 	@PostMapping(path = VALIDATE_PATH, consumes = MediaType.APPLICATION_JSON_VALUE, produces =
 		MediaType.APPLICATION_JSON_VALUE)
 	public ValidationReport postValidate(@RequestBody final ValidationRequest validationRequest) {
+		this.matchboxMetrics.ifPresent(MatchboxMetrics::addValidation);
 		final var sw = new StopWatch();
 		sw.startTask("Total");
 
