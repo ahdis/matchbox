@@ -24,6 +24,7 @@ Unreleased
 - Add the `Bundle/$get-profiles` to infer possible validation profiles for a document Bundle, based on its Composition
   type and category codes (#355)
 - Don't keep the narrative of resources loaded in the engine context (#566). Thanks @achrafachkari!
+- Add custom metrics
 
 2026/08/14 Release 4.1.13
 

@@ -7,12 +7,15 @@ import dev.langchain4j.memory.ChatMemory;
 import dev.langchain4j.memory.chat.MessageWindowChatMemory;
 import dev.langchain4j.model.anthropic.AnthropicChatModel;
 import dev.langchain4j.model.chat.ChatModel;
+import dev.langchain4j.model.chat.listener.ChatModelListener;
 import dev.langchain4j.model.chat.request.ChatRequest;
 import dev.langchain4j.model.chat.response.ChatResponse;
 import dev.langchain4j.model.googleai.GoogleAiGeminiChatModel;
 import dev.langchain4j.model.openai.OpenAiChatModel;
 
 import java.io.IOException;
+import java.util.Collections;
+import java.util.List;
 import java.util.UUID;
 
 /**
@@ -36,18 +39,30 @@ public class LlmConnector {
 
 	private ChatModel model;
 	private ChatMemory chatMemory;
+	private final List<ChatModelListener> listeners;
 
 	public static LlmConnector getConnector(final MatchboxFhirContextLlmProperties llmProperties) {
-		return new LlmConnector(llmProperties);
+		return new LlmConnector(llmProperties, Collections.emptyList());
+	}
+
+	/**
+	 * @param listeners the {@link ChatModelListener}s to register on the built {@link ChatModel}, e.g. the
+	 *                  Micrometer/Observation listeners that emit the {@code gen_ai.*} metrics. Without this,
+	 *                  those listener beans are never invoked and no metrics are recorded.
+	 */
+	public static LlmConnector getConnector(final MatchboxFhirContextLlmProperties llmProperties,
+														 final List<ChatModelListener> listeners) {
+		return new LlmConnector(llmProperties, listeners);
 	}
 
 	/**
 	 * Constructor for the OpenAIConnector.
 	 */
-	private LlmConnector(final MatchboxFhirContextLlmProperties llmProperties) {
-		provider = llmProperties.getProvider();
-		modelName = llmProperties.getModelName();
-		apiKey = llmProperties.getApiKey();
+	private LlmConnector(final MatchboxFhirContextLlmProperties llmProperties, final List<ChatModelListener> listeners) {
+		this.provider = llmProperties.getProvider();
+		this.modelName = llmProperties.getModelName();
+		this.apiKey = llmProperties.getApiKey();
+		this.listeners = listeners == null ? Collections.emptyList() : listeners;
 		this.initializeChatModel();
 	}
 
@@ -62,6 +77,7 @@ public class LlmConnector {
 				this.model = OpenAiChatModel.builder()
 					.apiKey(this.apiKey)
 					.modelName(this.modelName)
+					.listeners(this.listeners)
 					.build();
 				break;
 			case "huggingface":
@@ -69,18 +85,21 @@ public class LlmConnector {
 					.apiKey(this.apiKey)
 					.baseUrl(HUGGINGFACE_BASE_URL)
 					.modelName(this.modelName)
+					.listeners(this.listeners)
 					.build();
 				break;
 			case "anthropic":
 				this.model = AnthropicChatModel.builder()
 					.apiKey(this.apiKey)
 					.modelName(this.modelName)
+					.listeners(this.listeners)
 					.build();
 				break;
 			case "google":
 				this.model = GoogleAiGeminiChatModel.builder()
 					.apiKey(this.apiKey)
 					.modelName(this.modelName)
+					.listeners(this.listeners)
 					.build();
 				break;
 

@@ -20,4 +20,9 @@ public interface MatchboxImplementationGuideProvider {
 	 * Installs the given ImplementationGuide from the internet registry.
 	 */
 	void installFromInternetRegistry(final String packageId, final String packageVersion);
+
+	/**
+	 * Counts the number of installed ImplementationGuides.
+	 */
+	long count();
 }

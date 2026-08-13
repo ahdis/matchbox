@@ -2,9 +2,9 @@ package ch.ahdis.matchbox.mappinglanguage;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
+import ch.ahdis.matchbox.util.metrics.MatchboxMetrics;
 /*
  * #%L
  * Matchbox Server
@@ -38,7 +38,6 @@ import org.hl7.fhir.r5.context.IWorkerContext;
 import org.hl7.fhir.r5.utils.structuremap.StructureMapUtilities;
 import org.hl7.fhir.utilities.xhtml.NodeType;
 import org.hl7.fhir.utilities.xhtml.XhtmlNode;
-import org.springframework.beans.factory.annotation.Autowired;
 
 import ca.uhn.fhir.context.FhirContext;
 import ca.uhn.fhir.rest.annotation.ConditionalUrlParam;
@@ -63,23 +62,22 @@ import org.hl7.fhir.r5.model.*;
 import org.springframework.beans.factory.annotation.Value;
 
 import javax.annotation.Nullable;
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * StructureMapTransformProvider
  */
 public class StructureMapTransformProvider extends StructureMapResourceProvider {
 
-	@Autowired
 	protected final MatchboxEngineSupport matchboxEngineSupport;
-
 	private final FhirContext fhirContext;
+	private final Optional<MatchboxMetrics> matchboxMetrics;
 
 	public StructureMapTransformProvider(@Value("${hapi.fhir.fhir_version}") final FhirVersionEnum serverFhirVersion,
-													 final MatchboxEngineSupport matchboxEngineSupport) {
+													 final MatchboxEngineSupport matchboxEngineSupport,
+													 final Optional<MatchboxMetrics> matchboxMetrics) {
 		this.matchboxEngineSupport = matchboxEngineSupport;
 		this.fhirContext = FhirContext.forCached(serverFhirVersion);
+		this.matchboxMetrics = matchboxMetrics;
 	}
 
 	@Override
@@ -107,6 +105,7 @@ public class StructureMapTransformProvider extends StructureMapResourceProvider 
 	@Operation(name = "$transform", type = StructureMap.class, manualResponse = true, manualRequest = true)
 	public void manualInputAndOutput(final HttpServletRequest theServletRequest,
 												final HttpServletResponse theServletResponse) throws IOException {
+		this.matchboxMetrics.ifPresent(MatchboxMetrics::addTransformation);
 		// Parse the request body, it is either a Parameters resource, or any resource
 		final String body = new String(theServletRequest.getInputStream().readAllBytes()).trim();
 		@Nullable String resource = null;

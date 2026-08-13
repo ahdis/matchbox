@@ -68,6 +68,7 @@ import ch.ahdis.matchbox.statistics.SearchParameterResourceProviderR5;
 import ch.ahdis.matchbox.util.MatchboxEngineCache;
 import ch.ahdis.matchbox.util.MatchboxEngineSupport;
 import ch.ahdis.matchbox.util.MatchboxPackageInstallerImpl;
+import ch.ahdis.matchbox.util.metrics.MatchboxMetrics;
 import ch.ahdis.matchbox.validation.ValidationProvider;
 import jakarta.persistence.EntityManager;
 
@@ -562,8 +563,9 @@ public class MatchboxJpaConfig extends StarterJpaConfig {
 	@Bean
 	@Primary
 	public StructureMapTransformProvider structureMapTransformProvider(@Value("${hapi.fhir.fhir_version}") final FhirVersionEnum serverFhirVersion,
-	                                                                   final MatchboxEngineSupport matchboxEngineSupport) {
-		return new StructureMapTransformProvider(serverFhirVersion, matchboxEngineSupport);
+	                                                                   final MatchboxEngineSupport matchboxEngineSupport,
+	                                                                   final Optional<MatchboxMetrics> matchboxMetrics) {
+		return new StructureMapTransformProvider(serverFhirVersion, matchboxEngineSupport, matchboxMetrics);
 	}
 
 
