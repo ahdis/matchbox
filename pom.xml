@@ -9,7 +9,7 @@
 
     <groupId>health.matchbox</groupId>
     <artifactId>matchbox</artifactId>
-    <version>4.1.12</version>
+    <version>4.1.13</version>
     <packaging>pom</packaging>
     <name>matchbox</name>
     <description>An open-source implementation to support testing and implementation of FHIR based solutions and map or
@@ -60,6 +60,7 @@
         <spring_version>6.2.19</spring_version>
         <spring_context_version>6.2.19</spring_context_version>
         <spring_boot_version>3.5.16</spring_boot_version>
+        <spring_data_version>3.5.12</spring_data_version>
         <thymeleaf.version>3.1.5.RELEASE</thymeleaf.version>
         <testcontainers_version>1.21.4</testcontainers_version>
         <ucum_version>1.0.10</ucum_version>
@@ -480,6 +481,27 @@
                 <artifactId>spring-webmvc</artifactId>
                 <version>${spring_version}</version>
             </dependency>
+            <!-- spring-core and spring-websocket are pulled in transitively by HAPI FHIR, which resolves them to
+                 6.2.18 while the rest of the framework is already managed at ${spring_version}. Aligning them fixes
+                 CVE-2026-41838 in spring-websocket (https://github.com/ahdis/matchbox/security/code-scanning/470)
+                 and CVE-2026-41848 in spring-core (https://github.com/ahdis/matchbox/security/code-scanning/479). -->
+            <dependency>
+                <groupId>org.springframework</groupId>
+                <artifactId>spring-core</artifactId>
+                <version>${spring_version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.springframework</groupId>
+                <artifactId>spring-websocket</artifactId>
+                <version>${spring_version}</version>
+            </dependency>
+            <!-- Force spring-retry >= 2.0.13 to fix CVE-2026-41710 (transitive via hapi-fhir-jpaserver-searchparam):
+                 https://github.com/ahdis/matchbox/security/code-scanning/469 -->
+            <dependency>
+                <groupId>org.springframework.retry</groupId>
+                <artifactId>spring-retry</artifactId>
+                <version>2.0.13</version>
+            </dependency>
             <dependency>
                 <groupId>org.awaitility</groupId>
                 <artifactId>awaitility</artifactId>
@@ -490,6 +512,25 @@
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-autoconfigure</artifactId>
                 <version>${spring_boot_version}</version>
+            </dependency>
+            <!-- Spring Data is pulled in transitively by hapi-fhir-jpaserver-base, which still resolves the
+                 3.3.x line. Force the 3.5.x line (matching spring_boot_version) to fix CVE-2026-41716:
+                 https://github.com/ahdis/matchbox/security/code-scanning/492
+                 The three artifacts are released in lock-step and must stay on the same version. -->
+            <dependency>
+                <groupId>org.springframework.data</groupId>
+                <artifactId>spring-data-commons</artifactId>
+                <version>${spring_data_version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.springframework.data</groupId>
+                <artifactId>spring-data-jpa</artifactId>
+                <version>${spring_data_version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.springframework.data</groupId>
+                <artifactId>spring-data-envers</artifactId>
+                <version>${spring_data_version}</version>
             </dependency>
             <dependency>
                 <groupId>org.springframework.boot</groupId>

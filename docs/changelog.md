@@ -1,5 +1,8 @@
-Unreleased
+2026/08/14 Release 4.1.13
 
+- Force Spring Data to 3.5.12 (`spring-data-commons`, `spring-data-jpa`, `spring-data-envers`), which HAPI FHIR still pulls in as 3.3.5, to fix three vulnerabilities in `spring-data-commons`: CVE-2026-41716 (denial of service, attacker-supplied strings are permanently retained as property-lookup cache keys and can exhaust the heap), CVE-2026-41711 and CVE-2026-41721
+- Align `spring-core` and `spring-websocket`, which HAPI FHIR pulls in as 6.2.18, with the Spring Framework version already used elsewhere (6.2.19), fixing CVE-2026-41838 in `spring-websocket` and CVE-2026-41848 in `spring-core`
+- Force `spring-retry` to 2.0.13, which HAPI FHIR pulls in as 2.0.10, to fix CVE-2026-41710
 - Fix the GUI not displaying markdown content (#555)
 
 2026/08/11 Release 4.1.12
