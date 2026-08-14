@@ -86,9 +86,9 @@ export class Issue {
     } else {
       text = ooIssue.diagnostics ?? "";
     }
-    let markdown =
+    const isMarkdown =
       Issue.getExtensionStringValue(ooIssue, 'http://hl7.org/fhir/StructureDefinition/rendering-style') == 'markdown';
-    let details = ooIssue.details ? ooIssue.details.text : undefined;
+    const details = ooIssue.details ? ooIssue.details.text : undefined;
     return new Issue(
       ooIssue.severity as IssueSeverity,
       ooIssue.code,
@@ -97,7 +97,7 @@ export class Issue {
       Issue.getColNo(ooIssue),
       expression,
       sliceInfo,
-      markdown,
+      isMarkdown,
       details
     );
   }

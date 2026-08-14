@@ -1,3 +1,7 @@
+Unreleased
+
+- Fix the GUI not displaying markdown content (#555)
+
 2026/08/11 Release 4.1.12
 
 - Update org.hl7.fhir.core to 6.10.0
