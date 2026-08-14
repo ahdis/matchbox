@@ -38,13 +38,13 @@ export class IgsComponent {
   };
 
   constructor(
-    private data: FhirConfigService,
+    data: FhirConfigService,
     private fhirPathService: FhirPathService
   ) {
     this.client = data.getFhirClient();
     this.addPackageId = new UntypedFormControl('', [Validators.required, Validators.minLength(1)]);
     this.addVersion = new UntypedFormControl('current', [Validators.required, Validators.minLength(1)]);
-    this.addUrl = new UntypedFormControl('url');
+    this.addUrl = new UntypedFormControl('');
     this.search();
   }
 

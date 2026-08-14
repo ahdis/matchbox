@@ -80,6 +80,7 @@ import org.springframework.core.env.Environment;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
 import org.springframework.data.domain.Page;
+import org.springframework.transaction.PlatformTransactionManager;
 
 import javax.annotation.Nullable;
 
@@ -629,12 +630,14 @@ public class MatchboxJpaConfig extends StarterJpaConfig {
 		final MatchboxJpaPackageCache matchboxJpaPackageCache,
 		final INpmPackageVersionResourceDao myPackageVersionResourceDao,
 		final IBinaryStorageSvc myBinaryStorageSvc,
-		final DaoRegistry myDaoRegistry) {
+		final DaoRegistry myDaoRegistry,
+		final PlatformTransactionManager txManager) {
 		return new MbInstalledStructureDefinitionMigration(installedStructureDefinitionRepository,
 																			matchboxJpaPackageCache,
 																			myPackageVersionResourceDao,
 																			myBinaryStorageSvc,
-																			myDaoRegistry);
+																			myDaoRegistry,
+																			txManager);
 	}
 
 	private static void registerOptionalProvider(final MatchboxRestfulServer fhirServer,

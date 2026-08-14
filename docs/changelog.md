@@ -4,6 +4,7 @@
 - Align `spring-core` and `spring-websocket`, which HAPI FHIR pulls in as 6.2.18, with the Spring Framework version already used elsewhere (6.2.19), fixing CVE-2026-41838 in `spring-websocket` and CVE-2026-41848 in `spring-core`
 - Force `spring-retry` to 2.0.13, which HAPI FHIR pulls in as 2.0.10, to fix CVE-2026-41710
 - Fix the GUI not displaying markdown content (#555)
+- Isolate each database write during the migration of `MB_INSTALLED_STRUCT_DEF`
 
 2026/08/11 Release 4.1.12
 
