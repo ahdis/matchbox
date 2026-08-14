@@ -1,0 +1,1544 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+      
+      
+      
+      
+      
+      <link rel="icon" href="../../assets/favicon-96x96.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.6.23">
+    
+    
+      
+        <title>Terminology - Clinical Document Architecture v2.0.1-sd-202510-matchbox-patch - Matchbox</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.84d31ad4.min.css">
+      
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.06af60db.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../../stylesheets/extra.css">
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+    
+  </head>
+  
+  
+    
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="matchbox" data-md-color-primary="indigo" data-md-color-accent="indigo">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#terminology-clinical-document-architecture-v201-sd-202510-matchbox-patch" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../.." title="Matchbox" class="md-header__button md-logo" aria-label="Matchbox" data-md-component="logo">
+      
+  <img src="../../assets/matchbox_logo_color.png" alt="logo">
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            Matchbox
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Terminology - Clinical Document Architecture v2.0.1-sd-202510-matchbox-patch
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+    
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="Matchbox" class="md-nav__button md-logo" aria-label="Matchbox" data-md-component="logo">
+      
+  <img src="../../assets/matchbox_logo_color.png" alt="logo">
+
+    </a>
+    Matchbox
+  </label>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Welcome
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../features/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Features
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../changelog/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Changelog
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../matchbox-engine/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Matchbox Engine
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../matchbox-server/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Matchbox Server
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    API for Matchbox
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../validation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Validation of FHIR resources
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../docker/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Running matchbox in docker
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../cda/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    CDA Logical Model
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../validation-tutorial/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Tutorial: validation
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../validation-with-ai-tutorial/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Tutorial: validation with ai
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#terminology" class="md-nav__link">
+    <span class="md-ellipsis">
+      Terminology
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Terminology">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#value-sets" class="md-nav__link">
+    <span class="md-ellipsis">
+      Value Sets
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#code-systems" class="md-nav__link">
+    <span class="md-ellipsis">
+      Code Systems
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+
+<h1 id="terminology-clinical-document-architecture-v201-sd-202510-matchbox-patch">Terminology - Clinical Document Architecture v2.0.1-sd-202510-matchbox-patch</h1>
+<ul>
+<li><a href="toc.md"><strong>Table of Contents</strong></a></li>
+<li><strong>Terminology</strong></li>
+</ul>
+<h2 id="terminology">Terminology</h2>
+<p>This page lists all the ValueSets and CodeSystems used by CDA</p>
+<h3 id="value-sets">Value Sets</h3>
+<p>These value sets are used in this implementation guide:</p>
+<p>Value Set Sources:</p>
+<ul>
+<li><a href="http://hl7.org/fhir/R5/">FHIR</a></li>
+<li><a href="http://terminology.hl7.org/">THO</a></li>
+</ul>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;"></th>
+<th style="text-align: left;"></th>
+<th style="text-align: left;"></th>
+<th style="text-align: left;"></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;">1</td>
+<td style="text-align: left;"><a href="http://terminology.hl7.org/ValueSet/v3-ActClassClinicalDocument">ActClassClinicalDocument</a></td>
+<td style="text-align: left;"><a href="../StructureDefinition-ParentDocument/">ParentDocument</a></td>
+<td style="text-align: left;">THO</td>
+</tr>
+<tr>
+<td style="text-align: left;">2</td>
+<td style="text-align: left;"><a href="http://terminology.hl7.org/ValueSet/v3-ActClassDocument">ActClassDocument</a></td>
+<td style="text-align: left;"><a href="../StructureDefinition-ExternalDocument/">ExternalDocument</a></td>
+<td style="text-align: left;">THO</td>
+</tr>
+<tr>
+<td style="text-align: left;">3</td>
+<td style="text-align: left;"><a href="http://terminology.hl7.org/ValueSet/v3-ActClassProcedure">ActClassProcedure</a></td>
+<td style="text-align: left;"><a href="../StructureDefinition-Procedure/">Procedure</a>,<a href="../StructureDefinition-ExternalProcedure/">ExternalProcedure</a></td>
+<td style="text-align: left;">THO</td>
+</tr>
+<tr>
+<td style="text-align: left;">4</td>
+<td style="text-align: left;"><a href="http://terminology.hl7.org/ValueSet/v3-ActClassROI">ActClassROI</a></td>
+<td style="text-align: left;"><a href="../StructureDefinition-RegionOfInterest/">RegionOfInterest</a></td>
+<td style="text-align: left;">THO</td>
+</tr>
+<tr>
+<td style="text-align: left;">5</td>
+<td style="text-align: left;"><a href="http://terminology.hl7.org/ValueSet/v3-ActClassRecordOrganizer">ActClassRecordOrganizer</a></td>
+<td style="text-align: left;"><a href="../StructureDefinition-Section/">Section</a>,<a href="../StructureDefinition-NonXMLBody/">NonXMLBody</a>,<a href="../StructureDefinition-StructuredBody/">StructuredBody</a></td>
+<td style="text-align: left;">THO</td>
+</tr>
+<tr>
+<td style="text-align: left;">6</td>
+<td style="text-align: left;"><a href="http://terminology.hl7.org/ValueSet/v3-ActClassSupply">ActClassSupply</a></td>
+<td style="text-align: left;"><a href="../StructureDefinition-Supply/">Supply</a></td>
+<td style="text-align: left;">THO</td>
+</tr>
+<tr>
+<td style="text-align: left;">7</td>
+<td style="text-align: left;"><a href="http://terminology.hl7.org/ValueSet/v3-ActEncounterCode">ActEncounterCode</a></td>
+<td style="text-align: left;"><a href="../StructureDefinition-EncompassingEncounter/">EncompassingEncounter</a>,<a href="../StructureDefinition-Encounter/">Encounter</a></td>
+<td style="text-align: left;">THO</td>
+</tr>
+<tr>
+<td style="text-align: left;">8</td>
+<td style="text-align: left;"><a href="http://terminology.hl7.org/ValueSet/v3-ActMoodPredicate">ActMoodPredicate</a></td>
+<td style="text-align: left;"><a href="../StructureDefinition-Criterion/">Criterion</a>,<a href="../StructureDefinition-ObservationRange/">ObservationRange</a></td>
+<td style="text-align: left;">THO</td>
+</tr>
+<tr>
+<td style="text-align: left;">9</td>
+<td style="text-align: left;"><a href="http://terminology.hl7.org/ValueSet/v3-ActPriority">ActPriority</a></td>
+<td style="text-align: left;"><a href="../StructureDefinition-Procedure/">Procedure</a>,<a href="../StructureDefinition-Observation/">Observation</a>,<a href="../StructureDefinition-Encounter/">Encounter</a>,<a href="../StructureDefinition-Order/">Order</a>,<a href="../StructureDefinition-Act/">Act</a>,<a href="../StructureDefinition-Supply/">Supply</a>,<a href="../StructureDefinition-SubstanceAdministration/">SubstanceAdministration</a></td>
+<td style="text-align: left;">THO</td>
+</tr>
+<tr>
+<td style="text-align: left;">10</td>
+<td style="text-align: left;"><a href="http://terminology.hl7.org/ValueSet/v3-ActRelationshipFulfills">ActRelationshipFulfills</a></td>
+<td style="text-align: left;"><a href="../StructureDefinition-InFulfillmentOf/">InFulfillmentOf</a>,<a href="../StructureDefinition-InFulfillmentOf1/">InFulfillmentOf1</a></td>
+<td style="text-align: left;">THO</td>
+</tr>
+<tr>
+<td style="text-align: left;">11</td>
+<td style="text-align: left;"><a href="http://terminology.hl7.org/ValueSet/v3-ActRelationshipHasComponent">ActRelationshipHasComponent</a></td>
+<td style="text-align: left;"><a href="../StructureDefinition-Component/">Component</a>,<a href="../StructureDefinition-OrganizerComponent/">OrganizerComponent</a>,<a href="../StructureDefinition-ComponentOf/">ComponentOf</a></td>
+<td style="text-align: left;">THO</td>
+</tr>
+<tr>
+<td style="text-align: left;">12</td>
+<td style="text-align: left;"><a href="http://terminology.hl7.org/ValueSet/v3-ActStatus">ActStatus</a></td>
+<td style="text-align: left;"><a href="../StructureDefinition-Procedure/">Procedure</a>,<a href="../StructureDefinition-Observation/">Observation</a>,<a href="../StructureDefinition-Encounter/">Encounter</a>,<a href="../StructureDefinition-Consent/">Consent</a>,<a href="../StructureDefinition-Act/">Act</a>,<a href="../StructureDefinition-AlternateIdentification/">AlternateIdentification</a>,<a href="../StructureDefinition-Organizer/">Organizer</a>,<a href="../StructureDefinition-Supply/">Supply</a>,<a href="../StructureDefinition-ClinicalDocument/">ClinicalDocument</a>,<a href="../StructureDefinition-SubstanceAdministration/">SubstanceAdministration</a></td>
+<td style="text-align: left;">THO</td>
+</tr>
+<tr>
+<td style="text-align: left;">13</td>
+<td style="text-align: left;"><a href="http://terminology.hl7.org/ValueSet/v3-AdministrableDrugForm">AdministrableDrugForm</a></td>
+<td style="text-align: left;"><a href="../StructureDefinition-SubstanceAdministration/">SubstanceAdministration</a></td>
+<td style="text-align: left;">THO</td>
+</tr>
+<tr>
+<td style="text-align: left;">14</td>
+<td style="text-align: left;"><a href="http://terminology.hl7.org/ValueSet/v3-AdministrativeGender">AdministrativeGender</a></td>
+<td style="text-align: left;"><a href="../StructureDefinition-Patient/">Patient</a>,<a href="../StructureDefinition-SubjectPerson/">SubjectPerson</a></td>
+<td style="text-align: left;">THO</td>
+</tr>
+<tr>
+<td style="text-align: left;">15</td>
+<td style="text-align: left;"><a href="http://hl7.org/fhir/R5/valueset-all-languages.html">All Languages</a></td>
+<td style="text-align: left;"><a href="../StructureDefinition-ObservationMedia/">ObservationMedia</a>,<a href="../StructureDefinition-Procedure/">Procedure</a>,<a href="../StructureDefinition-Observation/">Observation</a>,<a href="../StructureDefinition-LanguageCommunication/">LanguageCommunication</a>,<a href="../StructureDefinition-Act/">Act</a>,<a href="../StructureDefinition-Section/">Section</a>,<a href="../StructureDefinition-NonXMLBody/">NonXMLBody</a>,<a href="../StructureDefinition-ClinicalDocument/">ClinicalDocument</a>,<a href="../StructureDefinition-StructuredBody/">StructuredBody</a></td>
+<td style="text-align: left;">FHIR</td>
+</tr>
+<tr>
+<td style="text-align: left;">16</td>
+<td style="text-align: left;"><a href="../ValueSet-CDAActClass/">CDAActClass</a></td>
+<td style="text-align: left;"><a href="../StructureDefinition-EncompassingEncounter/">EncompassingEncounter</a>,<a href="../StructureDefinition-Encounter/">Encounter</a>,<a href="../StructureDefinition-ExternalAct/">ExternalAct</a>,<a href="../StructureDefinition-Consent/">Consent</a>,<a href="../StructureDefinition-Order/">Order</a>,<a href="../StructureDefinition-ServiceEvent/">ServiceEvent</a>,<a href="../StructureDefinition-ClinicalDocument/">ClinicalDocument</a>,<a href="../StructureDefinition-SubstanceAdministration/">SubstanceAdministration</a></td>
+<td style="text-align: left;">CDA</td>
+</tr>
+<tr>
+<td style="text-align: left;">17</td>
+<td style="text-align: left;"><a href="../ValueSet-CDAActClassObservation/">CDAActClassObservation</a></td>
+<td style="text-align: left;"><a href="../StructureDefinition-ObservationMedia/">ObservationMedia</a>,<a href="../StructureDefinition-Observation/">Observation</a>,<a href="../StructureDefinition-ExternalObservation/">ExternalObservation</a>,<a href="../StructureDefinition-Criterion/">Criterion</a>,<a href="../StructureDefinition-ObservationRange/">ObservationRange</a></td>
+<td style="text-align: left;">CDA</td>
+</tr>
+<tr>
+<td style="text-align: left;">18</td>
+<td style="text-align: left;"><a href="../ValueSet-CDAActMood/">CDAActMood</a></td>
+<td style="text-align: left;"><a href="../StructureDefinition-EncompassingEncounter/">EncompassingEncounter</a>,<a href="../StructureDefinition-ExternalObservation/">ExternalObservation</a>,<a href="../StructureDefinition-Consent/">Consent</a>,<a href="../StructureDefinition-ParentDocument/">ParentDocument</a>,<a href="../StructureDefinition-NonXMLBody/">NonXMLBody</a>,<a href="../StructureDefinition-StructuredBody/">StructuredBody</a>,<a href="../StructureDefinition-ObservationMedia/">ObservationMedia</a>,<a href="../StructureDefinition-ExternalProcedure/">ExternalProcedure</a>,<a href="../StructureDefinition-ExternalAct/">ExternalAct</a>,<a href="../StructureDefinition-Section/">Section</a>,<a href="../StructureDefinition-RegionOfInterest/">RegionOfInterest</a>,<a href="../StructureDefinition-ServiceEvent/">ServiceEvent</a>,<a href="../StructureDefinition-ExternalDocument/">ExternalDocument</a>,<a href="../StructureDefinition-Organizer/">Organizer</a>,<a href="../StructureDefinition-ClinicalDocument/">ClinicalDocument</a></td>
+<td style="text-align: left;">CDA</td>
+</tr>
+<tr>
+<td style="text-align: left;">19</td>
+<td style="text-align: left;"><a href="../ValueSet-CDAActMoodIntent/">CDAActMoodIntent</a></td>
+<td style="text-align: left;"><a href="../StructureDefinition-Order/">Order</a></td>
+<td style="text-align: left;">CDA</td>
+</tr>
+<tr>
+<td style="text-align: left;">20</td>
+<td style="text-align: left;"><a href="../ValueSet-CDAActRelationshipType/">CDAActRelationshipType</a></td>
+<td style="text-align: left;"><a href="../StructureDefinition-Observation/">Observation</a>,<a href="../StructureDefinition-Precondition/">Precondition</a>,<a href="../StructureDefinition-DocumentationOf/">DocumentationOf</a>,<a href="../StructureDefinition-ObservationRange/">ObservationRange</a>,<a href="../StructureDefinition-Precondition2/">Precondition2</a></td>
+<td style="text-align: left;">CDA</td>
+</tr>
+<tr>
+<td style="text-align: left;">21</td>
+<td style="text-align: left;"><a href="../ValueSet-CDAActSubstanceAdministrationCode/">CDAActSubstanceAdministrationCode</a></td>
+<td style="text-align: left;"><a href="../StructureDefinition-SubstanceAdministration/">SubstanceAdministration</a></td>
+<td style="text-align: left;">CDA</td>
+</tr>
+<tr>
+<td style="text-align: left;">22</td>
+<td style="text-align: left;"><a href="../ValueSet-BinaryDataEncoding/">CDABinaryDataEncoding</a></td>
+<td style="text-align: left;"><a href="../StructureDefinition-ED/">ED</a></td>
+<td style="text-align: left;">CDA</td>
+</tr>
+<tr>
+<td style="text-align: left;">23</td>
+<td style="text-align: left;"><a href="../ValueSet-CDACompressionAlgorithm/">CDACompressionAlgorithm</a></td>
+<td style="text-align: left;"><a href="../StructureDefinition-ED/">ED</a></td>
+<td style="text-align: left;">CDA</td>
+</tr>
+<tr>
+<td style="text-align: left;">24</td>
+<td style="text-align: left;"><a href="../ValueSet-CDAContextControl/">CDAContextControl</a></td>
+<td style="text-align: left;"><a href="../StructureDefinition-Informant/">Informant</a>,<a href="../StructureDefinition-Subject/">Subject</a>,<a href="../StructureDefinition-Participant2/">Participant2</a>,<a href="../StructureDefinition-Participant1/">Participant1</a>,<a href="../StructureDefinition-Author/">Author</a>,<a href="../StructureDefinition-RecordTarget/">RecordTarget</a>,<a href="../StructureDefinition-LegalAuthenticator/">LegalAuthenticator</a>,<a href="../StructureDefinition-DataEnterer/">DataEnterer</a></td>
+<td style="text-align: left;">CDA</td>
+</tr>
+<tr>
+<td style="text-align: left;">25</td>
+<td style="text-align: left;"><a href="../ValueSet-CDAEntityCode/">CDAEntityCode</a></td>
+<td style="text-align: left;"><a href="../StructureDefinition-Device/">Device</a>,<a href="../StructureDefinition-Entity/">Entity</a>,<a href="../StructureDefinition-PlayingEntity/">PlayingEntity</a>,<a href="../StructureDefinition-AuthoringDevice/">AuthoringDevice</a></td>
+<td style="text-align: left;">CDA</td>
+</tr>
+<tr>
+<td style="text-align: left;">26</td>
+<td style="text-align: left;"><a href="../ValueSet-CDAEntityNamePartQualifier/">CDAEntityNamePartQualifier</a></td>
+<td style="text-align: left;"><a href="../StructureDefinition-ENXP/">ENXP</a></td>
+<td style="text-align: left;">CDA</td>
+</tr>
+<tr>
+<td style="text-align: left;">27</td>
+<td style="text-align: left;"><a href="../ValueSet-CDAEntityNameUse/">CDAEntityNameUse</a></td>
+<td style="text-align: left;"><a href="../StructureDefinition-EN/">EN</a>,<a href="../StructureDefinition-TN/">TN</a>,<a href="../StructureDefinition-PN/">PN</a>,<a href="../StructureDefinition-ON/">ON</a></td>
+<td style="text-align: left;">CDA</td>
+</tr>
+<tr>
+<td style="text-align: left;">28</td>
+<td style="text-align: left;"><a href="../ValueSet-CDAInformationRecipientRole/">CDAInformationRecipientRole</a></td>
+<td style="text-align: left;"><a href="../StructureDefinition-IntendedRecipient/">IntendedRecipient</a></td>
+<td style="text-align: left;">CDA</td>
+</tr>
+<tr>
+<td style="text-align: left;">29</td>
+<td style="text-align: left;"><a href="../ValueSet-CDAMaterialEntityClassType/">CDAMaterialEntityClassType</a></td>
+<td style="text-align: left;"><a href="../StructureDefinition-Material/">Material</a>,<a href="../ValueSet-CDAEntityCode/">CDAEntityCode</a></td>
+<td style="text-align: left;">CDA</td>
+</tr>
+<tr>
+<td style="text-align: left;">30</td>
+<td style="text-align: left;"><a href="../ValueSet-CDANullFlavor/">CDANullFlavor</a></td>
+<td style="text-align: left;"><a href="../StructureDefinition-AssignedEntity/">AssignedEntity</a>,<a href="../StructureDefinition-Device/">Device</a>,<a href="../StructureDefinition-ParentDocument/">ParentDocument</a>,<a href="../StructureDefinition-InformationRecipient/">InformationRecipient</a>,<a href="../StructureDefinition-Participant2/">Participant2</a>,<a href="../StructureDefinition-Participant1/">Participant1</a>,<a href="../StructureDefinition-SpecimenRole/">SpecimenRole</a>,<a href="../StructureDefinition-IVXB-TS/">IVXB-TS</a>,<a href="../StructureDefinition-PatientRole/">PatientRole</a>,<a href="../StructureDefinition-HealthCareFacility/">HealthCareFacility</a>,<a href="../StructureDefinition-StructuredBody/">StructuredBody</a>,<a href="../StructureDefinition-SXCM-TS/">SXCM-TS</a>,<a href="../StructureDefinition-LanguageCommunication/">LanguageCommunication</a>,<a href="../StructureDefinition-Patient/">Patient</a>,<a href="../StructureDefinition-INT-POS/">INT-POS</a>,<a href="../StructureDefinition-AuthoringDevice/">AuthoringDevice</a>,<a href="../StructureDefinition-ON/">ON</a>,<a href="../StructureDefinition-DocumentationOf/">DocumentationOf</a>,<a href="../StructureDefinition-Custodian/">Custodian</a>,<a href="../StructureDefinition-Authenticator/">Authenticator</a>,<a href="../StructureDefinition-Supply/">Supply</a>,<a href="../StructureDefinition-DataEnterer/">DataEnterer</a>,<a href="../StructureDefinition-Procedure/">Procedure</a>,<a href="../StructureDefinition-PreconditionBase/">PreconditionBase</a>,<a href="../StructureDefinition-ADXP/">ADXP</a>,<a href="../StructureDefinition-PN/">PN</a>,<a href="../StructureDefinition-PQ/">PQ</a>,<a href="../StructureDefinition-ENXP/">ENXP</a>,<a href="../StructureDefinition-Organizer/">Organizer</a>,<a href="../StructureDefinition-Specimen/">Specimen</a>,<a href="../StructureDefinition-Precondition/">Precondition</a>,<a href="../StructureDefinition-Consent/">Consent</a>,<a href="../StructureDefinition-PlayingEntity/">PlayingEntity</a>,<a href="../StructureDefinition-RelatedSubject/">RelatedSubject</a>,<a href="../StructureDefinition-IVL-TS/">IVL-TS</a>,<a href="../StructureDefinition-Authorization/">Authorization</a>,<a href="../StructureDefinition-Act/">Act</a>,<a href="../StructureDefinition-PQR/">PQR</a>,<a href="../StructureDefinition-II/">II</a>,<a href="../StructureDefinition-AD/">AD</a>,<a href="../StructureDefinition-OrganizerComponent/">OrganizerComponent</a>,<a href="../StructureDefinition-Informant/">Informant</a>,<a href="../StructureDefinition-BL/">BL</a>,<a href="../StructureDefinition-InFulfillmentOf/">InFulfillmentOf</a>,<a href="../StructureDefinition-InFulfillmentOf1/">InFulfillmentOf1</a>,<a href="../StructureDefinition-AssignedAuthor/">AssignedAuthor</a>,<a href="../StructureDefinition-SC/">SC</a>,<a href="../StructureDefinition-NonXMLBody/">NonXMLBody</a>,<a href="../StructureDefinition-LegalAuthenticator/">LegalAuthenticator</a>,<a href="../StructureDefinition-ComponentOf/">ComponentOf</a>,<a href="../StructureDefinition-ObservationMedia/">ObservationMedia</a>,<a href="../StructureDefinition-ExternalProcedure/">ExternalProcedure</a>,<a href="../StructureDefinition-ExternalAct/">ExternalAct</a>,<a href="../StructureDefinition-Material/">Material</a>,<a href="../StructureDefinition-SubstanceAdministration/">SubstanceAdministration</a>,<a href="../StructureDefinition-RelatedDocument/">RelatedDocument</a>,<a href="../StructureDefinition-EncompassingEncounter/">EncompassingEncounter</a>,<a href="../StructureDefinition-EntryRelationship/">EntryRelationship</a>,<a href="../StructureDefinition-ExternalObservation/">ExternalObservation</a>,<a href="../StructureDefinition-CO/">CO</a>,<a href="../StructureDefinition-EIVL-TS/">EIVL-TS</a>,<a href="../StructureDefinition-Author/">Author</a>,<a href="../StructureDefinition-CR/">CR</a>,<a href="../StructureDefinition-Person/">Person</a>,<a href="../StructureDefinition-CS/">CS</a>,<a href="../StructureDefinition-CustodianOrganization/">CustodianOrganization</a>,<a href="../StructureDefinition-CV/">CV</a>,<a href="../StructureDefinition-Organization/">Organization</a>,<a href="../StructureDefinition-IVXB-PQ/">IVXB-PQ</a>,<a href="../StructureDefinition-AssignedCustodian/">AssignedCustodian</a>,<a href="../StructureDefinition-ST/">ST</a>,<a href="../StructureDefinition-RegionOfInterest/">RegionOfInterest</a>,<a href="../StructureDefinition-CD/">CD</a>,<a href="../StructureDefinition-ServiceEvent/">ServiceEvent</a>,<a href="../StructureDefinition-CE/">CE</a>,<a href="../StructureDefinition-Entry/">Entry</a>,<a href="../StructureDefinition-SubjectPerson/">SubjectPerson</a>,<a href="../StructureDefinition-Reference/">Reference</a>,<a href="../StructureDefinition-Component/">Component</a>,<a href="../StructureDefinition-Subject/">Subject</a>,<a href="../StructureDefinition-ParticipantRole/">ParticipantRole</a>,<a href="../StructureDefinition-Encounter/">Encounter</a>,<a href="../StructureDefinition-QTY/">QTY</a>,<a href="../StructureDefinition-TN/">TN</a>,<a href="../StructureDefinition-Place/">Place</a>,<a href="../StructureDefinition-PIVL-TS/">PIVL-TS</a>,<a href="../StructureDefinition-Birthplace/">Birthplace</a>,<a href="../StructureDefinition-LabeledDrug/">LabeledDrug</a>,<a href="../StructureDefinition-TS/">TS</a>,<a href="../StructureDefinition-RecordTarget/">RecordTarget</a>,<a href="../StructureDefinition-Criterion/">Criterion</a>,<a href="../StructureDefinition-OrganizationPartOf/">OrganizationPartOf</a>,<a href="../StructureDefinition-EN/">EN</a>,<a href="../StructureDefinition-EncounterParticipant/">EncounterParticipant</a>,<a href="../StructureDefinition-SXPR-TS/">SXPR-TS</a>,<a href="../StructureDefinition-Order/">Order</a>,<a href="../StructureDefinition-IVL-PQ/">IVL-PQ</a>,<a href="../StructureDefinition-IVXB-INT/">IVXB-INT</a>,<a href="../StructureDefinition-TEL/">TEL</a>,<a href="../StructureDefinition-IntendedRecipient/">IntendedRecipient</a>,<a href="../StructureDefinition-IVL-INT/">IVL-INT</a>,<a href="../StructureDefinition-Section/">Section</a>,<a href="../StructureDefinition-Guardian/">Guardian</a>,<a href="../StructureDefinition-MO/">MO</a>,<a href="../StructureDefinition-ED/">ED</a>,<a href="../StructureDefinition-Performer1/">Performer1</a>,<a href="../StructureDefinition-Performer2/">Performer2</a>,<a href="../StructureDefinition-ClinicalDocument/">ClinicalDocument</a>,<a href="../StructureDefinition-ManufacturedProduct/">ManufacturedProduct</a>,<a href="../StructureDefinition-Entity/">Entity</a>,<a href="../StructureDefinition-RTO-PQ-PQ/">RTO-PQ-PQ</a>,<a href="../StructureDefinition-AssociatedEntity/">AssociatedEntity</a>,<a href="../StructureDefinition-ObservationRange/">ObservationRange</a>,<a href="../StructureDefinition-Precondition2/">Precondition2</a>,<a href="../StructureDefinition-Observation/">Observation</a>,<a href="../StructureDefinition-InfrastructureRoot/">InfrastructureRoot</a>,<a href="../StructureDefinition-ExternalDocument/">ExternalDocument</a>,<a href="../StructureDefinition-MaintainedEntity/">MaintainedEntity</a>,<a href="../StructureDefinition-INT/">INT</a>,<a href="../StructureDefinition-ANY/">ANY</a>,<a href="../StructureDefinition-RelatedEntity/">RelatedEntity</a>,<a href="../StructureDefinition-REAL/">REAL</a></td>
+<td style="text-align: left;">CDA</td>
+</tr>
+<tr>
+<td style="text-align: left;">31</td>
+<td style="text-align: left;"><a href="../ValueSet-CDAObservationInterpretation/">CDAObservationInterpretation</a></td>
+<td style="text-align: left;"><a href="../StructureDefinition-Observation/">Observation</a>,<a href="../StructureDefinition-ObservationRange/">ObservationRange</a></td>
+<td style="text-align: left;">CDA</td>
+</tr>
+<tr>
+<td style="text-align: left;">32</td>
+<td style="text-align: left;"><a href="../ValueSet-CDAParticipationType/">CDAParticipationType</a></td>
+<td style="text-align: left;"><a href="../StructureDefinition-EncompassingEncounter/">EncompassingEncounter</a>,<a href="../StructureDefinition-Informant/">Informant</a>,<a href="../StructureDefinition-Specimen/">Specimen</a>,<a href="../StructureDefinition-Participant2/">Participant2</a>,<a href="../StructureDefinition-Participant1/">Participant1</a>,<a href="../StructureDefinition-Custodian/">Custodian</a>,<a href="../StructureDefinition-Author/">Author</a>,<a href="../StructureDefinition-Authenticator/">Authenticator</a>,<a href="../StructureDefinition-Authorization/">Authorization</a>,<a href="../StructureDefinition-LegalAuthenticator/">LegalAuthenticator</a>,<a href="../StructureDefinition-DataEnterer/">DataEnterer</a>,<a href="../StructureDefinition-RecordTarget/">RecordTarget</a>,<a href="../StructureDefinition-SubstanceAdministration/">SubstanceAdministration</a></td>
+<td style="text-align: left;">CDA</td>
+</tr>
+<tr>
+<td style="text-align: left;">33</td>
+<td style="text-align: left;"><a href="../ValueSet-CDAPostalAddressUse/">CDAPostalAddressUse</a></td>
+<td style="text-align: left;"><a href="../StructureDefinition-AD/">AD</a></td>
+<td style="text-align: left;">CDA</td>
+</tr>
+<tr>
+<td style="text-align: left;">34</td>
+<td style="text-align: left;"><a href="../ValueSet-CDARoleClass/">CDARoleClass</a></td>
+<td style="text-align: left;"><a href="../StructureDefinition-AlternateIdentification/">AlternateIdentification</a></td>
+<td style="text-align: left;">CDA</td>
+</tr>
+<tr>
+<td style="text-align: left;">35</td>
+<td style="text-align: left;"><a href="../ValueSet-CDARoleClassAssociative/">CDARoleClassAssociative</a></td>
+<td style="text-align: left;"><a href="../StructureDefinition-AssociatedEntity/">AssociatedEntity</a></td>
+<td style="text-align: left;">CDA</td>
+</tr>
+<tr>
+<td style="text-align: left;">36</td>
+<td style="text-align: left;"><a href="../ValueSet-CDARoleClassMutualRelationship/">CDARoleClassMutualRelationship</a></td>
+<td style="text-align: left;"><a href="../StructureDefinition-RelatedEntity/">RelatedEntity</a></td>
+<td style="text-align: left;">CDA</td>
+</tr>
+<tr>
+<td style="text-align: left;">37</td>
+<td style="text-align: left;"><a href="../ValueSet-CDARoleClassRoot/">CDARoleClassRoot</a></td>
+<td style="text-align: left;"><a href="../StructureDefinition-ParticipantRole/">ParticipantRole</a></td>
+<td style="text-align: left;">CDA</td>
+</tr>
+<tr>
+<td style="text-align: left;">38</td>
+<td style="text-align: left;"><a href="../ValueSet-CDARoleCode/">CDARoleCode</a></td>
+<td style="text-align: left;"><a href="../StructureDefinition-AssignedEntity/">AssignedEntity</a>,<a href="../StructureDefinition-ParticipantRole/">ParticipantRole</a>,<a href="../StructureDefinition-AssignedAuthor/">AssignedAuthor</a>,<a href="../StructureDefinition-Guardian/">Guardian</a>,<a href="../StructureDefinition-AssociatedEntity/">AssociatedEntity</a>,<a href="../StructureDefinition-OrganizationPartOf/">OrganizationPartOf</a></td>
+<td style="text-align: left;">CDA</td>
+</tr>
+<tr>
+<td style="text-align: left;">39</td>
+<td style="text-align: left;"><a href="../ValueSet-CDASetOperator/">CDASetOperator</a></td>
+<td style="text-align: left;"><a href="../StructureDefinition-SXCM-TS/">SXCM-TS</a>,<a href="../StructureDefinition-PIVL-TS/">PIVL-TS</a>,<a href="../StructureDefinition-SXPR-TS/">SXPR-TS</a>,<a href="../StructureDefinition-IVL-PQ/">IVL-PQ</a>,<a href="../StructureDefinition-IVL-INT/">IVL-INT</a>,<a href="../StructureDefinition-EIVL-TS/">EIVL-TS</a>,<a href="../StructureDefinition-IVL-TS/">IVL-TS</a></td>
+<td style="text-align: left;">CDA</td>
+</tr>
+<tr>
+<td style="text-align: left;">40</td>
+<td style="text-align: left;"><a href="../ValueSet-CDASignatureCode/">CDASignatureCode</a></td>
+<td style="text-align: left;"><a href="../StructureDefinition-Authenticator/">Authenticator</a>,<a href="../StructureDefinition-LegalAuthenticator/">LegalAuthenticator</a></td>
+<td style="text-align: left;">CDA</td>
+</tr>
+<tr>
+<td style="text-align: left;">41</td>
+<td style="text-align: left;"><a href="http://terminology.hl7.org/ValueSet/v3-DocumentSectionType">DocumentSectionType</a></td>
+<td style="text-align: left;"><a href="../StructureDefinition-Section/">Section</a></td>
+<td style="text-align: left;">THO</td>
+</tr>
+<tr>
+<td style="text-align: left;">42</td>
+<td style="text-align: left;"><a href="http://terminology.hl7.org/ValueSet/v3-EntityClassDevice">EntityClassDevice</a></td>
+<td style="text-align: left;"><a href="../StructureDefinition-Device/">Device</a>,<a href="../StructureDefinition-AuthoringDevice/">AuthoringDevice</a></td>
+<td style="text-align: left;">THO</td>
+</tr>
+<tr>
+<td style="text-align: left;">43</td>
+<td style="text-align: left;"><a href="http://terminology.hl7.org/ValueSet/v3-EntityClassLivingSubject">EntityClassLivingSubject</a></td>
+<td style="text-align: left;"><a href="../StructureDefinition-Patient/">Patient</a>,<a href="../StructureDefinition-Person/">Person</a>,<a href="../StructureDefinition-SubjectPerson/">SubjectPerson</a></td>
+<td style="text-align: left;">THO</td>
+</tr>
+<tr>
+<td style="text-align: left;">44</td>
+<td style="text-align: left;"><a href="http://terminology.hl7.org/ValueSet/v3-EntityClassManufacturedMaterial">EntityClassManufacturedMaterial</a></td>
+<td style="text-align: left;"><a href="../StructureDefinition-LabeledDrug/">LabeledDrug</a>,<a href="../StructureDefinition-Material/">Material</a></td>
+<td style="text-align: left;">THO</td>
+</tr>
+<tr>
+<td style="text-align: left;">45</td>
+<td style="text-align: left;"><a href="http://terminology.hl7.org/ValueSet/v3-EntityClassOrganization">EntityClassOrganization</a></td>
+<td style="text-align: left;"><a href="../StructureDefinition-CustodianOrganization/">CustodianOrganization</a>,<a href="../StructureDefinition-Organization/">Organization</a></td>
+<td style="text-align: left;">THO</td>
+</tr>
+<tr>
+<td style="text-align: left;">46</td>
+<td style="text-align: left;"><a href="http://terminology.hl7.org/ValueSet/v3-EntityClassPlace">EntityClassPlace</a></td>
+<td style="text-align: left;"><a href="../StructureDefinition-Place/">Place</a></td>
+<td style="text-align: left;">THO</td>
+</tr>
+<tr>
+<td style="text-align: left;">47</td>
+<td style="text-align: left;"><a href="http://terminology.hl7.org/ValueSet/v3-EntityClassRoot">EntityClassRoot</a></td>
+<td style="text-align: left;"><a href="../StructureDefinition-Entity/">Entity</a>,<a href="../StructureDefinition-PlayingEntity/">PlayingEntity</a></td>
+<td style="text-align: left;">THO</td>
+</tr>
+<tr>
+<td style="text-align: left;">48</td>
+<td style="text-align: left;"><a href="http://terminology.hl7.org/ValueSet/v3-EntityDeterminer">EntityDeterminer</a></td>
+<td style="text-align: left;"><a href="../StructureDefinition-Place/">Place</a>,<a href="../StructureDefinition-Patient/">Patient</a>,<a href="../StructureDefinition-Device/">Device</a>,<a href="../StructureDefinition-Entity/">Entity</a>,<a href="../StructureDefinition-PlayingEntity/">PlayingEntity</a>,<a href="../StructureDefinition-AuthoringDevice/">AuthoringDevice</a>,<a href="../StructureDefinition-Person/">Person</a>,<a href="../StructureDefinition-SubjectPerson/">SubjectPerson</a>,<a href="../StructureDefinition-CustodianOrganization/">CustodianOrganization</a>,<a href="../StructureDefinition-Organization/">Organization</a></td>
+<td style="text-align: left;">THO</td>
+</tr>
+<tr>
+<td style="text-align: left;">49</td>
+<td style="text-align: left;"><a href="http://terminology.hl7.org/ValueSet/v3-EntityDeterminerDetermined">EntityDeterminerDetermined</a></td>
+<td style="text-align: left;"><a href="../StructureDefinition-LabeledDrug/">LabeledDrug</a>,<a href="../StructureDefinition-Material/">Material</a></td>
+<td style="text-align: left;">THO</td>
+</tr>
+<tr>
+<td style="text-align: left;">50</td>
+<td style="text-align: left;"><a href="http://terminology.hl7.org/ValueSet/v3-EntityNamePartType">EntityNamePartType</a></td>
+<td style="text-align: left;"><a href="../StructureDefinition-ENXP/">ENXP</a></td>
+<td style="text-align: left;">THO</td>
+</tr>
+<tr>
+<td style="text-align: left;">51</td>
+<td style="text-align: left;"><a href="http://terminology.hl7.org/ValueSet/v3-Ethnicity">Ethnicity</a></td>
+<td style="text-align: left;"><a href="../StructureDefinition-Patient/">Patient</a></td>
+<td style="text-align: left;">THO</td>
+</tr>
+<tr>
+<td style="text-align: left;">52</td>
+<td style="text-align: left;"><a href="http://hl7.org/fhir/R5/valueset-doc-typecodes.html">FHIR Document Type Codes</a></td>
+<td style="text-align: left;"><a href="../StructureDefinition-ParentDocument/">ParentDocument</a>,<a href="../StructureDefinition-ExternalDocument/">ExternalDocument</a>,<a href="../StructureDefinition-ClinicalDocument/">ClinicalDocument</a></td>
+<td style="text-align: left;">FHIR</td>
+</tr>
+<tr>
+<td style="text-align: left;">53</td>
+<td style="text-align: left;"><a href="http://terminology.hl7.org/ValueSet/v3-IntegrityCheckAlgorithm">IntegrityCheckAlgorithm</a></td>
+<td style="text-align: left;"><a href="../StructureDefinition-ED/">ED</a></td>
+<td style="text-align: left;">THO</td>
+</tr>
+<tr>
+<td style="text-align: left;">54</td>
+<td style="text-align: left;"><a href="http://terminology.hl7.org/ValueSet/v3-LanguageAbilityMode">LanguageAbilityMode</a></td>
+<td style="text-align: left;"><a href="../StructureDefinition-LanguageCommunication/">LanguageCommunication</a></td>
+<td style="text-align: left;">THO</td>
+</tr>
+<tr>
+<td style="text-align: left;">55</td>
+<td style="text-align: left;"><a href="http://terminology.hl7.org/ValueSet/v3-LanguageAbilityProficiency">LanguageAbilityProficiency</a></td>
+<td style="text-align: left;"><a href="../StructureDefinition-LanguageCommunication/">LanguageCommunication</a></td>
+<td style="text-align: left;">THO</td>
+</tr>
+<tr>
+<td style="text-align: left;">56</td>
+<td style="text-align: left;"><a href="http://terminology.hl7.org/ValueSet/v3-ManufacturerModelNameExample">Manufacturer Model Name Example</a></td>
+<td style="text-align: left;"><a href="../StructureDefinition-Device/">Device</a>,<a href="../StructureDefinition-AuthoringDevice/">AuthoringDevice</a></td>
+<td style="text-align: left;">THO</td>
+</tr>
+<tr>
+<td style="text-align: left;">57</td>
+<td style="text-align: left;"><a href="http://terminology.hl7.org/ValueSet/v3-MaritalStatus">MaritalStatus</a></td>
+<td style="text-align: left;"><a href="../StructureDefinition-Patient/">Patient</a></td>
+<td style="text-align: left;">THO</td>
+</tr>
+<tr>
+<td style="text-align: left;">58</td>
+<td style="text-align: left;"><a href="http://terminology.hl7.org/ValueSet/v3-MediaType">MediaType</a></td>
+<td style="text-align: left;"><a href="../StructureDefinition-ED/">ED</a></td>
+<td style="text-align: left;">THO</td>
+</tr>
+<tr>
+<td style="text-align: left;">59</td>
+<td style="text-align: left;"><a href="http://terminology.hl7.org/ValueSet/v3-ObservationMethod">ObservationMethod</a></td>
+<td style="text-align: left;"><a href="../StructureDefinition-Observation/">Observation</a></td>
+<td style="text-align: left;">THO</td>
+</tr>
+<tr>
+<td style="text-align: left;">60</td>
+<td style="text-align: left;"><a href="http://terminology.hl7.org/ValueSet/v3-ObservationType">ObservationType</a></td>
+<td style="text-align: left;"><a href="../StructureDefinition-Observation/">Observation</a></td>
+<td style="text-align: left;">THO</td>
+</tr>
+<tr>
+<td style="text-align: left;">61</td>
+<td style="text-align: left;"><a href="http://terminology.hl7.org/ValueSet/v3-OrganizationIndustryClassNAICS">OrganizationIndustryClassNAICS</a></td>
+<td style="text-align: left;"><a href="../StructureDefinition-Organization/">Organization</a></td>
+<td style="text-align: left;">THO</td>
+</tr>
+<tr>
+<td style="text-align: left;">62</td>
+<td style="text-align: left;"><a href="http://terminology.hl7.org/ValueSet/v3-ParticipationPhysicalPerformer">ParticipationPhysicalPerformer</a></td>
+<td style="text-align: left;"><a href="../StructureDefinition-Performer2/">Performer2</a></td>
+<td style="text-align: left;">THO</td>
+</tr>
+<tr>
+<td style="text-align: left;">63</td>
+<td style="text-align: left;"><a href="http://terminology.hl7.org/ValueSet/v3-ParticipationTargetDirect">ParticipationTargetDirect</a></td>
+<td style="text-align: left;"><a href="../StructureDefinition-Supply/">Supply</a></td>
+<td style="text-align: left;">THO</td>
+</tr>
+<tr>
+<td style="text-align: left;">64</td>
+<td style="text-align: left;"><a href="http://terminology.hl7.org/ValueSet/v3-ParticipationTargetLocation">ParticipationTargetLocation</a></td>
+<td style="text-align: left;"><a href="../StructureDefinition-EncompassingEncounter/">EncompassingEncounter</a></td>
+<td style="text-align: left;">THO</td>
+</tr>
+<tr>
+<td style="text-align: left;">65</td>
+<td style="text-align: left;"><a href="http://terminology.hl7.org/ValueSet/v3-ParticipationTargetSubject">ParticipationTargetSubject</a></td>
+<td style="text-align: left;"><a href="../StructureDefinition-Subject/">Subject</a></td>
+<td style="text-align: left;">THO</td>
+</tr>
+<tr>
+<td style="text-align: left;">66</td>
+<td style="text-align: left;"><a href="http://terminology.hl7.org/ValueSet/v3-PersonalRelationshipRoleType">PersonalRelationshipRoleType</a></td>
+<td style="text-align: left;"><a href="../StructureDefinition-RelatedSubject/">RelatedSubject</a>,<a href="../StructureDefinition-RelatedEntity/">RelatedEntity</a></td>
+<td style="text-align: left;">THO</td>
+</tr>
+<tr>
+<td style="text-align: left;">67</td>
+<td style="text-align: left;"><a href="http://terminology.hl7.org/ValueSet/v3-ROIOverlayShape">ROIOverlayShape</a></td>
+<td style="text-align: left;"><a href="../StructureDefinition-RegionOfInterest/">RegionOfInterest</a></td>
+<td style="text-align: left;">THO</td>
+</tr>
+<tr>
+<td style="text-align: left;">68</td>
+<td style="text-align: left;"><a href="http://terminology.hl7.org/ValueSet/v3-Race">Race</a></td>
+<td style="text-align: left;"><a href="../StructureDefinition-Patient/">Patient</a></td>
+<td style="text-align: left;">THO</td>
+</tr>
+<tr>
+<td style="text-align: left;">69</td>
+<td style="text-align: left;"><a href="http://terminology.hl7.org/ValueSet/v3-RelationshipConjunction">RelationshipConjunction</a></td>
+<td style="text-align: left;"><a href="../StructureDefinition-ObservationRange/">ObservationRange</a>,<a href="../StructureDefinition-Precondition2/">Precondition2</a></td>
+<td style="text-align: left;">THO</td>
+</tr>
+<tr>
+<td style="text-align: left;">70</td>
+<td style="text-align: left;"><a href="http://terminology.hl7.org/ValueSet/v3-ReligiousAffiliation">ReligiousAffiliation</a></td>
+<td style="text-align: left;"><a href="../StructureDefinition-Patient/">Patient</a></td>
+<td style="text-align: left;">THO</td>
+</tr>
+<tr>
+<td style="text-align: left;">71</td>
+<td style="text-align: left;"><a href="http://terminology.hl7.org/ValueSet/v3-RoleClassAgent">RoleClassAgent</a></td>
+<td style="text-align: left;"><a href="../StructureDefinition-Guardian/">Guardian</a></td>
+<td style="text-align: left;">THO</td>
+</tr>
+<tr>
+<td style="text-align: left;">72</td>
+<td style="text-align: left;"><a href="http://terminology.hl7.org/ValueSet/v3-RoleClassAssignedEntity">RoleClassAssignedEntity</a></td>
+<td style="text-align: left;"><a href="../StructureDefinition-AssignedEntity/">AssignedEntity</a>,<a href="../StructureDefinition-AssignedCustodian/">AssignedCustodian</a>,<a href="../StructureDefinition-AssignedAuthor/">AssignedAuthor</a></td>
+<td style="text-align: left;">THO</td>
+</tr>
+<tr>
+<td style="text-align: left;">73</td>
+<td style="text-align: left;"><a href="http://terminology.hl7.org/ValueSet/v3-RoleClassManufacturedProduct">RoleClassManufacturedProduct</a></td>
+<td style="text-align: left;"><a href="../StructureDefinition-ManufacturedProduct/">ManufacturedProduct</a></td>
+<td style="text-align: left;">THO</td>
+</tr>
+<tr>
+<td style="text-align: left;">74</td>
+<td style="text-align: left;"><a href="http://terminology.hl7.org/ValueSet/v3-RoleClassPartitive">RoleClassPartitive</a></td>
+<td style="text-align: left;"><a href="../StructureDefinition-OrganizationPartOf/">OrganizationPartOf</a></td>
+<td style="text-align: left;">THO</td>
+</tr>
+<tr>
+<td style="text-align: left;">75</td>
+<td style="text-align: left;"><a href="http://terminology.hl7.org/ValueSet/v3-RoleClassPassive">RoleClassPassive</a></td>
+<td style="text-align: left;"><a href="../StructureDefinition-Birthplace/">Birthplace</a>,<a href="../StructureDefinition-MaintainedEntity/">MaintainedEntity</a></td>
+<td style="text-align: left;">THO</td>
+</tr>
+<tr>
+<td style="text-align: left;">76</td>
+<td style="text-align: left;"><a href="http://terminology.hl7.org/ValueSet/v3-RoleClassRelationshipFormal">RoleClassRelationshipFormal</a></td>
+<td style="text-align: left;"><a href="../StructureDefinition-PatientRole/">PatientRole</a></td>
+<td style="text-align: left;">THO</td>
+</tr>
+<tr>
+<td style="text-align: left;">77</td>
+<td style="text-align: left;"><a href="http://terminology.hl7.org/ValueSet/v3-RoleClassServiceDeliveryLocation">RoleClassServiceDeliveryLocation</a></td>
+<td style="text-align: left;"><a href="../StructureDefinition-HealthCareFacility/">HealthCareFacility</a></td>
+<td style="text-align: left;">THO</td>
+</tr>
+<tr>
+<td style="text-align: left;">78</td>
+<td style="text-align: left;"><a href="http://terminology.hl7.org/ValueSet/v3-RoleClassSpecimen">RoleClassSpecimen</a></td>
+<td style="text-align: left;"><a href="../StructureDefinition-SpecimenRole/">SpecimenRole</a></td>
+<td style="text-align: left;">THO</td>
+</tr>
+<tr>
+<td style="text-align: left;">79</td>
+<td style="text-align: left;"><a href="http://terminology.hl7.org/ValueSet/v3-RoleLinkType">RoleLinkType</a></td>
+<td style="text-align: left;"><a href="../StructureDefinition-IdentifiedBy/">IdentifiedBy</a></td>
+<td style="text-align: left;">THO</td>
+</tr>
+<tr>
+<td style="text-align: left;">80</td>
+<td style="text-align: left;"><a href="http://terminology.hl7.org/ValueSet/v3-RouteOfAdministration">RouteOfAdministration</a></td>
+<td style="text-align: left;"><a href="../StructureDefinition-SubstanceAdministration/">SubstanceAdministration</a></td>
+<td style="text-align: left;">THO</td>
+</tr>
+<tr>
+<td style="text-align: left;">81</td>
+<td style="text-align: left;"><a href="http://terminology.hl7.org/ValueSet/v3-ServiceDeliveryLocationRoleType">ServiceDeliveryLocationRoleType</a></td>
+<td style="text-align: left;"><a href="../StructureDefinition-HealthCareFacility/">HealthCareFacility</a></td>
+<td style="text-align: left;">THO</td>
+</tr>
+<tr>
+<td style="text-align: left;">82</td>
+<td style="text-align: left;"><a href="http://terminology.hl7.org/ValueSet/v3-SoftwareNameExample">Software Name Example</a></td>
+<td style="text-align: left;"><a href="../StructureDefinition-Device/">Device</a>,<a href="../StructureDefinition-AuthoringDevice/">AuthoringDevice</a></td>
+<td style="text-align: left;">THO</td>
+</tr>
+<tr>
+<td style="text-align: left;">83</td>
+<td style="text-align: left;"><a href="http://terminology.hl7.org/ValueSet/v3-TargetAwareness">TargetAwareness</a></td>
+<td style="text-align: left;"><a href="../StructureDefinition-Subject/">Subject</a></td>
+<td style="text-align: left;">THO</td>
+</tr>
+<tr>
+<td style="text-align: left;">84</td>
+<td style="text-align: left;"><a href="http://terminology.hl7.org/ValueSet/v3-TelecommunicationAddressUse">TelecommunicationAddressUse</a></td>
+<td style="text-align: left;"><a href="../StructureDefinition-TEL/">TEL</a></td>
+<td style="text-align: left;">THO</td>
+</tr>
+<tr>
+<td style="text-align: left;">85</td>
+<td style="text-align: left;"><a href="http://terminology.hl7.org/ValueSet/v3-USEncounterDischargeDisposition">USEncounterDischargeDisposition</a></td>
+<td style="text-align: left;"><a href="../StructureDefinition-EncompassingEncounter/">EncompassingEncounter</a></td>
+<td style="text-align: left;">THO</td>
+</tr>
+<tr>
+<td style="text-align: left;">86</td>
+<td style="text-align: left;"><a href="http://terminology.hl7.org/ValueSet/v3-ActCode">v3 Code System ActCode</a></td>
+<td style="text-align: left;"><a href="../StructureDefinition-ExternalObservation/">ExternalObservation</a>,<a href="../StructureDefinition-ExternalProcedure/">ExternalProcedure</a>,<a href="../StructureDefinition-ExternalAct/">ExternalAct</a>,<a href="../StructureDefinition-Consent/">Consent</a>,<a href="../StructureDefinition-Order/">Order</a>,<a href="../StructureDefinition-Act/">Act</a>,<a href="../StructureDefinition-Organizer/">Organizer</a>,<a href="../StructureDefinition-Criterion/">Criterion</a>,<a href="../StructureDefinition-Supply/">Supply</a>,<a href="../StructureDefinition-ObservationRange/">ObservationRange</a></td>
+<td style="text-align: left;">THO</td>
+</tr>
+<tr>
+<td style="text-align: left;">87</td>
+<td style="text-align: left;"><a href="http://terminology.hl7.org/ValueSet/v3-ActSite">v3 Value Set ActSite</a></td>
+<td style="text-align: left;"><a href="../StructureDefinition-SubstanceAdministration/">SubstanceAdministration</a></td>
+<td style="text-align: left;">THO</td>
+</tr>
+<tr>
+<td style="text-align: left;">88</td>
+<td style="text-align: left;"><a href="http://terminology.hl7.org/ValueSet/v3-xActClassDocumentEntryAct">x_ActClassDocumentEntryAct</a></td>
+<td style="text-align: left;"><a href="../StructureDefinition-Act/">Act</a></td>
+<td style="text-align: left;">THO</td>
+</tr>
+<tr>
+<td style="text-align: left;">89</td>
+<td style="text-align: left;"><a href="http://terminology.hl7.org/ValueSet/v3-xActClassDocumentEntryOrganizer">x_ActClassDocumentEntryOrganizer</a></td>
+<td style="text-align: left;"><a href="../StructureDefinition-Organizer/">Organizer</a></td>
+<td style="text-align: left;">THO</td>
+</tr>
+<tr>
+<td style="text-align: left;">90</td>
+<td style="text-align: left;"><a href="http://terminology.hl7.org/ValueSet/v3-xActMoodDocumentObservation">x_ActMoodDocumentObservation</a></td>
+<td style="text-align: left;"><a href="../StructureDefinition-Observation/">Observation</a></td>
+<td style="text-align: left;">THO</td>
+</tr>
+<tr>
+<td style="text-align: left;">91</td>
+<td style="text-align: left;"><a href="http://terminology.hl7.org/ValueSet/v3-xActRelationshipDocument">x_ActRelationshipDocument</a></td>
+<td style="text-align: left;"><a href="../StructureDefinition-RelatedDocument/">RelatedDocument</a></td>
+<td style="text-align: left;">THO</td>
+</tr>
+<tr>
+<td style="text-align: left;">92</td>
+<td style="text-align: left;"><a href="http://terminology.hl7.org/ValueSet/v3-xActRelationshipEntry">x_ActRelationshipEntry</a></td>
+<td style="text-align: left;"><a href="../StructureDefinition-Entry/">Entry</a></td>
+<td style="text-align: left;">THO</td>
+</tr>
+<tr>
+<td style="text-align: left;">93</td>
+<td style="text-align: left;"><a href="http://terminology.hl7.org/ValueSet/v3-xActRelationshipEntryRelationship">x_ActRelationshipEntryRelationship</a></td>
+<td style="text-align: left;"><a href="../StructureDefinition-EntryRelationship/">EntryRelationship</a></td>
+<td style="text-align: left;">THO</td>
+</tr>
+<tr>
+<td style="text-align: left;">94</td>
+<td style="text-align: left;"><a href="http://terminology.hl7.org/ValueSet/v3-xActRelationshipExternalReference">x_ActRelationshipExternalReference</a></td>
+<td style="text-align: left;"><a href="../StructureDefinition-Reference/">Reference</a></td>
+<td style="text-align: left;">THO</td>
+</tr>
+<tr>
+<td style="text-align: left;">95</td>
+<td style="text-align: left;"><a href="http://terminology.hl7.org/ValueSet/v3-xDocumentActMood">x_DocumentActMood</a></td>
+<td style="text-align: left;"><a href="../StructureDefinition-Act/">Act</a></td>
+<td style="text-align: left;">THO</td>
+</tr>
+<tr>
+<td style="text-align: left;">96</td>
+<td style="text-align: left;"><a href="http://terminology.hl7.org/ValueSet/v3-xDocumentEncounterMood">x_DocumentEncounterMood</a></td>
+<td style="text-align: left;"><a href="../StructureDefinition-Encounter/">Encounter</a></td>
+<td style="text-align: left;">THO</td>
+</tr>
+<tr>
+<td style="text-align: left;">97</td>
+<td style="text-align: left;"><a href="http://terminology.hl7.org/ValueSet/v3-xDocumentProcedureMood">x_DocumentProcedureMood</a></td>
+<td style="text-align: left;"><a href="../StructureDefinition-Procedure/">Procedure</a></td>
+<td style="text-align: left;">THO</td>
+</tr>
+<tr>
+<td style="text-align: left;">98</td>
+<td style="text-align: left;"><a href="http://terminology.hl7.org/ValueSet/v3-xDocumentSubstanceMood">x_DocumentSubstanceMood</a></td>
+<td style="text-align: left;"><a href="../StructureDefinition-Supply/">Supply</a>,<a href="../StructureDefinition-SubstanceAdministration/">SubstanceAdministration</a></td>
+<td style="text-align: left;">THO</td>
+</tr>
+<tr>
+<td style="text-align: left;">99</td>
+<td style="text-align: left;"><a href="http://terminology.hl7.org/ValueSet/v3-xEncounterParticipant">x_EncounterParticipant</a></td>
+<td style="text-align: left;"><a href="../StructureDefinition-EncounterParticipant/">EncounterParticipant</a></td>
+<td style="text-align: left;">THO</td>
+</tr>
+<tr>
+<td style="text-align: left;">100</td>
+<td style="text-align: left;"><a href="http://terminology.hl7.org/ValueSet/v3-xInformationRecipient">x_InformationRecipient</a></td>
+<td style="text-align: left;"><a href="../StructureDefinition-InformationRecipient/">InformationRecipient</a></td>
+<td style="text-align: left;">THO</td>
+</tr>
+<tr>
+<td style="text-align: left;">101</td>
+<td style="text-align: left;"><a href="http://terminology.hl7.org/ValueSet/v3-xServiceEventPerformer">x_ServiceEventPerformer</a></td>
+<td style="text-align: left;"><a href="../StructureDefinition-Performer1/">Performer1</a></td>
+<td style="text-align: left;">THO</td>
+</tr>
+</tbody>
+</table>
+<h3 id="code-systems">Code Systems</h3>
+<p>These code systems are used in this implementation guide:</p>
+<p>Code System Sources:</p>
+<ul>
+<li><a href="http://hl7.org/fhir/R5/">FHIR</a></li>
+<li><a href="http://terminology.hl7.org/">THO</a></li>
+<li><a href="http://snomed.info/sct">SNOMED</a></li>
+<li><a href="http://loinc.org">LOINC</a></li>
+<li><a href="http://unitsofmeasure.org">UCUM</a></li>
+<li>Code systems published by other standards organizations</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;"></th>
+<th style="text-align: left;"></th>
+<th style="text-align: left;"></th>
+<th style="text-align: left;"></th>
+<th style="text-align: left;"></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;">1</td>
+<td style="text-align: left;"><a href="http://terminology.hl7.org/CodeSystem/v3-ActClass">ActClass</a></td>
+<td style="text-align: left;"><code>http://terminology.hl7.org/CodeSystem/v3-ActClass</code></td>
+<td style="text-align: left;">ValueSet/v3-ActClassProcedureValueSet/v3-xActClassDocumentEntryOrganizerValueSet/v3-ActClassClinicalDocumentValueSet/v3-ActClassROIValueSet/CDAActClassObservationValueSet/v3-ActClassRecordOrganizerValueSet/CDAActClassValueSet/v3-ActClassDocumentValueSet/v3-xActClassDocumentEntryActValueSet/v3-ActClassSupply</td>
+<td style="text-align: left;">THO</td>
+</tr>
+<tr>
+<td style="text-align: left;">2</td>
+<td style="text-align: left;"><a href="http://terminology.hl7.org/CodeSystem/v3-ActCode">ActCode</a></td>
+<td style="text-align: left;"><code>http://terminology.hl7.org/CodeSystem/v3-ActCode</code></td>
+<td style="text-align: left;">ValueSet/CDAActSubstanceAdministrationCodeValueSet/v3-ObservationTypeValueSet/v3-ActCodeValueSet/v3-ActEncounterCodeValueSet/v3-ROIOverlayShape</td>
+<td style="text-align: left;">THO</td>
+</tr>
+<tr>
+<td style="text-align: left;">3</td>
+<td style="text-align: left;"><a href="http://terminology.hl7.org/CodeSystem/v3-ActMood">ActMood</a></td>
+<td style="text-align: left;"><code>http://terminology.hl7.org/CodeSystem/v3-ActMood</code></td>
+<td style="text-align: left;">ValueSet/v3-xDocumentSubstanceMoodValueSet/v3-ActMoodPredicateValueSet/v3-xActMoodDocumentObservationValueSet/v3-xDocumentProcedureMoodValueSet/CDAActMoodIntentValueSet/CDAActMoodValueSet/v3-xDocumentActMoodValueSet/v3-xDocumentEncounterMood</td>
+<td style="text-align: left;">THO</td>
+</tr>
+<tr>
+<td style="text-align: left;">4</td>
+<td style="text-align: left;"><a href="http://terminology.hl7.org/CodeSystem/v3-ActPriority">ActPriority</a></td>
+<td style="text-align: left;"><code>http://terminology.hl7.org/CodeSystem/v3-ActPriority</code></td>
+<td style="text-align: left;">ValueSet/v3-ActPriority</td>
+<td style="text-align: left;">THO</td>
+</tr>
+<tr>
+<td style="text-align: left;">5</td>
+<td style="text-align: left;"><a href="http://terminology.hl7.org/CodeSystem/v3-ActRelationshipType">ActRelationshipType</a></td>
+<td style="text-align: left;"><code>http://terminology.hl7.org/CodeSystem/v3-ActRelationshipType</code></td>
+<td style="text-align: left;">ValueSet/CDAActRelationshipTypeValueSet/v3-xActRelationshipEntryValueSet/v3-xActRelationshipExternalReferenceValueSet/v3-ActRelationshipFulfillsValueSet/v3-xActRelationshipDocumentValueSet/v3-xActRelationshipEntryRelationshipValueSet/v3-ActRelationshipHasComponent</td>
+<td style="text-align: left;">THO</td>
+</tr>
+<tr>
+<td style="text-align: left;">6</td>
+<td style="text-align: left;"><a href="http://terminology.hl7.org/CodeSystem/v3-ActSite">ActSite</a></td>
+<td style="text-align: left;"><code>http://terminology.hl7.org/CodeSystem/v3-ActSite</code></td>
+<td style="text-align: left;">ValueSet/v3-ActSite</td>
+<td style="text-align: left;">THO</td>
+</tr>
+<tr>
+<td style="text-align: left;">7</td>
+<td style="text-align: left;"><a href="http://terminology.hl7.org/CodeSystem/v3-ActStatus">ActStatus</a></td>
+<td style="text-align: left;"><code>http://terminology.hl7.org/CodeSystem/v3-ActStatus</code></td>
+<td style="text-align: left;">ValueSet/v3-ActStatus</td>
+<td style="text-align: left;">THO</td>
+</tr>
+<tr>
+<td style="text-align: left;">8</td>
+<td style="text-align: left;"><a href="http://terminology.hl7.org/CodeSystem/v3-AddressUse">AddressUse</a></td>
+<td style="text-align: left;"><code>http://terminology.hl7.org/CodeSystem/v3-AddressUse</code></td>
+<td style="text-align: left;">ValueSet/CDAPostalAddressUseValueSet/v3-TelecommunicationAddressUse</td>
+<td style="text-align: left;">THO</td>
+</tr>
+<tr>
+<td style="text-align: left;">9</td>
+<td style="text-align: left;"><a href="http://terminology.hl7.org/CodeSystem/v3-AdministrativeGender">AdministrativeGender</a></td>
+<td style="text-align: left;"><code>http://terminology.hl7.org/CodeSystem/v3-AdministrativeGender</code></td>
+<td style="text-align: left;">ValueSet/v3-AdministrativeGender</td>
+<td style="text-align: left;">THO</td>
+</tr>
+<tr>
+<td style="text-align: left;">10</td>
+<td style="text-align: left;"><a href="../CodeSystem-BinaryDataEncoding/">Binary Data Encoding Code System</a></td>
+<td style="text-align: left;"><code>http://hl7.org/cda/stds/core/CodeSystem/BinaryDataEncoding</code></td>
+<td style="text-align: left;">ValueSet/BinaryDataEncoding</td>
+<td style="text-align: left;">CDA</td>
+</tr>
+<tr>
+<td style="text-align: left;">11</td>
+<td style="text-align: left;"><a href="http://terminology.hl7.org/CodeSystem/v3-CompressionAlgorithm">CompressionAlgorithm</a></td>
+<td style="text-align: left;"><code>http://terminology.hl7.org/CodeSystem/v3-CompressionAlgorithm</code></td>
+<td style="text-align: left;">ValueSet/CDACompressionAlgorithm</td>
+<td style="text-align: left;">THO</td>
+</tr>
+<tr>
+<td style="text-align: left;">12</td>
+<td style="text-align: left;"><a href="http://terminology.hl7.org/CodeSystem/v3-ContextControl">ContextControl</a></td>
+<td style="text-align: left;"><code>http://terminology.hl7.org/CodeSystem/v3-ContextControl</code></td>
+<td style="text-align: left;">ValueSet/CDAContextControl</td>
+<td style="text-align: left;">THO</td>
+</tr>
+<tr>
+<td style="text-align: left;">13</td>
+<td style="text-align: left;"><a href="http://terminology.hl7.org/CodeSystem/v3-EntityClass">EntityClass</a></td>
+<td style="text-align: left;"><code>http://terminology.hl7.org/CodeSystem/v3-EntityClass</code></td>
+<td style="text-align: left;">ValueSet/v3-EntityClassLivingSubjectValueSet/v3-EntityClassRootValueSet/v3-EntityClassManufacturedMaterialValueSet/v3-EntityClassPlaceValueSet/v3-EntityClassDeviceValueSet/v3-EntityClassOrganization</td>
+<td style="text-align: left;">THO</td>
+</tr>
+<tr>
+<td style="text-align: left;">14</td>
+<td style="text-align: left;"><a href="http://terminology.hl7.org/CodeSystem/v3-EntityCode">EntityCode</a></td>
+<td style="text-align: left;"><code>http://terminology.hl7.org/CodeSystem/v3-EntityCode</code></td>
+<td style="text-align: left;">ValueSet/CDAMaterialEntityClassTypeValueSet/CDAEntityCode</td>
+<td style="text-align: left;">THO</td>
+</tr>
+<tr>
+<td style="text-align: left;">15</td>
+<td style="text-align: left;"><a href="http://terminology.hl7.org/CodeSystem/v3-EntityDeterminer">EntityDeterminer</a></td>
+<td style="text-align: left;"><code>http://terminology.hl7.org/CodeSystem/v3-EntityDeterminer</code></td>
+<td style="text-align: left;">ValueSet/v3-EntityDeterminerValueSet/v3-EntityDeterminerDetermined</td>
+<td style="text-align: left;">THO</td>
+</tr>
+<tr>
+<td style="text-align: left;">16</td>
+<td style="text-align: left;"><a href="http://terminology.hl7.org/CodeSystem/v3-EntityNamePartQualifier">EntityNamePartQualifier</a></td>
+<td style="text-align: left;"><code>http://terminology.hl7.org/CodeSystem/v3-EntityNamePartQualifier</code></td>
+<td style="text-align: left;">ValueSet/CDAEntityNamePartQualifier</td>
+<td style="text-align: left;">THO</td>
+</tr>
+<tr>
+<td style="text-align: left;">17</td>
+<td style="text-align: left;"><a href="http://terminology.hl7.org/CodeSystem/v3-EntityNamePartType">EntityNamePartType</a></td>
+<td style="text-align: left;"><code>http://terminology.hl7.org/CodeSystem/v3-EntityNamePartType</code></td>
+<td style="text-align: left;">ValueSet/v3-EntityNamePartType</td>
+<td style="text-align: left;">THO</td>
+</tr>
+<tr>
+<td style="text-align: left;">18</td>
+<td style="text-align: left;"><a href="http://terminology.hl7.org/CodeSystem/v3-EntityNameUse">EntityNameUse</a></td>
+<td style="text-align: left;"><code>http://terminology.hl7.org/CodeSystem/v3-EntityNameUse</code></td>
+<td style="text-align: left;">ValueSet/CDAEntityNameUseValueSet/CDAPostalAddressUse</td>
+<td style="text-align: left;">THO</td>
+</tr>
+<tr>
+<td style="text-align: left;">19</td>
+<td style="text-align: left;"><a href="http://terminology.hl7.org/CodeSystem/v3-Ethnicity">Ethnicity</a></td>
+<td style="text-align: left;"><code>http://terminology.hl7.org/CodeSystem/v3-Ethnicity</code></td>
+<td style="text-align: left;">ValueSet/v3-Ethnicity</td>
+<td style="text-align: left;">THO</td>
+</tr>
+<tr>
+<td style="text-align: left;">20</td>
+<td style="text-align: left;"><a href="http://terminology.hl7.org/CodeSystem/v3-IntegrityCheckAlgorithm">IntegrityCheckAlgorithm</a></td>
+<td style="text-align: left;"><code>http://terminology.hl7.org/CodeSystem/v3-IntegrityCheckAlgorithm</code></td>
+<td style="text-align: left;">ValueSet/v3-IntegrityCheckAlgorithm</td>
+<td style="text-align: left;">THO</td>
+</tr>
+<tr>
+<td style="text-align: left;">21</td>
+<td style="text-align: left;"><a href="http://terminology.hl7.org/CodeSystem/v3-LanguageAbilityMode">LanguageAbilityMode</a></td>
+<td style="text-align: left;"><code>http://terminology.hl7.org/CodeSystem/v3-LanguageAbilityMode</code></td>
+<td style="text-align: left;">ValueSet/v3-LanguageAbilityMode</td>
+<td style="text-align: left;">THO</td>
+</tr>
+<tr>
+<td style="text-align: left;">22</td>
+<td style="text-align: left;"><a href="http://terminology.hl7.org/CodeSystem/v3-LanguageAbilityProficiency">LanguageAbilityProficiency</a></td>
+<td style="text-align: left;"><code>http://terminology.hl7.org/CodeSystem/v3-LanguageAbilityProficiency</code></td>
+<td style="text-align: left;">ValueSet/v3-LanguageAbilityProficiency</td>
+<td style="text-align: left;">THO</td>
+</tr>
+<tr>
+<td style="text-align: left;">23</td>
+<td style="text-align: left;"><a href="http://loinc.org">Logical Observation Identifiers</a></td>
+<td style="text-align: left;"><code>http://loinc.org</code></td>
+<td style="text-align: left;">LOINC provides a set of universal names and ID codes for identifying laboratory and clinical test results.12 LOINC facilitates the exchange and pooling of resultssuch as blood hemoglobinserum potassiumor vital signsfor clinical careoutcomes managementand research. LOINC's universal identifiers (names and codes) can be used in the context of order and observation exchanges between information systems that use syntax standards such as HL73CEN TC251ISO TC215ASTM4and DICOM. Specificallythe identifier can be used as the coded value for an observation in any other standard that uses the observation/observation value paradigmwhether messagesdocumentsapplication programming interface (API)etc. For exampleLOINC codes are used widely in the OBX segment Observation Identifier field (OBX-3) of an ORU HL7 (HL7 version 2.x or ASTM 1238-9410) message that may be sent between a Clinical Laboratory Information Management Systems (LIMS) and Electronic Health Record Systems (EHR).56 In this wayLOINC codes provide universal identifiers that allow the exchange of clinical data between heterogeneous computing environments.</td>
+<td style="text-align: left;">LOINC</td>
+</tr>
+<tr>
+<td style="text-align: left;">24</td>
+<td style="text-align: left;"><a href="http://terminology.hl7.org/CodeSystem/v3-ManufacturerModelNameExample">ManufacturerModelNameExample</a></td>
+<td style="text-align: left;"><code>http://terminology.hl7.org/CodeSystem/v3-ManufacturerModelNameExample</code></td>
+<td style="text-align: left;">ValueSet/v3-ManufacturerModelNameExample</td>
+<td style="text-align: left;">THO</td>
+</tr>
+<tr>
+<td style="text-align: left;">25</td>
+<td style="text-align: left;"><a href="http://terminology.hl7.org/CodeSystem/v3-MaritalStatus">MaritalStatus</a></td>
+<td style="text-align: left;"><code>http://terminology.hl7.org/CodeSystem/v3-MaritalStatus</code></td>
+<td style="text-align: left;">ValueSet/v3-MaritalStatus</td>
+<td style="text-align: left;">THO</td>
+</tr>
+<tr>
+<td style="text-align: left;">26</td>
+<td style="text-align: left;"><a href="http://terminology.hl7.org/CodeSystem/v3-mediaType">Media Type</a></td>
+<td style="text-align: left;"><code>http://terminology.hl7.org/CodeSystem/v3-mediaType</code></td>
+<td style="text-align: left;">ValueSet/v3-MediaType</td>
+<td style="text-align: left;">THO</td>
+</tr>
+<tr>
+<td style="text-align: left;">27</td>
+<td style="text-align: left;"><a href="http://terminology.hl7.org/CodeSystem/nubc-UB92">National Uniform Billing Council</a></td>
+<td style="text-align: left;"><code>http://terminology.hl7.org/CodeSystem/nubc-UB92</code></td>
+<td style="text-align: left;">National Uniform Billing CouncilUB 92</td>
+<td style="text-align: left;">THO</td>
+</tr>
+<tr>
+<td style="text-align: left;">28</td>
+<td style="text-align: left;"><a href="http://terminology.hl7.org/CodeSystem/naics">North American Industry Classification System</a></td>
+<td style="text-align: left;"><code>http://terminology.hl7.org/CodeSystem/naics</code></td>
+<td style="text-align: left;">ValueSet/v3-OrganizationIndustryClassNAICS</td>
+<td style="text-align: left;">THO</td>
+</tr>
+<tr>
+<td style="text-align: left;">29</td>
+<td style="text-align: left;"><a href="http://terminology.hl7.org/CodeSystem/v3-NullFlavor">NullFlavor</a></td>
+<td style="text-align: left;"><code>http://terminology.hl7.org/CodeSystem/v3-NullFlavor</code></td>
+<td style="text-align: left;">ValueSet/CDANullFlavor</td>
+<td style="text-align: left;">THO</td>
+</tr>
+<tr>
+<td style="text-align: left;">30</td>
+<td style="text-align: left;"><a href="http://terminology.hl7.org/CodeSystem/v3-ObservationInterpretation">ObservationInterpretation</a></td>
+<td style="text-align: left;"><code>http://terminology.hl7.org/CodeSystem/v3-ObservationInterpretation</code></td>
+<td style="text-align: left;">ValueSet/CDAObservationInterpretation</td>
+<td style="text-align: left;">THO</td>
+</tr>
+<tr>
+<td style="text-align: left;">31</td>
+<td style="text-align: left;"><a href="http://terminology.hl7.org/CodeSystem/v3-ObservationMethod">ObservationMethod</a></td>
+<td style="text-align: left;"><code>http://terminology.hl7.org/CodeSystem/v3-ObservationMethod</code></td>
+<td style="text-align: left;">ValueSet/v3-ObservationMethod</td>
+<td style="text-align: left;">THO</td>
+</tr>
+<tr>
+<td style="text-align: left;">32</td>
+<td style="text-align: left;"><a href="http://terminology.hl7.org/CodeSystem/v3-orderableDrugForm">Orderable Drug Form</a></td>
+<td style="text-align: left;"><code>http://terminology.hl7.org/CodeSystem/v3-orderableDrugForm</code></td>
+<td style="text-align: left;">ValueSet/v3-AdministrableDrugForm</td>
+<td style="text-align: left;">THO</td>
+</tr>
+<tr>
+<td style="text-align: left;">33</td>
+<td style="text-align: left;"><a href="http://terminology.hl7.org/CodeSystem/v3-ParticipationSignature">ParticipationSignature</a></td>
+<td style="text-align: left;"><code>http://terminology.hl7.org/CodeSystem/v3-ParticipationSignature</code></td>
+<td style="text-align: left;">ValueSet/CDASignatureCode</td>
+<td style="text-align: left;">THO</td>
+</tr>
+<tr>
+<td style="text-align: left;">34</td>
+<td style="text-align: left;"><a href="http://terminology.hl7.org/CodeSystem/v3-ParticipationType">ParticipationType</a></td>
+<td style="text-align: left;"><code>http://terminology.hl7.org/CodeSystem/v3-ParticipationType</code></td>
+<td style="text-align: left;">ValueSet/v3-ParticipationTargetLocationValueSet/v3-xInformationRecipientValueSet/CDAParticipationTypeValueSet/v3-ParticipationPhysicalPerformerValueSet/v3-xServiceEventPerformerValueSet/v3-ParticipationTargetSubjectValueSet/v3-ParticipationTargetDirectValueSet/v3-xEncounterParticipant</td>
+<td style="text-align: left;">THO</td>
+</tr>
+<tr>
+<td style="text-align: left;">35</td>
+<td style="text-align: left;"><a href="http://terminology.hl7.org/CodeSystem/v3-Race">Race</a></td>
+<td style="text-align: left;"><code>http://terminology.hl7.org/CodeSystem/v3-Race</code></td>
+<td style="text-align: left;">ValueSet/v3-Race</td>
+<td style="text-align: left;">THO</td>
+</tr>
+<tr>
+<td style="text-align: left;">36</td>
+<td style="text-align: left;"><a href="http://terminology.hl7.org/CodeSystem/v3-RelationshipConjunction">RelationshipConjunction</a></td>
+<td style="text-align: left;"><code>http://terminology.hl7.org/CodeSystem/v3-RelationshipConjunction</code></td>
+<td style="text-align: left;">ValueSet/v3-RelationshipConjunction</td>
+<td style="text-align: left;">THO</td>
+</tr>
+<tr>
+<td style="text-align: left;">37</td>
+<td style="text-align: left;"><a href="http://terminology.hl7.org/CodeSystem/v3-ReligiousAffiliation">Religious Affiliation</a></td>
+<td style="text-align: left;"><code>http://terminology.hl7.org/CodeSystem/v3-ReligiousAffiliation</code></td>
+<td style="text-align: left;">ValueSet/v3-ReligiousAffiliation</td>
+<td style="text-align: left;">THO</td>
+</tr>
+<tr>
+<td style="text-align: left;">38</td>
+<td style="text-align: left;"><a href="http://terminology.hl7.org/CodeSystem/v3-RoleClass">RoleClass</a></td>
+<td style="text-align: left;"><code>http://terminology.hl7.org/CodeSystem/v3-RoleClass</code></td>
+<td style="text-align: left;">ValueSet/CDARoleClassAssociativeValueSet/v3-RoleClassPassiveValueSet/CDARoleClassRootValueSet/v3-RoleClassManufacturedProductValueSet/CDAInformationRecipientRoleValueSet/v3-RoleClassAssignedEntityValueSet/v3-RoleClassPartitiveValueSet/v3-RoleClassAgentValueSet/v3-RoleClassRelationshipFormalValueSet/CDARoleClassMutualRelationshipValueSet/v3-RoleClassServiceDeliveryLocationValueSet/v3-RoleClassSpecimenValueSet/CDARoleClass</td>
+<td style="text-align: left;">THO</td>
+</tr>
+<tr>
+<td style="text-align: left;">39</td>
+<td style="text-align: left;"><a href="http://terminology.hl7.org/CodeSystem/v3-RoleCode">RoleCode</a></td>
+<td style="text-align: left;"><code>http://terminology.hl7.org/CodeSystem/v3-RoleCode</code></td>
+<td style="text-align: left;">ValueSet/v3-PersonalRelationshipRoleTypeValueSet/CDARoleCodeValueSet/v3-ServiceDeliveryLocationRoleType</td>
+<td style="text-align: left;">THO</td>
+</tr>
+<tr>
+<td style="text-align: left;">40</td>
+<td style="text-align: left;"><a href="http://terminology.hl7.org/CodeSystem/v3-RoleLinkType">RoleLinkType</a></td>
+<td style="text-align: left;"><code>http://terminology.hl7.org/CodeSystem/v3-RoleLinkType</code></td>
+<td style="text-align: left;">ValueSet/v3-RoleLinkType</td>
+<td style="text-align: left;">THO</td>
+</tr>
+<tr>
+<td style="text-align: left;">41</td>
+<td style="text-align: left;"><a href="http://terminology.hl7.org/CodeSystem/v3-RouteOfAdministration">RouteOfAdministration</a></td>
+<td style="text-align: left;"><code>http://terminology.hl7.org/CodeSystem/v3-RouteOfAdministration</code></td>
+<td style="text-align: left;">ValueSet/v3-RouteOfAdministration</td>
+<td style="text-align: left;">THO</td>
+</tr>
+<tr>
+<td style="text-align: left;">42</td>
+<td style="text-align: left;"><a href="http://terminology.hl7.org/CodeSystem/v3-SetOperator">SetOperator</a></td>
+<td style="text-align: left;"><code>http://terminology.hl7.org/CodeSystem/v3-SetOperator</code></td>
+<td style="text-align: left;">ValueSet/CDASetOperator</td>
+<td style="text-align: left;">THO</td>
+</tr>
+<tr>
+<td style="text-align: left;">43</td>
+<td style="text-align: left;"><a href="http://terminology.hl7.org/CodeSystem/v3-SoftwareNameExample">SoftwareNameExample</a></td>
+<td style="text-align: left;"><code>http://terminology.hl7.org/CodeSystem/v3-SoftwareNameExample</code></td>
+<td style="text-align: left;">ValueSet/v3-SoftwareNameExample</td>
+<td style="text-align: left;">THO</td>
+</tr>
+<tr>
+<td style="text-align: left;">44</td>
+<td style="text-align: left;"><a href="http://terminology.hl7.org/CodeSystem/v3-SpecimenType">SpecimenType</a></td>
+<td style="text-align: left;"><code>http://terminology.hl7.org/CodeSystem/v3-SpecimenType</code></td>
+<td style="text-align: left;">ValueSet/CDAMaterialEntityClassType</td>
+<td style="text-align: left;">THO</td>
+</tr>
+<tr>
+<td style="text-align: left;">45</td>
+<td style="text-align: left;">Tags for the Identification of Languages</td>
+<td style="text-align: left;"><code>urn:ietf:bcp:47</code></td>
+<td style="text-align: left;">ValueSet/all-languages</td>
+<td style="text-align: left;">Other</td>
+</tr>
+<tr>
+<td style="text-align: left;">46</td>
+<td style="text-align: left;"><a href="http://terminology.hl7.org/CodeSystem/v3-TargetAwareness">TargetAwareness</a></td>
+<td style="text-align: left;"><code>http://terminology.hl7.org/CodeSystem/v3-TargetAwareness</code></td>
+<td style="text-align: left;">ValueSet/v3-TargetAwareness</td>
+<td style="text-align: left;">THO</td>
+</tr>
+</tbody>
+</table>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      <script id="__config" type="application/json">{"base": "../..", "features": [], "search": "../../assets/javascripts/workers/search.973d3a69.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.f55a23d4.min.js"></script>
+      
+    
+  </body>
+</html>
