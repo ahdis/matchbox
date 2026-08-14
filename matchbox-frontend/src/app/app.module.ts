@@ -22,6 +22,7 @@ import { APP_BASE_HREF } from '@angular/common';
 import { SortSettingsPipe } from './validate/order-settings.pipe';
 import { StatisticsComponent } from './statistics/statistics.component';
 import { provideHotToastConfig } from '@ngxpert/hot-toast';
+import { MarkdownComponent, provideMarkdown } from 'ngx-markdown';
 
 // The Angular routes
 // All paths defined here must be supported in matchbox-server's MatchboxStaticResourceConfig, otherwise a direct access
@@ -85,6 +86,7 @@ const routes: Routes = [
     NgxMatSelectSearchModule,
     HighlightLineNumbers,
     SortSettingsPipe,
+    MarkdownComponent,
   ],
   providers: [
     provideTranslateService({
@@ -108,6 +110,7 @@ const routes: Routes = [
     HashUrlRedirectionService,
     { provide: APP_BASE_HREF, useValue: (window as any).MATCHBOX_BASE_PATH },
     provideHotToastConfig(),
+    provideMarkdown({}),
   ],
 })
 export class AppModule {}

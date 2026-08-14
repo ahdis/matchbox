@@ -27,7 +27,8 @@
             "browser": "src/main.ts",
             "allowedCommonJsDependencies": [
               "fhirpath", "fhir-kit-client", "js-untar"
-            ]
+            ],
+            "externalDependencies": ["marked-katex-extension"]
           },
           "configurations": {
             "production": {
@@ -46,7 +47,7 @@
             },
             "development": {
               "optimization": {
-                "scripts": true,
+                "scripts": false,
                 "styles": false,
                 "fonts": false
               },
@@ -61,7 +62,10 @@
           "builder": "@angular/build:dev-server",
           "options": {
             "buildTarget": "matchbox-formfiller:build",
-            "proxyConfig": "src/proxy.conf.json"
+            "proxyConfig": "src/proxy.conf.json",
+            "prebundle": {
+              "exclude": ["ngx-markdown"]
+            }
           },
           "configurations": {
             "production": {
