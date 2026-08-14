@@ -58,15 +58,34 @@ public class MatchboxJpaPackageCache {
 	 */
 	public void interceptEntityAfterSaving(final NpmPackageVersionResourceEntity entity,
 														final IBaseResource res) {
-		switch (res) {
-			case org.hl7.fhir.r4.model.StructureDefinition sdR4 ->
-				this.interceptStructureDefinition(entity, sdR4, null, null);
-			case org.hl7.fhir.r4b.model.StructureDefinition sdR4b ->
-				this.interceptStructureDefinition(entity, null, sdR4b, null);
-			case org.hl7.fhir.r5.model.StructureDefinition sdR5 ->
-				this.interceptStructureDefinition(entity, null, null, sdR5);
-			default -> { /* do nothing */ }
+		final var installedEntity = this.buildInstalledStructureDefinitionEntity(entity, res);
+		if (installedEntity != null) {
+			this.installedStructureDefinitionRepository.save(installedEntity);
 		}
+	}
+
+	/**
+	 * Builds (without saving) the {@link MbInstalledStructureDefinitionEntity} for a StructureDefinition that was
+	 * just persisted, or {@code null} if {@code res} isn't a StructureDefinition.
+	 * <p>
+	 * Split out from {@link #interceptEntityAfterSaving} so callers that need to isolate the save in its own
+	 * transaction can build the entity first and save it independently - see
+	 * {@link MbInstalledStructureDefinitionMigration}, where each row's save is isolated in its own transaction so
+	 * a single bad row (e.g. a constraint violation) is simply skipped instead of aborting the whole backfill.
+	 */
+	@Nullable
+	public MbInstalledStructureDefinitionEntity buildInstalledStructureDefinitionEntity(
+			final NpmPackageVersionResourceEntity npmPackageVersionResourceEntity,
+			final IBaseResource res) {
+		return switch (res) {
+			case org.hl7.fhir.r4.model.StructureDefinition sdR4 ->
+				this.toInstalledStructureDefinitionEntity(npmPackageVersionResourceEntity, sdR4, null, null);
+			case org.hl7.fhir.r4b.model.StructureDefinition sdR4b ->
+				this.toInstalledStructureDefinitionEntity(npmPackageVersionResourceEntity, null, sdR4b, null);
+			case org.hl7.fhir.r5.model.StructureDefinition sdR5 ->
+				this.toInstalledStructureDefinitionEntity(npmPackageVersionResourceEntity, null, null, sdR5);
+			default -> null;
+		};
 	}
 
 	/**
@@ -79,13 +98,13 @@ public class MatchboxJpaPackageCache {
 	}
 
 	/**
-	 * Intercept a StructureDefinition right after it got persisted in the database. Create our
-	 * MbInstalledStructureDefinitionEntity to store it in an optimized way.
+	 * Builds the MbInstalledStructureDefinitionEntity for a StructureDefinition, without saving it.
 	 */
-	private void interceptStructureDefinition(final NpmPackageVersionResourceEntity npmPackageVersionResourceEntity,
-	                                          final org.hl7.fhir.r4.model.@Nullable StructureDefinition sdR4,
-	                                          final org.hl7.fhir.r4b.model.@Nullable StructureDefinition sdR4b,
-	                                          final org.hl7.fhir.r5.model.@Nullable StructureDefinition sdR5) {
+	private MbInstalledStructureDefinitionEntity toInstalledStructureDefinitionEntity(
+			final NpmPackageVersionResourceEntity npmPackageVersionResourceEntity,
+			final org.hl7.fhir.r4.model.@Nullable StructureDefinition sdR4,
+			final org.hl7.fhir.r4b.model.@Nullable StructureDefinition sdR4b,
+			final org.hl7.fhir.r5.model.@Nullable StructureDefinition sdR5) {
 		// 1. Extract interesting info
 		final var terser = new FhirTerserWrapper(sdR4, sdR4b, sdR5);
 		var title = terser.getSinglePrimitiveValueOrNull("title");
@@ -109,7 +128,7 @@ public class MatchboxJpaPackageCache {
 		entity.setKind(kind);
 		entity.setValidatable(isValidatable);
 		entity.setNpmPackageVersionResourceEntity(npmPackageVersionResourceEntity);
-		this.installedStructureDefinitionRepository.save(entity);
+		return entity;
 	}
 
 	/**

@@ -30,7 +30,7 @@ public class MbInstalledStructureDefinitionEntity implements Serializable {
    * A primary key for the table.
    */
   @Id
-  @SequenceGenerator(name = "SEQ_MB_INSTSTRUCTDEF", sequenceName = "SEQ_MB_INSTSTRUCTDEF")
+  @SequenceGenerator(name = "SEQ_MB_INSTSTRUCTDEF", sequenceName = "SEQ_MB_INSTSTRUCTDEF", allocationSize = 1)
   @GeneratedValue(strategy = GenerationType.AUTO, generator = "SEQ_MB_INSTSTRUCTDEF")
   @Column(name = "PID")
   private Long id;
