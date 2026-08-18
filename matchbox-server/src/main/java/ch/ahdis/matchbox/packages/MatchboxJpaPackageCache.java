@@ -115,7 +115,6 @@ public class MatchboxJpaPackageCache {
 		final var kind = terser.getSinglePrimitiveValueOrNull("kind");
 		final var isValidatable = !"primitive-type".equals(kind)
 			&& !"complex-type".equals(kind)
-			&& !"logical".equals(kind)
 			&& !"Extension".equals(type);
 
 		// 2. Create our own entity for the StructureDefinition
