@@ -10,11 +10,11 @@ Matchbox engine has been created to allow a standalone FHIR validation and trans
 
 default fhir package configuration:
 
-- cda-uv-core-2.0#2.0.0-sd-202406-matchbox-patch.tgz
+- hl7.cda.uv.core#2.0.1-sd-202510-matchbox-patch.tgz
 - hl7.fhir.r4.core.tgz
 - hl7.fhir.xver-extensions#0.1.0.tgz
-- hl7.terminology.r4#6.2.0.tgz
-- hl7.fhir.uv.extensions#1.0.0.tgz
+- hl7.terminology.r4#7.3.0.tgz
+- hl7.fhir.uv.extensions.r4#5.3.0.tgz
 
 ## Library based on matchbox and hapi-fhir / org.hl7.fhir.core
 
