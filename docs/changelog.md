@@ -1,3 +1,7 @@
+Unreleased
+
+- Try to parse the LLM providers' JSON error responses to provide more meaningful error messages (#531)
+
 2026/08/14 Release 4.1.13
 
 - Force Spring Data to 3.5.12 (`spring-data-commons`, `spring-data-jpa`, `spring-data-envers`), which HAPI FHIR still pulls in as 3.3.5, to fix three vulnerabilities in `spring-data-commons`: CVE-2026-41716 (denial of service, attacker-supplied strings are permanently retained as property-lookup cache keys and can exhaust the heap), CVE-2026-41711 and CVE-2026-41721
