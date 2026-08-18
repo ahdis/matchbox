@@ -5,6 +5,7 @@ Unreleased
 - Fix StructureMap/$list returning empty when using onlyOneEngine mode (#472)
 - Make StructureMap/$transform always available, not only on onlyOneEngine mode (#428)
 - Fix StructureMap/$transform not reading the `source` parameter from the Parameters body
+- Fix the rendering of the StructureMap/$transform operation in the GUI
 
 2026/08/14 Release 4.1.13
 
