@@ -546,7 +546,6 @@ public class MatchboxJpaConfig extends StarterJpaConfig {
 	}
 
 	@Bean
-	@Conditional(OnMatchboxOnlyOneEnginePresent.class)
 	@Primary
 	public StructureMapTransformProvider structureMapTransformProvider() {
 		return new StructureMapTransformProvider();
