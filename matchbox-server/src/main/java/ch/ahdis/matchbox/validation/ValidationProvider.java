@@ -50,6 +50,8 @@ import org.hl7.fhir.r5.utils.EOperationOutcome;
 import org.hl7.fhir.r5.utils.OperationOutcomeUtilities;
 import org.hl7.fhir.utilities.validation.ValidationMessage;
 import org.springframework.beans.factory.annotation.Autowired;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import ch.ahdis.matchbox.validation.matchspark.LLMErrorMessage;
 
 import jakarta.servlet.http.HttpServletRequest;
 
@@ -281,7 +283,7 @@ public class ValidationProvider {
 				String json = FhirContext.forR5Cached().newJsonParser().encodeResourceToString(oo);
 				String aiResult = openAIConnector.interpretWithMatchbox(contentString, json);
 				oo = this.addAIIssueToOperationOutcome(oo, aiResult);
-			} catch (Exception e) {
+			} catch (final Exception e) {
 				log.error("Error during AI analysis", e);
 				// add the error to the OperationOutcome, so the client still gets the validation result
 				oo = this.addExceptionToOperationOutcome(oo, e);
@@ -451,10 +453,39 @@ public class ValidationProvider {
 	}
 
 	public OperationOutcome addExceptionToOperationOutcome(final OperationOutcome outcome, final Exception e) {
+		var message = e.getMessage();
+		if (message != null && message.strip().startsWith("{")) {
+			try {
+				// This is a best effort to extract a "message" field from a JSON error response from an LLM provider
+				final ObjectMapper om = new ObjectMapper();
+				final LLMErrorMessage parsed = om.readValue(message, LLMErrorMessage.class);
+				if (parsed != null) {
+					if (parsed.getMessage() != null && !parsed.getMessage().isBlank()) {
+						message = parsed.getMessage();
+					} else if (parsed.getError() != null) {
+						final LLMErrorMessage.ErrorObject err = parsed.getError();
+						if (err.getMessage() != null && !err.getMessage().isBlank()) {
+							message = err.getMessage();
+						} else if (err.getErrors() != null && !err.getErrors().isEmpty()) {
+							final LLMErrorMessage.FieldError fe = err.getErrors().getFirst();
+							if (fe.getMessage() != null && !fe.getMessage().isBlank()) {
+								message = fe.getMessage();
+							}
+						} else if (err.getInfo() != null && !err.getInfo().isEmpty()) {
+							message = err.getInfo().toString();
+						}
+					}
+				}
+			} catch (final Exception ex) {
+				// Not a big deal, we just couldn't parse the JSON error message, so we will use the original JSON string
+				log.debug("Could not parse LLM JSON error message: {}", ex.getMessage());
+			}
+		}
+
 		outcome.addIssue()
 			.setSeverity(OperationOutcome.IssueSeverity.ERROR)
 			.setCode(OperationOutcome.IssueType.EXCEPTION)
-			.setDiagnostics(e.getLocalizedMessage());
+			.setDiagnostics(message);
 		return outcome;
 	}
 
@@ -469,8 +500,6 @@ public class ValidationProvider {
 			return;
 		}
 
-		// todo: set OperationOutcome.id
-		// todo: set OperationOutcome.meta.source = matchbox-validation
 		operationOutcome.setId(UUID.randomUUID().toString());
 		operationOutcome.getMeta().setSource("matchbox-validation");
 
