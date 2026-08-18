@@ -1,6 +1,7 @@
 Unreleased
 
 - Try to parse the LLM providers' JSON error responses to provide more meaningful error messages (#531)
+- Mark logical models as profiles that can be used in validations (#446)
 
 2026/08/14 Release 4.1.13
 
