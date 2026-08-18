@@ -11,6 +11,8 @@ import { parseFhirResource } from '../util/fhir-resource-parser';
 import { UploadedFile } from '../upload/uploaded-file';
 import { HotToastService } from '@ngxpert/hot-toast';
 import { FhirClientWrapper } from '../util/fhir-client-wrapper';
+import ace, { Ace } from 'ace-builds';
+import Resource = fhir.r4.Resource;
 
 @Component({
   selector: 'app-transform',
@@ -50,9 +52,11 @@ export class TransformComponent {
   // The FHIR API client
   client: FhirClientWrapper;
 
-  public transformed: any;
   operationOutcome: OperationOutcome | null = null;
   operationOutcomeTransformed: OperationOutcome | null = null;
+
+  // Code editor
+  editor: Ace.Editor | null = null;
 
   constructor(
     readonly data: FhirConfigService,
@@ -73,7 +77,22 @@ export class TransformComponent {
     this.structureMapFilterControl.valueChanges.subscribe(() => this.filterStructureMaps());
   }
 
+  ngAfterViewInit() {
+    // Initializes the code editor, after the DOM is ready
+    this.editor = ace.edit('editor');
+    this.editor.setReadOnly(true);
+    this.editor.setTheme('ace/theme/textmate');
+    this.editor.setOptions({
+      tabSize: 2,
+      wrap: true,
+      useWorker: false,
+      useSvgGutterIcons: false,
+    });
+    this.editor.getSession().setMode('ace/mode/json');
+  }
+
   transform() {
+    this.setTransformed(null);
     if (this.resource != null && this.map != null) {
       const payload = {
         resourceType: 'Parameters',
@@ -106,17 +125,22 @@ export class TransformComponent {
         .transformFromParameters(payload)
         .then((response) => {
           this.operationOutcomeTransformed = null;
-          this.transformed = response;
+          this.setTransformed(response);
         })
         .catch((error) => {
-          this.transformed = null;
+          console.error("Got an error from the $transform operation", error);
+          this.setTransformed(null);
           this.operationOutcomeTransformed = error.response.data;
         });
     }
   }
 
-  getMapped(): string {
-    return JSON.stringify(this.transformed, null, 2);
+  setTransformed(transformed: Resource | null) {
+    if (transformed) {
+      this.editor!!.setValue(JSON.stringify(transformed, null, 2), -1);
+    } else {
+      this.editor!!.setValue('');
+    }
   }
 
   setMaps(response: Bundle) {
@@ -137,7 +161,6 @@ export class TransformComponent {
       resourceType: parsed.resourceType,
       resourceId: parsed.id,
     };
-    this.transformed = null;
   }
 
   async setMapContent(droppedBlob: UploadedFile) {

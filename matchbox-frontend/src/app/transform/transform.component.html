@@ -78,24 +78,23 @@
   </mat-card-content>
 </mat-card>
 
-@if (transformed || operationOutcomeTransformed) {
-  <mat-card class="card-maps">
-    <mat-card-header>
-      <mat-card-title>Transformed</mat-card-title>
-    </mat-card-header>
-    <mat-card-content>
-      @if (operationOutcomeTransformed) {
-        <mat-error>
-          <ul>
-            @for (issue of operationOutcomeTransformed.issue; track issue) {
-              <li>
-                {{ issue.diagnostics }}
-              </li>
-            }
-          </ul>
-        </mat-error>
-      }
-      <pre><code [highlight]="getMapped()" lineNumbers language="json"></code></pre>
-    </mat-card-content>
-  </mat-card>
-}
+<mat-card class="card-maps">
+  <mat-card-header>
+    <mat-card-title>Transformed</mat-card-title>
+  </mat-card-header>
+  <mat-card-content>
+    @if (operationOutcomeTransformed) {
+      <mat-error>
+        <ul>
+          @for (issue of operationOutcomeTransformed.issue; track issue) {
+            <li>
+              {{ issue.diagnostics }}
+            </li>
+          }
+        </ul>
+      </mat-error>
+    }
+    <div id="editor"></div>
+  </mat-card-content>
+</mat-card>
+
