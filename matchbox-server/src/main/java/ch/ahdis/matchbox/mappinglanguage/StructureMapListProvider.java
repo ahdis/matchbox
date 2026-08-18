@@ -4,6 +4,7 @@ import ca.uhn.fhir.jpa.dao.data.INpmPackageVersionResourceDao;
 import ca.uhn.fhir.jpa.model.entity.NpmPackageVersionResourceEntity;
 import ca.uhn.fhir.rest.annotation.Operation;
 import ca.uhn.fhir.rest.api.server.RequestDetails;
+import ch.ahdis.matchbox.CliContext;
 import ch.ahdis.matchbox.config.MatchboxFhirVersion;
 import ch.ahdis.matchbox.providers.AbstractMatchboxResourceProvider;
 import ch.ahdis.matchbox.util.MatchboxEngineSupport;
@@ -12,6 +13,9 @@ import org.hl7.fhir.r5.model.Bundle;
 import org.hl7.fhir.r5.model.StructureMap;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.support.TransactionTemplate;
+
+import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * The provider of the StructureMap/$list operation.
@@ -26,21 +30,25 @@ public class StructureMapListProvider extends AbstractMatchboxResourceProvider {
 
 	private final INpmPackageVersionResourceDao npmPackageVersionResourceDao;
 	private final PlatformTransactionManager myTxManager;
+	private final CliContext cliContext;
+	private final MatchboxEngineSupport matchboxEngineSupport;
 
 	public StructureMapListProvider(final MatchboxEngineSupport matchboxEngineSupport,
-											  final MatchboxFhirVersion matchboxFhirVersion) {
+											  final MatchboxFhirVersion matchboxFhirVersion,
+											  final CliContext cliContext) {
 		super(matchboxFhirVersion, org.hl7.fhir.r4.model.StructureMap.class, org.hl7.fhir.r4b.model.StructureMap.class, StructureMap.class);
 		this.npmPackageVersionResourceDao = matchboxEngineSupport.getMyPackageVersionResourceDao();
 		this.myTxManager = matchboxEngineSupport.getMyTxManager();
+		this.cliContext = cliContext;
+		this.matchboxEngineSupport = matchboxEngineSupport;
 	}
 
 	@Operation(name = "$list", idempotent = true, manualRequest = true)
 	public IBaseResource listStructureMaps(final RequestDetails requestDetails) {
-		final var resources = new TransactionTemplate(this.myTxManager)
-			.execute(tx -> this.npmPackageVersionResourceDao.getStructureMapResources())
-			.stream()
-			.map(this::summarizeStructureMap)
-			.toList();
+		final var resources = this.listStructureMapsFromDatabase();
+		if (this.cliContext.getOnlyOneEngine()) {
+			resources.addAll(this.listStructureMapsFromMainEngine());
+		}
 
 		final var bundle = new Bundle();
 		bundle.setType(Bundle.BundleType.SEARCHSET);
@@ -49,6 +57,19 @@ public class StructureMapListProvider extends AbstractMatchboxResourceProvider {
 		resources.forEach(resource -> bundle.addEntry().setResource(resource));
 
 		return this.fhirVersion.convertForResponse(bundle);
+	}
+
+	private List<StructureMap> listStructureMapsFromDatabase() {
+		return new TransactionTemplate(this.myTxManager)
+			.execute(tx -> this.npmPackageVersionResourceDao.getStructureMapResources())
+			.stream()
+			.map(this::summarizeStructureMap)
+			.collect(Collectors.toList());
+	}
+
+	private List<StructureMap> listStructureMapsFromMainEngine() {
+		final var mainEngine = this.matchboxEngineSupport.getMatchboxEngine("default", cliContext, true, false);
+		return mainEngine.getContext().fetchResourcesByType(StructureMap.class);
 	}
 
 	private StructureMap summarizeStructureMap(final NpmPackageVersionResourceEntity entity) {

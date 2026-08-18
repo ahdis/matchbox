@@ -568,8 +568,9 @@ public class MatchboxJpaConfig extends StarterJpaConfig {
 
 	@Bean
 	public StructureMapListProvider structureMapListProvider(final MatchboxEngineSupport matchboxEngineSupport,
-																				final MatchboxFhirVersion matchboxFhirVersion) {
-		return new StructureMapListProvider(matchboxEngineSupport, matchboxFhirVersion);
+																				final MatchboxFhirVersion matchboxFhirVersion,
+																				final CliContext cliContext) {
+		return new StructureMapListProvider(matchboxEngineSupport, matchboxFhirVersion, cliContext);
 	}
 
 	// @Bean
