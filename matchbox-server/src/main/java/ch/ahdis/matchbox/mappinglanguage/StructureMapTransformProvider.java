@@ -5,7 +5,6 @@ import java.nio.charset.StandardCharsets;
 import java.util.Map;
 import java.util.Set;
 
-import jakarta.servlet.ServletOutputStream;
 /*
  * #%L
  * Matchbox Server
@@ -101,7 +100,6 @@ public class StructureMapTransformProvider extends StructureMapResourceProvider 
 		// Parse the request body, it is either a Parameters resource, or any resource
 		final String body = new String(theServletRequest.getInputStream().readAllBytes()).trim();
 		@Nullable String resource = null;
-		
 
 		EncodingEnum encoding = EncodingEnum.forContentType(theServletRequest.getContentType());
 		if (encoding == null) {
@@ -123,7 +121,8 @@ public class StructureMapTransformProvider extends StructureMapResourceProvider 
 		 *   - input same FHIR version, no logical model -> everything provided as ParameterResource
 		 */
 		
-		// If the 'source' was not provided in the Parameters, check the URL query parameters
+		// Check the URL parameter 'source' first, if present, it takes precedence over the body.
+		// In that case, the body is the resource to transform.
 		@Nullable String source = null;
 		final Map<String, String[]> requestParams = theServletRequest.getParameterMap();
 		if (requestParams.containsKey("source") && requestParams.get("source").length > 0) {
@@ -133,12 +132,13 @@ public class StructureMapTransformProvider extends StructureMapResourceProvider 
 			source = requestParams.get("source")[0];
 			resource = body;
 		}
-		
-		
+
 		final List<StructureDefinition> models = new ArrayList<>(2);
 		@Nullable StructureMap map = null;
 
 		if (source == null) {
+			// If no source was provided as URL parameter, then the body must be a Parameters resource, containing all
+			// needed parameters.
 			final IBaseResource bodyResource = this.parseBaseResource(body);
 			if (!(bodyResource instanceof final Parameters inputParameters)) {
 					throw new InvalidRequestException("Expecting a Parameters resource in the body if no source query parameter is provided");
@@ -166,6 +166,14 @@ public class StructureMapTransformProvider extends StructureMapResourceProvider 
 				}
 			}
 
+			if (inputParameters.hasParameter("source")) {
+				if (inputParameters.getParameter("source").getValue() instanceof final StringType sourceString) {
+					source = sourceString.getValueNotNull();
+				} else {
+					throw new InvalidRequestException("The parameter 'source' must be a string");
+				}
+			}
+
 			if (inputParameters.hasParameter("map")) {
 				try {
 					map = this.parseResource(inputParameters.getParameter("map").getValueStringType().getValueNotNull(),
@@ -178,9 +186,10 @@ public class StructureMapTransformProvider extends StructureMapResourceProvider 
 					throw new InvalidRequestException("The parameter 'map' must be a StructureMap resource");
 				}
 			}
-		if (source == null && map == null) {
-			throw new InvalidRequestException("Either 'source' or 'map' parameter must be provided");
-		}
+
+			if (source == null && map == null) {
+				throw new InvalidRequestException("Either 'source' or 'map' parameter must be provided");
+			}
 		}
 
 		// Initialize the Matchbox engine that will perform the transformation
