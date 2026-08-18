@@ -85,5 +85,4 @@ public class ValidationPolicyAdvisor extends BasePolicyAdvisorForFullValidation 
     public void clearErrorMessagesToIgnore() {
       messagesToIgnore.clear();
     }
-
 }

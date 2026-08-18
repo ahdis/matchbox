@@ -1156,12 +1156,9 @@ public class MatchboxEngine extends ValidationEngine {
 	 * @param regexPath The regexPath to check.
 	 */
 	public void addSuppressedError(final @NonNull String messageId, final @NonNull String regexPath) {
-		IValidationPolicyAdvisor advisor = getPolicyAdvisor();
-		while(advisor != null && !(advisor instanceof ch.ahdis.matchbox.engine.ValidationPolicyAdvisor)) {
-			advisor = advisor.getPolicyAdvisor();
-		}
+		final var advisor = getMatchboxValidationPolicyAdvisor();
 		if (advisor != null) {
-			((ch.ahdis.matchbox.engine.ValidationPolicyAdvisor) advisor).addSuppressedError(messageId, regexPath);
+			advisor.addSuppressedError(messageId, regexPath);
 		} else {
 			log.error("ValidationPolicyAdvisor not found to add suppressed error for messageId: " + messageId + " and regexPath: " + regexPath);
 		}
@@ -1198,12 +1195,9 @@ public class MatchboxEngine extends ValidationEngine {
 	 * Returns the set of suppressed validation error issues.
 	 */
 	public Set<String> getSuppressedErrors() {
-		IValidationPolicyAdvisor advisor = getPolicyAdvisor();
-		while(advisor != null && !(advisor instanceof ch.ahdis.matchbox.engine.ValidationPolicyAdvisor)) {
-			advisor = advisor.getPolicyAdvisor();
-		}
+		final var advisor = getMatchboxValidationPolicyAdvisor();
 		if (advisor != null) {
-			return ((ch.ahdis.matchbox.engine.ValidationPolicyAdvisor) advisor).getSuppressedErrorMessages();
+			return advisor.getSuppressedErrorMessages();
 		}
 		return Collections.emptySet();
 	}
@@ -1224,6 +1218,18 @@ public class MatchboxEngine extends ValidationEngine {
 	 */
 	protected List<Pattern> compileSuppressedWarnInfoPatterns() {
 		return this.suppressedWarnInfoPatterns.stream().map(Pattern::compile).collect(Collectors.toList());
+	}
+
+	@Nullable
+	public ValidationPolicyAdvisor getMatchboxValidationPolicyAdvisor() {
+		IValidationPolicyAdvisor advisor = getPolicyAdvisor();
+		while (advisor != null && !(advisor instanceof ValidationPolicyAdvisor)) {
+			advisor = advisor.getPolicyAdvisor();
+		}
+		if (advisor != null) {
+			return (ValidationPolicyAdvisor) advisor;
+		}
+		return null;
 	}
 
 	/**
