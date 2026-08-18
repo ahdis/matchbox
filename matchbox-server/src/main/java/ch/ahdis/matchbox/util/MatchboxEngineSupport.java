@@ -21,7 +21,6 @@ import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hl7.fhir.instance.model.api.IBaseResource;
 import org.hl7.fhir.r5.conformance.R5ExtensionsLoader;
-import org.hl7.fhir.r5.terminologies.CodeSystemUtilities;
 import org.hl7.fhir.r5.terminologies.client.TerminologyClientContext;
 import org.hl7.fhir.r5.utils.validation.constants.ReferenceValidationPolicy;
 import org.hl7.fhir.utilities.FhirPublication;
@@ -219,6 +218,15 @@ public class MatchboxEngineSupport {
 			}
 		}
 		log.debug("Package Summary: {}", validator.getContext().loadedPackageSummary());
+
+		// The new validation engine inherits the `suppressedWarnInfoPatterns`/`suppressedErrorPatterns` from the main
+		// engine, which could be everything from the application.yaml (if all packages were loaded).
+		// We clear them here, they'll be set again in the configureValidationEngine method.
+		validator.getSuppressedWarnInfoPatterns().clear();
+		final var advisor = validator.getMatchboxValidationPolicyAdvisor();
+		if (advisor != null) {
+			advisor.clearErrorMessagesToIgnore();
+		}
 
 		this.configureValidationEngine(validator, cliContext);
 		log.debug("Finished creating new validate engine for {} with parameters {}", forIg, cliContext.sessionId());
