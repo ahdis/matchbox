@@ -3,6 +3,7 @@ Unreleased
 - Try to parse the LLM providers' JSON error responses to provide more meaningful error messages (#531)
 - Mark logical models as profiles that can be used in validations (#446)
 - Fix StructureMap/$list returning empty when using onlyOneEngine mode (#472)
+- Make StructureMap/$transform always available, not only on onlyOneEngine mode (#428)
 
 2026/08/14 Release 4.1.13
 
