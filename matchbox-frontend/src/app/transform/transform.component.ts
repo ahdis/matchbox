@@ -164,27 +164,46 @@ export class TransformComponent {
   }
 
   async setMapContent(droppedBlob: UploadedFile) {
-    const fileContent = await droppedBlob.blob.text();
-    const parsed = parseFhirResource(droppedBlob.name, fileContent);
-    if (!parsed) {
-      this.showErrorToast('Invalid File', 'The uploaded file does not contain a valid FHIR resource.');
+    const fileContent = (await droppedBlob.blob.text()).trim();
+
+    if (fileContent.startsWith('{') || fileContent.startsWith('<')) {
+      const parsed = parseFhirResource(droppedBlob.name, fileContent);
+      if (!parsed) {
+        this.showErrorToast('Invalid File', 'The uploaded file does not contain a valid FHIR resource.');
+        this.clearMapSelection();
+        return;
+      }
+      if (parsed.resourceType !== 'StructureMap') {
+        this.showErrorToast('Invalid Map', 'The uploaded file does not contain a valid StructureMap resource.');
+        this.clearMapSelection();
+        return;
+      }
+      if (!parsed.url) {
+        this.showErrorToast('Invalid Map', 'The uploaded StructureMap resource does not have a url/canonical.');
+        this.clearMapSelection();
+        return;
+      }
+      this.map = {
+        content: fileContent,
+        canonical: parsed.url,
+      };
+    } else if (fileContent.startsWith('map "')) {
+      const indexSecondQuote = fileContent.indexOf('"', 5);
+      if (indexSecondQuote === -1) {
+        this.showErrorToast('Invalid Map', 'The uploaded StructureMap file does not contain a valid map URL.');
+        this.clearMapSelection();
+        return;
+      }
+      const mapUrl = fileContent.substring(5, indexSecondQuote);
+      this.map = {
+        content: fileContent,
+        canonical: mapUrl,
+      };
+    } else {
+      this.showErrorToast('Invalid File', 'The uploaded file does not contain a valid map.');
       this.clearMapSelection();
       return;
     }
-    if (parsed.resourceType !== 'StructureMap') {
-      this.showErrorToast('Invalid Map', 'The uploaded file does not contain a valid StructureMap resource.');
-      this.clearMapSelection();
-      return;
-    }
-    if (!parsed.url) {
-      this.showErrorToast('Invalid Map', 'The uploaded StructureMap resource does not have a url/canonical.');
-      this.clearMapSelection();
-      return;
-    }
-    this.map = {
-      content: fileContent,
-      canonical: parsed.url,
-    };
   }
 
   async setModelContent(droppedBlob: UploadedFile) {

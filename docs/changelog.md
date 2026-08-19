@@ -7,6 +7,7 @@ Unreleased
 - Fix StructureMap/$transform not reading the `source` parameter from the Parameters body
 - Fix the rendering of the StructureMap/$transform operation in the GUI
 - Don't copy the suppressedWarnInfos/suppressedErrors from the main engine to the validation engines (#539)
+- Allow using an FML file as a map for StructureMap/$transform in the GUI (#560)
 
 2026/08/14 Release 4.1.13
 
