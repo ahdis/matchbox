@@ -11,7 +11,7 @@ import java.util.Map;
  * It's a best-effort attempt to extract the error message itself from the whole payload.
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class LLMErrorMessage {
+public class LlmErrorMessage {
 
     // Common top-level message some providers return
     private String message;
@@ -33,7 +33,7 @@ public class LLMErrorMessage {
     // Any other vendor-specific fields can be captured here
     private Map<String, Object> details;
 
-    public LLMErrorMessage() {
+    public LlmErrorMessage() {
     }
 
     // Getters / setters

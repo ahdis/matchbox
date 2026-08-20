@@ -3,15 +3,12 @@ package ca.uhn.fhir.jpa.starter.mcp;
 import ca.uhn.fhir.rest.server.McpBridge;
 import ca.uhn.fhir.rest.server.McpFhirBridge;
 import ca.uhn.fhir.rest.server.McpMatchboxBridge;
-import ch.ahdis.matchbox.CliContext;
 import ch.ahdis.matchbox.MatchboxRestfulServer;
-import com.fasterxml.jackson.databind.DeserializationFeature;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import ch.ahdis.matchbox.config.property.MatchboxFhirContextProperties;
+import ch.ahdis.matchbox.config.property.MatchboxFhirMcpProperties;
 import io.modelcontextprotocol.server.McpServer;
 import io.modelcontextprotocol.server.McpSyncServer;
-import io.modelcontextprotocol.server.transport.HttpServletSseServerTransportProvider;
 import io.modelcontextprotocol.server.transport.HttpServletStreamableServerTransportProvider;
-import io.modelcontextprotocol.spec.McpServerTransportProvider;
 import io.modelcontextprotocol.spec.McpStreamableServerTransportProvider;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.web.servlet.ServletRegistrationBean;
@@ -49,13 +46,15 @@ public class McpServerConfig {
   }
 
   @Bean
-  public McpFhirBridge mcpFhirBridge(final MatchboxRestfulServer restfulServer, CliContext cliContext) {
-    return new McpFhirBridge(restfulServer, cliContext);
+  public McpFhirBridge mcpFhirBridge(final MatchboxRestfulServer restfulServer,
+                                     final MatchboxFhirContextProperties matchboxContext) {
+    return new McpFhirBridge(restfulServer, matchboxContext);
   }
 
   @Bean
-  public McpMatchboxBridge mcpMatchboxBridge(final MatchboxRestfulServer restfulServer) {
-    return new McpMatchboxBridge(restfulServer);
+  public McpMatchboxBridge mcpMatchboxBridge(final MatchboxRestfulServer restfulServer,
+                                             final MatchboxFhirMcpProperties matchboxFhirMcpProperties) {
+    return new McpMatchboxBridge(restfulServer, matchboxFhirMcpProperties);
   }
 
   @Bean

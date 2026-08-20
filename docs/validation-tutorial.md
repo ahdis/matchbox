@@ -177,7 +177,7 @@ If an element has a 0..* cardinality this needs in json representation an array.
 }
 ```
 
-sending it as as a key, object will give an [error](https://test.ahdis.ch/matchboxv3/validate#resource=ewoJInJlc291cmNlVHlwZSI6ICJQYXRpZW50IiwKCSJuYW1lIjogewogICAgICAiZmFtaWx5IjogIlRlc3QiCgl9Cn0&profile=http%3A%2F%2Fhl7.org%2Ffhir%2FStructureDefinition%2FPatient):
+sending it as a key, object will give an [error](https://test.ahdis.ch/matchboxv3/validate#resource=ewoJInJlc291cmNlVHlwZSI6ICJQYXRpZW50IiwKCSJuYW1lIjogewogICAgICAiZmFtaWx5IjogIlRlc3QiCgl9Cn0&profile=http%3A%2F%2Fhl7.org%2Ffhir%2FStructureDefinition%2FPatient):
 
 ```http
 POST {{host}}/$validate?profile=http://hl7.org/fhir/StructureDefinition/Patient HTTP/1.1

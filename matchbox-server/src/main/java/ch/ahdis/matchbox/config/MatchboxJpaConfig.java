@@ -49,6 +49,7 @@ import ca.uhn.fhir.rest.server.provider.ResourceProviderFactory;
 import ca.uhn.fhir.rest.server.util.ISearchParamRegistry;
 import ch.ahdis.matchbox.CliContext;
 import ch.ahdis.matchbox.MatchboxRestfulServer;
+import ch.ahdis.matchbox.config.property.*;
 import ch.ahdis.matchbox.interceptors.HttpReadOnlyInterceptor;
 import ch.ahdis.matchbox.interceptors.MappingLanguageInterceptor;
 import ch.ahdis.matchbox.interceptors.MatchboxValidationInterceptor;
@@ -95,12 +96,19 @@ import java.util.stream.Stream;
 
 @Configuration
 @Import(ThreadPoolFactoryConfig.class)
-@EnableConfigurationProperties(MatchboxFhirContextProperties.class)
+@EnableConfigurationProperties({
+	MatchboxFhirProperties.class,
+	MatchboxFhirContextProperties.class,
+	MatchboxFhirContextLlmProperties.class,
+	MatchboxFhirMcpProperties.class,
+	MatchboxFhirValidationProperties.class,
+})
 public class MatchboxJpaConfig extends StarterJpaConfig {
 
 	@Bean
 	public MatchboxRestfulServer restfulServer(final IFhirSystemDao<?, ?> fhirSystemDao,
-															 final AppProperties appProperties,
+	                                           final AppProperties appProperties,
+	                                           final MatchboxFhirProperties matchboxFhirProperties,
 															 final CliContext cliContext,
 															 final FhirContext fhirContext,
 															 final ApplicationContext applicationContext,
@@ -111,44 +119,44 @@ public class MatchboxJpaConfig extends StarterJpaConfig {
 															 final IJpaSystemProvider jpaSystemProvider,
 															 final ResourceProviderFactory resourceProviderFactory,
 															 final JpaStorageSettings daoConfig,
-															 final ISearchParamRegistry searchParamRegistry,
-															 final DatabaseBackedPagingProvider databaseBackedPagingProvider,
-															 final LoggingInterceptor loggingInterceptor,
-															 final Optional<CorsInterceptor> corsInterceptor,
-															 final IInterceptorBroadcaster interceptorBroadcaster,
-															 final Optional<BinaryAccessProvider> binaryAccessProvider,
-															 final BinaryStorageInterceptor binaryStorageInterceptor,
-															 final PartitionManagementProvider partitionManagementProvider,
-															 final IPackageInstallerSvc packageInstallerSvc,
-															 final ThreadSafeResourceDeleterSvc theThreadSafeResourceDeleterSvc,
-															 final IHapiPackageCacheManager myPackageCacheManager,
-															 final MbInstalledStructureDefinitionRepository installedStructureDefinitionRepository,
+	                                           final ISearchParamRegistry searchParamRegistry,
+	                                           final DatabaseBackedPagingProvider databaseBackedPagingProvider,
+	                                           final LoggingInterceptor loggingInterceptor,
+	                                           final Optional<CorsInterceptor> corsInterceptor,
+	                                           final IInterceptorBroadcaster interceptorBroadcaster,
+	                                           final Optional<BinaryAccessProvider> binaryAccessProvider,
+	                                           final BinaryStorageInterceptor binaryStorageInterceptor,
+	                                           final PartitionManagementProvider partitionManagementProvider,
+	                                           final IPackageInstallerSvc packageInstallerSvc,
+	                                           final ThreadSafeResourceDeleterSvc theThreadSafeResourceDeleterSvc,
+	                                           final IHapiPackageCacheManager myPackageCacheManager,
+	                                           final MbInstalledStructureDefinitionRepository installedStructureDefinitionRepository,
 
-															 // Matchbox providers
-															 final InstallNpmPackageProvider installNpmPackageOperationProvider,
-															 final StructureDefinitionResourceProvider structureDefinitionProvider,
-															 final Optional<ValueSetResourceProvider> valueSetProvider,
-															 final Optional<ConceptMapResourceProvider> conceptMapProvider,
-															 final Optional<CodeSystemResourceProvider> codeSystemProvider,
-															 final Optional<StructureMapTransformProvider> structureMapTransformProvider,
-															 final StructureMapListProvider structureMapListProvider,
-															 final Optional<QuestionnaireResourceProvider> questionnaireProvider,
-															 final Optional<QuestionnaireAssembleProviderR4> assembleProviderR4,
-															 final Optional<QuestionnaireAssembleProviderR4B> assembleProviderR4B,
-															 final Optional<QuestionnaireAssembleProviderR5> assembleProviderR5,
-															 final Optional<QuestionnaireResponseExtractProviderR4> questionnaireResponseProviderR4,
-															 final Optional<QuestionnaireResponseExtractProviderR4B> questionnaireResponseProviderR4B,
-															 final Optional<QuestionnaireResponseExtractProviderR5> questionnaireResponseProviderR5,
-															 final Optional<ImplementationGuideProviderR4> implementationGuideResourceProviderR4,
-															 final Optional<ImplementationGuideProviderR4B> implementationGuideResourceProviderR4B,
-															 final Optional<ImplementationGuideProviderR5> implementationGuideResourceProviderR5,
-															 final Optional<OperationOutcomeResourceProviderR4> operationOutcomeResourceProviderR4,
-															 final Optional<OperationOutcomeResourceProviderR4B> operationOutcomeResourceProviderR4B,
-															 final Optional<OperationOutcomeResourceProviderR5> operationOutcomeResourceProviderR5,
-															 final ValidationProvider validationProvider,
-															 final Optional<SearchParameterResourceProviderR4> searchParameterResourceProviderR4,
-															 final Optional<SearchParameterResourceProviderR4B> searchParameterResourceProviderR4B,
-															 final Optional<SearchParameterResourceProviderR5> searchParameterResourceProviderR5
+	                                           // Matchbox providers
+	                                           final InstallNpmPackageProvider installNpmPackageOperationProvider,
+	                                           final StructureDefinitionResourceProvider structureDefinitionProvider,
+	                                           final Optional<ValueSetResourceProvider> valueSetProvider,
+	                                           final Optional<ConceptMapResourceProvider> conceptMapProvider,
+	                                           final Optional<CodeSystemResourceProvider> codeSystemProvider,
+	                                           final Optional<StructureMapTransformProvider> structureMapTransformProvider,
+	                                           final StructureMapListProvider structureMapListProvider,
+	                                           final Optional<QuestionnaireResourceProvider> questionnaireProvider,
+	                                           final Optional<QuestionnaireAssembleProviderR4> assembleProviderR4,
+	                                           final Optional<QuestionnaireAssembleProviderR4B> assembleProviderR4B,
+	                                           final Optional<QuestionnaireAssembleProviderR5> assembleProviderR5,
+	                                           final Optional<QuestionnaireResponseExtractProviderR4> questionnaireResponseProviderR4,
+	                                           final Optional<QuestionnaireResponseExtractProviderR4B> questionnaireResponseProviderR4B,
+	                                           final Optional<QuestionnaireResponseExtractProviderR5> questionnaireResponseProviderR5,
+	                                           final Optional<ImplementationGuideProviderR4> implementationGuideResourceProviderR4,
+	                                           final Optional<ImplementationGuideProviderR4B> implementationGuideResourceProviderR4B,
+	                                           final Optional<ImplementationGuideProviderR5> implementationGuideResourceProviderR5,
+	                                           final Optional<OperationOutcomeResourceProviderR4> operationOutcomeResourceProviderR4,
+	                                           final Optional<OperationOutcomeResourceProviderR4B> operationOutcomeResourceProviderR4B,
+	                                           final Optional<OperationOutcomeResourceProviderR5> operationOutcomeResourceProviderR5,
+	                                           final ValidationProvider validationProvider,
+	                                           final Optional<SearchParameterResourceProviderR4> searchParameterResourceProviderR4,
+	                                           final Optional<SearchParameterResourceProviderR4B> searchParameterResourceProviderR4B,
+	                                           final Optional<SearchParameterResourceProviderR5> searchParameterResourceProviderR5
 															) {
 
 		final var fhirServer = super.restfulServer(fhirSystemDao,
@@ -178,10 +186,11 @@ public class MatchboxJpaConfig extends StarterJpaConfig {
 																 packageInstallerSvc,
 																 theThreadSafeResourceDeleterSvc);
 
-		if (cliContext.isHttpReadOnly()) {
+		if (matchboxFhirProperties.getContext().isHttpReadOnly()) {
 			fhirServer.registerInterceptor(new HttpReadOnlyInterceptor());
 		}
-		fhirServer.registerInterceptor(new MappingLanguageInterceptor(matchboxEngineSupport));
+		fhirServer.registerInterceptor(new MappingLanguageInterceptor(matchboxEngineSupport,
+																						  matchboxFhirProperties.getContext()));
 		fhirServer.registerInterceptor(new ImplementationGuidePackageInterceptor(myPackageCacheManager, fhirContext));
 		fhirServer.registerInterceptor(new MatchboxValidationInterceptor());
 
@@ -200,13 +209,13 @@ public class MatchboxJpaConfig extends StarterJpaConfig {
 			structureMapTransformProvider
 		);
 
-		if (!cliContext.isHttpReadOnly()) {
+		if (!matchboxFhirProperties.getContext().isHttpReadOnly()) {
 			// The operation $install-npm-package is enabled if the httpReadOnly mode is disabled
 			fhirServer.registerProvider(installNpmPackageOperationProvider);
 		}
 
 		// Configure SSRF protection
-		ManagedWebAccess.setSsrfProtectionEnabled(cliContext.isSsrfProtectionEnabled());
+		ManagedWebAccess.setSsrfProtectionEnabled(matchboxFhirProperties.getContext().isSsrfProtectionEnabled());
 
 		matchboxFhirVersion.execute(
 			() -> {
@@ -347,7 +356,8 @@ public class MatchboxJpaConfig extends StarterJpaConfig {
 																												  structureDefinitionProvider,
 																												  cliContext,
 																												  matchboxFhirVersion,
-																												  installedStructureDefinitionRepository));
+																												  installedStructureDefinitionRepository,
+																												  matchboxFhirProperties));
 
 		return fhirServer;
 	}
@@ -363,11 +373,11 @@ public class MatchboxJpaConfig extends StarterJpaConfig {
 	}
 
 	@Bean
-	public MatchboxEngineSupport getMatchboxEngineSupport(final MatchboxFhirContextProperties matchboxFhirContextProperties,
+	public MatchboxEngineSupport getMatchboxEngineSupport(final MatchboxFhirProperties matchboxFhirProperties,
 																			final CliContext cliContext,
 																			@Value("${hapi.fhir.fhir_version}") final FhirVersionEnum serverFhirVersion,
 																			final MatchboxEngineCache matchboxEngineCache) {
-		return new MatchboxEngineSupport(matchboxFhirContextProperties, cliContext, serverFhirVersion, matchboxEngineCache);
+		return new MatchboxEngineSupport(matchboxFhirProperties, cliContext, serverFhirVersion, matchboxEngineCache);
 	}
 
 	@Bean
@@ -568,8 +578,9 @@ public class MatchboxJpaConfig extends StarterJpaConfig {
 	@Bean
 	public StructureMapListProvider structureMapListProvider(final MatchboxEngineSupport matchboxEngineSupport,
 																				final MatchboxFhirVersion matchboxFhirVersion,
-																				final CliContext cliContext) {
-		return new StructureMapListProvider(matchboxEngineSupport, matchboxFhirVersion, cliContext);
+																				final CliContext cliContext,
+																				final MatchboxFhirContextProperties matchboxContext) {
+		return new StructureMapListProvider(matchboxEngineSupport, matchboxFhirVersion, cliContext, matchboxContext);
 	}
 
 	// @Bean

@@ -398,9 +398,8 @@ export class ValidateComponent implements AfterViewInit {
       this.showErrorToast('No resource selected', 'Please select a resource to validate');
       return;
     }
-    const aiAnalyzeSetting = { name: 'analyzeOutcomeWithAI', value: 'true' };
     const settings = this.getCurrentValidationSettings();
-    settings.push(aiAnalyzeSetting);
+    settings.push({ name: 'analyzeErrorsWithLlm', value: 'true' });
     const entry = new ValidationEntry(
       this.currentResource.filename,
       this.currentResource.content,

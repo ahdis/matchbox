@@ -6,6 +6,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
+import ch.ahdis.matchbox.config.property.MatchboxFhirContextProperties;
 import jakarta.servlet.http.HttpServletRequest;
 import ca.uhn.fhir.jpa.rp.r4.ImplementationGuideResourceProvider;
 import org.hl7.fhir.instance.model.api.IIdType;
@@ -75,6 +76,9 @@ public class ImplementationGuideProviderR4 extends ImplementationGuideResourcePr
 
 	@Autowired
 	private CliContext cliContext;
+
+	@Autowired
+	private MatchboxFhirContextProperties matchboxContext;
 
 	@Override
 	public MethodOutcome delete(HttpServletRequest theRequest, IIdType theResource, String theConditional,
@@ -189,7 +193,7 @@ public class ImplementationGuideProviderR4 extends ImplementationGuideResourcePr
 				.setName(theResource.getName())
 				.setVersion(theResource.getVersion()));
 
-		if (cliContext!=null && cliContext.getOnlyOneEngine()) {
+		if (this.matchboxContext.isOnlyOneEngine()) {
 			MatchboxEngine engine = matchboxEngineSupport.getMatchboxEngine(FHIRVersion._4_0_1.getDisplay(), this.cliContext, false, false);
 			try {
 				engine.loadPackage(theResource.getPackageId(), theResource.getVersion());
@@ -237,7 +241,7 @@ public class ImplementationGuideProviderR4 extends ImplementationGuideResourcePr
 		// The matchboxEngineSupport will set the 'initialized' flag after having reloaded
 		MatchboxEngine engine = matchboxEngineSupport.getMatchboxEngineNotSynchronized(null, this.cliContext, false,
 																												 true);
-		if (cliContext!=null && cliContext.getOnlyOneEngine()) {
+		if (this.matchboxContext.isOnlyOneEngine()) {
 			List<NpmPackageVersionEntity> packages = myPackageVersionDao
 					.findAll(org.springframework.data.domain.Sort.by(Direction.ASC, "myPackageId", "myVersionId"));
 			for (NpmPackageVersionEntity npmPackage : packages) {

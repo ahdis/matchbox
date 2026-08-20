@@ -13,18 +13,17 @@ Matchbox offers two methods of validating with support by AI technologies.
 
 To use AI analysis in matchbox the following parameters must be set when setting up the matchbox-server application properties: 
 
-|   |   |
-|---|---|
-|`matchbox.fhir.context.llm.provider`| The LLM provider used for the AI analysis of validation. |
-| `matchbox.fhir.context.llm.modelName` | The LLM model used for the AI analysis of validation. |
-| `matchbox.fhir.context.llm.apiKey` | Your API key for the desired LLM provider. |
+|                                       |                                                          |
+|---------------------------------------|----------------------------------------------------------|
+| `matchbox.fhir.context.llm.provider`  | The LLM provider used for the AI analysis of validation. |
+| `matchbox.fhir.context.llm.modelName` | The LLM model used for the AI analysis of validation.    |
+| `matchbox.fhir.context.llm.apiKey`    | Your API key for the desired LLM provider.               |
 
 In addition to these parameters, the default behavior for the analysis can be decided by setting one of these parameters:
 
-|   |   |
-|---|---|
-|`matchbox.fhir.context.analyzeOutcomeWithAI`| Whether the validation outcome should be analyzed by a LLM or not. Requires the LLM parameters to be correctly set. |
-| `matchbox.fhir.context.analyzeOutcomeWithAIOnError` | Whether the validation outcome should be analyzed by a LLM, when it includes error or fatal issues, or not. Requires the LLM parameters to be correctly set. |
+|                                                 |                                                                             |
+|-------------------------------------------------|-----------------------------------------------------------------------------|
+| `matchbox.fhir.validation.analyzeErrorsWithLlm` | Whether the outcome should be analyzed by a LLM when the validation failed. |
 
 These parameters can be overridden at runtime during specific validations to adjust the behavior for specific use cases.
 Example configuration (API-Key must be replaced):
@@ -35,12 +34,12 @@ matchbox:
     context:
       onlyOneEngine: true
       txServer: http://tx.fhir.org
-      analyzeOutcomeWithAIOnError: true
       llm:
         provider: openai
         modelName: gpt-4o-mini
         apiKey: sk-xxx
-
+    validation:
+      analyzeErrorsWithLlm: true
 ```
 
 ### Validating Resources in matchbox
@@ -78,18 +77,20 @@ Matchbox provides an MCP-Server, that can be interpreted by MCP-Client Applicati
 
 When validating resources via MCP, the analysis of the validation is **not** performed by the LLM configured in matchbox. Instead, matchbox delegates the analysis back to the LLM of the initiating MCP client.
 
-Depending if the MCP client supports [Sampling](https://modelcontextprotocol.io/specification/2025-11-25/client/sampling), matchbox uses two methods:
+Depending on if the MCP client supports [Sampling](https://modelcontextprotocol.io/specification/2025-11-25/client/sampling), matchbox uses two methods:
 - With Sampling: Matchbox requests the AI analysis from the client LLM via an MCP sampling request during the tool call.
 - Without Sampling: Matchbox returns the analysis prompt together with the validations Operation Outcome as part of the tool response. 
 
 #### Activation
 
 The AI analysis for MCP validation requests is only executed if:
-- The validation parameter `analyzeOutcomeWithAI=true` is provided
+- The validation parameter `analyzeErrorsWithLlm=true` is provided
 OR
-- The property `matchbox.fhir.context.analyzeOutcomeWithAI` is set to `true` in the `application.yaml` (and not overwritten by the validation parameter).
+- The property `matchbox.fhir.validation.analyzeErrorsWithLlm` is set to `true` in the `application.yaml` (and not 
+  overwritten by the validation parameter).
 
-In any case, the validation parameter `analyzeOutcomeWithAI` will get set to `false` before the validation in order to skip the analysis by the LLM configured in matchbox. The Sampling or Prompt Injection analysis will still be performed.
+In any case, the validation parameter `analyzeErrorsWithLlm` will get set to `false` before the validation in order to
+skip the analysis by the LLM configured in matchbox. The Sampling or Prompt Injection analysis will still be performed.
 
 ### Getting Started
 

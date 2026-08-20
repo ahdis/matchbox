@@ -8,24 +8,24 @@ It includes all features from Matchbox-engine, plus additional features that are
 The following configuration parameters are available for the Matchbox server.
 They can be set in the Spring configuration (e.g. `application.properties`/`application.yml`), or as system properties.
 
-| Parameter                                           | Default value | Description                                                                                                                                                      |
-|-----------------------------------------------------|---------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `matchbox.fhir.context.fhirVersion`                 | `4.0.1`       | The FHIR version of the server.                                                                                                                                  |
-| `matchbox.fhir.context.txServer`                    | `n/a`         | The URL of the terminology server to use, or `n/a` not to use a terminology server.                                                                              |
-| `matchbox.fhir.context.igsPreloaded`                | `[]`          | The list of IGs to always pre-load when initializing a Matchbox engine.                                                                                          |
-| `matchbox.fhir.context.onlyOneEngine`               | `false`       | Forces the server to initialize only one engine. See the section [_Only one engine_](#only-one-engine) below.                                                    |
-| `matchbox.fhir.context.suppressWarnInfo`            | `{}`          | The list of warnings/infos to suppress in validation reports. See [_Suppress warning/information-level issues in validation_](validation.md#suppress-warnings).  |
-| `matchbox.fhir.context.suppressError`               | `{}`          | The list of errors to suppress in validation reports. See [_Suppress error-level issues in validation_](validation.md#suppress-errors).                          |
-| `matchbox.fhir.context.httpReadOnly`                | `false`       | Whether the server is in read-only mode or not. See the section [_Read-only mode_](#read-only) below.                                                            |
-| `matchbox.fhir.context.extensions`                  | `any`         | The list of domains allowed in extensions while validating resources; `any` will allow all extensions.                                                           |
-| `matchbox.validation.save-statistics`               | `false`       | Whether the Operation Outcome containing the validation results should be stored or not.                                                                         |
-| `matchbox.fhir.context.analyzeOutcomeWithAI`        |               | Whether the validation outcome should be analyzed by a LLM or not. Requires the LLM parameters to be correctly set.                                              |
-| `matchbox.fhir.context.analyzeOutcomeWithAIOnError` |               | Whether the validation outcome should be analyzed by a LLM, when it includes `error` or `fatal` issues, or not. Requires the LLM parameters to be correctly set. |
-| `matchbox.fhir.context.llm.provider`                |               | The LLM provider used for the AI analysis of validation.                                                                                                         |
-| `matchbox.fhir.context.llm.modelName`               |               | The LLM model used for the AI analysis of validation.                                                                                                            |
-| `matchbox.fhir.context.llm.apiKey`                  |               | Your API key for the desired LLM provider.                                                                                                                       |
-| `matchbox.fhir.context.ssrfProtectionEnabled`       | `true`        | Whether the [SSRF protection](https://github.com/hapifhir/org.hl7.fhir.core/blob/master/SECURITY.md#network-access) is enabled or not.                           |
-| `spring.ai.mcp.server.enabled`                      |               | Whether matchbox should be provided as MCP-Server or not.                                                                                                        |
+| Parameter                                           | Default value | Description                                                                                                                                                     |
+|-----------------------------------------------------|---------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `matchbox.fhir.context.fhirVersion`                 | `4.0.1`       | The FHIR version of the server.                                                                                                                                 |
+| `matchbox.fhir.context.txServer`                    | `n/a`         | The URL of the terminology server to use, or `n/a` not to use a terminology server.                                                                             |
+| `matchbox.fhir.context.igsPreloaded`                | `[]`          | The list of IGs to always pre-load when initializing a Matchbox engine.                                                                                         |
+| `matchbox.fhir.context.onlyOneEngine`               | `false`       | Forces the server to initialize only one engine. See the section [_Only one engine_](#only-one-engine) below.                                                   |
+| `matchbox.fhir.context.suppressWarnInfo`            | `{}`          | The list of warnings/infos to suppress in validation reports. See [_Suppress warning/information-level issues in validation_](validation.md#suppress-warnings). |
+| `matchbox.fhir.context.suppressError`               | `{}`          | The list of errors to suppress in validation reports. See [_Suppress error-level issues in validation_](validation.md#suppress-errors).                         |
+| `matchbox.fhir.context.httpReadOnly`                | `false`       | Whether the server is in read-only mode or not. See the section [_Read-only mode_](#read-only) below.                                                           |
+| `matchbox.fhir.context.extensions`                  | `any`         | The list of domains allowed in extensions while validating resources; `any` will allow all extensions.                                                          |
+| `matchbox.validation.save-statistics`               | `false`       | Whether the Operation Outcome containing the validation results should be stored or not.                                                                        |
+| `matchbox.fhir.context.llm.provider`                |               | The LLM provider used for the AI analysis of validation.                                                                                                        |
+| `matchbox.fhir.context.llm.modelName`               |               | The LLM model used for the AI analysis of validation.                                                                                                           |
+| `matchbox.fhir.context.llm.apiKey`                  |               | Your API key for the desired LLM provider.                                                                                                                      |
+| `matchbox.fhir.context.ssrfProtectionEnabled`       | `true`        | Whether the [SSRF protection](https://github.com/hapifhir/org.hl7.fhir.core/blob/master/SECURITY.md#network-access) is enabled or not.                          |
+| `matchbox.fhir.validation.analyzeErrorsWithLlm`     | `false`       | Whether the validation outcome should be analyzed by a LLM, when it includes `error` or `fatal` issues, or not. Requires the LLM parameters to be correctly set |
+| `matchbox.fhir.mcp.requestAnalysisFromClient`       | `false`       | Whether to request an analysis of the validation outcome by the MCP client or not.                                                                              |
+| `spring.ai.mcp.server.enabled`                      |               | Whether matchbox should be provided as MCP-Server or not.                                                                                                       |
 
 In addition for validation the different [java validator parameters](https://confluence.hl7.org/spaces/FHIR/pages/35718580/Using+the+FHIR+Validator) can also be configured for default values: e.g: matchbox.fhir.context.displayIssuesAreWarnings is set default to true, but you can overwrite that by providing another value. To see the current supported list of parameters, you can check the OperationDefinition of $validate on matchbox [test instance](https://test.ahdis.ch/matchboxv3/fhir/OperationDefinition/-s-validate).
 
@@ -44,11 +44,12 @@ matchbox:
         ch.fhir.ig.ch-elm:
           - "regex:Binding for path (.+) has no source, so can't be checked"
           - "regex:None of the codings provided are in the value set 'Observation Interpretation Codes'(.*)"
-      analyzeOutcomeWithAIOnError: true
       llm:
         provider: anthropic
         modelName: claude-3-5-sonnet-20241022
         apiKey: sk-xxx
+    validation:
+      analyzeErrorsWithLlm: true
 
 ```
 
@@ -152,27 +153,11 @@ The FHIR package to install will be determined by (in the implemented order):
 ## LLM support {: #llm-support}
 Adding `llm` configurations will allow the server to make API calls to the specified LLM and add an analysis of the validation results to the operation outcome. This provides the user with AI generated instructions on how to fix errors in the validated FHIR resource.
 
-This feature requires a provider, model and API key to be defined in the applications configuration.
+This feature requires a provider, model and API key to be defined in the application configuration.
 
 Supported LLMs:
 
-| Provider                                            | Recommended Model           | Supported Models                                                                                               |
-|-----------------------------------------------------|-----------------------------|----------------------------------------------------------------------------------------------------------------|
-| [OpenAI](https://openai.com/index/openai-api/) (`openai`)     | `gpt-4o-mini`               | `gpt-3.5-turbo`, `gpt-4`, `gpt-4o`, `gpt-4o-mini`                                                              |
-| [Anthropic](https://www.anthropic.com/api) (`anthropic`)| `claude-3-5-sonnet-20241022`         | `claude-3-5-sonnet-20241022`, `claude-3-5-haiku-20241022`, `claude-3-sonnet-20240229`, `claude-3-opus-20240229`|
-
-To use this feature, `analyzeOutcomeWithAI` or `analyzeOutcomeWithAIOnError` must be set to `true` by the user in the validation settings.
-
-Setting `analyzeOutcomeWithAIOnError` to `true` will perform the AI analysis on all validations that include issues labeled `error` or `fatal`. Setting `analyzeOutcomeWithAI` to `false` will overwrite `analyzeOutcomeWithAIOnError` and the analysis is not performed. Check the following table for an overview.
-
-| analyzeOutcomeWithAIOnError | analyzeOutcomeWithAI | Errors in validation | Perform analysis |
-| --------------------------- | -------------------- | -------------------- | ---------------- |
-| `false`                       | `false`                | \-                   | no            |
-| `false`                       | \-                   | \-                   | no            |
-| `false`                       | `true`                 | \-                   | yes             |
-| `true`                        | `false`                | no                | no            |
-| `true`                        | `false`                | yes                 | no            |
-| `true`                        | \-                   | no                | no            |
-| `true`                        | \-                   | yes                 | yes             |
-| `true`                        | `true`                 | no                | yes             |
-| `true`                        | `true`                 | yes                 | yes             |
+| Provider                                                  | Recommended Model            | Supported Models                                                                                                |
+|-----------------------------------------------------------|------------------------------|-----------------------------------------------------------------------------------------------------------------|
+| [OpenAI](https://openai.com/index/openai-api/) (`openai`) | `gpt-4o-mini`                | `gpt-3.5-turbo`, `gpt-4`, `gpt-4o`, `gpt-4o-mini`                                                               |
+| [Anthropic](https://www.anthropic.com/api) (`anthropic`)  | `claude-3-5-sonnet-20241022` | `claude-3-5-sonnet-20241022`, `claude-3-5-haiku-20241022`, `claude-3-sonnet-20240229`, `claude-3-opus-20240229` |

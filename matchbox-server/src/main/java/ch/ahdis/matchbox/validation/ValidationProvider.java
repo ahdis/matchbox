@@ -29,11 +29,12 @@ import ca.uhn.fhir.rest.server.exceptions.BaseServerResponseException;
 import ca.uhn.fhir.util.StopWatch;
 import ch.ahdis.matchbox.CliContext;
 import ch.ahdis.matchbox.config.MatchboxFhirVersion;
+import ch.ahdis.matchbox.config.property.MatchboxFhirProperties;
 import ch.ahdis.matchbox.statistics.OperationOutcomeResourceProviderR4;
 import ch.ahdis.matchbox.statistics.OperationOutcomeResourceProviderR4B;
 import ch.ahdis.matchbox.statistics.OperationOutcomeResourceProviderR5;
 import ch.ahdis.matchbox.util.MatchboxEngineSupport;
-import ch.ahdis.matchbox.validation.matchspark.LLMConnector;
+import ch.ahdis.matchbox.validation.matchspark.LlmConnector;
 import ch.ahdis.matchbox.engine.MatchboxEngine;
 import ch.ahdis.matchbox.engine.cli.VersionUtil;
 import ch.ahdis.matchbox.packages.MatchboxImplementationGuideProvider;
@@ -51,7 +52,7 @@ import org.hl7.fhir.r5.utils.OperationOutcomeUtilities;
 import org.hl7.fhir.utilities.validation.ValidationMessage;
 import org.springframework.beans.factory.annotation.Autowired;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import ch.ahdis.matchbox.validation.matchspark.LLMErrorMessage;
+import ch.ahdis.matchbox.validation.matchspark.LlmErrorMessage;
 
 import jakarta.servlet.http.HttpServletRequest;
 
@@ -73,11 +74,18 @@ import static ch.ahdis.matchbox.util.MatchboxServerUtils.addExtension;
  * The HAPI provider of the operation $validate
  */
 public class ValidationProvider {
-
 	private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(ValidationProvider.class);
+
+	public static final String PARAM_ANALYZE_ERRORS_WITH_LLM = "analyzeErrorsWithLlm";
+	public static final String PARAM_LLM_PROVIDER = "llmProvider";
+	public static final String PARAM_LLM_MODEL_NAME = "llmModelName";
+	public static final String PARAM_LLM_API_KEY = "llmApiKey";
 
 	@Autowired
 	protected MatchboxEngineSupport matchboxEngineSupport;
+
+	@Autowired
+	protected MatchboxFhirProperties matchboxProps;
 
 	@Autowired
 	protected CliContext cliContext;
@@ -258,35 +266,44 @@ public class ValidationProvider {
 		long millis = sw.getMillis();
 		log.debug("Validation time: {}", sw);
 
-		var oo = this.getOperationOutcome(sha3Hex, messages, profile, engine, millis, cliContext);
+		final OperationOutcome oo = this.getOperationOutcome(sha3Hex, messages, profile, engine, millis, cliContext);
 
-		Boolean aiAnalyze = null;
-		// check if the request ai analyze parameter is set to true or false
-		if (theRequest.getParameter("analyzeOutcomeWithAI") != null) {
-			aiAnalyze = Boolean.parseBoolean(theRequest.getParameter("analyzeOutcomeWithAI"));
+		// Check if we should analyze errors with LLM, either from the request parameter or from the configuration
+		boolean analyzeErrorsWithLlm = this.matchboxProps.getValidation().isAnalyzeErrorsWithLlm();
+		if (theRequest.getParameter(PARAM_ANALYZE_ERRORS_WITH_LLM) != null) {
+			analyzeErrorsWithLlm = Boolean.parseBoolean(theRequest.getParameter(PARAM_ANALYZE_ERRORS_WITH_LLM));
 		}
 
-		Boolean aiAnalyzeOnError = cliContext.getAnalyzeOutcomeWithAIOnError();
-
-		boolean hasError = false;
-		if (aiAnalyzeOnError != null && aiAnalyzeOnError) {
-			for (final ValidationMessage message : messages) {
-				if (message.getLevel() == ValidationMessage.IssueSeverity.ERROR || message.getLevel() == ValidationMessage.IssueSeverity.FATAL) {
-					hasError = true;
-					break;
-				}
+		if (analyzeErrorsWithLlm && hasError(oo)) {
+			// Use the Matchbox LLM configuration, and update it with the request parameters if provided
+			final var llmConnectorConfig = this.matchboxProps.getContext().getLlm().clone();
+			if (theRequest.getParameter(PARAM_LLM_PROVIDER) != null) {
+				llmConnectorConfig.setProvider(theRequest.getParameter(PARAM_LLM_PROVIDER));
 			}
-		}
-		if ((aiAnalyze != null && aiAnalyze) || (aiAnalyze == null && aiAnalyzeOnError != null && aiAnalyzeOnError && hasError)) {
-			try {
-				LLMConnector openAIConnector = LLMConnector.getConnector(cliContext);
-				String json = FhirContext.forR5Cached().newJsonParser().encodeResourceToString(oo);
-				String aiResult = openAIConnector.interpretWithMatchbox(contentString, json);
-				oo = this.addAIIssueToOperationOutcome(oo, aiResult);
-			} catch (final Exception e) {
-				log.error("Error during AI analysis", e);
-				// add the error to the OperationOutcome, so the client still gets the validation result
-				oo = this.addExceptionToOperationOutcome(oo, e);
+			if (theRequest.getParameter(PARAM_LLM_MODEL_NAME) != null) {
+				llmConnectorConfig.setModelName(theRequest.getParameter(PARAM_LLM_MODEL_NAME));
+			}
+			if (theRequest.getParameter(PARAM_LLM_API_KEY) != null) {
+				llmConnectorConfig.setApiKey(theRequest.getParameter(PARAM_LLM_API_KEY));
+			}
+
+			if (!llmConnectorConfig.isValid()) {
+				log.debug("LLM configuration is not valid, skipping AI analysis");
+				oo.addIssue()
+					.setSeverity(OperationOutcome.IssueSeverity.WARNING)
+					.setCode(OperationOutcome.IssueType.REQUIRED)
+					.setDiagnostics("The error outcome analysis was requested but the LLM configuration is invalid");
+			} else {
+				try {
+					final var openAIConnector = LlmConnector.getConnector(llmConnectorConfig);
+					final String json = FhirContext.forR5Cached().newJsonParser().encodeResourceToString(oo);
+					final String aiResult = openAIConnector.interpretWithMatchbox(contentString, json);
+					this.addAIIssueToOperationOutcome(oo, aiResult);
+				} catch (final Exception e) {
+					log.error("Error during AI analysis", e);
+					// add the error to the OperationOutcome, so the client still gets the validation result
+					this.addExceptionToOperationOutcome(oo, e);
+				}
 			}
 		}
 
@@ -333,8 +350,13 @@ public class ValidationProvider {
 			ext.addExtension("total", new Duration().setUnit("ms").setValue(ms));
 			addExtension(ext, "validatorVersion", new StringType(VersionUtil.getPoweredBy()));
 			cliContext.addContextToExtension(ext);
-			if (matchboxEngineSupport.getSessionId(engine) != null) {
-				addExtension(ext, "sessionId", new StringType(matchboxEngineSupport.getSessionId(engine)));
+			ext.addExtension("onlyOneEngine", new BooleanType(this.matchboxProps.getContext().isOnlyOneEngine()));
+			ext.addExtension("httpReadOnly", new BooleanType(this.matchboxProps.getContext().isHttpReadOnly()));
+			ext.addExtension("ssrfProtectionEnabled", new BooleanType(this.matchboxProps.getContext().isSsrfProtectionEnabled()));
+
+			final var sessionId = this.matchboxEngineSupport.getSessionId(engine);
+			if (sessionId != null) {
+				addExtension(ext, "sessionId", new StringType(sessionId));
 			}
 			for (final String pkg : engine.getContext().getLoadedPackages()) {
 				addExtension(ext, "package", new StringType(pkg));
@@ -436,7 +458,7 @@ public class ValidationProvider {
 		return messages;
 	}
 
-	public OperationOutcome addAIIssueToOperationOutcome(final OperationOutcome outcome, final String aiResponse) {
+	public void addAIIssueToOperationOutcome(final OperationOutcome outcome, final String aiResponse) {
 		final var details = new CodeableConcept();
 		details.setText("AI Analyze of the Operation Outcome");
 
@@ -448,26 +470,24 @@ public class ValidationProvider {
 			.addExtension()
 			.setUrl("http://hl7.org/fhir/StructureDefinition/rendering-style")
 			.setValue(new StringType("markdown"));
-
-		return outcome;
 	}
 
-	public OperationOutcome addExceptionToOperationOutcome(final OperationOutcome outcome, final Exception e) {
+	public void addExceptionToOperationOutcome(final OperationOutcome outcome, final Exception e) {
 		var message = e.getMessage();
 		if (message != null && message.strip().startsWith("{")) {
 			try {
 				// This is a best effort to extract a "message" field from a JSON error response from an LLM provider
 				final ObjectMapper om = new ObjectMapper();
-				final LLMErrorMessage parsed = om.readValue(message, LLMErrorMessage.class);
+				final LlmErrorMessage parsed = om.readValue(message, LlmErrorMessage.class);
 				if (parsed != null) {
 					if (parsed.getMessage() != null && !parsed.getMessage().isBlank()) {
 						message = parsed.getMessage();
 					} else if (parsed.getError() != null) {
-						final LLMErrorMessage.ErrorObject err = parsed.getError();
+						final LlmErrorMessage.ErrorObject err = parsed.getError();
 						if (err.getMessage() != null && !err.getMessage().isBlank()) {
 							message = err.getMessage();
 						} else if (err.getErrors() != null && !err.getErrors().isEmpty()) {
-							final LLMErrorMessage.FieldError fe = err.getErrors().getFirst();
+							final LlmErrorMessage.FieldError fe = err.getErrors().getFirst();
 							if (fe.getMessage() != null && !fe.getMessage().isBlank()) {
 								message = fe.getMessage();
 							}
@@ -486,7 +506,6 @@ public class ValidationProvider {
 			.setSeverity(OperationOutcome.IssueSeverity.ERROR)
 			.setCode(OperationOutcome.IssueType.EXCEPTION)
 			.setDiagnostics(message);
-		return outcome;
 	}
 
 	public void saveOperationOutcome(final OperationOutcome operationOutcome) {
@@ -510,7 +529,18 @@ public class ValidationProvider {
 			() -> this.operationOutcomeResourceProviderR4B.ifPresent(rp -> rp.getDao().create(convertToR4B(operationOutcome, org.hl7.fhir.r4b.model.OperationOutcome.class))),
 			() -> this.operationOutcomeResourceProviderR5.ifPresent(rp -> rp.getDao().create(operationOutcome))
 		);
+	}
 
+	private boolean hasError(final OperationOutcome operationOutcome) {
+		if (operationOutcome == null || operationOutcome.getIssue() == null) {
+			return false;
+		}
+		for (final OperationOutcome.OperationOutcomeIssueComponent issue : operationOutcome.getIssue()) {
+			if (issue.getSeverity() == OperationOutcome.IssueSeverity.ERROR || issue.getSeverity() == OperationOutcome.IssueSeverity.FATAL) {
+				return true;
+			}
+		}
+		return false;
 	}
 }
 
