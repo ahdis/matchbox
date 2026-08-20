@@ -6,6 +6,7 @@ import ca.uhn.fhir.rest.annotation.Operation;
 import ca.uhn.fhir.rest.api.server.RequestDetails;
 import ch.ahdis.matchbox.CliContext;
 import ch.ahdis.matchbox.config.MatchboxFhirVersion;
+import ch.ahdis.matchbox.config.property.MatchboxFhirContextProperties;
 import ch.ahdis.matchbox.providers.AbstractMatchboxResourceProvider;
 import ch.ahdis.matchbox.util.MatchboxEngineSupport;
 import org.hl7.fhir.instance.model.api.IBaseResource;
@@ -32,21 +33,24 @@ public class StructureMapListProvider extends AbstractMatchboxResourceProvider {
 	private final PlatformTransactionManager myTxManager;
 	private final CliContext cliContext;
 	private final MatchboxEngineSupport matchboxEngineSupport;
+	private final MatchboxFhirContextProperties matchboxContext;
 
 	public StructureMapListProvider(final MatchboxEngineSupport matchboxEngineSupport,
 											  final MatchboxFhirVersion matchboxFhirVersion,
-											  final CliContext cliContext) {
+											  final CliContext cliContext,
+											  final MatchboxFhirContextProperties matchboxContext) {
 		super(matchboxFhirVersion, org.hl7.fhir.r4.model.StructureMap.class, org.hl7.fhir.r4b.model.StructureMap.class, StructureMap.class);
 		this.npmPackageVersionResourceDao = matchboxEngineSupport.getMyPackageVersionResourceDao();
 		this.myTxManager = matchboxEngineSupport.getMyTxManager();
 		this.cliContext = cliContext;
 		this.matchboxEngineSupport = matchboxEngineSupport;
+		this.matchboxContext = matchboxContext;
 	}
 
 	@Operation(name = "$list", idempotent = true, manualRequest = true)
 	public IBaseResource listStructureMaps(final RequestDetails requestDetails) {
 		final var resources = this.listStructureMapsFromDatabase();
-		if (this.cliContext.getOnlyOneEngine()) {
+		if (this.matchboxContext.isOnlyOneEngine()) {
 			resources.addAll(this.listStructureMapsFromMainEngine());
 		}
 

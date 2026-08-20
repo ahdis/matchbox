@@ -1,5 +1,6 @@
 package ch.ahdis.matchbox.mcp;
 
+import ca.uhn.fhir.rest.server.McpMatchboxBridge;
 import io.modelcontextprotocol.spec.McpSchema.Tool;
 
 import java.util.List;
@@ -21,7 +22,7 @@ public class ToolFactory {
 							"type", "string",
 							"description", "The FHIR profile to validate against"
 						),
-						"validationparams", Map.of(
+						McpMatchboxBridge.PARAM_VALIDATION_PARAMETERS, Map.of(
 							"type",
 							"string",
 							"description",

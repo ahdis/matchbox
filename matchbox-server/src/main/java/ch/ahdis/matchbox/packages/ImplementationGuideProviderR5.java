@@ -15,6 +15,7 @@ import ca.uhn.fhir.rest.api.server.RequestDetails;
 import ca.uhn.fhir.rest.param.*;
 import ca.uhn.fhir.rest.server.SimpleBundleProvider;
 import ch.ahdis.matchbox.CliContext;
+import ch.ahdis.matchbox.config.property.MatchboxFhirContextProperties;
 import ch.ahdis.matchbox.util.MatchboxEngineSupport;
 import ch.ahdis.matchbox.engine.MatchboxEngine;
 import ch.ahdis.matchbox.engine.cli.VersionUtil;
@@ -53,6 +54,9 @@ public class ImplementationGuideProviderR5 extends ImplementationGuideResourcePr
 
 	@Autowired
 	private CliContext cliContext;
+
+	@Autowired
+	private MatchboxFhirContextProperties matchboxContext;
 
 	@Override
 	public MethodOutcome delete(HttpServletRequest theRequest, IIdType theResource, String theConditional,
@@ -166,7 +170,7 @@ public class ImplementationGuideProviderR5 extends ImplementationGuideResourcePr
 				.setName(theResource.getName())
 				.setVersion(theResource.getVersion())
 				.setInstallMode(PackageInstallationSpec.InstallModeEnum.STORE_ONLY));
-		if (cliContext!=null && cliContext.getOnlyOneEngine()) {
+		if (this.matchboxContext.isOnlyOneEngine()) {
 			MatchboxEngine engine = matchboxEngineSupport.getMatchboxEngine(FHIRVersion._5_0_0.getDisplay(), this.cliContext, false, false);
 			try {
 				engine.loadPackage(theResource.getPackageId(), theResource.getVersion());
@@ -214,7 +218,7 @@ public class ImplementationGuideProviderR5 extends ImplementationGuideResourcePr
 		// The matchboxEngineSupport will set the 'initialized' flag after having reloaded
 		MatchboxEngine engine = matchboxEngineSupport.getMatchboxEngineNotSynchronized(null, this.cliContext, false,
 																												 true);
-		if (cliContext!=null && cliContext.getOnlyOneEngine()) {
+		if (this.matchboxContext.isOnlyOneEngine()) {
 			List<NpmPackageVersionEntity> packages = myPackageVersionDao
 					.findAll(org.springframework.data.domain.Sort.by(Direction.ASC, "myPackageId", "myVersionId"));
 			for (NpmPackageVersionEntity npmPackage : packages) {

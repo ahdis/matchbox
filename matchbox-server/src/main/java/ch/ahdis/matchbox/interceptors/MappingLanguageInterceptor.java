@@ -31,6 +31,7 @@ import ca.uhn.fhir.context.FhirVersionEnum;
 import ca.uhn.fhir.rest.server.exceptions.InternalErrorException;
 import ca.uhn.fhir.rest.server.exceptions.UnclassifiedServerFailureException;
 import ch.ahdis.matchbox.config.MatchboxFhirVersion;
+import ch.ahdis.matchbox.config.property.MatchboxFhirContextProperties;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
@@ -61,12 +62,15 @@ import javax.annotation.Nullable;
 public class MappingLanguageInterceptor extends InterceptorAdapter {
 
 	protected final MatchboxEngineSupport matchboxEngineSupport;
+	protected final MatchboxFhirContextProperties matchboxContext;
 
 	private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(MappingLanguageInterceptor.class);
 
-	public MappingLanguageInterceptor(final MatchboxEngineSupport matchboxEngineSupport) {
+	public MappingLanguageInterceptor(final MatchboxEngineSupport matchboxEngineSupport,
+	                                  final MatchboxFhirContextProperties matchboxContext) {
 		super();
 		this.matchboxEngineSupport = matchboxEngineSupport;
+		this.matchboxContext = matchboxContext;
 	}
 
 	@Override
@@ -81,7 +85,7 @@ public class MappingLanguageInterceptor extends InterceptorAdapter {
 			FhirVersionEnum requestedFhirVersion = this.extractFhirVersion(contentType);
 			final FhirVersionEnum mainEngineFhirVersion = this.matchboxEngineSupport.getServerFhirVersion();
 
-			if (requestedFhirVersion != null && this.matchboxEngineSupport.getClientContext().getOnlyOneEngine()) {
+			if (requestedFhirVersion != null && this.matchboxContext.isOnlyOneEngine()) {
 				// If the onlyOneEngine mode is enabled, check that it's the same FHIR version
 				if (mainEngineFhirVersion != requestedFhirVersion) {
 					throw new UnclassifiedServerFailureException(415, "The requested FHIR version (" + requestedFhirVersion +

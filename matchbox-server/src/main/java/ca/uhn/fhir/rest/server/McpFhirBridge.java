@@ -4,7 +4,7 @@ import ca.uhn.fhir.jpa.starter.mcp.CallToolResultFactory;
 import ca.uhn.fhir.jpa.starter.mcp.Interaction;
 import ca.uhn.fhir.jpa.starter.mcp.RequestBuilder;
 import ca.uhn.fhir.jpa.starter.mcp.ToolFactory;
-import ch.ahdis.matchbox.CliContext;
+import ch.ahdis.matchbox.config.property.MatchboxFhirContextProperties;
 import io.modelcontextprotocol.server.McpServerFeatures;
 import io.modelcontextprotocol.spec.McpSchema;
 import org.slf4j.Logger;
@@ -22,22 +22,23 @@ public class McpFhirBridge implements McpBridge {
   private static final Logger logger = LoggerFactory.getLogger(McpFhirBridge.class);
 
   private final RestfulServer restfulServer;
-  private final CliContext cliContext;
+  private final MatchboxFhirContextProperties matchboxContext;
 
-  public McpFhirBridge(RestfulServer restfulServer, CliContext cliContext) {
+  public McpFhirBridge(final RestfulServer restfulServer,
+                       final MatchboxFhirContextProperties matchboxContext) {
     this.restfulServer = restfulServer;
-    this.cliContext = cliContext;
+    this.matchboxContext = matchboxContext;
   }
 
   public List<McpServerFeatures.SyncToolSpecification> generateTools() {
-    if (!cliContext.getOnlyOneEngine()) {
+    if (!this.matchboxContext.isOnlyOneEngine()) {
       return Collections.emptyList();
     }
     
     final var tools = new ArrayList<McpServerFeatures.SyncToolSpecification>(9);
     tools.add(buildToolSpecification(ToolFactory.readFhirResource(), Interaction.READ));
     tools.add(buildToolSpecification(ToolFactory.searchFhirResources(), Interaction.SEARCH));
-    if (!cliContext.isHttpReadOnly()) {
+    if (!this.matchboxContext.isHttpReadOnly()) {
       tools.add(buildToolSpecification(ToolFactory.createFhirResource(), Interaction.CREATE));
       tools.add(buildToolSpecification(ToolFactory.updateFhirResource(), Interaction.UPDATE));
       tools.add(buildToolSpecification(ToolFactory.conditionalUpdateFhirResource(), Interaction.UPDATE));
@@ -61,10 +62,10 @@ public class McpFhirBridge implements McpBridge {
                                                  final Interaction interaction) {
     final var arguments = toolRequest.arguments();
     final var response = new MockHttpServletResponse();
-    final var request = new RequestBuilder(restfulServer, arguments, interaction).buildRequest();
+    final var request = new RequestBuilder(this.restfulServer, arguments, interaction).buildRequest();
 
     try {
-      restfulServer.handleRequest(interaction.asRequestType(), request, response);
+      this.restfulServer.handleRequest(interaction.asRequestType(), request, response);
       final var status = response.getStatus();
       final var body = response.getContentAsString();
 

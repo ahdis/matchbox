@@ -20,6 +20,7 @@ import ca.uhn.fhir.rest.server.exceptions.MethodNotAllowedException;
 import ca.uhn.fhir.rest.server.exceptions.ResourceNotFoundException;
 import ch.ahdis.matchbox.CliContext;
 import ch.ahdis.matchbox.config.MatchboxFhirVersion;
+import ch.ahdis.matchbox.config.property.MatchboxFhirContextProperties;
 import ch.ahdis.matchbox.engine.MatchboxEngine;
 import ch.ahdis.matchbox.util.CrossVersionResourceUtils;
 import ch.ahdis.matchbox.util.MatchboxEngineSupport;
@@ -79,6 +80,9 @@ public class ConformancePackageResourceProvider<R4 extends MetadataResource, R4B
 
 	@Autowired
 	protected CliContext cliContext;
+
+	@Autowired
+	private MatchboxFhirContextProperties matchboxContext;
 
 	private String resourceType;
 	protected final Class<R4> classR4;
@@ -148,7 +152,7 @@ public class ConformancePackageResourceProvider<R4 extends MetadataResource, R4B
 			});
 		}
 
-		if (cliContext.getOnlyOneEngine()) {
+		if (this.matchboxContext.isOnlyOneEngine()) {
 			List<org.hl7.fhir.r5.model.Resource> resources = new ArrayList<>();
 			MatchboxEngine matchboxEngine = matchboxEngineSupport.getMatchboxEngine(null, cliContext,
 																											false, false);
@@ -213,7 +217,7 @@ public class ConformancePackageResourceProvider<R4 extends MetadataResource, R4B
 
 				// if is current we check if already loaded in a own engine and might be updated
 				// in the cache
-				if (res.getPackageVersion().isCurrentVersion() || cliContext.getOnlyOneEngine()) {
+				if (res.getPackageVersion().isCurrentVersion() || this.matchboxContext.isOnlyOneEngine()) {
 					MatchboxEngine matchboxEngine = matchboxEngineSupport.getMatchboxEngine(url,
 																													cliContext,
 																													false,
@@ -242,7 +246,7 @@ public class ConformancePackageResourceProvider<R4 extends MetadataResource, R4B
 
 		CliContext cliContext = new CliContext(this.cliContext);
 		cliContext.setFhirVersion(theResource.getStructureFhirVersionEnum().getFhirVersionString());
-		if (cliContext.getOnlyOneEngine()) {
+		if (this.matchboxContext.isOnlyOneEngine()) {
 
 			if (classR4.isInstance(theResource)) {
 				R4 r = classR4.cast(theResource);
@@ -313,7 +317,7 @@ public class ConformancePackageResourceProvider<R4 extends MetadataResource, R4B
 		String url = null;
 		CliContext cliContext = new CliContext(this.cliContext);
 		cliContext.setFhirVersion(getFhirVersion(theResource));
-		if (cliContext.getOnlyOneEngine()) {
+		if (this.matchboxContext.isOnlyOneEngine()) {
 			if (classR4.isInstance(theResource)) {
 				R4 r = classR4.cast(theResource);
 				r.getMeta().setLastUpdated(new Date());

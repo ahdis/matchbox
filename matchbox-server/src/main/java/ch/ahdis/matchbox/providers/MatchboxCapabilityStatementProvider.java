@@ -13,9 +13,11 @@ import ca.uhn.fhir.util.FhirTerser;
 import ca.uhn.fhir.util.TerserUtil;
 import ch.ahdis.matchbox.CliContext;
 import ch.ahdis.matchbox.config.MatchboxFhirVersion;
+import ch.ahdis.matchbox.config.property.MatchboxFhirProperties;
 import ch.ahdis.matchbox.engine.cli.VersionUtil;
 import ch.ahdis.matchbox.engine.exception.MatchboxUnsupportedFhirVersionException;
 import ch.ahdis.matchbox.questionnaire.QuestionnaireResponseExtractProvider;
+import ch.ahdis.matchbox.validation.ValidationProvider;
 import org.hl7.fhir.instance.model.api.IBase;
 import org.hl7.fhir.instance.model.api.IBaseConformance;
 import org.hl7.fhir.instance.model.api.IBaseResource;
@@ -26,6 +28,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.lang.reflect.Field;
+import java.util.List;
 
 /**
  * A provider of CapabilityStatement customized for Matchbox.
@@ -33,30 +36,34 @@ import java.lang.reflect.Field;
 public class MatchboxCapabilityStatementProvider extends ServerCapabilityStatementProvider {
 	private static final Logger log = LoggerFactory.getLogger(MatchboxCapabilityStatementProvider.class);
 	private static final String VALIDATE_OPERATION_NAME = "Validate";
+	private static final String EXT_VALIDATION_DEFAULT_VALUE = "http://matchbox.health/validationDefaultValue";
 
 	private final StructureDefinitionResourceProvider structureDefinitionProvider;
 	private final CliContext cliContext;
 	private final FhirContext myFhirContext;
 	private final MatchboxFhirVersion matchboxFhirVersion;
 	private final MbInstalledStructureDefinitionRepository installedStructureDefinitionRepository;
+	private final MatchboxFhirProperties matchboxFhirProperties;
 
 	public MatchboxCapabilityStatementProvider(final FhirContext fhirContext,
 	                                           final RestfulServer theServerConfiguration,
 	                                           final StructureDefinitionResourceProvider structureDefinitionProvider,
 	                                           final CliContext cliContext,
 	                                           final MatchboxFhirVersion matchboxFhirVersion,
-	                                           final MbInstalledStructureDefinitionRepository installedStructureDefinitionRepository) {
+	                                           final MbInstalledStructureDefinitionRepository installedStructureDefinitionRepository,
+	                                           final MatchboxFhirProperties matchboxFhirProperties) {
 		super(theServerConfiguration, null, null);
 		this.structureDefinitionProvider = structureDefinitionProvider;
 		this.cliContext = cliContext;
 		theServerConfiguration.setServerName(VersionUtil.getPoweredBy());
 		theServerConfiguration.setServerVersion(VersionUtil.getVersion());
-		if (cliContext.getOnlyOneEngine()) {
+		if (matchboxFhirProperties.getContext().isOnlyOneEngine()) {
 			theServerConfiguration.setImplementationDescription("Development mode");
 		}
 		this.myFhirContext = fhirContext;
 		this.matchboxFhirVersion = matchboxFhirVersion;
 		this.installedStructureDefinitionRepository = installedStructureDefinitionRepository;
+		this.matchboxFhirProperties = matchboxFhirProperties;
 	}
 
 	protected void postProcessRestResource(FhirTerser theTerser, IBase theResource, String theResourceName) {
@@ -119,11 +126,11 @@ public class MatchboxCapabilityStatementProvider extends ServerCapabilityStateme
 				                                                  this.myFhirContext.getVersion().getVersion());
 			}
 
-			if (!cliContext.getOnlyOneEngine() && ("ImplementationGuide".equals(type))) {
+			if (!this.matchboxFhirProperties.getContext().isOnlyOneEngine() && ("ImplementationGuide".equals(type))) {
 				TerserUtil.clearField(myFhirContext, "interaction", resource);
 				setField(myFhirContext, theTerser, "interaction", resource, interaction, interactionSearch);
 			}
-			if (!cliContext.getOnlyOneEngine() && ("StructureDefinition".equals(type) || "StructureMap".equals(type))) {
+			if (!this.matchboxFhirProperties.getContext().isOnlyOneEngine() && ("StructureDefinition".equals(type) || "StructureMap".equals(type))) {
 				TerserUtil.clearField(myFhirContext, "interaction", resource);
 				TerserUtil.clearField(myFhirContext, "searchParam", resource);
 				TerserUtil.clearField(myFhirContext, "conditionalCreate", resource);
@@ -210,36 +217,113 @@ public class MatchboxCapabilityStatementProvider extends ServerCapabilityStateme
 			final var isBoolean = field.getType().equals(boolean.class) || field.getType().equals(Boolean.class);
 			field.setAccessible(true);
 			try {
-				OperationDefinitionParameterComponent component = validateOperationDefinition.addParameter()
-					.setName(field.getName())
-					.setUse(Enumerations.OperationParameterUse.IN)
-					.setMin(0)
-					.setMax(field.getType().isArray() ? "*" : "1")
-					.setType(isBoolean ? Enumerations.FHIRTypes.BOOLEAN : Enumerations.FHIRTypes.STRING);
+				final ValidationParameterBuilder builder = isBoolean ?
+					ValidationParameterBuilder.bool(field.getName()) :
+					ValidationParameterBuilder.string(field.getName());
 				if (field.getType().isArray()) {
-					String[] values = (String[]) field.get(cliContext);
+					builder.array();
+				}
+
+				if (field.getType().isArray()) {
+					String[] values = (String[]) field.get(this.cliContext);
 					if (values != null && values.length > 0) {
-						for (String value : values) {
-							if (value != null && !value.isBlank()) {
-								component.addExtension("http://matchbox.health/validationDefaultValue",
-								                       new StringType(value));
-							}
-						}
+						builder.defaultValues(List.of(values));
 					}
 				} else {
-					if (!field.getName().equals("llmApiKey")) {
-						component.addExtension(
-							"http://matchbox.health/validationDefaultValue",
-						                       isBoolean ?
-														  new BooleanType((Boolean) field.get(cliContext)) :
-														  new StringType((String) field.get(cliContext))
-						);
-					}
+					builder.defaultValue(field.get(this.cliContext));
 				}
+				validateOperationDefinition.addParameter(builder.build());
 			} catch (final Exception e) {
 				log.error("Unable to inspect field", e);
 			}
 		}
 
+		// Manually add other parameters that can be overridden per request
+		final var context = this.matchboxFhirProperties.getContext();
+		validateOperationDefinition.addParameter(
+			ValidationParameterBuilder.string(ValidationProvider.PARAM_LLM_PROVIDER)
+				.defaultValue(context.getLlm().getProvider()).build()
+		);
+		validateOperationDefinition.addParameter(
+			ValidationParameterBuilder.string(ValidationProvider.PARAM_LLM_MODEL_NAME)
+				.defaultValue(context.getLlm().getModelName()).build()
+		);
+		validateOperationDefinition.addParameter(
+			ValidationParameterBuilder.string(ValidationProvider.PARAM_LLM_API_KEY).build()
+		);
+
+		final var validationProps = this.matchboxFhirProperties.getValidation();
+		validateOperationDefinition.addParameter(
+			ValidationParameterBuilder.bool(ValidationProvider.PARAM_ANALYZE_ERRORS_WITH_LLM)
+				.defaultValue(validationProps.isAnalyzeErrorsWithLlm()).build()
+		);
+	}
+
+	private static class ValidationParameterBuilder {
+
+		private final String name;
+		private final ParameterType type;
+		private boolean isArray = false;
+		private List<?> defaultValues = null;
+
+		public ValidationParameterBuilder(final String name,
+													 final ParameterType type) {
+			this.name = name;
+			this.type = type;
+		}
+
+		public static ValidationParameterBuilder string(final String name) {
+			return new ValidationParameterBuilder(name, ParameterType.STRING);
+		}
+
+		public static ValidationParameterBuilder bool(final String name) {
+			return new ValidationParameterBuilder(name, ParameterType.BOOLEAN);
+		}
+
+		public ValidationParameterBuilder array() {
+			this.isArray = true;
+			return this;
+		}
+
+		public ValidationParameterBuilder defaultValue(final Object defaultValue) {
+			if (defaultValue == null) {
+				return this;
+			}
+			this.defaultValues = List.of(defaultValue);
+			return this;
+		}
+
+		public ValidationParameterBuilder defaultValues(final List<?> defaultValues) {
+			this.defaultValues = defaultValues;
+			return this;
+		}
+
+		public OperationDefinitionParameterComponent build() {
+			final var component = new OperationDefinitionParameterComponent()
+				.setName(this.name)
+				.setUse(Enumerations.OperationParameterUse.IN)
+				.setMin(0)
+				.setMax(this.isArray ? "*" : "1")
+				.setType(this.type == ParameterType.STRING ? Enumerations.FHIRTypes.STRING : Enumerations.FHIRTypes.BOOLEAN);
+			if (this.defaultValues != null) {
+				for (final Object value : this.defaultValues) {
+					switch (value) {
+						case String stringValue when stringValue.isBlank() -> {}
+						case String stringValue when this.type == ParameterType.STRING ->
+							component.addExtension(EXT_VALIDATION_DEFAULT_VALUE, new StringType(stringValue));
+						case Boolean booleanValue when this.type == ParameterType.BOOLEAN ->
+							component.addExtension(EXT_VALIDATION_DEFAULT_VALUE, new BooleanType(booleanValue));
+						default -> {
+							// Don't add nulls or unsupported types
+						}
+					}
+				}
+			}
+			return component;
+		}
+
+		enum ParameterType {
+			STRING, BOOLEAN
+		}
 	}
 }

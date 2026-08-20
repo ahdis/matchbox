@@ -6,7 +6,7 @@ import java.util.*;
 
 import ch.ahdis.matchbox.CliContext;
 import ch.ahdis.matchbox.EngineLoggingService;
-import ch.ahdis.matchbox.config.MatchboxFhirContextProperties;
+import ch.ahdis.matchbox.config.property.MatchboxFhirProperties;
 import ch.ahdis.matchbox.engine.exception.IgLoadException;
 import ch.ahdis.matchbox.engine.exception.MatchboxEngineCreationException;
 import ch.ahdis.matchbox.engine.exception.MatchboxUnsupportedFhirVersionException;
@@ -74,16 +74,16 @@ public class MatchboxEngineSupport {
 
 	private CliContext cliContext;
 
-	private final MatchboxFhirContextProperties matchboxFhirContextProperties;
+	private final MatchboxFhirProperties matchboxFhirProperties;
 
 	private final FhirVersionEnum serverFhirVersion;
 
-	public MatchboxEngineSupport(final MatchboxFhirContextProperties matchboxFhirContextProperties,
+	public MatchboxEngineSupport(final MatchboxFhirProperties matchboxFhirProperties,
 										  final CliContext cliContext,
 										  @Value("${hapi.fhir.fhir_version}") final FhirVersionEnum serverFhirVersion,
 										  final MatchboxEngineCache engineCache) {
 		this.engineCache = Objects.requireNonNull(engineCache);
-		this.matchboxFhirContextProperties = Objects.requireNonNull(matchboxFhirContextProperties);
+		this.matchboxFhirProperties = Objects.requireNonNull(matchboxFhirProperties);
 		this.serverFhirVersion = serverFhirVersion;
 		this.cliContext = cliContext;
 		this.cliContext.setFhirVersion(this.serverFhirVersion.getFhirVersionString());
@@ -366,9 +366,10 @@ public class MatchboxEngineSupport {
 			this.engineCache.cachePermanentEngine(cliContextMain, mainEngine);
 			this.cliContext.setIg(null); // otherwise we get for reloads the pacakge name instead a new one later  set ahdis/matchbox #144
 
-			if (cliContextMain.getIgsPreloaded() != null) {
-				for (final String ig : cliContextMain.getIgsPreloaded()) {
-					if (cliContextMain.getOnlyOneEngine()) {
+			final var preloadedIgs = this.matchboxFhirProperties.getContext().getIgsPreloaded();
+			if (preloadedIgs != null && !preloadedIgs.isEmpty()) {
+				for (final String ig : preloadedIgs) {
+					if (this.matchboxFhirProperties.getContext().isOnlyOneEngine()) {
 						try {
 							mainEngine.getIgLoader().loadIg(mainEngine.getIgs(), mainEngine.getBinaries(), ig, true);
 						} catch (final Exception e) {
@@ -388,7 +389,7 @@ public class MatchboxEngineSupport {
 				}
 			}
 
-			if (cliContextMain.getOnlyOneEngine()) {
+			if (this.matchboxFhirProperties.getContext().isOnlyOneEngine()) {
 				log.warn(
 					"Only one engine will be provided with the preloaded ig's mentioned in application.yaml, cannot handle multiple versions of ig's, DEVELOPMENT ONLY MODE");
 			}
@@ -419,7 +420,7 @@ public class MatchboxEngineSupport {
 			this.setInitialized(true);
 		}
 
-		if (cliRequestedContext.getOnlyOneEngine()) {
+		if (this.matchboxFhirProperties.getContext().isOnlyOneEngine()) {
 			if (create && cliRequestedContext.getIg() != null) {
 				try {
 					mainEngine.getIgLoader().loadIg(mainEngine.getIgs(), mainEngine.getBinaries(), cliRequestedContext.getIg(), true);
@@ -632,11 +633,11 @@ public class MatchboxEngineSupport {
 
 		// Configure which warnings will be suppressed in the validation results
 		final Map<String, Set<String>> suppressedWarnings = Objects.requireNonNullElseGet(
-			this.matchboxFhirContextProperties.getSuppressWarnInfo(),
+			this.matchboxFhirProperties.getContext().getSuppressWarnInfo(),
 			Collections::emptyMap
 		);
 		final Map<String, Set<String>> suppressedError = Objects.requireNonNullElseGet(
-			this.matchboxFhirContextProperties.getSuppressError(),
+			this.matchboxFhirProperties.getContext().getSuppressError(),
 			Collections::emptyMap
 		);
 
@@ -654,7 +655,7 @@ public class MatchboxEngineSupport {
 			log.info("Suppressing error over API, not using configuration file");
 		}
 
-		if (cli.getOnlyOneEngine()) {
+		if (this.matchboxFhirProperties.getContext().isOnlyOneEngine()) {
 			// If we only have one engine, then ignore all warnings that are defined in the configuration file
 			if (!apiDefinedWarnInfos) {
 				suppressedWarnings.values().stream()

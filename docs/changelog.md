@@ -8,6 +8,10 @@ Unreleased
 - Fix the rendering of the StructureMap/$transform operation in the GUI
 - Don't copy the suppressedWarnInfos/suppressedErrors from the main engine to the validation engines (#539)
 - Allow using an FML file as a map for StructureMap/$transform in the GUI (#560)
+- Remove the configuration property `matchbox.fhir.context.analyzeOutcomeWithAI` (#561)
+- Remove the configuration property `matchbox.fhir.context.analyzeOutcomeWithAIOnError` (#561)
+- Add the configuration property `matchbox.fhir.validation.analyzeErrorsWithLlm` (#561)
+- Add the configuration property `matchbox.fhir.mcp.requestAnalysisFromClient` (#561)
 
 2026/08/14 Release 4.1.13
 

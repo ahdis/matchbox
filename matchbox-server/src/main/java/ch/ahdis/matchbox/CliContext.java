@@ -210,58 +210,6 @@ public class CliContext {
   @JsonProperty("bundle")
   private String bundle = null;
 
-
-  private String igsPreloaded[];
-
-  public String[] getIgsPreloaded() {
-    return igsPreloaded;
-  }
-
-  private boolean onlyOneEngine = false;
-
-  public boolean getOnlyOneEngine() {
-    return this.onlyOneEngine;
-  }
-
-  private boolean httpReadOnly = false;
-
-  public boolean isHttpReadOnly() {
-    return this.httpReadOnly;
-  }
-
-  @JsonProperty("llmProvider")
-  private String llmProvider;
-
-  public String getLlmProvider() {
-    return llmProvider;
-  }
-
-  public void setLlmProvider(String llmProvider) {
-    this.llmProvider = llmProvider;
-  }
-
-  @JsonProperty("llmModelName")
-  private String llmModelName;
-
-  public String getLlmModelName() {
-    return llmModelName;
-  }
-
-  public void setLlmModelName(String llmModelName) {
-    this.llmModelName = llmModelName;
-  }
-
-  @JsonProperty("llmApiKey")
-  private String llmApiKey;
-
-  public void setLlmApiKey(String llmApiKey) {
-    this.llmApiKey = llmApiKey;
-  }
-
-  public String getLlmApiKey() {
-    return this.llmApiKey;
-  }
-  
   @JsonProperty("check-references")
   private boolean checkReferences = false;
 
@@ -289,23 +237,9 @@ public class CliContext {
   @JsonProperty("disableDefaultResourceFetcher")
   private boolean disableDefaultResourceFetcher = true;
 
-  @JsonProperty("analyzeOutcomeWithAI")
-  private Boolean analyzeOutcomeWithAI;
-
-  @JsonProperty("analyzeOutcomeWithAIOnError")
-  private Boolean analyzeOutcomeWithAIOnError;
-
-  @JsonProperty("ssrfProtectionEnabled")
-  private boolean ssrfProtectionEnabled = true;
-
   @Autowired
   public CliContext(Environment environment) {
     this.extensions = environment.getProperty("matchbox.fhir.context.extensions", String[].class, new String[]{"any"});
-    this.llmApiKey = environment.getProperty("matchbox.fhir.context.llm.apiKey", String.class);
-    this.llmModelName = environment.getProperty("matchbox.fhir.context.llm.modelName", String.class);
-    this.llmProvider = environment.getProperty("matchbox.fhir.context.llm.provider", String.class);
-    this.analyzeOutcomeWithAI = environment.getProperty("matchbox.fhir.context.analyzeOutcomeWithAI", Boolean.class, null);
-    this.analyzeOutcomeWithAIOnError = environment.getProperty("matchbox.fhir.context.analyzeOutcomeWithAIOnError", Boolean.class, null);
 
     // get al list of all JsonProperty of cliContext with return values property
     // name and property type
@@ -327,11 +261,6 @@ public class CliContext {
         }
       }
     }
-    // get properties array from the environment?
-    this.igsPreloaded = environment.getProperty("matchbox.fhir.context.igsPreloaded", String[].class);
-    this.onlyOneEngine = environment.getProperty("matchbox.fhir.context.onlyOneEngine", Boolean.class, false);
-    this.httpReadOnly = environment.getProperty("matchbox.fhir.context.httpReadOnly", Boolean.class, false);
-    this.ssrfProtectionEnabled = environment.getProperty("matchbox.fhir.context.ssrfProtectionEnabled", Boolean.class, true);
   }
 
   public CliContext(CliContext other) {
@@ -347,18 +276,9 @@ public class CliContext {
         log.error("error setting property " + field.getName());
       }
     }
-    this.igsPreloaded = other.igsPreloaded;
-    this.onlyOneEngine = other.onlyOneEngine;
-    this.httpReadOnly = other.httpReadOnly;
-    this.analyzeOutcomeWithAI = other.analyzeOutcomeWithAI;
-    this.analyzeOutcomeWithAIOnError = other.analyzeOutcomeWithAIOnError;
-    this.llmProvider = other.llmProvider;
-    this.llmModelName = other.llmModelName;
-    this.llmApiKey = other.llmApiKey;
     this.suppressErrors = other.suppressErrors;
     this.suppressWarnInfos = other.suppressWarnInfos;
     this.igs = other.igs;
-	 this.ssrfProtectionEnabled = other.ssrfProtectionEnabled;
   }
 
   public String getIg() {
@@ -716,22 +636,6 @@ public class CliContext {
     this.bundle = bundle;
   }
 
-  public Boolean getAnalyzeOutcomeWithAI() {
-    return analyzeOutcomeWithAI;
-  }
-
-  public void setAnalyzeOutcomeWithAI(Boolean analyzeOutcomeWithAI) {
-    this.analyzeOutcomeWithAI = analyzeOutcomeWithAI;
-  }
-
-  public Boolean getAnalyzeOutcomeWithAIOnError() {
-    return analyzeOutcomeWithAIOnError;
-  }
-
-  public void setAnalyzeOutcomeWithAIOnError(Boolean analyzeOutcomeWithAIOnError) {
-    this.analyzeOutcomeWithAIOnError = analyzeOutcomeWithAIOnError;
-  }
-
   public String getR5BundleRelativeReferencePolicy() {
     return r5BundleRelativeReferencePolicy;
   }
@@ -739,14 +643,6 @@ public class CliContext {
   public void setR5BundleRelativeReferencePolicy(String r5BundleRelativeReferencePolicy) {
     this.r5BundleRelativeReferencePolicy = r5BundleRelativeReferencePolicy;
   }
-
-	public boolean isSsrfProtectionEnabled() {
-		return this.ssrfProtectionEnabled;
-	}
-
-	public void setSsrfProtectionEnabled(final boolean ssrfProtectionEnabled) {
-		this.ssrfProtectionEnabled = ssrfProtectionEnabled;
-	}
 
 	@Override
   public boolean equals(final Object o) {
@@ -775,8 +671,6 @@ public class CliContext {
         && showTerminologyRouting == that.showTerminologyRouting
         && clearTxCache == that.clearTxCache
         && allowExampleUrls == that.allowExampleUrls
-        && onlyOneEngine == that.onlyOneEngine
-        && httpReadOnly == that.httpReadOnly
         && htmlInMarkdownCheck == that.htmlInMarkdownCheck
         && Objects.equals(extensions, that.extensions)
         && Objects.equals(txServer, that.txServer)
@@ -793,21 +687,16 @@ public class CliContext {
         && Objects.equals(locale, that.locale)
         && Objects.equals(locations, that.locations)
         && Objects.equals(jurisdiction, that.jurisdiction)
-        && Arrays.equals(igsPreloaded, that.igsPreloaded)
         && checkReferences == that.checkReferences
         && Arrays.equals(checkReferencesTo, that.checkReferencesTo)
         && Objects.equals(resolutionContext, that.resolutionContext)
         && disableDefaultResourceFetcher == that.disableDefaultResourceFetcher
-        && Objects.equals(llmProvider, that.llmProvider)
-        && Objects.equals(llmModelName, that.llmModelName)
-        && Objects.equals(llmApiKey, that.llmApiKey)
         && checkIpsCodes == that.checkIpsCodes
         && Objects.equals(bundle, that.bundle)
         && Arrays.equals(suppressErrors, that.suppressErrors)
         && Arrays.equals(suppressWarnInfos, that.suppressWarnInfos)
         && Arrays.equals(igs, that.igs)
-        && Objects.equals(r5BundleRelativeReferencePolicy, that.r5BundleRelativeReferencePolicy)
-		  && ssrfProtectionEnabled == that.ssrfProtectionEnabled;
+        && Objects.equals(r5BundleRelativeReferencePolicy, that.r5BundleRelativeReferencePolicy);
   }
 
   @Override
@@ -831,7 +720,6 @@ public class CliContext {
         showMessageIds,
         showTerminologyRouting,
         clearTxCache,
-        httpReadOnly,
         allowExampleUrls,
         htmlInMarkdownCheck,
         txServer,
@@ -848,19 +736,13 @@ public class CliContext {
         locale,
         locations,
         jurisdiction,
-        onlyOneEngine,
         checkReferences,
         checkReferencesTo,
         resolutionContext,
         disableDefaultResourceFetcher,
-        llmProvider,
-        llmModelName,
-        llmApiKey,
         checkIpsCodes,
         bundle,
-        r5BundleRelativeReferencePolicy,
-		  ssrfProtectionEnabled);
-    result = 31 * result + Arrays.hashCode(igsPreloaded);
+        r5BundleRelativeReferencePolicy);
     result = 31 * result + Arrays.hashCode(extensions);
     result = 31 * result + Arrays.hashCode(suppressErrors);
     result = 31 * result + Arrays.hashCode(suppressWarnInfos);
@@ -911,23 +793,15 @@ public class CliContext {
         ", locale='" + locale + '\'' +
         ", locations=" + locations +
         ", jurisdiction='" + jurisdiction + '\'' +
-        ", igsPreloaded=" + Arrays.toString(igsPreloaded) +
-        ", onlyOneEngine=" + onlyOneEngine +
-        ", httpReadOnly=" + httpReadOnly +
         ", checkReferences=" + checkReferences +
         ", resolutionContext=" + resolutionContext +
         ", r5-bundle-relative-reference-policy='" + r5BundleRelativeReferencePolicy + '\'' +
         ", disableDefaultResourceFetcher=" + disableDefaultResourceFetcher +
-        ", analyzeOutcomeWithAI=" + analyzeOutcomeWithAI +
-        ", analyzeOutcomeWithAIOnError=" + analyzeOutcomeWithAIOnError +
-        ", llmProvider='" + llmProvider + '\'' +
-        ", llmModelName='" + llmModelName + '\'' +
         ", checkIpsCodes='" + checkIpsCodes + '\'' +
         ", bundle='" + bundle  + '\'' +
         ", suppressErrors=" + Arrays.toString(suppressErrors) +
         ", suppressWarnInfos=" + Arrays.toString(suppressWarnInfos) +
         ", igs=" + Arrays.toString(igs) +
-        ", ssrfProtectionEnabled=" + ssrfProtectionEnabled +
         '}';
   }
 
@@ -962,7 +836,6 @@ public class CliContext {
     addExtension(ext, "showMessageIds", new BooleanType(this.showMessageIds));
     addExtension(ext, "showTerminologyRouting", new BooleanType(this.showTerminologyRouting));
     addExtension(ext, "clearTxCache", new BooleanType(this.clearTxCache));
-    addExtension(ext, "httpReadOnly", new BooleanType(this.httpReadOnly));
     addExtension(ext, "allowExampleUrls", new BooleanType(this.allowExampleUrls));
     addExtension(ext, "txServer", new UriType(this.txServer));
     addExtension(ext, "txServerCache", new BooleanType(this.txServerCache));
@@ -971,7 +844,6 @@ public class CliContext {
     addExtension(ext, "lang", new StringType(this.lang));
     addExtension(ext, "snomedCT", new StringType(this.snomedCT));
     addExtension(ext, "fhirVersion", new StringType(this.fhirVersion));
-    addExtension(ext, "onlyOneEngine", new BooleanType(this.onlyOneEngine));
     addExtension(ext, "ig", new StringType(this.ig));
     // addExtension(ext, "questionnaireMode", new BooleanType(this.questionnaireMode));
     // addExtension(ext, "level", new BooleanType(this.level));
@@ -988,13 +860,8 @@ public class CliContext {
     addExtension(ext, "resolution-context", new StringType(this.resolutionContext));
     addExtension(ext, "r5-bundle-relative-reference-policy", new StringType(this.r5BundleRelativeReferencePolicy));
     addExtension(ext, "disableDefaultResourceFetcher", new BooleanType(this.disableDefaultResourceFetcher));
-    addExtension(ext, "analyzeOutcomeWithAI", new BooleanType(this.analyzeOutcomeWithAI));
-    addExtension(ext, "analyzeOutcomeWithAIOnError", new BooleanType(this.analyzeOutcomeWithAIOnError));
-    addExtension(ext, "llmProvider", new StringType(this.llmProvider));
-    addExtension(ext, "llmModelName", new StringType(this.llmModelName));
     addExtension(ext, "check-ips-codes", new BooleanType(this.checkIpsCodes));
     addExtension(ext, "bundle", new StringType(this.bundle));
-	 addExtension(ext, "ssrf-protection-enabled", new BooleanType(this.ssrfProtectionEnabled));
     if (this.extensions != null && this.extensions.length > 0) {
       for( var extension : this.extensions) {
         addExtension(ext, "extensions", new StringType(extension));
