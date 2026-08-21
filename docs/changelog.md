@@ -13,6 +13,7 @@ Unreleased
 - Add the configuration property `matchbox.fhir.validation.analyzeErrorsWithLlm` (#561)
 - Add the configuration property `matchbox.fhir.mcp.requestAnalysisFromClient` (#561)
 - Allow to override `llmProvider` in the validation GUI
+- Revert the temporary workaround for "Slicing cannot be evaluated" in `ProfileUtilities.findProfile()` (#487); the canonical version resolution rules are honoured again, as org.hl7.fhir.core 6.10.0 resolves versioned extension canonicals correctly
 
 2026/08/14 Release 4.1.13
 
