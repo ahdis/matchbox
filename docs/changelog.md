@@ -12,6 +12,7 @@ Unreleased
 - Remove the configuration property `matchbox.fhir.context.analyzeOutcomeWithAIOnError` (#561)
 - Add the configuration property `matchbox.fhir.validation.analyzeErrorsWithLlm` (#561)
 - Add the configuration property `matchbox.fhir.mcp.requestAnalysisFromClient` (#561)
+- Allow to override `llmProvider` in the validation GUI
 
 2026/08/14 Release 4.1.13
 

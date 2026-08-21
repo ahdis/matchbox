@@ -587,7 +587,7 @@ export class ValidateComponent implements AfterViewInit {
     });
     od.parameter
       ?.filter(
-        (f) => f.use == 'in' && f.name != 'resource' && f.name != 'profile' && f.name != 'ig' && f.name != 'llmProvider'
+        (f) => f.use == 'in' && f.name != 'resource' && f.name != 'profile' && f.name != 'ig'
       )
       .forEach((parameter: fhir.r4.OperationDefinitionParameter) => {
         this.validatorSettings.set(parameter.name, new ValidationParameterDefinition(parameter));
