@@ -97,6 +97,20 @@ class FhirMappingLanguageTests {
 	}
 
 	@Test
+	void testPinnedCanonical() throws FHIRException, IOException {
+		MatchboxEngine engine = new MatchboxEngine(FhirMappingLanguageTests.engine);
+		StructureMap sm = engine.parseMap(getFileAsStringFromResources("/qr2patgender_pin.map"));
+		assertTrue(sm != null);
+		engine.addCanonicalResource(sm);
+		Resource res = engine.transformToFhir(getFileAsStringFromResources("/qr.json"), true,
+				"http://ahdis.ch/matchbox/fml/qr2patgender");
+		assertTrue(res != null);
+		assertEquals("Patient", res.getResourceType().name());
+		Patient patient = (Patient) res;
+		assertEquals("FEMALE", patient.getGender().name());
+	}
+
+	@Test
 	void testMemberOf() throws FHIRException, IOException {
 		MatchboxEngine engine = new MatchboxEngine(FhirMappingLanguageTests.engine);
 		StructureMap sm = engine.parseMap(getFileAsStringFromResources("/memberof.map"));
