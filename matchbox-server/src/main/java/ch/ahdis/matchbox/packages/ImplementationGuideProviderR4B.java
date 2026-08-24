@@ -158,10 +158,14 @@ public class ImplementationGuideProviderR4B extends ImplementationGuideResourceP
 	}
 
 	public OperationOutcome uninstall(ImplementationGuide theResource) {
-		return getOperationOutcome(packageInstallerSvc.uninstall(this.getPackageInstallationSpec()
+		PackageDeleteOutcomeJson outcome = packageInstallerSvc.uninstall(this.getPackageInstallationSpec()
 				.setPackageUrl(theResource.getUrl())
 				.setName(theResource.getName())
-				.setVersion(theResource.getVersion())));
+				.setVersion(theResource.getVersion()));
+		if (outcome != null) {
+			matchboxEngineSupport.onImplementationGuideUninstalled(theResource.getName(), theResource.getVersion());
+		}
+		return getOperationOutcome(outcome);
 	}
 
 	public PackageInstallationSpec getPackageInstallationSpec() {
