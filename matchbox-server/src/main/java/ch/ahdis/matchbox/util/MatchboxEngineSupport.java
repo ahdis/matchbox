@@ -31,6 +31,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Slice;
+import org.springframework.data.domain.Sort;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.support.TransactionTemplate;
 
@@ -39,6 +40,7 @@ import ca.uhn.fhir.jpa.api.dao.DaoRegistry;
 import ca.uhn.fhir.jpa.binary.api.IBinaryStorageSvc;
 import ca.uhn.fhir.jpa.dao.data.INpmPackageVersionDao;
 import ca.uhn.fhir.jpa.dao.data.INpmPackageVersionResourceDao;
+import ca.uhn.fhir.jpa.model.entity.NpmPackageVersionEntity;
 import ca.uhn.fhir.jpa.model.entity.NpmPackageVersionResourceEntity;
 import ca.uhn.fhir.jpa.packages.IHapiPackageCacheManager;
 import ch.ahdis.matchbox.engine.MatchboxEngine;
@@ -484,6 +486,38 @@ public class MatchboxEngineSupport {
 
 	public String getSessionId(final MatchboxEngine engine) {
 		return this.engineCache.findSessionId(engine);
+	}
+
+	/**
+	 * Called after an ImplementationGuide has been uninstalled, so that any engine that had it loaded is not kept
+	 * around with stale content.
+	 * <p>
+	 * In 'onlyOneEngine' mode, there is a single shared engine that cannot selectively unload a package, so it is
+	 * fully recreated and repopulated with the packages that remain in the database (i.e. everything except the
+	 * one that was just uninstalled).
+	 *
+	 * @param packageId      the id of the uninstalled package.
+	 * @param packageVersion the version of the uninstalled package.
+	 */
+	public synchronized void onImplementationGuideUninstalled(final String packageId, final String packageVersion) {
+		if (this.matchboxFhirProperties.getContext().isOnlyOneEngine()) {
+			log.info("Recreating the main engine after uninstalling package {}#{} (onlyOneEngine mode)", packageId, packageVersion);
+			final MatchboxEngine engine = this.getMatchboxEngineNotSynchronized(null, this.cliContext, false, true);
+			final List<NpmPackageVersionEntity> packages = this.myNpmPackageVersionDao
+				.findAll(Sort.by(Sort.Direction.ASC, "myPackageId", "myVersionId"));
+			for (final NpmPackageVersionEntity npmPackage : packages) {
+				try {
+					engine.loadPackage(npmPackage.getPackageId(), npmPackage.getVersionId());
+				} catch (final Exception e) {
+					log.error("Error loading package " + npmPackage.getPackageId() + " " + npmPackage.getVersionId(), e);
+				}
+			}
+		} else {
+			final int evicted = this.engineCache.evictEnginesWithPackage(packageId, packageVersion);
+			if (evicted > 0) {
+				log.info("Evicted {} cached engine(s) that had package {}#{} loaded", evicted, packageId, packageVersion);
+			}
+		}
 	}
 
 	public boolean isInitialized() {
