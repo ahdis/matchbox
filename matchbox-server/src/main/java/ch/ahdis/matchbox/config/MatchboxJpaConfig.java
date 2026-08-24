@@ -557,8 +557,9 @@ public class MatchboxJpaConfig extends StarterJpaConfig {
 
 	@Bean
 	@Primary
-	public StructureMapTransformProvider structureMapTransformProvider() {
-		return new StructureMapTransformProvider();
+	public StructureMapTransformProvider structureMapTransformProvider(@Value("${hapi.fhir.fhir_version}") final FhirVersionEnum serverFhirVersion,
+	                                                                   final MatchboxEngineSupport matchboxEngineSupport) {
+		return new StructureMapTransformProvider(serverFhirVersion, matchboxEngineSupport);
 	}
 
 

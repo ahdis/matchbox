@@ -24,9 +24,12 @@ import java.util.Set;
  * limitations under the License.
  * #L%
  */
+import ca.uhn.fhir.context.FhirVersionEnum;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
+import org.hl7.fhir.convertors.factory.VersionConvertorFactory_40_50;
+import org.hl7.fhir.convertors.factory.VersionConvertorFactory_43_50;
 import org.hl7.fhir.instance.model.api.IBase;
 import org.hl7.fhir.instance.model.api.IBaseResource;
 import org.hl7.fhir.instance.model.api.IDomainResource;
@@ -57,6 +60,7 @@ import ch.ahdis.matchbox.engine.cli.VersionUtil;
 import ch.ahdis.matchbox.engine.exception.MatchboxUnsupportedFhirVersionException;
 import org.hl7.fhir.r4.model.Narrative.NarrativeStatus;
 import org.hl7.fhir.r5.model.*;
+import org.springframework.beans.factory.annotation.Value;
 
 import javax.annotation.Nullable;
 import java.util.ArrayList;
@@ -68,9 +72,15 @@ import java.util.List;
 public class StructureMapTransformProvider extends StructureMapResourceProvider {
 
 	@Autowired
-	protected MatchboxEngineSupport matchboxEngineSupport;
+	protected final MatchboxEngineSupport matchboxEngineSupport;
 
-	private final FhirContext fhirR5Context = FhirContext.forR5Cached();
+	private final FhirContext fhirContext;
+
+	public StructureMapTransformProvider(@Value("${hapi.fhir.fhir_version}") final FhirVersionEnum serverFhirVersion,
+													 final MatchboxEngineSupport matchboxEngineSupport) {
+		this.matchboxEngineSupport = matchboxEngineSupport;
+		this.fhirContext = FhirContext.forCached(serverFhirVersion);
+	}
 
 	@Override
 	public MethodOutcome create(final HttpServletRequest theRequest,
@@ -139,7 +149,7 @@ public class StructureMapTransformProvider extends StructureMapResourceProvider 
 		if (source == null) {
 			// If no source was provided as URL parameter, then the body must be a Parameters resource, containing all
 			// needed parameters.
-			final IBaseResource bodyResource = this.parseBaseResource(body);
+			final IBaseResource bodyResource = this.parseResource(body);
 			if (!(bodyResource instanceof final Parameters inputParameters)) {
 					throw new InvalidRequestException("Expecting a Parameters resource in the body if no source query parameter is provided");
 			}
@@ -151,7 +161,7 @@ public class StructureMapTransformProvider extends StructureMapResourceProvider 
 			encoding = EncodingEnum.detectEncoding(resource);
 
 			if (inputParameters.hasParameter("model")) {
-				final IBaseResource model = this.parseBaseResource(inputParameters.getParameter("model").getValueStringType().getValueNotNull());
+				final IBaseResource model = this.parseResource(inputParameters.getParameter("model").getValueStringType().getValueNotNull());
 				if (model instanceof final StructureDefinition structureDefinition) {
 					models.add(structureDefinition);
 				} else if (model instanceof final Bundle bundle) {
@@ -176,8 +186,8 @@ public class StructureMapTransformProvider extends StructureMapResourceProvider 
 
 			if (inputParameters.hasParameter("map")) {
 				try {
-					map = this.parseResource(inputParameters.getParameter("map").getValueStringType().getValueNotNull(),
-													 StructureMap.class);
+					map =
+						(StructureMap) this.parseResource(inputParameters.getParameter("map").getValueStringType().getValueNotNull());
 				} catch (final Exception e) {
 					final var tempEngine = this.matchboxEngineSupport.getMatchboxEngine(null, cliContext, true, false);
 					map = tempEngine.parseMapR5(inputParameters.getParameter("map").getValueStringType().getValueNotNull());
@@ -257,7 +267,7 @@ public class StructureMapTransformProvider extends StructureMapResourceProvider 
 				// return the parameters resource
 				theServletResponse.setContentType(Constants.CT_FHIR_JSON_NEW);
 				theServletResponse.setCharacterEncoding(Constants.CHARSET_UTF8);
-				theServletResponse.getOutputStream().write(this.fhirR5Context.newJsonParser().setPrettyPrint(true)
+				theServletResponse.getOutputStream().write(this.fhirContext.newJsonParser().setPrettyPrint(true)
 					.encodeResourceToString(resultParameters).getBytes(StandardCharsets.UTF_8));
 			}
 			else {
@@ -287,22 +297,21 @@ public class StructureMapTransformProvider extends StructureMapResourceProvider 
 		return content;
 	}
 
-	private IBaseResource parseBaseResource(String content) {
+	private Resource parseResource(String content) {
 		content = content.trim();
+		final IBaseResource resource;
 		if (content.startsWith("<")) {
-			return this.fhirR5Context.newXmlParser().parseResource(content);
+			resource = this.fhirContext.newXmlParser().parseResource(content);
 		} else {
-			return this.fhirR5Context.newJsonParser().parseResource(content);
+			resource = this.fhirContext.newJsonParser().parseResource(content);
 		}
-	}
-
-	private <T extends IBaseResource> T parseResource(String content, final Class<T> theResourceType) {
-		content = content.trim();
-		if (content.startsWith("<")) {
-			return this.fhirR5Context.newXmlParser().parseResource(theResourceType, content);
-		} else {
-			return this.fhirR5Context.newJsonParser().parseResource(theResourceType, content);
-		}
+		return switch (resource) {
+			case final org.hl7.fhir.r4.model.Resource r4 -> VersionConvertorFactory_40_50.convertResource(r4);
+			case final org.hl7.fhir.r4b.model.Resource r4b -> VersionConvertorFactory_43_50.convertResource(r4b);
+			case final Resource r5 -> r5;
+			default -> throw new MatchboxUnsupportedFhirVersionException("StructureMapTransformProvider",
+			                                                             resource.getStructureFhirVersionEnum());
+		};
 	}
 
 	private void createNarrative(final IBaseResource theResource) {
