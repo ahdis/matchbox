@@ -1,6 +1,7 @@
 package ca.uhn.fhir.jpa.model.entity;
 
 import jakarta.persistence.*;
+import org.hibernate.annotations.ColumnDefault;
 import org.hibernate.annotations.Formula;
 import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.OnDeleteAction;
@@ -91,6 +92,16 @@ public class MbInstalledStructureDefinitionEntity implements Serializable {
   private Boolean isValidatable;
 
   /**
+   * A version number for this row's data, used to detect rows that need a migration to run against them.
+   * <p>
+   * Modeled as a Java {@code byte} so that Hibernate maps it to a native {@code TINYINT} column on H2 and {@code 
+   * SMALLINT} on PostgreSQL.
+   */
+  @Column(name = "META_VERSION", nullable = false)
+  @ColumnDefault("1")
+  private byte metaVersion = 1;
+
+  /**
    * We keep a link to the original entity and cascade changes.
    * Like that, if it gets removed, this entity will also be removed.
    */
@@ -167,6 +178,14 @@ public class MbInstalledStructureDefinitionEntity implements Serializable {
     isValidatable = validatable;
   }
 
+  public byte getMetaVersion() {
+    return this.metaVersion;
+  }
+
+  public void setMetaVersion(final byte metaVersion) {
+    this.metaVersion = metaVersion;
+  }
+
   public void setNpmPackageVersionResourceEntity(final NpmPackageVersionResourceEntity npmPackageVersionResourceEntity) {
     this.npmPackageVersionResourceEntity = npmPackageVersionResourceEntity;
   }
@@ -185,12 +204,14 @@ public class MbInstalledStructureDefinitionEntity implements Serializable {
       // isCurrent is formula-computed, so it's null until the entity is loaded from the database (e.g. still
       // unset on a freshly-constructed, not-yet-persisted instance): compare it null-safely.
       && Objects.equals(isCurrent, that.isCurrent)
-      && isValidatable.equals(that.isValidatable);
+      && isValidatable.equals(that.isValidatable)
+      && metaVersion == that.metaVersion;
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(id, canonicalUrl, title, packageId, packageVersion, type, kind, isCurrent, isValidatable);
+    return Objects.hash(id, canonicalUrl, title, packageId, packageVersion, type, kind, isCurrent, isValidatable,
+      metaVersion);
   }
 
   @Override
@@ -205,6 +226,7 @@ public class MbInstalledStructureDefinitionEntity implements Serializable {
       ", kind='" + kind + '\'' +
       ", isCurrent=" + isCurrent +
       ", isValidatable=" + isValidatable +
+      ", metaVersion=" + metaVersion +
       '}';
   }
 }

@@ -18,6 +18,7 @@ Unreleased
 - Support R4 StructureMaps in $transform (#559)
 - Fix support of StructureMaps with pinned-version targets (#431)
 - When an ImplementationGuide is uninstalled, evict all cached engines that loaded it (#322)
+- Add a `META_VERSION` column to `MB_INSTALLED_STRUCT_DEF`, defaulting to `1`, to allow future data migration
 
 2026/08/14 Release 4.1.13
 
