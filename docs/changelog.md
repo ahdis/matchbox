@@ -16,6 +16,7 @@ Unreleased
 - Revert the temporary workaround for "Slicing cannot be evaluated" in `ProfileUtilities.findProfile()` (#487); the canonical version resolution rules are honoured again, as org.hl7.fhir.core 6.10.0 resolves versioned extension canonicals correctly
 - Fix national core IGs (`hl7.fhir.fr.core`, `hl7.fhir.us.core`, ...) failing to resolve because they were treated as FHIR core packages and looked up on the classpath (#568)
 - Support R4 StructureMaps in $transform (#559)
+- Fix support of StructureMaps with pinned-version targets (#431)
 
 2026/08/14 Release 4.1.13
 

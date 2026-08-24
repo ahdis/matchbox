@@ -753,6 +753,8 @@ public class MatchboxEngine extends ValidationEngine {
 			throw new FHIRException("Unable to determine resource URL for target type");
 		}
 
+		// We remove the FHIR version from the FHIR Core canonical if necessary
+		// E.g. http://hl7.org/fhir/3.0/StructureDefinition/CodeSystem
 		if (Utilities.isAbsoluteUrl(targetTypeUrl)) {
 			int index = targetTypeUrl.indexOf("/"+context.getVersion().substring(0,3)+"/");
 			if (index >= 0) {
@@ -760,17 +762,30 @@ public class MatchboxEngine extends ValidationEngine {
 			}
 		}
 
+		// Extract the StructureDefinition version from the targetTypeUrl if it is present
+		// E.g. http://hl7.org/fhir/StructureDefinition/CodeSystem|4.0.1
+		String targetVersion = null;
+		final int versionPipeIndex = targetTypeUrl.indexOf('|');
+		if (versionPipeIndex > 0) {
+			targetVersion = targetTypeUrl.substring(versionPipeIndex + 1);
+			targetTypeUrl = targetTypeUrl.substring(0, versionPipeIndex);
+		}
+
+		// Let's find that StructureDefinition in our context
 		StructureDefinition structureDefinition = null;
 		for (StructureDefinition sd : context.fetchResourcesByType(StructureDefinition.class)) {
 			if (sd.getUrl().equalsIgnoreCase(targetTypeUrl)) {
-				structureDefinition = sd;
-				break;
+				if (targetVersion == null || targetVersion.equals(sd.getVersion())) {
+					structureDefinition = sd;
+					break;
+				}
 			}
 		}
 
 		if (structureDefinition == null) {
-			log.error("Unable to find StructureDefinition for target type ('" + targetTypeUrl + "')");
-			throw new FHIRException("Unable to find StructureDefinition for target type ('" + targetTypeUrl + "')");
+			final var message = "Unable to find StructureDefinition for canonical URL '%s' and version '%s' in the context".formatted(targetTypeUrl, targetVersion);
+			log.error(message);
+			throw new FHIRException(message);
 		}
 
 		return Manager.build(context, structureDefinition);
