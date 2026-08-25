@@ -189,7 +189,12 @@ public class HttpRequestWrapper {
 		// Check the '_format' parameter first
 		final var formatParam = this.request.getParameter("_format");
 		if (formatParam != null) {
-			final var format = this.mapMediaType(MediaType.parseMediaType(formatParam));
+			final FhirMediaType format;
+			if (formatParam.contains("/")) {
+				format = this.mapMediaType(MediaType.parseMediaType(formatParam));
+			} else {
+				format = this.mapMediaType(new MediaType(formatParam));
+			}
 			if (format == null) {
 				throw new InvalidRequestException(
 					"Unsupported _format parameter: '%s'. Supported types are: %s".formatted(
