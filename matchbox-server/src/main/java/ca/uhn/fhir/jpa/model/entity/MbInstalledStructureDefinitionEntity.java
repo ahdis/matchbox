@@ -34,6 +34,12 @@ public class MbInstalledStructureDefinitionEntity implements Serializable {
   public static final int TITLE_MAX_LENGTH = 300;
 
   /**
+   * The placeholder value set in {@link #docCompTypeCode} for StructureDefinitions that are of type "Bundle" and need
+   * to be processed (see logic in {@link ch.ahdis.matchbox.events.MatchboxEventListener}).
+   */
+  public static final String DOC_BUNDLE_NEEDS_PROCESSING = "DOC_BUNDLE_NEEDS_PROCESSING";
+
+  /**
    * A primary key for the table.
    */
   @Id
