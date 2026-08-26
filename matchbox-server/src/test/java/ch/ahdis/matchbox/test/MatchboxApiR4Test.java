@@ -160,7 +160,7 @@ class MatchboxApiR4Test {
 		String profileMatchbox = "http://matchbox.health/ig/test/r4/StructureDefinition/practitioner-identifier-required";
 		operationOutcome = validationClient.validate(resource, profileMatchbox);
 		assertEquals(0, getValidationFailures((OperationOutcome) operationOutcome));
-		assertEquals("matchbox.health.test.ig.r4#0.2.0", getIg(operationOutcome));
+		assertEquals("matchbox.health.test.ig.r4#0.3.0", getIg(operationOutcome));
 		String sessionIdMatchbox = getSessionId(operationOutcome);
 
 		// verify that we have have different validation engine
@@ -187,7 +187,7 @@ class MatchboxApiR4Test {
 		// assertEquals(0, getValidationFailures((OperationOutcome) operationOutcome));
 		// String sessionId2MatchboxTxNa = getSessionId(operationOutcome);
 		// assertNotEquals(sessionIdMatchbox, sessionId2MatchboxTxNa);
-		// assertEquals("matchbox.health.test.ig.r4#0.2.0", getIg(operationOutcome));
+		// assertEquals("matchbox.health.test.ig.r4#0.3.0", getIg(operationOutcome));
 		// assertEquals("n/a", getTxServer(operationOutcome));
 
 		// // add new parameters should create a new validation engine for default validation
@@ -215,21 +215,21 @@ class MatchboxApiR4Test {
 		String sessionIdFirst = getSessionId(operationOutcome);
 
 		assertEquals(0, getValidationFailures((OperationOutcome) operationOutcome));
-		assertEquals("matchbox.health.test.ig.r4#0.2.0", getIg(operationOutcome));
+		assertEquals("matchbox.health.test.ig.r4#0.3.0", getIg(operationOutcome));
 
 		// validate with the profile and the ig
 		Parameters parameters = new Parameters();
-		parameters.addParameter("ig", "matchbox.health.test.ig.r4#0.2.0");
+		parameters.addParameter("ig", "matchbox.health.test.ig.r4#0.3.0");
 		operationOutcome = validationClient.validate(resource, profileMatchbox, parameters);
 		String sessionIdSecond = getSessionId(operationOutcome);
 		assertEquals(0, getValidationFailures((OperationOutcome) operationOutcome));
-		assertEquals("matchbox.health.test.ig.r4#0.2.0", getIg(operationOutcome));
+		assertEquals("matchbox.health.test.ig.r4#0.3.0", getIg(operationOutcome));
 		assertEquals(sessionIdFirst, sessionIdSecond);
 
-		operationOutcome = validationClient.validate(resource, profileMatchbox + "|0.2.0");
+		operationOutcome = validationClient.validate(resource, profileMatchbox + "|0.3.0");
 		String sessionIdThird = getSessionId(operationOutcome);
 		assertEquals(0, getValidationFailures((OperationOutcome) operationOutcome));
-		assertEquals("matchbox.health.test.ig.r4#0.2.0", getIg(operationOutcome));
+		assertEquals("matchbox.health.test.ig.r4#0.3.0", getIg(operationOutcome));
 		assertEquals(sessionIdFirst, sessionIdThird);
 
 		// validate with the profile and the ig version, has an internal business version 9.9.9
@@ -237,13 +237,13 @@ class MatchboxApiR4Test {
 		operationOutcome = validationClient.validate(resource, profileMatchbox);
 		String sessionIdForth = getSessionId(operationOutcome);
 		assertEquals(0, getValidationFailures((OperationOutcome) operationOutcome));
-		assertEquals("matchbox.health.test.ig.r4#0.2.0", getIg(operationOutcome));
+		assertEquals("matchbox.health.test.ig.r4#0.3.0", getIg(operationOutcome));
 		assertEquals(sessionIdFirst, sessionIdForth);
 
-		operationOutcome = validationClient.validate(resource, profileMatchbox + "|0.2.0");
+		operationOutcome = validationClient.validate(resource, profileMatchbox + "|0.3.0");
 		String sessionIdFifth = getSessionId(operationOutcome);
 		assertEquals(0, getValidationFailures((OperationOutcome) operationOutcome));
-		assertEquals("matchbox.health.test.ig.r4#0.2.0", getIg(operationOutcome));
+		assertEquals("matchbox.health.test.ig.r4#0.3.0", getIg(operationOutcome));
 		assertEquals(sessionIdFirst, sessionIdFifth);
 	}
 
@@ -264,12 +264,12 @@ class MatchboxApiR4Test {
 		String sessionIdFirst = getSessionId(report);
 
 		assertEquals(0, getValidationFailures(report));
-		assertEquals("matchbox.health.test.ig.r4#0.2.0", getIg(report));
+		assertEquals("matchbox.health.test.ig.r4#0.3.0", getIg(report));
 
-		report = this.validateWithGazelle(resource, profileMatchbox + "|0.2.0");
+		report = this.validateWithGazelle(resource, profileMatchbox + "|0.3.0");
 		String sessionIdThird = getSessionId(report);
 		assertEquals(0, getValidationFailures(report));
-		assertEquals("matchbox.health.test.ig.r4#0.2.0", getIg(report));
+		assertEquals("matchbox.health.test.ig.r4#0.3.0", getIg(report));
 		assertEquals(sessionIdFirst, sessionIdThird);
 
 		// validate with the profile and the ig version, has an internal business version 9.9.9
@@ -277,13 +277,13 @@ class MatchboxApiR4Test {
 		report = this.validateWithGazelle(resource, profileMatchbox);
 		String sessionIdForth = getSessionId(report);
 		assertEquals(0, getValidationFailures(report));
-		assertEquals("matchbox.health.test.ig.r4#0.2.0", getIg(report));
+		assertEquals("matchbox.health.test.ig.r4#0.3.0", getIg(report));
 		assertEquals(sessionIdFirst, sessionIdForth);
 
-		report = this.validateWithGazelle(resource, profileMatchbox + "|0.2.0");
+		report = this.validateWithGazelle(resource, profileMatchbox + "|0.3.0");
 		String sessionIdFifth = getSessionId(report);
 		assertEquals(0, getValidationFailures(report));
-		assertEquals("matchbox.health.test.ig.r4#0.2.0", getIg(report));
+		assertEquals("matchbox.health.test.ig.r4#0.3.0", getIg(report));
 		assertEquals(sessionIdFirst, sessionIdFifth);
 	}
 

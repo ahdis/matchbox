@@ -38,7 +38,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 class MbInstalledStructureDefinitionIsCurrentTest {
 
 	private static final String PACKAGE_ID = "matchbox.health.test.ig.r4";
-	private static final String PACKAGE_VERSION = "0.2.0";
+	private static final String PACKAGE_VERSION = "0.3.0";
 
 	@Autowired
 	private MbInstalledStructureDefinitionRepository installedStructureDefinitionRepository;
