@@ -7,6 +7,7 @@ import java.util.Optional;
 import java.util.Set;
 
 import ch.ahdis.matchbox.config.property.MatchboxFhirContextProperties;
+import ch.ahdis.matchbox.events.ImplementationGuideInstalledEvent;
 import jakarta.servlet.http.HttpServletRequest;
 import ca.uhn.fhir.jpa.rp.r4b.ImplementationGuideResourceProvider;
 import org.hl7.fhir.instance.model.api.IIdType;
@@ -20,6 +21,7 @@ import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Sort.Direction;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.support.TransactionTemplate;
@@ -80,6 +82,9 @@ public class ImplementationGuideProviderR4B extends ImplementationGuideResourceP
 	@Autowired
 	private MatchboxFhirContextProperties matchboxContext;
 
+	@Autowired
+	private ApplicationEventPublisher applicationEventPublisher;
+
 	@Override
 	public MethodOutcome delete(HttpServletRequest theRequest, IIdType theResource, String theConditional,
 			RequestDetails theRequestDetails) {
@@ -114,6 +119,7 @@ public class ImplementationGuideProviderR4B extends ImplementationGuideResourceP
 		OperationOutcome oo = load(theResource);
 		MethodOutcome outcome = new MethodOutcome();
 		outcome.setOperationOutcome(oo);
+		this.applicationEventPublisher.publishEvent(new ImplementationGuideInstalledEvent(this));
 		return outcome;
 	}
 
@@ -238,6 +244,7 @@ public class ImplementationGuideProviderR4B extends ImplementationGuideResourceP
 
 		if (this.appProperties.getOnly_install_packages() != null && this.appProperties.getOnly_install_packages()) {
 			// In the 'only_install_packages' mode, we can stop after having installed the IGs in the database
+			this.applicationEventPublisher.publishEvent(new ImplementationGuideInstalledEvent(this));
 			return installOutcome;
 		}
 
@@ -257,6 +264,7 @@ public class ImplementationGuideProviderR4B extends ImplementationGuideResourceP
 			}
 		}
 		log.info("Finished engines during startup  " + VersionUtil.getMemory());
+		this.applicationEventPublisher.publishEvent(new ImplementationGuideInstalledEvent(this));
 		return installOutcome;
 	}
 
