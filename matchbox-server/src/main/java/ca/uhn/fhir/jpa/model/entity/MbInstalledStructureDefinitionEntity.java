@@ -102,6 +102,20 @@ public class MbInstalledStructureDefinitionEntity implements Serializable {
   private byte metaVersion = 1;
 
   /**
+   * The code of the document's composition type (e.g. Composition.type), if this StructureDefinition profiles a 
+   * document. Null for non-document StructureDefinitions.
+   */
+  @Column(name = "DOC_COMP_TYPE_CODE", length = 200, nullable = true)
+  private String docCompTypeCode;
+
+  /**
+   * The code of the document's composition category (e.g. Composition.category), if this StructureDefinition
+   * profiles a document. Null for non-document StructureDefinitions.
+   */
+  @Column(name = "DOC_COMP_CAT_CODE", length = 200, nullable = true)
+  private String docCompCatCode;
+
+  /**
    * We keep a link to the original entity and cascade changes.
    * Like that, if it gets removed, this entity will also be removed.
    */
@@ -186,6 +200,26 @@ public class MbInstalledStructureDefinitionEntity implements Serializable {
     this.metaVersion = metaVersion;
   }
 
+  public String getDocCompTypeCode() {
+    return this.docCompTypeCode;
+  }
+
+  public void setDocCompTypeCode(final String docCompTypeCode) {
+    this.docCompTypeCode = docCompTypeCode;
+  }
+
+  public String getDocCompCatCode() {
+    return this.docCompCatCode;
+  }
+
+  public void setDocCompCatCode(final String docCompCatCode) {
+    this.docCompCatCode = docCompCatCode;
+  }
+
+  public NpmPackageVersionResourceEntity getNpmPackageVersionResourceEntity() {
+    return this.npmPackageVersionResourceEntity;
+  }
+
   public void setNpmPackageVersionResourceEntity(final NpmPackageVersionResourceEntity npmPackageVersionResourceEntity) {
     this.npmPackageVersionResourceEntity = npmPackageVersionResourceEntity;
   }
@@ -205,13 +239,15 @@ public class MbInstalledStructureDefinitionEntity implements Serializable {
       // unset on a freshly-constructed, not-yet-persisted instance): compare it null-safely.
       && Objects.equals(isCurrent, that.isCurrent)
       && isValidatable.equals(that.isValidatable)
-      && metaVersion == that.metaVersion;
+      && metaVersion == that.metaVersion
+      && Objects.equals(docCompTypeCode, that.docCompTypeCode)
+      && Objects.equals(docCompCatCode, that.docCompCatCode);
   }
 
   @Override
   public int hashCode() {
     return Objects.hash(id, canonicalUrl, title, packageId, packageVersion, type, kind, isCurrent, isValidatable,
-      metaVersion);
+      metaVersion, docCompTypeCode, docCompCatCode);
   }
 
   @Override
@@ -227,6 +263,8 @@ public class MbInstalledStructureDefinitionEntity implements Serializable {
       ", isCurrent=" + isCurrent +
       ", isValidatable=" + isValidatable +
       ", metaVersion=" + metaVersion +
+      ", docCompTypeCode='" + docCompTypeCode + '\'' +
+      ", docCompCatCode='" + docCompCatCode + '\'' +
       '}';
   }
 }
