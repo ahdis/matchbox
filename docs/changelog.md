@@ -21,6 +21,8 @@ Unreleased
 - Add a `META_VERSION` column to `MB_INSTALLED_STRUCT_DEF`, defaulting to `1`, to allow future data migration
 - Add `DOC_COMP_TYPE_CODE` and `DOC_COMP_CAT_CODE` columns to `MB_INSTALLED_STRUCT_DEF`, storing the Composition 
   type and category codes when the current profile is a document Bundle making direct use of that Composition.
+- Add the `Bundle/$get-profiles` to infer possible validation profiles for a document Bundle, based on its Composition
+  type and category codes (#355)
 
 2026/08/14 Release 4.1.13
 
