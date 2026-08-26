@@ -127,6 +127,7 @@ public class MatchboxJpaPackageCache {
 		entity.setKind(kind);
 		entity.setValidatable(isValidatable);
 		entity.setNpmPackageVersionResourceEntity(npmPackageVersionResourceEntity);
+		entity.setMetaVersion(MbInstalledStructureDefinitionEntity.CURRENT_META_VERSION);
 		return entity;
 	}
 

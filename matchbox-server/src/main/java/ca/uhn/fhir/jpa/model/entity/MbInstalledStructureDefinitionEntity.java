@@ -23,6 +23,12 @@ import java.util.Objects;
 public class MbInstalledStructureDefinitionEntity implements Serializable {
 
   /**
+   * The current version of the metadata stored in this table. A lower value than current means a data migration needs
+   * to be run against this row.
+   */
+  public static final byte CURRENT_META_VERSION = 2;
+
+  /**
    * The maximum length of {@link #title}.
    */
   public static final int TITLE_MAX_LENGTH = 300;
