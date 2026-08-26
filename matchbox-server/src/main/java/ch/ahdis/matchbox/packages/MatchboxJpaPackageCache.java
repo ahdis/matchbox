@@ -128,6 +128,12 @@ public class MatchboxJpaPackageCache {
 		entity.setValidatable(isValidatable);
 		entity.setNpmPackageVersionResourceEntity(npmPackageVersionResourceEntity);
 		entity.setMetaVersion(MbInstalledStructureDefinitionEntity.CURRENT_META_VERSION);
+
+		// 3. If the entity is for a Bundle resource, we mark it for later processing (see the MatchboxEventListener)
+		if ("resource".equals(kind) && "Bundle".equals(type)) {
+			entity.setDocCompTypeCode(MbInstalledStructureDefinitionEntity.DOC_BUNDLE_NEEDS_PROCESSING);
+		}
+
 		return entity;
 	}
 
