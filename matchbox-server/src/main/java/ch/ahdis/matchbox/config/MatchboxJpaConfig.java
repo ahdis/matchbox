@@ -197,7 +197,10 @@ public class MatchboxJpaConfig extends StarterJpaConfig {
 		fhirServer.registerProviders(
 			validationProvider,
 			structureDefinitionProvider,
-			structureMapListProvider
+			structureMapListProvider,
+			new BundleResourceProvider(matchboxFhirVersion,
+												installedStructureDefinitionRepository,
+												fhirContext.getVersion().getVersion())
 		);
 
 		registerOptionalProviders(
