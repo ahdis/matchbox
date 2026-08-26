@@ -9,7 +9,7 @@ import ca.uhn.fhir.jpa.dao.data.MbInstalledStructureDefinitionRepository;
 import ca.uhn.fhir.jpa.model.entity.MbInstalledStructureDefinitionEntity;
 import ca.uhn.fhir.jpa.model.entity.NpmPackageVersionResourceEntity;
 import ch.ahdis.matchbox.config.MatchboxJpaConfig;
-import ch.ahdis.matchbox.spring.MatchboxEventListener;
+import ch.ahdis.matchbox.events.MatchboxEventListener;
 import org.hl7.fhir.instance.model.api.IBaseBinary;
 import org.hl7.fhir.instance.model.api.IBaseResource;
 import org.slf4j.Logger;

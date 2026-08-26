@@ -3,7 +3,7 @@ package ca.uhn.fhir.jpa.starter;
 import ch.ahdis.matchbox.MatchboxRestfulServer;
 import ch.ahdis.matchbox.config.MatchboxStaticResourceConfig;
 import ch.ahdis.matchbox.config.MatchboxTxConfig;
-import ch.ahdis.matchbox.spring.MatchboxEventListener;
+import ch.ahdis.matchbox.events.MatchboxEventListener;
 import ch.ahdis.matchbox.terminology.MatchboxTxServer;
 import ch.ahdis.matchbox.terminology.RegistryWs;
 import ch.ahdis.matchbox.validation.gazelle.GazelleValidationWs;
