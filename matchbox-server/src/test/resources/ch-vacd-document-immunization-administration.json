@@ -1,0 +1,319 @@
+{
+  "resourceType" : "Bundle",
+  "id" : "1-1-ImmunizationAdministration",
+  "identifier" : {
+    "system" : "urn:ietf:rfc:3986",
+    "value" : "urn:uuid:5bca53b2-0973-4b91-961e-b1e93474c9c2"
+  },
+  "type" : "document",
+  "timestamp" : "2021-06-01T00:00:00.390+02:00",
+  "entry" : [{
+    "fullUrl" : "http://test.fhir.ch/r4/Composition/2-1-ImmunizationAdministrationComposition",
+    "resource" : {
+      "resourceType" : "Composition",
+      "id" : "2-1-ImmunizationAdministrationComposition",
+      "language" : "en-US",
+      "identifier" : {
+        "system" : "urn:ietf:rfc:3986",
+        "value" : "urn:uuid:5bca53b2-0973-4b91-961e-b1e93474c9c2"
+      },
+      "status" : "final",
+      "type" : {
+        "coding" : [{
+          "system" : "http://snomed.info/sct",
+          "code" : "41000179103",
+          "display" : "Immunization record"
+        }]
+      },
+      "category" : [{
+        "coding" : [{
+          "system" : "urn:oid:2.16.756.5.30.1.127.3.10.10",
+          "code" : "urn:che:epr:ch-vacd:immunization-administration:2022"
+        }]
+      }],
+      "subject" : {
+        "reference" : "Patient/3-1-Patient"
+      },
+      "date" : "2021-06-01T00:00:00+02:00",
+      "author" : [{
+        "reference" : "PractitionerRole/6-1-PractitionerRole"
+      }],
+      "title" : "Immunization Administration",
+      "confidentiality" : "N",
+      "_confidentiality" : {
+        "extension" : [{
+          "url" : "http://fhir.ch/ig/ch-core/StructureDefinition/ch-ext-epr-confidentialitycode",
+          "valueCodeableConcept" : {
+            "coding" : [{
+              "system" : "http://snomed.info/sct",
+              "code" : "17621005",
+              "display" : "Normal (qualifier value)"
+            }]
+          }
+        }]
+      },
+      "custodian" : {
+        "reference" : "Organization/5-1-Organization"
+      },
+      "section" : [{
+        "id" : "administration",
+        "title" : "Immunization Administration",
+        "code" : {
+          "coding" : [{
+            "system" : "http://loinc.org",
+            "code" : "11369-6",
+            "display" : "Hx of Immunization"
+          }]
+        },
+        "entry" : [{
+          "reference" : "Immunization/7-1-Immunization"
+        }]
+      },
+        {
+          "id" : "originalRepresentation",
+          "title" : "Original representation",
+          "code" : {
+            "coding" : [{
+              "system" : "http://loinc.org",
+              "code" : "55108-5",
+              "display" : "Clinical presentation Document"
+            }]
+          },
+          "entry" : [{
+            "reference" : "Binary/1-1-ImmunizationAdministration-Binary"
+          }]
+        },
+        {
+          "id" : "Annotation",
+          "title" : "Comments",
+          "code" : {
+            "coding" : [{
+              "system" : "http://loinc.org",
+              "code" : "48767-8",
+              "display" : "Annotation comment Imp"
+            }]
+          },
+          "text" : {
+            "status" : "generated",
+            "div" : "<div xmlns=\"http://www.w3.org/1999/xhtml\">This is the section containing all immunization entries.</div>"
+          }
+        }]
+    }
+  },
+    {
+      "fullUrl" : "http://test.fhir.ch/r4/Patient/3-1-Patient",
+      "resource" : {
+        "resourceType" : "Patient",
+        "id" : "3-1-Patient",
+        "identifier" : [{
+          "type" : {
+            "coding" : [{
+              "system" : "http://terminology.hl7.org/CodeSystem/v2-0203",
+              "code" : "MR"
+            }]
+          },
+          "system" : "urn:oid:2.999.1.2.3.4",
+          "value" : "12345678"
+        }],
+        "name" : [{
+          "family" : "Wegmueller",
+          "given" : ["Monika"]
+        }],
+        "telecom" : [{
+          "system" : "phone",
+          "value" : "tel:+41.32.685.12.34",
+          "use" : "home"
+        }],
+        "gender" : "female",
+        "birthDate" : "1967-02-10",
+        "address" : [{
+          "type" : "both",
+          "line" : ["Leidensweg 10"],
+          "city" : "Specimendorf",
+          "postalCode" : "9876",
+          "country" : "CH"
+        }]
+      }
+    },
+    {
+      "fullUrl" : "http://test.fhir.ch/r4/Practitioner/4-1-Practitioner",
+      "resource" : {
+        "resourceType" : "Practitioner",
+        "id" : "4-1-Practitioner",
+        "identifier" : [{
+          "system" : "urn:oid:2.51.1.3",
+          "value" : "7601888888884"
+        }],
+        "active" : true,
+        "name" : [{
+          "family" : "Bereit",
+          "given" : ["Allzeit"],
+          "prefix" : ["Dr. med."]
+        }],
+        "telecom" : [{
+          "system" : "phone",
+          "value" : "tel:+41.32.234.55.66",
+          "use" : "work"
+        },
+          {
+            "system" : "fax",
+            "value" : "fax:+41.32.234.55.67",
+            "use" : "work"
+          },
+          {
+            "system" : "email",
+            "value" : "mailto:bereit@gruppenpraxis.ch",
+            "use" : "work"
+          },
+          {
+            "system" : "url",
+            "value" : "http://www.gruppenpraxis.ch",
+            "use" : "work"
+          }],
+        "address" : [{
+          "type" : "physical",
+          "line" : ["Doktorgasse 2"],
+          "city" : "Musterhausen",
+          "postalCode" : "8888",
+          "country" : "CH"
+        }]
+      }
+    },
+    {
+      "fullUrl" : "http://test.fhir.ch/r4/Organization/5-1-Organization",
+      "resource" : {
+        "resourceType" : "Organization",
+        "id" : "5-1-Organization",
+        "identifier" : [{
+          "system" : "urn:oid:2.51.1.3",
+          "value" : "7601888888884"
+        }],
+        "name" : "Gruppenpraxis CH",
+        "telecom" : [{
+          "system" : "phone",
+          "value" : "tel:+41.32.234.55.66",
+          "use" : "work"
+        },
+          {
+            "system" : "fax",
+            "value" : "fax:+41.32.234.55.67",
+            "use" : "work"
+          },
+          {
+            "system" : "email",
+            "value" : "mailto:bereit@gruppenpraxis.ch",
+            "use" : "work"
+          },
+          {
+            "system" : "url",
+            "value" : "http://www.gruppenpraxis.ch",
+            "use" : "work"
+          }],
+        "address" : [{
+          "line" : ["Doktorgasse 2"],
+          "city" : "Musterhausen",
+          "state" : "ZH",
+          "postalCode" : "8888",
+          "country" : "CH"
+        }]
+      }
+    },
+    {
+      "fullUrl" : "http://test.fhir.ch/r4/PractitionerRole/6-1-PractitionerRole",
+      "resource" : {
+        "resourceType" : "PractitionerRole",
+        "id" : "6-1-PractitionerRole",
+        "active" : true,
+        "practitioner" : {
+          "reference" : "Practitioner/4-1-Practitioner"
+        },
+        "organization" : {
+          "reference" : "Organization/5-1-Organization"
+        }
+      }
+    },
+    {
+      "fullUrl" : "http://test.fhir.ch/r4/Immunization/7-1-Immunization",
+      "resource" : {
+        "resourceType" : "Immunization",
+        "id" : "7-1-Immunization",
+        "extension" : [{
+          "url" : "http://fhir.ch/ig/ch-core/StructureDefinition/ch-ext-author",
+          "valueReference" : {
+            "reference" : "Patient/3-1-Patient"
+          }
+        },
+          {
+            "url" : "http://fhir.ch/ig/ch-vacd/StructureDefinition/ch-vacd-ext-verification-status",
+            "valueCoding" : {
+              "system" : "http://snomed.info/sct",
+              "code" : "76104008",
+              "display" : "Not confirmed"
+            }
+          }],
+        "identifier" : [{
+          "system" : "urn:oid:2.999.1.2.3.4",
+          "value" : "1829774"
+        }],
+        "status" : "completed",
+        "vaccineCode" : {
+          "coding" : [{
+            "system" : "http://fhir.ch/ig/ch-vacd/CodeSystem/ch-vacd-swissmedic-cs",
+            "code" : "637",
+            "display" : "Boostrix"
+          }]
+        },
+        "patient" : {
+          "reference" : "Patient/3-1-Patient"
+        },
+        "occurrenceDateTime" : "2017-09-15T09:12:56+02:00",
+        "recorded" : "2017-09-15T09:12:56+02:00",
+        "lotNumber" : "12-34244",
+        "route" : {
+          "coding" : [{
+            "system" : "http://standardterms.edqm.eu",
+            "code" : "20035000",
+            "display" : "Intramuscular use"
+          }]
+        },
+        "performer" : [{
+          "actor" : {
+            "reference" : "PractitionerRole/6-1-PractitionerRole"
+          }
+        }],
+        "protocolApplied" : [{
+          "targetDisease" : [{
+            "coding" : [{
+              "system" : "http://snomed.info/sct",
+              "code" : "397430003",
+              "display" : "Diphtheria caused by Corynebacterium diphtheriae (disorder)"
+            }]
+          },
+            {
+              "coding" : [{
+                "system" : "http://snomed.info/sct",
+                "code" : "76902006",
+                "display" : "Tetanus (disorder)"
+              }]
+            },
+            {
+              "coding" : [{
+                "system" : "http://snomed.info/sct",
+                "code" : "27836007",
+                "display" : "Pertussis (disorder)"
+              }]
+            }],
+          "doseNumberPositiveInt" : 1
+        }]
+      }
+    },
+    {
+      "fullUrl" : "http://test.fhir.ch/r4/Binary/1-1-ImmunizationAdministration-Binary",
+      "resource" : {
+        "resourceType" : "Binary",
+        "id" : "1-1-ImmunizationAdministration-Binary",
+        "contentType" : "application/pdf",
+        "data" : ""
+      }
+    }]
+}

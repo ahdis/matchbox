@@ -3,6 +3,7 @@ package ch.ahdis.matchbox.test;
 import ca.uhn.fhir.context.BaseRuntimeChildDefinition;
 import ca.uhn.fhir.context.FhirContext;
 import ca.uhn.fhir.context.RuntimeResourceDefinition;
+import ca.uhn.fhir.jpa.dao.data.MbInstalledStructureDefinitionRepository;
 import ca.uhn.fhir.jpa.starter.Application;
 import ch.ahdis.matchbox.validation.gazelle.models.validation.ValidationItem;
 import ch.ahdis.matchbox.validation.gazelle.models.validation.ValidationReport;
@@ -10,17 +11,14 @@ import ch.ahdis.matchbox.validation.gazelle.models.validation.ValidationRequest;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.commons.io.FileUtils;
 import org.hl7.fhir.instance.model.api.*;
-import org.hl7.fhir.r4.model.CanonicalType;
-import org.hl7.fhir.r4.model.CapabilityStatement;
-import org.hl7.fhir.r4.model.OperationDefinition;
-import org.hl7.fhir.r4.model.OperationOutcome;
+import org.hl7.fhir.r4.model.*;
 import org.hl7.fhir.r4.model.OperationOutcome.IssueSeverity;
 import org.hl7.fhir.r4.model.OperationOutcome.OperationOutcomeIssueComponent;
-import org.hl7.fhir.r4.model.Parameters;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.context.SpringBootTest.WebEnvironment;
 import org.springframework.core.io.ClassPathResource;
@@ -38,10 +36,7 @@ import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertNotEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 
 @SpringBootTest(webEnvironment = WebEnvironment.DEFINED_PORT)
 @ContextConfiguration(classes = {Application.class})
@@ -56,6 +51,9 @@ class MatchboxApiR4Test {
 	private final ValidationClient validationClient = new ValidationClient(FHIR_CONTEXT, TARGET_SERVER + "/fhir");
 	private final HttpClient httpClient = HttpClient.newHttpClient();
 	private final ObjectMapper objectMapper = new ObjectMapper();
+
+	@Autowired
+	protected MbInstalledStructureDefinitionRepository installedStructureDefinitionRepository;
 
 	@BeforeAll
 	void waitUntilStartup() throws Exception {
@@ -506,6 +504,42 @@ class MatchboxApiR4Test {
 		// Currently fails with HTTP 500 due to ClassCastException (R5 ValueSet cast to R4 Resource
 		// inside VersionCanonicalizer$R4Strategy). After the fix this should return 200.
 		assertEquals(200, response.statusCode());
+	}
+
+	@Test
+	void testDocumentCodeExtraction() throws Exception {
+		final var entities = this.installedStructureDefinitionRepository
+			.findAllByCanonical("http://matchbox.health/ig/test/r4/StructureDefinition/document-bundle");
+		assertEquals(1, entities.size());
+		final var entity = entities.getFirst();
+		assertEquals("http://snomed.info/sct#41000179103", entity.getDocCompTypeCode());
+		assertEquals("urn:oid:2.16.756.5.30.1.127.3.10.10#urn:che:epr:ch-vacd:immunization-administration:2022", entity.getDocCompCatCode());
+	}
+
+	@Test
+	void testBundleGetProfilesMatches() throws Exception {
+		final var documentJson = getContent("ch-vacd-document-immunization-administration.json");
+		final var document = FHIR_CONTEXT.newJsonParser().parseResource(Bundle.class, documentJson);
+		final var response = this.validationClient.operation()
+			.onType("Bundle")
+			.named("$get-profiles")
+			.withParameter(Parameters.class, "resource", document)
+			.returnResourceType(Parameters.class)
+			.execute();
+		assertNotNull(response);
+	}
+
+	@Test
+	void testBundleGetProfilesDoesntMatch() throws Exception {
+		final var documentXml = getContent("Bundle-51Doc-Gelbfieber.xml");
+		final var document = FHIR_CONTEXT.newXmlParser().parseResource(Bundle.class, documentXml);
+		final var response = this.validationClient.operation()
+			.onType("Bundle")
+			.named("$get-profiles")
+			.withParameter(Parameters.class, "resource", document)
+			.returnResourceType(Parameters.class)
+			.execute();
+		assertNotNull(response);
 	}
 
 	private String getContent(String resourceName) throws IOException {
