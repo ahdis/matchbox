@@ -253,6 +253,14 @@ public abstract class BaseWorkerContext extends I18nBase implements IWorkerConte
   private Map<String, Map<String, ResourceProxy>> allResourcesById = new HashMap<String, Map<String, ResourceProxy>>();
   private Map<String, List<ResourceProxy>> allResourcesByUrl = new HashMap<String, List<ResourceProxy>>();
 
+  // matchbox patch: conformance resources loaded from a package keep their narrative in memory, where it is
+  // never read: validation does not look at DomainResource.text. Measured on hl7.fhir.r4.core plus the
+  // myhealth.eu.fhir.laboratory closure, the parsed XHTML accounts for ~970 MiB of a 2.1 GiB heap.
+  // HAPI already drops narrative when it persists package resources (JpaPackageCache.addPackageToCache),
+  // so this keeps the in-memory contexts consistent with what the server serves from the database.
+  // Set -Dmatchbox.retainPackageNarrative=true to keep it.
+  private boolean stripPackageNarrative = !Boolean.getBoolean("matchbox.retainPackageNarrative");
+
   // all maps are to the full URI
   private CanonicalResourceManager<CodeSystem> codeSystems = new CanonicalResourceManager<CodeSystem>(false, minimalMemory);
   private final HashMap<String, SystemSupportInformation> supportedCodeSystems = new HashMap<>();
@@ -397,6 +405,7 @@ public abstract class BaseWorkerContext extends I18nBase implements IWorkerConte
       suppressedMappings = other.suppressedMappings;
       cutils.setSuppressedMappings(other.suppressedMappings);
       locale = other.locale; // matchbox patch https://github.com/ahdis/matchbox/issues/425
+      stripPackageNarrative = other.stripPackageNarrative; // matchbox patch, see stripPackageNarrative
     }
   }
 
@@ -509,6 +518,13 @@ public abstract class BaseWorkerContext extends I18nBase implements IWorkerConte
   }
 
   public void cacheResourceFromPackage(Resource r, PackageInformation packageInfo) throws FHIRException {
+    // matchbox patch: drop the narrative of resources coming from a package, see stripPackageNarrative.
+    // packageInfo is null when a resource is cached at runtime (cacheResource), e.g. a StructureMap whose
+    // narrative was deliberately rendered by StructureMapTransformProvider - those keep their narrative.
+    if (packageInfo != null && stripPackageNarrative && r instanceof DomainResource domainResource
+      && domainResource.hasText()) {
+      domainResource.setText(null);
+    }
     synchronized (lock) {
       definitionsChanged();
       if (packageInfo != null) {
@@ -3765,6 +3781,21 @@ public abstract class BaseWorkerContext extends I18nBase implements IWorkerConte
     }
     return res;
   }
+
+  // matchbox patch, see stripPackageNarrative
+  public boolean isStripPackageNarrative() {
+    return stripPackageNarrative;
+  }
+
+  /**
+   * Whether the narrative of conformance resources loaded from a package is dropped instead of being kept in
+   * memory. Only affects resources cached after this call. Defaults to true, unless the system property
+   * {@code matchbox.retainPackageNarrative} is set.
+   */
+  public void setStripPackageNarrative(boolean stripPackageNarrative) {
+    this.stripPackageNarrative = stripPackageNarrative;
+  }
+  // END matchbox patch
 
   public void setLocale(Locale locale) {
     // matchbox patch https://github.com/ahdis/matchbox/issues/425

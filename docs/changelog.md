@@ -13,6 +13,7 @@ Unreleased
 - Add the configuration property `matchbox.fhir.validation.analyzeErrorsWithLlm` (#561)
 - Add the configuration property `matchbox.fhir.mcp.requestAnalysisFromClient` (#561)
 - Allow to override `llmProvider` in the validation GUI
+- Don't keep the narrative of conformance resources loaded from a package in the validation contexts, it is never used during validation and accounts for about half of the heap (#566)
 
 2026/08/14 Release 4.1.13
 
