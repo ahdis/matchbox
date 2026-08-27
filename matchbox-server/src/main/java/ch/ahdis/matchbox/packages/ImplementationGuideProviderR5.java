@@ -17,6 +17,7 @@ import ca.uhn.fhir.rest.server.SimpleBundleProvider;
 import ch.ahdis.matchbox.CliContext;
 import ch.ahdis.matchbox.config.property.MatchboxFhirContextProperties;
 import ch.ahdis.matchbox.events.ImplementationGuideInstalledEvent;
+import ch.ahdis.matchbox.events.ImplementationGuideUninstalledEvent;
 import ch.ahdis.matchbox.util.MatchboxEngineSupport;
 import ch.ahdis.matchbox.engine.MatchboxEngine;
 import ch.ahdis.matchbox.engine.cli.VersionUtil;
@@ -147,7 +148,11 @@ public class ImplementationGuideProviderR5 extends ImplementationGuideResourcePr
 				.setName(theResource.getName())
 				.setVersion(theResource.getVersion()));
 		if (outcome != null) {
-			matchboxEngineSupport.onImplementationGuideUninstalled(theResource.getName(), theResource.getVersion());
+			this.applicationEventPublisher.publishEvent(new ImplementationGuideUninstalledEvent(
+				this,
+				theResource.getName(),
+				theResource.getVersion()
+			));
 		}
 		return getOperationOutcome(outcome);
 	}

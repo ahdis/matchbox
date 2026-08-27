@@ -8,6 +8,7 @@ import java.util.Set;
 
 import ch.ahdis.matchbox.config.property.MatchboxFhirContextProperties;
 import ch.ahdis.matchbox.events.ImplementationGuideInstalledEvent;
+import ch.ahdis.matchbox.events.ImplementationGuideUninstalledEvent;
 import jakarta.servlet.http.HttpServletRequest;
 import ca.uhn.fhir.jpa.rp.r4.ImplementationGuideResourceProvider;
 import org.hl7.fhir.instance.model.api.IIdType;
@@ -169,7 +170,11 @@ public class ImplementationGuideProviderR4 extends ImplementationGuideResourcePr
 				.setName(theResource.getName())
 				.setVersion(theResource.getVersion()));
 		if (outcome != null) {
-			matchboxEngineSupport.onImplementationGuideUninstalled(theResource.getName(), theResource.getVersion());
+			this.applicationEventPublisher.publishEvent(new ImplementationGuideUninstalledEvent(
+				this,
+				theResource.getName(),
+				theResource.getVersion()
+			));
 		}
 		return getOperationOutcome(outcome);
 	}
