@@ -56,6 +56,7 @@ import ch.ahdis.matchbox.interceptors.MatchboxValidationInterceptor;
 import ch.ahdis.matchbox.mappinglanguage.StructureMapListProvider;
 import ch.ahdis.matchbox.mappinglanguage.StructureMapTransformProvider;
 import ch.ahdis.matchbox.packages.*;
+import ch.ahdis.matchbox.packages.migrations.MbInstalledStructureDefinitionV1Migration;
 import ch.ahdis.matchbox.providers.*;
 import ch.ahdis.matchbox.questionnaire.*;
 import ch.ahdis.matchbox.statistics.OperationOutcomeResourceProviderR4;
@@ -632,27 +633,6 @@ public class MatchboxJpaConfig extends StarterJpaConfig {
 	@Bean
 	public MatchboxJpaPackageCache matchboxJpaPackageCache(final MbInstalledStructureDefinitionRepository installedStructureDefinitionRepository) {
 		return new MatchboxJpaPackageCache(installedStructureDefinitionRepository);
-	}
-
-	/**
-	 * Prototype-scoped: this bean only does one-time startup work in {@code ApplicationRunner#run}, and it'll be
-	 * destroyed after. See JavaDoc of {@link MbInstalledStructureDefinitionMigration} for details.
-	 */
-	@Bean
-	@Scope("prototype")
-	public MbInstalledStructureDefinitionMigration mbInstalledStructureDefinitionMigration(
-		final MbInstalledStructureDefinitionRepository installedStructureDefinitionRepository,
-		final MatchboxJpaPackageCache matchboxJpaPackageCache,
-		final INpmPackageVersionResourceDao myPackageVersionResourceDao,
-		final IBinaryStorageSvc myBinaryStorageSvc,
-		final DaoRegistry myDaoRegistry,
-		final PlatformTransactionManager txManager) {
-		return new MbInstalledStructureDefinitionMigration(installedStructureDefinitionRepository,
-																			matchboxJpaPackageCache,
-																			myPackageVersionResourceDao,
-																			myBinaryStorageSvc,
-																			myDaoRegistry,
-																			txManager);
 	}
 
 	private static void registerOptionalProvider(final MatchboxRestfulServer fhirServer,

@@ -1,4 +1,4 @@
-package ch.ahdis.matchbox.packages;
+package ch.ahdis.matchbox.packages.migrations;
 
 import ca.uhn.fhir.context.FhirContext;
 import ca.uhn.fhir.jpa.api.dao.DaoRegistry;
@@ -8,8 +8,7 @@ import ca.uhn.fhir.jpa.dao.data.INpmPackageVersionResourceDao;
 import ca.uhn.fhir.jpa.dao.data.MbInstalledStructureDefinitionRepository;
 import ca.uhn.fhir.jpa.model.entity.MbInstalledStructureDefinitionEntity;
 import ca.uhn.fhir.jpa.model.entity.NpmPackageVersionResourceEntity;
-import ch.ahdis.matchbox.config.MatchboxJpaConfig;
-import ch.ahdis.matchbox.events.MatchboxEventListener;
+import ch.ahdis.matchbox.packages.MatchboxJpaPackageCache;
 import org.hl7.fhir.instance.model.api.IBaseBinary;
 import org.hl7.fhir.instance.model.api.IBaseResource;
 import org.slf4j.Logger;
@@ -39,12 +38,6 @@ import static java.util.Objects.requireNonNull;
  * installed, so on an upgrade the StructureDefinitions installed by previous versions were never processed by that
  * hook and the table starts out empty.
  * <p>
- * This runs as an {@link ApplicationRunner} so that it completes before {@link MatchboxEventListener}
- * starts installing the configured ImplementationGuides.
- * <p>
- * The bean is registered with prototype scope (see {@link MatchboxJpaConfig}) since it only does one-time startup
- * work: there won't be any reference kept to it, and it'll be collected by GC during the app lifecycle.
- * <p>
  * Each page is processed in its own short transaction (see {@link #backfillPage}), rather than the whole backfill
  * running as one long transaction: the embedded web server starts accepting HTTP requests during context refresh,
  * i.e. before this ApplicationRunner even starts, so a single transaction spanning every installed
@@ -54,8 +47,8 @@ import static java.util.Objects.requireNonNull;
  *
  * @author Quentin Ligier
  **/
-public class MbInstalledStructureDefinitionMigration implements ApplicationRunner {
-	private static final Logger LOG = LoggerFactory.getLogger(MbInstalledStructureDefinitionMigration.class);
+public class MbInstalledStructureDefinitionV1Migration {
+	private static final Logger LOG = LoggerFactory.getLogger(MbInstalledStructureDefinitionV1Migration.class);
 	private static final int PAGE_SIZE = 250;
 
 	private final MbInstalledStructureDefinitionRepository installedStructureDefinitionRepository;
@@ -66,12 +59,12 @@ public class MbInstalledStructureDefinitionMigration implements ApplicationRunne
 	private final TransactionTemplate pageTxTemplate;
 	private final TransactionTemplate entityTxTemplate;
 
-	public MbInstalledStructureDefinitionMigration(final MbInstalledStructureDefinitionRepository installedStructureDefinitionRepository,
-																  final MatchboxJpaPackageCache matchboxJpaPackageCache,
-																  final INpmPackageVersionResourceDao myPackageVersionResourceDao,
-																  final IBinaryStorageSvc myBinaryStorageSvc,
-																  final DaoRegistry myDaoRegistry,
-																  final PlatformTransactionManager txManager) {
+	public MbInstalledStructureDefinitionV1Migration(final MbInstalledStructureDefinitionRepository installedStructureDefinitionRepository,
+	                                                 final MatchboxJpaPackageCache matchboxJpaPackageCache,
+	                                                 final INpmPackageVersionResourceDao myPackageVersionResourceDao,
+	                                                 final IBinaryStorageSvc myBinaryStorageSvc,
+	                                                 final DaoRegistry myDaoRegistry,
+	                                                 final PlatformTransactionManager txManager) {
 		this.installedStructureDefinitionRepository = requireNonNull(installedStructureDefinitionRepository);
 		this.matchboxJpaPackageCache = requireNonNull(matchboxJpaPackageCache);
 		this.myPackageVersionResourceDao = requireNonNull(myPackageVersionResourceDao);
@@ -86,17 +79,10 @@ public class MbInstalledStructureDefinitionMigration implements ApplicationRunne
 
 	/**
 	 * Deliberately not {@code @Transactional}: each page gets its own transaction via {@link #pageTxTemplate} in
-	 * {@link #backfillPage}, see the class-level javadoc for why.
+	 * {@link #backfillPage}.
 	 */
-	@Override
-	public void run(final ApplicationArguments args) {
-		if (this.installedStructureDefinitionRepository.count() > 0) {
-			// Either this is not the first startup after the upgrade, or packages have already been installed
-			// (e.g. igsPreloaded) and went through the normal, up-to-date hook. Nothing to backfill.
-			return;
-		}
-		LOG.info("MB_INSTALLED_STRUCT_DEF is empty, backfilling it from the already-installed StructureDefinitions");
-
+	public void run() {
+		LOG.info("Backfilling MB_INSTALLED_STRUCT_DEF from the already-installed StructureDefinitions");
 		Pageable page = PageRequest.of(0, PAGE_SIZE);
 		boolean hasNext;
 		do {
@@ -104,7 +90,7 @@ public class MbInstalledStructureDefinitionMigration implements ApplicationRunne
 			hasNext = this.backfillPage(page);
 			page = page.next();
 		} while (hasNext);
-		LOG.info("MB_INSTALLED_STRUCT_DEF migration complete");
+		LOG.debug("MB_INSTALLED_STRUCT_DEF migration complete");
 	}
 
 	/**
