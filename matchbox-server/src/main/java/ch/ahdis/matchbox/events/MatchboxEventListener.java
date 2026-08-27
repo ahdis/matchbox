@@ -9,6 +9,7 @@ import ch.ahdis.matchbox.packages.MatchboxJpaPackageCache;
 import ch.ahdis.matchbox.packages.documents.DocumentCompositionCodesExtractor;
 import ch.ahdis.matchbox.packages.migrations.MbInstalledStructureDefinitionV1Migration;
 import ch.ahdis.matchbox.packages.migrations.MbInstalledStructureDefinitionV2Migration;
+import ch.ahdis.matchbox.util.MatchboxEngineSupport;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
@@ -29,6 +30,7 @@ public class MatchboxEventListener {
 	private final MatchboxImplementationGuideProvider igProvider;
 	private final PlatformTransactionManager txManager;
 	private final MatchboxJpaPackageCache matchboxJpaPackageCache;
+	private final MatchboxEngineSupport matchboxEngineSupport;
 
 	public MatchboxEventListener(final MbInstalledStructureDefinitionRepository installedStructureDefinitionRepository,
 										  final DaoRegistry myDaoRegistry,
@@ -36,7 +38,8 @@ public class MatchboxEventListener {
 	                             final INpmPackageVersionResourceDao myPackageVersionResourceDao,
 	                             final MatchboxImplementationGuideProvider igProvider,
 	                             final PlatformTransactionManager txManager,
-	                             final MatchboxJpaPackageCache matchboxJpaPackageCache) {
+	                             final MatchboxJpaPackageCache matchboxJpaPackageCache,
+	                             final MatchboxEngineSupport matchboxEngineSupport) {
 		this.installedStructureDefinitionRepository = installedStructureDefinitionRepository;
 		this.myDaoRegistry = myDaoRegistry;
 		this.myBinaryStorageSvc = myBinaryStorageSvc;
@@ -44,6 +47,7 @@ public class MatchboxEventListener {
 		this.igProvider = igProvider;
 		this.txManager = txManager;
 		this.matchboxJpaPackageCache = matchboxJpaPackageCache;
+		this.matchboxEngineSupport = matchboxEngineSupport;
 	}
 
 	/**
@@ -84,6 +88,15 @@ public class MatchboxEventListener {
 			}
 		}
 		LOGGER.trace("Done processing the ImplementationGuideInstalledEvent");
+	}
+
+	/**
+	 * An ImplementationGuide has been uninstalled: remove all relevant engines from cache.
+	 */
+	@EventListener
+	public void handleImplementationGuideUninstalledEvent(final ImplementationGuideUninstalledEvent ignored) {
+		LOGGER.debug("Received an ImplementationGuideUninstalledEvent");
+		this.matchboxEngineSupport.onImplementationGuideUninstalled(ignored.getPackageId(), ignored.getPackageVersion());
 	}
 
 	/**
