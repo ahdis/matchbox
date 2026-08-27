@@ -5,6 +5,7 @@ import ca.uhn.fhir.jpa.dao.data.MbInstalledStructureDefinitionRepository;
 import ca.uhn.fhir.jpa.model.entity.MbInstalledStructureDefinitionEntity;
 import ca.uhn.fhir.jpa.model.entity.NpmPackageVersionResourceEntity;
 import ca.uhn.fhir.util.FhirTerser;
+import ch.ahdis.matchbox.packages.migrations.MbInstalledStructureDefinitionV1Migration;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hl7.fhir.instance.model.api.IBase;
 import org.hl7.fhir.instance.model.api.IBaseResource;
@@ -70,7 +71,7 @@ public class MatchboxJpaPackageCache {
 	 * <p>
 	 * Split out from {@link #interceptEntityAfterSaving} so callers that need to isolate the save in its own
 	 * transaction can build the entity first and save it independently - see
-	 * {@link MbInstalledStructureDefinitionMigration}, where each row's save is isolated in its own transaction so
+	 * {@link MbInstalledStructureDefinitionV1Migration}, where each row's save is isolated in its own transaction so
 	 * a single bad row (e.g. a constraint violation) is simply skipped instead of aborting the whole backfill.
 	 */
 	@Nullable

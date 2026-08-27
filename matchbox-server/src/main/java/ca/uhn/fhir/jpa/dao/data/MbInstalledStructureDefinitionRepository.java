@@ -1,6 +1,8 @@
 package ca.uhn.fhir.jpa.dao.data;
 
 import ca.uhn.fhir.jpa.model.entity.MbInstalledStructureDefinitionEntity;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Slice;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -27,11 +29,19 @@ public interface MbInstalledStructureDefinitionRepository
   List<MbInstalledStructureDefinitionEntity> findAllByDocumentTypeAndCategory(@Param("typeCode") final String typeCode,
                                                                               @Param("categoryCode") final String categoryCode);
   
+  @Query("SELECT e FROM MbInstalledStructureDefinitionEntity e WHERE e.docCompTypeCode is not null OR e.docCompCatCode is not null")
+  List<MbInstalledStructureDefinitionEntity> findAllRecognizableDocuments();
+  
+  @Query("SELECT e FROM MbInstalledStructureDefinitionEntity e WHERE e.metaVersion = :metaVersion")
+  Slice<MbInstalledStructureDefinitionEntity> findAllByMetaVersion(@Param("metaVersion") final byte metaVersion,
+                                                                   final Pageable pageable);
+
   @Query("SELECT CASE WHEN COUNT(e) > 0 THEN true ELSE false END FROM MbInstalledStructureDefinitionEntity e " +
     "WHERE e.canonicalUrl = :canonical AND e.type = :type")
   boolean existsByCanonicalAndType(@Param("canonical") final String canonical,
                                    @Param("type") final String type);
-  
-  @Query("SELECT e FROM MbInstalledStructureDefinitionEntity e WHERE e.docCompTypeCode is not null OR e.docCompCatCode is not null")
-  List<MbInstalledStructureDefinitionEntity> findAllRecognizableDocuments();
+
+  boolean existsByMetaVersion(byte metaVersion);
+
+  long countByMetaVersion(byte metaVersion);
 }
