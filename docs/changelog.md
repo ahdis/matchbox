@@ -23,6 +23,7 @@ Unreleased
   type and category codes when the current profile is a document Bundle making direct use of that Composition.
 - Add the `Bundle/$get-profiles` to infer possible validation profiles for a document Bundle, based on its Composition
   type and category codes (#355)
+- Don't keep the narrative of resources loaded in the engine context (#566). Thanks @achrafachkari!
 
 2026/08/14 Release 4.1.13
 

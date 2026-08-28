@@ -509,6 +509,13 @@ public abstract class BaseWorkerContext extends I18nBase implements IWorkerConte
   }
 
   public void cacheResourceFromPackage(Resource r, PackageInformation packageInfo) throws FHIRException {
+    // MATCHBOX PATCH: remove narrative, see #566
+    if (r instanceof final DomainResource dr) {
+      // Let's remove the narrative of all resources, because we don't need them.
+      // They're also removed before the resources are persisted, see JpaPackageCache.addPackageToCacheInternal
+      dr.setText(null);
+    }
+    // END matchbox patch
     synchronized (lock) {
       definitionsChanged();
       if (packageInfo != null) {
