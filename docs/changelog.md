@@ -25,6 +25,7 @@ Unreleased
   type and category codes (#355)
 - Don't keep the narrative of resources loaded in the engine context (#566). Thanks @achrafachkari!
 - Add custom metrics
+- Update org.hl7.fhir.core to 6.10.3
 
 2026/08/14 Release 4.1.13
 

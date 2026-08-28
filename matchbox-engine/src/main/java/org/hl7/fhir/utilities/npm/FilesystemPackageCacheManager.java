@@ -298,7 +298,7 @@ public class FilesystemPackageCacheManager extends BasePackageCacheManager imple
         FileUtilities.atomicDeleteDirectory(f.getAbsolutePath());
       } else if (!f.getName().equals("packages.ini")
         // These files are package locks. They could interfere with running processes.
-      ) {
+        ) {
         if (FilesystemPackageCacheManagerLocks.isLockFile(f.getName())) {
           log.warn("Encountered package lock while clearing cache: {} It is possible that another process is modifying this cache. Lock-file deletion was not attempted.", f.getAbsolutePath());
         } else {
@@ -519,10 +519,10 @@ public class FilesystemPackageCacheManager extends BasePackageCacheManager imple
     locks.getPackageLock(sid + "#" + version).doWriteWithLock(() -> {
 
       String f = Utilities.path(cacheFolder, sid + "#" + version);
-      File ff = ManagedFileAccess.file(f);
-      if (ff.exists()) {
-        FileUtilities.atomicDeleteDirectory(f);
-      }
+        File ff = ManagedFileAccess.file(f);
+        if (ff.exists()) {
+          FileUtilities.atomicDeleteDirectory(f);
+        }
       return null;
     }, lockParameters);
   }
@@ -594,7 +594,7 @@ public class FilesystemPackageCacheManager extends BasePackageCacheManager imple
             output.checkIndexed(path);
             return output;
           }, lockParameters);
-        }
+          }
       }
     }
     if ("dev".equals(version))
@@ -644,9 +644,9 @@ public class FilesystemPackageCacheManager extends BasePackageCacheManager imple
       log.info("Installing " + stripAlias(actualId) + "#" + version);
 
       if (!suppressErrors && extractedNpm.name() != null && actualId != null &&
-        !fileSystemId.equalsIgnoreCase(encodeIdForFilesystem(extractedNpm.name())) &&
-        !fileSystemId.equalsIgnoreCase(encodeIdForFilesystem(extractedNpm.name())+"."+VersionUtilities.getNameForVersion(extractedNpm.fhirVersion()))) {
-        throw new IOException("Attempt to import a mis-identified package. Expected " + actualId + ", got " + extractedNpm.name());
+          !fileSystemId.equalsIgnoreCase(encodeIdForFilesystem(extractedNpm.name())) &&
+          !fileSystemId.equalsIgnoreCase(encodeIdForFilesystem(extractedNpm.name())+"."+VersionUtilities.getNameForVersion(extractedNpm.fhirVersion()))) {
+          throw new IOException("Attempt to import a mis-identified package. Expected " + actualId + ", got " + extractedNpm.name());
       }
 
       NpmPackage npmPackage;
@@ -885,7 +885,7 @@ public class FilesystemPackageCacheManager extends BasePackageCacheManager imple
   }
 
   // ----- the old way, from before package server, while everything gets onto the package server
-  private InputStreamWithSrc fetchTheOldWay(String id, String v) {
+  private InputStreamWithSrc fetchTheOldWay(String id, String version) {
     String url = getUrlForPackage(id);
     if (url == null) {
       try {
@@ -894,31 +894,31 @@ public class FilesystemPackageCacheManager extends BasePackageCacheManager imple
       }
     }
     if (url == null) {
-      throw new FHIRException("Unable to resolve package id " + id + "#" + v);
+      throw new FHIRException("Unable to resolve package id " + id + "#" + version);
     }
     if (url.contains("/ImplementationGuide/")) {
       url = url.substring(0, url.indexOf("/ImplementationGuide/"));
     }
-    String pu = Utilities.pathURL(url, "package-list.json");
+    String packageListUrl = ManagedWebAccess.makeSecureRef(Utilities.pathURL(url, "package-list.json"));
 
-    PackageList pl;
+    PackageList packageList;
     try {
-      pl = PackageList.fromUrl(pu);
+      packageList = PackageList.fromUrl(packageListUrl);
     } catch (Exception e) {
-      String pv = Utilities.pathURL(url, v, "package.tgz");
+      String packageTgzUrl = ManagedWebAccess.makeSecureRef(Utilities.pathURL(url, version, "package.tgz"));
+
       try {
-        return new InputStreamWithSrc(fetchFromUrlSpecific(pv, false), pv, v);
+        return new InputStreamWithSrc(fetchFromUrlSpecific(packageTgzUrl, false), packageTgzUrl, version);
       } catch (Exception e1) {
-        throw new FHIRException("Error fetching package directly (" + pv + "), or fetching package list for " + id + " from " + pu + ": " + e1.getMessage(), e1);
+        throw new FHIRException("Error fetching package directly (" + packageTgzUrl + "), or fetching package list for " + id + " from " + packageListUrl + ": " + e1.getMessage(), e1);
       }
     }
-    if (!id.equals(pl.pid()))
-      throw new FHIRException("Package ids do not match in " + pu + ": " + id + " vs " + pl.pid());
-    for (PackageListEntry vo : pl.versions()) {
-      if (v.equals(vo.version())) {
-
-        String u = Utilities.pathURL(vo.path(), "package.tgz");
-        return new InputStreamWithSrc(fetchFromUrlSpecific(u, true), u, v);
+    if (!id.equals(packageList.pid()))
+      throw new FHIRException("Package ids do not match in " + packageListUrl + ": " + id + " vs " + packageList.pid());
+    for (PackageListEntry packageEntry : packageList.versions()) {
+      if (version.equals(packageEntry.version())) {
+        String packageTgzUrl = ManagedWebAccess.makeSecureRef(Utilities.pathURL(packageEntry.path(), "package.tgz"));
+        return new InputStreamWithSrc(fetchFromUrlSpecific(packageTgzUrl, true), packageTgzUrl, version);
       }
     }
 

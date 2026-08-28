@@ -73,7 +73,7 @@ import org.hl7.fhir.r5.model.ValueSet;
 import org.hl7.fhir.r5.model.Enumerations.PublicationStatus;
 import org.hl7.fhir.r5.model.OperationOutcome.OperationOutcomeIssueComponent;
 import org.hl7.fhir.r5.terminologies.ImplicitValueSets;
-import org.hl7.fhir.r5.utils.UserDataNames;
+import org.hl7.fhir.utilities.UserDataNames;
 import org.hl7.fhir.r5.utils.xver.XVerExtensionManager;
 import org.hl7.fhir.r5.utils.xver.XVerExtensionManager.XVerExtensionStatus;
 import org.hl7.fhir.r5.utils.validation.IMessagingServices;
@@ -1747,7 +1747,7 @@ public class BaseValidator implements IValidationContextResourceLoader, IMessagi
 
         statusWarnings.add(vurl+":DEPRECATED");
         hint(errors, "2023-08-10", IssueType.BUSINESSRULE, element.line(), element.col(), path, false,
-             Utilities.noString(note) ? I18nConstants.MSG_DEPENDS_ON_DEPRECATED : I18nConstants.MSG_DEPENDS_ON_DEPRECATED_NOTE, type, vurl, note);
+          Utilities.noString(note) ? I18nConstants.MSG_DEPENDS_ON_DEPRECATED : I18nConstants.MSG_DEPENDS_ON_DEPRECATED_NOTE, type, vurl, note);
       }
     } else if (standardsStatus == StandardsStatus.WITHDRAWN) {
       if (!statusWarnings.contains(vurl+":WITHDRAWN")) {
@@ -1828,17 +1828,17 @@ public class BaseValidator implements IValidationContextResourceLoader, IMessagi
       if (codeMatches) {
         if (usage.getValue().fhirType().equals(t.getValue().fhirType())) {
           switch (usage.getValue().fhirType()) {
-            case "CodeableConcept":
-              for (Coding uc : usage.getValueCodeableConcept().getCoding()) {
-                for (Coding tc : t.getValueCodeableConcept().getCoding()) {
-                  @SuppressWarnings("checkstyle:stringImplicitPatternUsage")
-                  //False positive: not using String.matches
-                  boolean codingMatches = uc.matches(tc);
-                  if (codingMatches) {
-                    return true;
-                  }
+          case "CodeableConcept": 
+            for (Coding uc : usage.getValueCodeableConcept().getCoding()) {
+              for (Coding tc : t.getValueCodeableConcept().getCoding()) {
+                @SuppressWarnings("checkstyle:stringImplicitPatternUsage")
+                //False positive: not using String.matches
+                boolean codingMatches = uc.matches(tc);
+                if (codingMatches) {
+                  return true;
                 }
               }
+            }
             case "Quantity":
               return false; // for now
             case "Range":
