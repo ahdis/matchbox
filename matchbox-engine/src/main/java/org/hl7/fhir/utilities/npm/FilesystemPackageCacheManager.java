@@ -348,7 +348,10 @@ public class FilesystemPackageCacheManager extends BasePackageCacheManager imple
       return new InputStreamWithSrc(stream, "http://fhir.org/", version);
     }
 
-    if (id.startsWith("hl7.fhir") && id.endsWith("core")) {
+    // matchbox-engine PATCH, the FHIR core packages are provided in the classpath.
+    // Note: this must not use a startsWith/endsWith test on the id, it would also capture the national core
+    // IGs (hl7.fhir.fr.core, hl7.fhir.us.core, hl7.fhir.be.core, ...), which are ordinary packages.
+    if (VersionUtilities.isCorePackage(id)) {
       ourLog.info("loading from classpath "+id);
       InputStream stream = getClass().getResourceAsStream("/"+id+".tgz");
       if (stream==null) {
