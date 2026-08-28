@@ -1256,9 +1256,9 @@ public class MatchboxEngine extends ValidationEngine {
 		final var op = new org.hl7.fhir.r5.model.OperationOutcome();
 		messages.stream().map(vm -> OperationOutcomeUtilities.convertToIssue(vm, op))
 			.forEach(op.getIssue()::add);
-		final var rc = new RenderingContext(context, null, null, "http://hl7.org/fhir", "", null,
+		final var rc = new RenderingContext(context, null, null, null, "http://hl7.org/fhir", "", null,
 											 RenderingContext.ResourceRendererMode.END_USER, RenderingContext.GenerationRules.VALID_RESOURCE);
- 		RendererFactory.factory(op, rc).renderResource(ResourceWrapper.forResource(rc.getContextUtilities(), op));
+ 		new RendererFactory().factory(op, rc).renderResource(ResourceWrapper.forResource(rc.getContextUtilities(), op));
 		return (OperationOutcome) (VersionConvertorFactory_40_50.convertResource(op));
 	}
 

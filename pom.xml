@@ -39,7 +39,7 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
 
-        <fhir.core.version>6.10.0</fhir.core.version>
+        <fhir.core.version>6.10.3</fhir.core.version>
         <hapi.fhir.version>8.10.1</hapi.fhir.version>
 
 
@@ -74,7 +74,7 @@
         <!-- The following section closely matches the one of HAPI-FHIR (for easier version comparison/upgrade).
              Only re-used dependencies are listed here.
              https://github.com/hapifhir/org.hl7.fhir.core/blob/master/pom.xml -->
-        <validator_test_case_version>1.7.66</validator_test_case_version>
+        <validator_test_case_version>1.7.68</validator_test_case_version>
 
 
         <!-- Other dependencies we need -->

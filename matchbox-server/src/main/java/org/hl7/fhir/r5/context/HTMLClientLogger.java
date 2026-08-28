@@ -16,14 +16,12 @@ import java.util.Optional;
 import ca.uhn.fhir.context.FhirContext;
 import lombok.Generated;
 import org.hl7.fhir.r4.model.*;
-import org.hl7.fhir.utilities.MarkedToMoveToAdjunctPackage;
 import org.hl7.fhir.utilities.ToolingClientLogger;
 import org.hl7.fhir.utilities.Utilities;
 import org.hl7.fhir.utilities.filesystem.ManagedFileAccess;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-@MarkedToMoveToAdjunctPackage
 public class HTMLClientLogger extends BaseLogger implements ToolingClientLogger {
 	@Generated
 	private static final Logger log = LoggerFactory.getLogger(HTMLClientLogger.class);

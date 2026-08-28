@@ -40,7 +40,7 @@ import org.hl7.fhir.r5.testfactory.dataprovider.ValueSetDataProvider;
 import org.hl7.fhir.utilities.CommaSeparatedStringBuilder;
 import org.hl7.fhir.utilities.FhirPublication;
 import org.hl7.fhir.utilities.FileUtilities;
-import org.hl7.fhir.utilities.MarkedToMoveToAdjunctPackage;
+
 import org.hl7.fhir.utilities.Utilities;
 import org.hl7.fhir.utilities.filesystem.ManagedFileAccess;
 import org.hl7.fhir.utilities.http.HTTPResult;
@@ -49,14 +49,14 @@ import org.hl7.fhir.utilities.json.JsonException;
 import org.hl7.fhir.utilities.json.model.JsonObject;
 import org.hl7.fhir.utilities.json.parser.JsonParser;
 
-@MarkedToMoveToAdjunctPackage
+
 @Slf4j
 public class TestDataFactory {
 
   public static class DataTable extends Base {
     List<String> columns = new ArrayList<String>();
     List<List<String>> rows = new ArrayList<List<String>>();
-
+    
     @Override
     public String fhirType() {
       return "DataTable";
@@ -73,8 +73,8 @@ public class TestDataFactory {
     public Base copy() {
       return this;
     }
-
-
+    
+    
     public List<String> getColumns() {
       return columns;
     }
@@ -92,11 +92,11 @@ public class TestDataFactory {
         for (int i = 0; i < rows.size(); i++) {
           l[i] = BaseTableWrapper.forRow(columns, rows.get(i));
         }
-        return l;
+        return l;      
       }
       return super.getProperty(hash, name, checkValid);
     }
-
+    
     public String cell(int row, String col) {
       if (row >= 0 && row < rows.size()) {
         List<String> r = rows.get(row);
@@ -121,7 +121,7 @@ public class TestDataFactory {
       return null;
     }
   }
-
+    
   public static class CellLookupFunction extends FHIRPathFunctionDefinition {
 
     @Override
@@ -144,13 +144,13 @@ public class TestDataFactory {
       int row = Utilities.parseInt(parameters.get(0).get(0).primitiveValue(), 0);
       String col = parameters.get(1).get(0).primitiveValue();
       DataTable dt = (DataTable) focus.get(0);
-
+      
       List<Base> res = new ArrayList<Base>();
       String s = dt.cell(row, col);
       if (!Utilities.noString(s)) {
         res.add(new StringType(s));
       }
-      return res;
+      return res;   
     }
   }
 
@@ -191,7 +191,7 @@ public class TestDataFactory {
       }
       if (focus.get(0) instanceof BaseTableWrapper && parameters.size() == 4 && parameters.get(0).size() == 1 && parameters.get(1).size() == 1 && parameters.get(2).size() == 1 && parameters.get(3).size() == 1) {
         BaseTableWrapper dt = (BaseTableWrapper) focus.get(0);
-        String table = parameters.get(0).get(0).primitiveValue();
+        String table = parameters.get(0).get(0).primitiveValue(); 
         String lcol = parameters.get(1).get(0).primitiveValue();
         String val = parameters.get(2).get(0).primitiveValue();
         String rcol = parameters.get(3).get(0).primitiveValue();
@@ -207,9 +207,9 @@ public class TestDataFactory {
       }
       return res;
     }
-
+    
   }
-
+  
   private String rootFolder;
   private LiquidEngine liquid;
   private PrintStream testLog;
@@ -223,7 +223,7 @@ public class TestDataFactory {
   private boolean testing;
   private Map<String, String> profileMap;
   private Locale locale;
-
+  
   public TestDataFactory(IWorkerContext context, JsonObject details, LiquidEngine liquid, FHIRPathEngine fpe, String canonical, String rootFolder, String logFolder, Map<String, String> profileMap, Locale locale) throws IOException {
     super();
     this.context = context;
@@ -242,11 +242,11 @@ public class TestDataFactory {
     testLog = new PrintStream(new FileOutputStream(Utilities.path(logFolder, name+".log")));
     format = "json".equals(details.asString("format")) ? FhirFormat.JSON : FhirFormat.XML;
   }
-
+  
   public String getName() {
     return name;
   }
-
+  
   public void execute() throws FHIRException, IOException {
     String mode = details.asString( "mode");
     if ("liquid".equals(mode)) {
@@ -259,7 +259,7 @@ public class TestDataFactory {
     log("finished successfully");
     testLog.close();
   }
-
+  
 
   private void logDataScheme(DataTable tbl, Map<String, DataTable> tables) throws IOException {
     log("data: "+CommaSeparatedStringBuilder.join(",", tbl.getColumns()));
@@ -274,7 +274,7 @@ public class TestDataFactory {
     }
   }
 
-
+  
   private void executeProfile() throws IOException {
     try {
       checkDownloadBaseData();
@@ -282,7 +282,7 @@ public class TestDataFactory {
       String dataWithSheetInfo = details.asString("data");
       String[] split = splitDataWithSheetInfo(dataWithSheetInfo);
       TableDataProvider.SheetInfo sheetInfo = split[1] == null ? new TableDataProvider.SheetInfo(null, null) :
-        TableDataProvider.SheetInfo.fromString(split[1]);
+          TableDataProvider.SheetInfo.fromString(split[1]);
 
       TableDataProvider tbl = loadTable(Utilities.path(rootFolder, split[0]), sheetInfo);
       Map<String, DataTable> tables = new HashMap<>();
@@ -290,7 +290,7 @@ public class TestDataFactory {
         JsonObject tablesJ = details.getJsonObject("tables");
         for (String n : tablesJ.getNames()) {
           tables.put(n, loadData(Utilities.path(rootFolder, tablesJ.asString(n))));
-        }
+        } 
       }
       logDataScheme(tbl, tables);
       ProfileBasedFactory factory = new ProfileBasedFactory(fpe, localData.getAbsolutePath(), tbl, tables, details.forceArray("mappings"));
@@ -304,7 +304,7 @@ public class TestDataFactory {
       } else if (!profile.hasSnapshot()) {
         error("Profile "+purl+" doesn't have a snapshot");
       }
-
+      
       if ("true".equals(details.asString("bundle"))) {
         byte[] data = runBundle(profile, factory, tbl);
         String fn = Utilities.path(rootFolder, details.asString( "filename"));
@@ -342,10 +342,10 @@ public class TestDataFactory {
   }
 
   private void checkDownloadBaseData() throws IOException {
-    localData = ManagedFileAccess.file(Utilities.path("[tmp]", "fhir-test-data.db"));
-    File localInfo = ManagedFileAccess.file(Utilities.path("[tmp]", "fhir-test-data.json"));
+    localData = ManagedFileAccess.file(Utilities.path("[tmp]", "fhir-test-data.db"));  
+    File localInfo = ManagedFileAccess.file(Utilities.path("[tmp]", "fhir-test-data.json"));  
     try {
-      JsonObject local = localInfo.exists() ? JsonParser.parseObject(localInfo) : null;
+      JsonObject local = localInfo.exists() ? JsonParser.parseObject(localInfo) : null; 
       JsonObject json = JsonParser.parseObjectFromUrl("https://www.fhir.org/downloads/test-data-versions.json");
       JsonObject current = json.forceArray("versions").get(0).asJsonObject();
       if (current == null) {
@@ -377,7 +377,7 @@ public class TestDataFactory {
   private byte[] runBundle(StructureDefinition profile, ProfileBasedFactory factory, TableDataProvider tbl) throws IOException, FHIRException, SQLException {
     Element bundle = Manager.parse(context, bundleShell(), FhirFormat.JSON).get(0).getElement();
     bundle.makeElement("id").setValue(UUID.randomUUID().toString().toLowerCase());
-
+    
     while (tbl.nextRow()) {
       if (rowPasses(factory)) {
         Element resource = factory.generate(profile);
@@ -433,17 +433,17 @@ public class TestDataFactory {
           DataTable v = loadData(Utilities.path(rootFolder, tablesJ.asString(n)));
           liquid.getVars().put(n, List.of(v));
           tables.put(n, v);
-        }
+        } 
       }
 
       logDataScheme(dt, tables);
-
+      
       logStrings("columns", dt.columns);
       if ("true".equals(details.asString( "bundle"))) {
         byte[] data = runBundle(template, dt);
         FileUtilities.bytesToFile(data, Utilities.path(rootFolder, details.asString( "filename")));
       } else {
-        for (List<String> row : dt.rows) {
+        for (List<String> row : dt.rows) { 
           byte[] data = runInstance(template, dt.columns, row);
           FileUtilities.bytesToFile(data, Utilities.path(rootFolder, getFileName(details.asString( "filename"), dt.columns, row)));
         }
@@ -457,7 +457,7 @@ public class TestDataFactory {
   }
 
   private void logStrings(String name, List<String> columns) throws IOException {
-    log(name+": "+CommaSeparatedStringBuilder.join(", ", columns));
+    log(name+": "+CommaSeparatedStringBuilder.join(", ", columns));    
   }
 
   private String getFileName(String name, List<String> columns, List<String> values) {
@@ -482,8 +482,8 @@ public class TestDataFactory {
   private byte[] runBundle(LiquidDocument template, DataTable dt) throws JsonException, IOException {
     Element bundle = Manager.parse(context, bundleShell(), FhirFormat.JSON).get(0).getElement();
     bundle.makeElement("id").setValue(UUID.randomUUID().toString().toLowerCase());
-
-    for (List<String> row : dt.rows) {
+    
+    for (List<String> row : dt.rows) { 
       byte[] data = runInstance(template, dt.columns, row);
       Element resource = Manager.parse(context, new ByteArrayInputStream(data), format).get(0).getElement();
       Element be = bundle.makeElement("entry");
@@ -562,6 +562,6 @@ public class TestDataFactory {
   public void setTesting(boolean testing) {
     this.testing = testing;
   }
-
-
+  
+  
 }
