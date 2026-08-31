@@ -1,4 +1,4 @@
-Unreleased
+2026/08/31 Release 4.1.14
 
 - Try to parse the LLM providers' JSON error responses to provide more meaningful error messages (#531)
 - Mark logical models as profiles that can be used in validations (#446)
@@ -14,7 +14,8 @@ Unreleased
 - Add the configuration property `matchbox.fhir.mcp.requestAnalysisFromClient` (#561)
 - Allow to override `llmProvider` in the validation GUI
 - Revert the temporary workaround for "Slicing cannot be evaluated" in `ProfileUtilities.findProfile()` (#487); the canonical version resolution rules are honoured again, as org.hl7.fhir.core 6.10.0 resolves versioned extension canonicals correctly
-- Fix national core IGs (`hl7.fhir.fr.core`, `hl7.fhir.us.core`, ...) failing to resolve because they were treated as FHIR core packages and looked up on the classpath (#568)
+- Fix national core IGs (`hl7.fhir.fr.core`, `hl7.fhir.us.core`, ...) failing to resolve because they were treated 
+  as FHIR core packages and looked up on the classpath (#568). Thanks @achrafachkari!
 - Support R4 StructureMaps in $transform (#559)
 - Fix support of StructureMaps with pinned-version targets (#431)
 - When an ImplementationGuide is uninstalled, evict all cached engines that loaded it (#322)
