@@ -88,7 +88,7 @@
         <snakeyaml_version>2.6</snakeyaml_version>
         <org_commonmark_version>0.29.0</org_commonmark_version>
         <apache_poi_version>5.5.1</apache_poi_version>
-        <langchain4j_version>1.18.0</langchain4j_version>
+        <langchain4j_version>1.19.0</langchain4j_version>
         <spring_ai_mcp_version>2.0.0</spring_ai_mcp_version>
 
         <excludePackageNames>org.hl7.*:ca.uhn.*</excludePackageNames>
@@ -656,7 +656,7 @@
             <dependency>
                 <groupId>dev.langchain4j</groupId>
                 <artifactId>langchain4j-observation</artifactId>
-                <version>1.18.0-beta28</version>
+                <version>1.19.0-beta29</version>
             </dependency>
             <dependency>
                 <groupId>org.springframework.ai</groupId>
@@ -668,12 +668,17 @@
                 <!-- Added to fix CVE-2026-45292, need >= 1.62.0 -->
                 <groupId>io.opentelemetry</groupId>
                 <artifactId>opentelemetry-api</artifactId>
-                <version>1.64.0</version>
+                <version>1.65.0</version>
             </dependency>
             <dependency>
                 <groupId>io.opentelemetry.instrumentation</groupId>
                 <artifactId>opentelemetry-spring-boot-starter</artifactId>
-                <version>2.30.0</version>
+                <version>2.31.1</version>
+            </dependency>
+            <dependency>
+                <groupId>io.opentelemetry.instrumentation</groupId>
+                <artifactId>opentelemetry-spring-boot-starter</artifactId>
+                <version>2.31.1</version>
             </dependency>
 
             <dependency>
@@ -681,6 +686,19 @@
                 <groupId>org.apache.thrift</groupId>
                 <artifactId>libthrift</artifactId>
                 <version>0.24.0</version>
+            </dependency>
+
+            <dependency>
+                <!-- Added to fix CVE-2026-40983 & CVE-2026-40984, need >= 1.16.6 -->
+                <groupId>io.micrometer</groupId>
+                <artifactId>micrometer-core</artifactId>
+                <version>1.16.6</version>
+            </dependency>
+            <dependency>
+                <!-- Added to fix CVE-2026-40983 & CVE-2026-40984, need >= 1.16.6 -->
+                <groupId>io.micrometer</groupId>
+                <artifactId>micrometer-commons</artifactId>
+                <version>1.16.6</version>
             </dependency>
         </dependencies>
     </dependencyManagement>
