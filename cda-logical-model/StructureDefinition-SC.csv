@@ -1,0 +1,24 @@
+"Id","Path","Slice Name","Alias(s)","Label","Min","Max","Must Support?","Is Modifier?","Is Summary?","Type(s)","Short","Definition","Comments","Requirements","Default Value","Meaning When Missing","Fixed Value","Pattern","Example","Minimum Value","Maximum Value","Maximum Length","Binding Strength","Binding Description","Binding Value Set","Code","Slicing Discriminator","Slicing Description","Slicing Ordered","Slicing Rules","Base Path","Base Min","Base Max","Condition(s)","Constraint(s)","Mapping: RIM Mapping"
+"SC","SC","","","",1,*,"","","","null {[]} {[]}
+","Base for all types and resources","An ST that optionally may have a code attached. The text must always be present if a code is present. The code is often a local code.","","","","","","","","","",,,,,"",,,,"Base",0,*,"","text-null:xmlText and nullFlavor are mutually exclusive (one must be present) {(xmlText | nullFlavor).count() = 1}
+","n/a"
+"SC.nullFlavor","SC.nullFlavor","","","Exceptional Value Detail",0,1,"","","","code {[CanonicalType[http://hl7.org/cda/stds/core/StructureDefinition/cs-simple]]} {[]}
+","","If a value is an exceptional value (NULL-value), this specifies in what way and why proper information is missing.","","","","","","","","","",,"required","","http://hl7.org/cda/stds/core/ValueSet/CDANullFlavor","",,,,"ANY.nullFlavor",0,1,"",""
+"SC.representation","SC.representation","","","",0,1,"","","","code {[CanonicalType[http://hl7.org/cda/stds/core/StructureDefinition/cs-simple]]} {[]}
+","","Specifies the representation of the binary data that is the content of the binary data value","","","","","<valueCode xmlns=""http://hl7.org/fhir"" value=""TXT""/>","","","","",,,,,"",,,,"ST.representation",0,1,"",""
+"SC.mediaType","SC.mediaType","","","Media Type",0,1,"","","","code {[CanonicalType[http://hl7.org/cda/stds/core/StructureDefinition/cs-simple]]} {[]}
+","","Identifies the type of the encapsulated data and identifies a method to interpret or render the data.","","","","","<valueCode xmlns=""http://hl7.org/fhir"" value=""text/plain""/>","","","","",,,,,"",,,,"ST.mediaType",0,1,"",""
+"SC.language","SC.language","","","Language",0,1,"","","","code {[CanonicalType[http://hl7.org/cda/stds/core/StructureDefinition/cs-simple]]} {[]}
+","","For character based information the language property specifies the human language of the text.","","","","","","","","","",,,,,"",,,,"ST.language",0,1,"",""
+"SC.xmlText","SC.xmlText","","","",0,1,"","","","string {[CanonicalType[http://hl7.org/cda/stds/core/StructureDefinition/st-simple]]} {[]}
+","Allows for mixed text content","","This element is represented in XML as textual content. The actual name ""xmlText"" will not appear in a CDA instance.","","","","","","","","",,,,,"",,,,"ST.xmlText",0,1,"",""
+"SC.code","SC.code","","","Code",0,1,"","","","code {[CanonicalType[http://hl7.org/cda/stds/core/StructureDefinition/cs-simple]]} {[]}
+","","","","","","","","","","","",,,,,"",,,,"SC.code",0,1,"",""
+"SC.codeSystem","SC.codeSystem","","","Code System",0,1,"","","","string {[CanonicalType[http://hl7.org/cda/stds/core/StructureDefinition/oid], CanonicalType[http://hl7.org/cda/stds/core/StructureDefinition/uuid], CanonicalType[http://hl7.org/cda/stds/core/StructureDefinition/ruid]]} {[]}
+","","","","","","","","","","","",,,,,"",,,,"SC.codeSystem",0,1,"",""
+"SC.codeSystemName","SC.codeSystemName","","","Code System Name",0,1,"","","","string {[CanonicalType[http://hl7.org/cda/stds/core/StructureDefinition/st-simple]]} {[]}
+","","","","","","","","","","","",,,,,"",,,,"SC.codeSystemName",0,1,"",""
+"SC.codeSystemVersion","SC.codeSystemVersion","","","Code System Version",0,1,"","","","string {[CanonicalType[http://hl7.org/cda/stds/core/StructureDefinition/st-simple]]} {[]}
+","","","","","","","","","","","",,,,,"",,,,"SC.codeSystemVersion",0,1,"",""
+"SC.displayName","SC.displayName","","","Display Name",0,1,"","","","string {[CanonicalType[http://hl7.org/cda/stds/core/StructureDefinition/st-simple]]} {[]}
+","","","","","","","","","","","",,,,,"",,,,"SC.displayName",0,1,"",""
