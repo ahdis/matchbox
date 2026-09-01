@@ -1,3 +1,8 @@
+Unreleased
+
+- Fix reading a conformance resource (StructureMap, StructureDefinition, ...) by the string id it was created with,
+  which failed with a 500 because the id was always parsed as a number; an unknown id now returns a 404 (#573)
+
 2026/08/31 Release 4.1.14
 
 - Try to parse the LLM providers' JSON error responses to provide more meaningful error messages (#531)

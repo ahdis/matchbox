@@ -192,10 +192,14 @@ public class ConformancePackageResourceProvider<R4 extends MetadataResource, R4B
 
 			final int offset = 0;
 			final int count = 1;
+			// resources loaded from the JPA package cache have a numeric id, resources added at runtime to the engine
+			// (see the create/update methods) have a string id, so we only query the package cache for numeric ids
 			Slice<NpmPackageVersionResourceEntity> outcome = null;
-			outcome = myPackageVersionResourceDao.findByResourceTypeById(PageRequest.of(offset, count),
-																							 resourceType,
-																							 theId.getIdPartAsLong());
+			if (theId.isIdPartValidLong()) {
+				outcome = myPackageVersionResourceDao.findByResourceTypeById(PageRequest.of(offset, count),
+																								 resourceType,
+																								 theId.getIdPartAsLong());
+			}
 			if (outcome != null && outcome.getSize() == 1) {
 				NpmPackageVersionResourceEntity res = outcome.toList().getFirst();
 				IBaseResource resource = (IBaseResource) loadPackageEntityAdjustId(outcome.toList().getFirst());
@@ -231,7 +235,11 @@ public class ConformancePackageResourceProvider<R4 extends MetadataResource, R4B
 				}
 				return loadPackageEntityAdjustId(outcome.toList().getFirst());
 			} else {
-				return matchboxEngineSupport.getCachedResource(resourceType, theId.getIdPart());
+				final IBaseResource cached = matchboxEngineSupport.getCachedResource(resourceType, theId.getIdPart());
+				if (cached == null) {
+					throw new ResourceNotFoundException(theId);
+				}
+				return cached;
 			}
 		});
 	}

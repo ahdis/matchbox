@@ -134,6 +134,46 @@ public class TransformTest {
 			 </TRight>""", response.body());
 	}
 
+	/**
+	 * The POST of a StructureMap returns a resource with a string id (the last segment of the canonical URL). Reading
+	 * the resource back with that id must work, see <a href="https://github.com/ahdis/matchbox/issues/573">issue
+	 * 573</a>.
+	 */
+	@Test
+	void testReadStructureMapByStringId() throws Exception {
+		final var createMapRequest = HttpRequest.newBuilder(URI.create(TARGET_SERVER + "/fhir/StructureMap"))
+			.POST(HttpRequest.BodyPublishers.ofString(this.getContent("qr2patgender.map")))
+			.header("Content-Type", "text/fhir-mapping")
+			.header("Accept", "application/fhir+json")
+			.build();
+		final var createResponse = this.httpClient.send(createMapRequest, HttpResponse.BodyHandlers.ofString());
+		assertEquals(201, createResponse.statusCode());
+		assertTrue(createResponse.body().replace(" ", "").contains("\"id\":\"qr2patgender\""),
+					  "the created StructureMap should have the id 'qr2patgender': " + createResponse.body());
+
+		final var readRequest = HttpRequest.newBuilder(URI.create(TARGET_SERVER + "/fhir/StructureMap/qr2patgender"))
+			.GET()
+			.header("Accept", "application/fhir+json")
+			.build();
+		final var readResponse = this.httpClient.send(readRequest, HttpResponse.BodyHandlers.ofString());
+		assertEquals(200, readResponse.statusCode(), "reading the StructureMap by its id failed: " + readResponse.body());
+		assertTrue(readResponse.body().contains("http://ahdis.ch/matchbox/fml/qr2patgender"),
+					  "the read StructureMap should have the expected canonical URL: " + readResponse.body());
+	}
+
+	/**
+	 * Reading a StructureMap with an unknown (non-numeric) id shall return a 404, not a server error.
+	 */
+	@Test
+	void testReadStructureMapByUnknownStringId() throws Exception {
+		final var readRequest = HttpRequest.newBuilder(URI.create(TARGET_SERVER + "/fhir/StructureMap/thisMapDoesNotExist"))
+			.GET()
+			.header("Accept", "application/fhir+json")
+			.build();
+		final var readResponse = this.httpClient.send(readRequest, HttpResponse.BodyHandlers.ofString());
+		assertEquals(404, readResponse.statusCode(), "expected a 404: " + readResponse.body());
+	}
+
 	private String getContent(final String resourceName) throws IOException {
 		Resource resource = new ClassPathResource(resourceName);
 		File file = resource.getFile();
