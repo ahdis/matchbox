@@ -57,6 +57,21 @@
           <mat-hint>A profile is required to validate against.</mat-hint>
         </mat-form-field>
       </div>
+
+      @if (proposedProfiles != null && proposedProfiles.length > 0) {
+        <mat-list id="proposed-profiles">
+          <h4 mat-subheader>Proposed profiles</h4>
+          @for (proposedProfile of proposedProfiles; track proposedProfile) {
+            <mat-list-item (click)="selectProposedProfile(proposedProfile)" title="Validate against this profile">
+              – {{ proposedProfile }}
+            </mat-list-item>
+            @if (!$last) {
+              <mat-divider></mat-divider>
+            }
+          }
+        </mat-list>
+      }
+
       <div class="form-field-group">
         <mat-form-field>
           <mat-label>Validation IG</mat-label>
@@ -87,6 +102,7 @@
         }
         <button color="primary" mat-raised-button (click)="onValidationButtonClick()">Validate</button>
         @if (showAIAnalyzeButton) {
+          &nbsp;
           <button color="primary" mat-raised-button (click)="onAiAnalyzeButtonClick()">Analyze Operation Outcome with AI</button>
         }
       </div>

@@ -96,10 +96,10 @@ export class ValidationCodeEditor {
     }
 
     if (editorContent == CodeEditorContent.RESOURCE_CONTENT) {
-      this.editor.setValue(selectedEntry.resource, -1);
-      if (selectedEntry.mimetype === 'application/fhir+json') {
+      this.editor.setValue(selectedEntry.content, -1);
+      if (selectedEntry.mediaType === 'application/fhir+json') {
         this.editor.getSession().setMode('ace/mode/json');
-      } else if (selectedEntry.mimetype === 'application/fhir+xml') {
+      } else if (selectedEntry.mediaType === 'application/fhir+xml') {
         this.editor.getSession().setMode('ace/mode/xml');
       }
       this.updateEditorIssues(selectedEntry);
