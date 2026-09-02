@@ -173,7 +173,6 @@ class R4ValidationTests {
 		this.expectValid(resourceWithUnknownExtension, Manager.FhirFormat.JSON, "http://hl7.org/fhir/StructureDefinition/Patient");
 	}
 
-
 	@Test
 	void testFhirPathDataAbsentReason() throws FHIRException, IOException {
 		String patient = """
@@ -286,6 +285,14 @@ class R4ValidationTests {
 		this.engine.setExtensionDomains(List.of(allowedDomain));
 		final String resourceWithUnknownExtension = this.loadSample("patient-with-extension.json");
 		this.expectValid(resourceWithUnknownExtension, Manager.FhirFormat.JSON, "http://hl7.org/fhir/StructureDefinition/Patient");
+	}
+
+	@Test
+	void testUnknownExtensionIsRejectedWithDifferentDomain() throws Exception {
+		this.engine.setExtensionDomains(List.of("http://aoihafs.com"));
+		final String resourceWithUnknownExtension = this.loadSample("patient-with-extension.json");
+		this.expectInvalid(resourceWithUnknownExtension, Manager.FhirFormat.JSON, "http://hl7.org/fhir/StructureDefinition" +
+			"/Patient");
 	}
 
 	/**
