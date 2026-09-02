@@ -42,7 +42,6 @@ export function parseFhirResource(filename: string, content: string): FhirResour
             .filter(text => text != null),
         url: xml.querySelector('url')?.getAttribute('value') || null,
       };
-      console.log(ret);
       return ret;
     }
     return null;

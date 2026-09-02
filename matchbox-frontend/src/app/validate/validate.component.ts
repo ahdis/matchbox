@@ -11,7 +11,7 @@ import { FormControl, Validators } from '@angular/forms';
 import { StructureDefinition } from './structure-definition';
 import { ValidationCodeEditor } from './validation-code-editor';
 import { Base64 } from 'js-base64';
-import { from, forkJoin, ReplaySubject, take } from 'rxjs';
+import { from, forkJoin, ReplaySubject, take, last } from 'rxjs';
 import { UploadedFile } from '../upload/uploaded-file';
 import { HotToastService } from '@ngxpert/hot-toast';
 import { FhirClientWrapper } from '../util/fhir-client-wrapper';
@@ -48,6 +48,7 @@ export class ValidateComponent implements AfterViewInit {
   selectedProfile: string | null = null;
   profileControl: FormControl = new FormControl<string>('', Validators.required);
   profileLocked: boolean = false;
+  proposedProfiles: string[] | null = null;
 
   // Code editor
   editor: ValidationCodeEditor | null = null;
@@ -70,9 +71,7 @@ export class ValidateComponent implements AfterViewInit {
     this.client = data.getFhirClient();
 
     // Creation of Observables for the two requests
-    const validateOperationDefinitionObservable$ = from(
-      this.client.readOperationDefinition('-s-validate')
-    );
+    const validateOperationDefinitionObservable$ = from(this.client.readOperationDefinition('-s-validate'));
 
     const implementationGuidesObservable$ = from(
       this.client
@@ -130,6 +129,7 @@ export class ValidateComponent implements AfterViewInit {
    * @param droppedBlob the selected/dropped file.
    */
   async onFileSelected(droppedBlob: UploadedFile): Promise<void> {
+    this.proposedProfiles = null;
     if (droppedBlob.name.endsWith('.tgz')) {
       // Load an IG package
       try {
@@ -148,7 +148,7 @@ export class ValidateComponent implements AfterViewInit {
 
       const fileContent = await droppedBlob.blob.text();
       this.cd.markForCheck();
-      this.validateResource(droppedBlob.name, fileContent, droppedBlob.contentType, !this.profileLocked);
+      await this.validateResource(droppedBlob.name, fileContent, droppedBlob.contentType, !this.profileLocked);
     } catch (error: any) {
       this.showErrorToast('Unexpected error', error.message);
       console.error(error);
@@ -157,7 +157,12 @@ export class ValidateComponent implements AfterViewInit {
     }
   }
 
-  validateResource(filename: string, content: string, contentType: string, selectBestProfile: boolean): void {
+  async validateResource(
+    filename: string,
+    content: string,
+    contentType: string,
+    selectBestProfile: boolean
+  ): Promise<boolean> {
     let entry: ValidationEntry | null = null;
     try {
       // Try to parse the resource to extract information
@@ -166,7 +171,7 @@ export class ValidateComponent implements AfterViewInit {
         this.showErrorToast('Error parsing the file', 'The provided file does not seem to be a valid FHIR resource');
         this.resourceDropper!!.clear();
         this.currentResource = null;
-        return;
+        return false;
       }
 
       this.currentResource = new UploadedValidationFile(
@@ -188,6 +193,19 @@ export class ValidateComponent implements AfterViewInit {
         if (!profileSet) {
           this.selectedProfile = 'http://hl7.org/fhir/StructureDefinition/' + entry.resourceType;
         }
+        if (this.selectedProfile == 'http://hl7.org/fhir/StructureDefinition/Bundle') {
+          const possibleProfiles = await this.bundleCanBeValidatedAsProfiles(entry);
+          if (possibleProfiles && possibleProfiles.length > 0) {
+            if (possibleProfiles.length == 1) {
+              // We have only one possible profile, so we will select it automatically.
+              this.selectedProfile = possibleProfiles[0];
+            } else {
+              // We have multiple possible profiles, so we will show them in the GUI for the user to select one.
+              this.proposedProfiles = possibleProfiles;
+              return false;
+            }
+          }
+        }
       }
       entry.validationProfile = this.selectedProfile;
 
@@ -195,8 +213,10 @@ export class ValidateComponent implements AfterViewInit {
         this.validationEntries.unshift(entry);
         this.show(entry);
         this.runValidation(entry);
+        return true;
       } else {
         this.showWarnToast('No profile selected', 'Please select a profile for validation');
+        return false;
       }
     } catch (error: any) {
       this.showErrorToast('Error parsing the file', error.message);
@@ -205,7 +225,7 @@ export class ValidateComponent implements AfterViewInit {
           'Error while processing the resource for' + ' validation: ' + error.message
         );
       }
-      return;
+      return false;
     }
   }
 
@@ -304,7 +324,8 @@ export class ValidateComponent implements AfterViewInit {
     }
 
     entry.loading = true;
-    this.client.validate(entry)
+    this.client
+      .validate(entry)
       .then((response) => {
         // Got a response that should be an OperationOutcome
         entry.loading = false;
@@ -350,8 +371,8 @@ export class ValidateComponent implements AfterViewInit {
       // Set the resource as currently selected in the form, to facilitate re-validation with a different profile/IG
       this.currentResource = new UploadedValidationFile(
         entry.filename,
-        entry.mimetype,
-        entry.resource,
+        entry.mediaType,
+        entry.content,
         entry.resourceType,
         entry.resourceId || null
       );
@@ -459,7 +480,7 @@ export class ValidateComponent implements AfterViewInit {
     });
 
     const hashParams = new URLSearchParams();
-    hashParams.set('resource', Base64.encodeURI(entry.resource));
+    hashParams.set('resource', Base64.encodeURI(entry.content));
     hashParams.set('profile', entry.validationProfile ?? '');
     if (entry.ig) {
       hashParams.set('ig', entry.ig);
@@ -507,6 +528,11 @@ export class ValidateComponent implements AfterViewInit {
     this.editor!!.updateCodeEditorContent(this.selectedEntry, this.editorContent);
   }
 
+  selectProposedProfile(profile: string): void {
+    this.selectedProfile = profile;
+    this.onValidationButtonClick();
+  }
+
   private getCurrentValidationSettings(): ValidationParameter[] {
     const parameters: ValidationParameter[] = [];
     for (const [_, setting] of this.validatorSettings) {
@@ -515,7 +541,7 @@ export class ValidateComponent implements AfterViewInit {
         if (isTextarea) {
           const lines = setting.formControl.value.toString().split('\n');
           // Filter out empty lines
-          const nonEmptyLines = lines.filter((line) => line.trim().length > 0);
+          const nonEmptyLines = lines.filter((line: string) => line.trim().length > 0);
           // Add each non-empty line as a separate parameter with the same name
           for (const line of nonEmptyLines) {
             parameters.push(new ValidationParameter(setting.param.name, line.trim()));
@@ -586,9 +612,7 @@ export class ValidateComponent implements AfterViewInit {
       }
     });
     od.parameter
-      ?.filter(
-        (f) => f.use == 'in' && f.name != 'resource' && f.name != 'profile' && f.name != 'ig'
-      )
+      ?.filter((f) => f.use == 'in' && f.name != 'resource' && f.name != 'profile' && f.name != 'ig')
       .forEach((parameter: fhir.r4.OperationDefinitionParameter) => {
         this.validatorSettings.set(parameter.name, new ValidationParameterDefinition(parameter));
       });
@@ -634,13 +658,33 @@ export class ValidateComponent implements AfterViewInit {
         }
       }
 
-      this.validateResource(filename, resource, contentType, !hasSetProfile && !this.profileLocked);
-      this.toast.info('<b>Validation</b>: the validation of your resource has started', {
-        dismissible: true,
-        duration: 3000,
-      });
+      if (await this.validateResource(filename, resource, contentType, !hasSetProfile && !this.profileLocked)) {
+        this.toast.info('<b>Validation</b>: the validation of your resource has started', {
+          dismissible: true,
+          duration: 3000,
+        });
+      }
     }
   }
+
+  /**
+   * Checks whether a bundle can be validated as a set of profiles, and returns the list of profiles if so.
+   * Otherwise, returns false.
+   */
+  private async bundleCanBeValidatedAsProfiles(entry: ValidationEntry): Promise<string[] | false> {
+    if (entry.resource.resourceType !== 'Bundle' || entry.content.indexOf('"document"') == -1) {
+      // Not a document Bundle
+      return false;
+    }
+    try {
+      return await this.client.getProfiles(entry.content, entry.mediaType);
+    } catch (error) {
+      console.log(error);
+      return false;
+    }
+  }
+
+  protected readonly last = last;
 }
 
 /**

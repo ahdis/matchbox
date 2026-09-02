@@ -3,6 +3,7 @@ Unreleased
 - Fix reading a conformance resource (StructureMap, StructureDefinition, ...) by the string id it was created with,
   which failed with a 500 because the id was always parsed as a number; an unknown id now returns a 404 (#573)
 - Fix debug mode of the $transform operation (#572)
+- GUI: ask the engine to analyze Bundle documents for possible validation profiles (#355)
 
 2026/08/31 Release 4.1.14
 
