@@ -60,6 +60,8 @@ server:
     # Undertow cannot be configured for unlimited request bodies through Spring Boot.
     max-http-post-size: 100MB
 management:
+  tracing:
+    enabled: false
   endpoint:
     health:
       probes:
@@ -107,3 +109,6 @@ logging:
     ca.uhn.fhir.jpa.packages.JpaPackageCache: ERROR
     fhirtest.access: ERROR
     fhirtest.request: ERROR
+otel:
+  sdk:
+    disabled: true
