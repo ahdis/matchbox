@@ -1,3 +1,5 @@
+- Fix debug mode of the $transform operation (#572)
+
 2026/08/31 Release 4.1.14
 
 - Try to parse the LLM providers' JSON error responses to provide more meaningful error messages (#531)

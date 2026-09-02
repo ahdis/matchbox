@@ -6,6 +6,8 @@ import ca.uhn.fhir.jpa.starter.Application;
 import ch.ahdis.matchbox.test.CompareUtil;
 import ch.ahdis.matchbox.test.ValidationClient;
 import org.apache.commons.io.FileUtils;
+import org.hl7.fhir.r4.model.Parameters;
+import org.hl7.fhir.r4.model.StringType;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
@@ -24,8 +26,7 @@ import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * matchbox
@@ -71,6 +72,24 @@ public class TransformTest {
 		final var patient = response.body();
 		assertTrue(patient.contains("<Patient xmlns=\"http://hl7.org/fhir\">"));
 		assertTrue(patient.contains("<gender value=\"female\"/>"));
+
+		// Test the debug mode
+		final var transformRequest2 = HttpRequest.newBuilder(URI.create(
+				TARGET_SERVER + "/fhir/StructureMap/$transform?source=http://ahdis.ch/matchbox/fml/qr2patgender&debug=true"))
+			.POST(HttpRequest.BodyPublishers.ofString(this.getContent("qr.json")))
+			.header("Content-Type", "application/fhir+json")
+			.header("Accept", "application/fhir+xml")
+			.build();
+		final var response2 = this.httpClient.send(transformRequest2, HttpResponse.BodyHandlers.ofString());
+		final var parameters = FHIR_CONTEXT.newXmlParser().parseResource(Parameters.class, response2.body());
+		assertNotNull(parameters);
+		assertTrue(parameters.hasParameter("result"));
+		assertTrue(parameters.hasParameter("parameters"));
+		assertTrue(parameters.hasParameter("trace"));
+		final var result = parameters.getParameterValue("result");
+		assertInstanceOf(StringType.class, result);
+		assertTrue(((StringType) result).getValue().contains("<Patient xmlns=\"http://hl7.org/fhir\">"));
+
 	}
 
 	@Test
