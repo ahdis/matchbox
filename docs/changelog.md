@@ -4,6 +4,7 @@ Unreleased
   which failed with a 500 because the id was always parsed as a number; an unknown id now returns a 404 (#573)
 - Fix debug mode of the $transform operation (#572)
 - GUI: ask the engine to analyze Bundle documents for possible validation profiles (#355)
+- GUI: fix the XML syntax highlighting
 
 2026/08/31 Release 4.1.14
 
