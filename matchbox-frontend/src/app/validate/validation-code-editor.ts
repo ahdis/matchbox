@@ -1,4 +1,7 @@
 import {Ace} from "ace-builds";
+import "ace-builds/src-noconflict/mode-json";
+import "ace-builds/src-noconflict/mode-xml";
+import "ace-builds/src-noconflict/theme-textmate";
 import {Issue, IssueSeverity} from "../util/operation-result";
 import {ValidationEntry} from "./validation-entry";
 import {CodeEditorContent} from "./validate.component";
