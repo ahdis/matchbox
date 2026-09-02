@@ -1,6 +1,7 @@
 - Fix debug mode of the $transform operation (#572)
 - GUI: ask the engine to analyze Bundle documents for possible validation profiles (#355)
 - GUI: fix the XML syntax highlighting
+- GUI: fix the XML resource data extraction
 
 2026/08/31 Release 4.1.14
 
