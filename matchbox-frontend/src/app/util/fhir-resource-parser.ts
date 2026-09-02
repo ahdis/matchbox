@@ -35,12 +35,11 @@ export function parseFhirResource(filename: string, content: string): FhirResour
       }
       const ret = {
         resourceType,
-        id: xml.querySelector('id')?.getAttribute('value') || null,
-        profiles:
-          Array.from(xml.querySelectorAll('meta > profile'))
-            .map((el) => el.getAttribute('value'))
-            .filter(text => text != null),
-        url: xml.querySelector('url')?.getAttribute('value') || null,
+        id: xml.querySelector(':root > id')?.getAttribute('value') || null,
+        profiles: Array.from(xml.querySelectorAll(':root > meta > profile'))
+          .map((el) => el.getAttribute('value'))
+          .filter((text) => text != null),
+        url: xml.querySelector(':root > url')?.getAttribute('value') || null,
       };
       return ret;
     }
