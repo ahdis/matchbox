@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
 
+import ch.ahdis.matchbox.util.http.HttpRequestWrapper;
 import ch.ahdis.matchbox.util.metrics.MatchboxMetrics;
 /*
  * #%L
@@ -263,13 +264,14 @@ public class StructureMapTransformProvider extends StructureMapResourceProvider 
 					.setName("map")
 					.setResource(map);
 
-				// return the parameters resource
-				theServletResponse.setContentType(Constants.CT_FHIR_JSON_NEW);
-				theServletResponse.setCharacterEncoding(Constants.CHARSET_UTF8);
-				theServletResponse.getOutputStream().write(this.fhirContext.newJsonParser().setPrettyPrint(true)
-					.encodeResourceToString(resultParameters).getBytes(StandardCharsets.UTF_8));
+				// Return the parameters resource, and let our wrapper handle the serialization in the right FHIR version
+				final var wrapper = new HttpRequestWrapper(theServletRequest,
+																		 theServletResponse,
+																		 this.fhirContext.getVersion().getVersion());
+				wrapper.writeResponse(resultParameters);
 			}
 			else {
+				// Return the transformed resource directly. It's a string, no
 				theServletResponse.getOutputStream().write(transformed.getBytes(StandardCharsets.UTF_8));
 			}
 		} finally {
