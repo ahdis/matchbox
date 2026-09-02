@@ -425,25 +425,23 @@ class MatchboxApiR4Test {
 
 	@Test
 	void validateUnknownExtensionIsAcceptedWithValidDomain() throws Exception {
-		final var patient = getContent("patient-dicom.json");
+		final var patient = getContent("patient-with-extension.json");
 		final var parameters = new Parameters();
-		parameters.addParameter("extensions", "http://nema.org");
+		parameters.addParameter("extensions", "http://fhir.ch");
 
 		final var operationOutcome = this.validationClient.validate(patient, profileCore("Patient"), parameters);
 		assertEquals(0, getValidationFailures((OperationOutcome) operationOutcome));
 	}
 
 	@Test
-	@Disabled("For some reason, the validation engine does not fail on unknown extensions with the default configuration, needs further investigation")
 	void validateUnknownExtensionIsRejectedWithWrongDomain() throws Exception {
-		final var patient = getContent("patient-dicom.json");
+		final var patient = getContent("patient-with-extension.json");
 		final var parameters = new Parameters();
-		parameters.addParameter("extensions", "http://fhir.ch");
+		parameters.addParameter("extensions", "http://not-used-by-the-resource.com");
 
 		final var operationOutcome = this.validationClient.validate(patient, profileCore("Patient"), parameters);
-		assertEquals(1, getValidationFailures((OperationOutcome) operationOutcome));
+		assertNotEquals(0, getValidationFailures((OperationOutcome) operationOutcome));
 	}
-
 
 	/**
 	 * Demonstrates the ClassCastException bug in ValueSetProvider when $validate-code is called with an inline
