@@ -18,7 +18,7 @@ export class FhirClientWrapper {
 
   constructor(readonly baseUrl: string) {
     this.client = new Client({
-      baseUrl: baseUrl
+      baseUrl: baseUrl,
     });
   }
 
@@ -51,7 +51,7 @@ export class FhirClientWrapper {
       input: resource as FhirResource,
       options: {
         keepalive: false,
-      }
+      },
     }) as Promise<Resource>;
   }
 
@@ -115,16 +115,33 @@ export class FhirClientWrapper {
       resourceType: undefined,
       // Here we have to cheat because the client expects either a FhirResource or SearchParameters, whereas we want
       // to send a plain string (the resource JSON or XML serialization).
-      input: entry.resource as unknown as FhirResource,
+      input: entry.content as unknown as FhirResource,
       options: {
         keepalive: false,
         headers: {
           accept: 'application/fhir+json',
-          'content-type': entry.mimetype,
+          'content-type': entry.mediaType,
         },
       },
     });
     return result as unknown as OperationOutcome;
+  }
+
+  async getProfiles(bundle: string,
+                    mediaType: string): Promise<string[]> {
+    const response = await fetch(this.baseUrl + '/Bundle/$get-profiles', {
+      method: 'POST',
+      headers: {
+        'Content-Type': mediaType,
+        'Accept': 'application/fhir+json',
+      },
+      body: bundle,
+    });
+    const result = (await response.json()) as unknown as fhir.r4.Parameters;
+    return result.parameter
+      ?.filter((p) => p.name === 'profile')
+      ?.map((p) => p.valueCanonical)
+      .filter((p): p is string => p !== undefined) || [];
   }
 }
 

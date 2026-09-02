@@ -23,6 +23,7 @@ import { SortSettingsPipe } from './validate/order-settings.pipe';
 import { StatisticsComponent } from './statistics/statistics.component';
 import { provideHotToastConfig } from '@ngxpert/hot-toast';
 import { MarkdownComponent, provideMarkdown } from 'ngx-markdown';
+import {MatList, MatListItem, MatListSubheaderCssMatStyler } from "@angular/material/list";
 
 // The Angular routes
 // All paths defined here must be supported in matchbox-server's MatchboxStaticResourceConfig, otherwise a direct access
@@ -87,6 +88,9 @@ const routes: Routes = [
     HighlightLineNumbers,
     SortSettingsPipe,
     MarkdownComponent,
+    MatList,
+    MatListSubheaderCssMatStyler,
+    MatListItem,
   ],
   providers: [
     provideTranslateService({
