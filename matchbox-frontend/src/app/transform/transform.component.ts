@@ -13,6 +13,9 @@ import { HotToastService } from '@ngxpert/hot-toast';
 import { FhirClientWrapper } from '../util/fhir-client-wrapper';
 import ace, { Ace } from 'ace-builds';
 import Resource = fhir.r4.Resource;
+import 'ace-builds/src-noconflict/mode-json';
+import 'ace-builds/src-noconflict/mode-xml';
+import 'ace-builds/src-noconflict/theme-textmate';
 
 @Component({
   selector: 'app-transform',
