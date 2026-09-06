@@ -41,7 +41,7 @@ public class FhirServerConfigR4B {
     return new QuestionnaireResponseExtractProviderR4B(matchboxEngineSupport);
   }
 
-  @Bean
+  @Bean(name = "myImplementationGuideDaoR4B")
   public IFhirResourceDao<ImplementationGuide> daoImplementationGuideR4B() {
     final var retVal = new JpaResourceDao<ImplementationGuide>();
     retVal.setResourceType(ImplementationGuide.class);
@@ -58,7 +58,7 @@ public class FhirServerConfigR4B {
     return retVal;
   }
 
-  @Bean
+  @Bean(name = "myStructureMapDaoR4B")
   @Conditional(OnMatchboxOnlyOneEnginePresent.class)
   public IFhirResourceDao<StructureMap> daoStructureMapR4B() {
     final var retVal = new JpaResourceDao<StructureMap>();

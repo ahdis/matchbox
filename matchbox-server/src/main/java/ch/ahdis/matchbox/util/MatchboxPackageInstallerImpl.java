@@ -564,7 +564,8 @@ public class MatchboxPackageInstallerImpl implements IPackageInstallerSvc {
 	@Override
 	public NpmPackage substituteVersionSpecificPackageIfNeeded(final NpmPackage theDependency,
 	                                                           final String theId,
-	                                                           final String theVersion) {
+	                                                           final String theVersion,
+																				  final boolean theShouldUpdateCache) {
 		throw new UnsupportedOperationException("Package substitution is not supported in this implementation");
 	}
 
