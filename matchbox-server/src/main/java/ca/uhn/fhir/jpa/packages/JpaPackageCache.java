@@ -597,7 +597,16 @@ public class JpaPackageCache extends BasePackageCacheManager implements IHapiPac
 		}
 	}
 
-	private IBaseResource loadPackageEntity(NpmPackageVersionResourceEntity contents) {
+  @Override
+  @Transactional
+  public NpmPackage loadPackage(final String thePackageId,
+                                final String thePackageVersion,
+                                final boolean theShouldUpdateCache)
+    throws FHIRException, IOException {
+    return this.loadPackage(thePackageId, thePackageVersion);
+  }
+
+  private IBaseResource loadPackageEntity(NpmPackageVersionResourceEntity contents) {
 		try {
 			JpaPid binaryPid = contents.getResourceBinary().getId();
 			IBaseBinary binary = getBinaryDao().readByPid(binaryPid);

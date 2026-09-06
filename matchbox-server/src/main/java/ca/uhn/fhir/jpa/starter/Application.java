@@ -1,5 +1,6 @@
 package ca.uhn.fhir.jpa.starter;
 
+import ca.uhn.fhir.batch2.jobs.installpackage.InstallPackageAppCtx;
 import ch.ahdis.matchbox.MatchboxRestfulServer;
 import ch.ahdis.matchbox.config.MatchboxMetricsConfig;
 import ch.ahdis.matchbox.config.MatchboxStaticResourceConfig;
@@ -35,6 +36,7 @@ import ch.ahdis.matchbox.config.MatchboxJpaConfig;
 	MdmConfig.class,
 	MatchboxJpaConfig.class,
 	FhirServerConfigR4.class,
+  InstallPackageAppCtx.class,
 	MatchboxEventListener.class,
 	GazelleValidationWs.class,
   RegistryWs.class,

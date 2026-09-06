@@ -38,10 +38,10 @@ import ca.uhn.fhir.interceptor.executor.InterceptorService;
 import ca.uhn.fhir.interceptor.model.RequestPartitionId;
 import ca.uhn.fhir.jpa.api.config.JpaStorageSettings;
 import ca.uhn.fhir.jpa.api.dao.DaoRegistry;
+import ca.uhn.fhir.jpa.api.dao.IFhirResourceDao;
 import ca.uhn.fhir.jpa.api.model.ExpungeOptions;
 import ca.uhn.fhir.jpa.api.svc.IIdHelperService;
 import ca.uhn.fhir.jpa.api.svc.ISearchUrlJobMaintenanceSvc;
-import ca.uhn.fhir.jpa.batch2.JpaBatch2Config;
 import ca.uhn.fhir.jpa.binary.interceptor.BinaryStorageInterceptor;
 import ca.uhn.fhir.jpa.binary.provider.BinaryAccessProvider;
 import ca.uhn.fhir.jpa.bulk.export.api.IBulkDataExportJobSchedulingHelper;
@@ -84,7 +84,6 @@ import ca.uhn.fhir.jpa.delete.DeleteConflictFinderService;
 import ca.uhn.fhir.jpa.delete.DeleteConflictService;
 import ca.uhn.fhir.jpa.delete.ThreadSafeResourceDeleterSvc;
 import ca.uhn.fhir.jpa.entity.Search;
-import ca.uhn.fhir.jpa.entity.TermValueSet;
 import ca.uhn.fhir.jpa.esr.ExternallyStoredResourceServiceRegistry;
 import ca.uhn.fhir.jpa.graphql.DaoRegistryGraphQLStorageServices;
 import ca.uhn.fhir.jpa.interceptor.CascadingDeleteInterceptor;
@@ -170,8 +169,6 @@ import ca.uhn.fhir.jpa.term.TermCodeSystemStorageSvcImpl;
 import ca.uhn.fhir.jpa.term.TermConceptMappingSvcImpl;
 import ca.uhn.fhir.jpa.term.TermReadSvcImpl;
 import ca.uhn.fhir.jpa.term.TermReindexingSvcImpl;
-import ca.uhn.fhir.jpa.term.ValueSetConceptAccumulator;
-import ca.uhn.fhir.jpa.term.ValueSetConceptAccumulatorFactory;
 import ca.uhn.fhir.jpa.term.api.ITermCodeSystemStorageSvc;
 import ca.uhn.fhir.jpa.term.api.ITermConceptMappingSvc;
 import ca.uhn.fhir.jpa.term.api.ITermReadSvc;
@@ -200,6 +197,7 @@ import org.hl7.fhir.common.hapi.validation.support.UnknownCodeSystemWarningValid
 import org.hl7.fhir.common.hapi.validation.support.ValidationSupportChain;
 import org.hl7.fhir.utilities.graphql.IGraphQLStorageServices;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
@@ -272,7 +270,34 @@ public class JpaConfig {
 
 	@Bean("myDaoRegistry")
 	public DaoRegistry daoRegistry() {
-		return new DaoRegistry();
+		// MATCHBOX PATCH: HAPI 8.12 removed DaoRegistry's ApplicationContextAware lazy scan; resource
+		// DAOs now only register themselves from their @PostConstruct start() via DaoRegistrationService.
+		// Matchbox does not register the full generated resource-provider set (see StarterJpaConfig,
+		// resourceProviderFactory.createProviders() is disabled), so the @Lazy IFhirResourceDao beans
+		// are otherwise never instantiated and the registry stays empty
+		// ("No DAO exists for resource type ... - Have: {}"). Restore the pre-8.12 behaviour: the first
+		// time any DAO is looked up, force every DAO bean to be created so it self-registers.
+		return new DaoRegistry() {
+			@Autowired
+			private ApplicationContext myApplicationContext;
+
+			private volatile boolean myDaosRealized = false;
+
+			@Override
+			public <R extends org.hl7.fhir.instance.model.api.IBaseResource, D extends IFhirResourceDao<R>> D getResourceDaoOrNull(
+					final String theResourceName) {
+				if (!this.myDaosRealized) {
+					synchronized (this) {
+						if (!this.myDaosRealized) {
+							this.myDaosRealized = true;
+							// Instantiates every @Lazy IFhirResourceDao bean; each one's start() registers itself.
+							this.myApplicationContext.getBeansOfType(IFhirResourceDao.class);
+						}
+					}
+				}
+				return super.getResourceDaoOrNull(theResourceName);
+			}
+		};
 	}
 
 	@Lazy
@@ -752,8 +777,8 @@ public class JpaConfig {
 
 	@Bean
 	@Primary
-	public ISearchParamProvider searchParamProvider() {
-		return new DaoSearchParamProvider();
+	public ISearchParamProvider searchParamProvider(final DaoRegistry theDaoRegistry) {
+		return new DaoSearchParamProvider(theDaoRegistry);
 	}
 
 	@Bean
@@ -871,17 +896,6 @@ public class JpaConfig {
 	}
 
 	@Bean
-	public ValueSetConceptAccumulatorFactory valueSetConceptAccumulatorFactory() {
-		return new ValueSetConceptAccumulatorFactory();
-	}
-
-	@Bean
-	@Scope("prototype")
-	public ValueSetConceptAccumulator valueSetConceptAccumulator(TermValueSet theTermValueSet) {
-		return valueSetConceptAccumulatorFactory().create(theTermValueSet);
-	}
-
-	@Bean
 	public ITermCodeSystemStorageSvc termCodeSystemStorageSvc() {
 		return new TermCodeSystemStorageSvcImpl();
 	}
@@ -903,13 +917,15 @@ public class JpaConfig {
 			IResourceSearchUrlDao theResourceSearchUrlDao,
 			MatchUrlService theMatchUrlService,
 			FhirContext theFhirContext,
-			PartitionSettings thePartitionSettings) {
+			PartitionSettings thePartitionSettings,
+      PlatformTransactionManager theTxManager) {
 		return new ResourceSearchUrlSvc(
 				thePersistenceContextProvider.getEntityManager(),
 				theResourceSearchUrlDao,
 				theMatchUrlService,
 				theFhirContext,
-				thePartitionSettings);
+				thePartitionSettings,
+        theTxManager);
 	}
 
 	@Bean
@@ -979,8 +995,9 @@ public class JpaConfig {
 
 	@Bean
 	@Primary
-	public ca.uhn.fhir.replacereferences.ReplaceReferencesProvenanceSvc replaceReferencesProvenanceSvc(DaoRegistry theDaoRegistry) {
-		return new ca.uhn.fhir.replacereferences.ReplaceReferencesProvenanceSvc(theDaoRegistry);
+	public ca.uhn.fhir.replacereferences.ReplaceReferencesProvenanceSvc replaceReferencesProvenanceSvc(final FhirContext fhirContext,
+                                                                                                     final DaoRegistry theDaoRegistry) {
+		return new ca.uhn.fhir.replacereferences.ReplaceReferencesProvenanceSvc(fhirContext, theDaoRegistry);
 	}
 
 	@Bean
@@ -1056,8 +1073,8 @@ public class JpaConfig {
 
 	@Bean
 	public ca.uhn.fhir.replacereferences.PreviousResourceVersionRestorer resourceVersionRestorer(
-			DaoRegistry theDaoRegistry, HapiTransactionService theHapiTransactionService) {
-		return new ca.uhn.fhir.replacereferences.PreviousResourceVersionRestorer(theDaoRegistry, theHapiTransactionService);
+			DaoRegistry theDaoRegistry, HapiTransactionService theHapiTransactionService, PartitionSettings thePartitionSettings) {
+		return new ca.uhn.fhir.replacereferences.PreviousResourceVersionRestorer(theDaoRegistry, theHapiTransactionService, thePartitionSettings);
 	}
 
 	@Bean
@@ -1106,18 +1123,21 @@ public class JpaConfig {
   public IJobMaintenanceService jobMaintenanceService() {
     return new IJobMaintenanceService() {
       @Override
-      public boolean triggerMaintenancePass() {
+      public boolean triggerActiveJobMaintenancePass() {
         return false;
       }
 
       @Override
-      public void runMaintenancePass() {}
+      public void runActiveJobMaintenancePass() {}
 
       @Override
-      public void forceMaintenancePass() {}
+      public void runEndedJobMaintenancePass() {}
 
       @Override
-      public void enableMaintenancePass(final boolean thetoEnable) {}
+      public void forceActiveJobMaintenancePass() {}
+
+      @Override
+      public void enableMaintenance(final boolean theEnable) {}
     };
   }
 

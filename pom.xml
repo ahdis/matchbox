@@ -40,7 +40,7 @@
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
 
         <fhir.core.version>6.10.3</fhir.core.version>
-        <hapi.fhir.version>8.10.1</hapi.fhir.version>
+        <hapi.fhir.version>8.12.0</hapi.fhir.version>
 
 
         <!-- The following section closely matches the one of HAPI-FHIR (for easier version comparison/upgrade).
@@ -51,7 +51,7 @@
         <commons_io_version>2.22.0</commons_io_version>
         <commons_lang3_version>3.20.0</commons_lang3_version>
         <junit_version>5.14.3</junit_version>
-        <logback_version>1.5.38</logback_version>
+        <logback_version>1.6.3</logback_version>
         <jackson2_version>2.22.1</jackson2_version>
         <jackson3_version>3.2.1</jackson3_version>
         <jackson_annotations_version>2.22</jackson_annotations_version>
@@ -140,21 +140,6 @@
                 <groupId>org.thymeleaf</groupId>
                 <artifactId>thymeleaf-spring6</artifactId>
                 <version>${thymeleaf.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.apache.httpcomponents.client5</groupId>
-                <artifactId>httpclient5</artifactId>
-                <version>5.6.2</version>
-            </dependency>
-            <dependency>
-                <groupId>org.apache.httpcomponents.core5</groupId>
-                <artifactId>httpcore5</artifactId>
-                <version>5.4.3</version>
-            </dependency>
-            <dependency>
-                <groupId>org.apache.httpcomponents.core5</groupId>
-                <artifactId>httpcore5-h2</artifactId>
-                <version>5.4.3</version>
             </dependency>
             <dependency>
                 <groupId>commons-io</groupId>

@@ -69,7 +69,7 @@ public class MbInstalledStructureDefinitionV1Migration {
 		this.matchboxJpaPackageCache = requireNonNull(matchboxJpaPackageCache);
 		this.myPackageVersionResourceDao = requireNonNull(myPackageVersionResourceDao);
 		this.myBinaryStorageSvc = requireNonNull(myBinaryStorageSvc);
-		this.binaryDao = (IFhirResourceDao<IBaseBinary>) myDaoRegistry.getResourceDao("Binary");
+		this.binaryDao = myDaoRegistry.getResourceDao("Binary");
 		this.pageTxTemplate = new TransactionTemplate(requireNonNull(txManager));
 		// A separate, REQUIRES_NEW template, only used as a fallback when a page's batch save fails: see
 		// #saveEntities for why.

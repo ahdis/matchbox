@@ -1,9 +1,6 @@
 package ch.ahdis.matchbox.config;
 
-import ca.uhn.fhir.batch2.api.IJobCoordinator;
-import ca.uhn.fhir.batch2.api.IJobPartitionProvider;
-import ca.uhn.fhir.batch2.api.IJobPersistence;
-import ca.uhn.fhir.batch2.api.JobOperationResultJson;
+import ca.uhn.fhir.batch2.api.*;
 import ca.uhn.fhir.batch2.coordinator.DefaultJobPartitionProvider;
 import ca.uhn.fhir.batch2.jobs.parameters.UrlPartitioner;
 import ca.uhn.fhir.batch2.model.*;
@@ -13,17 +10,21 @@ import ca.uhn.fhir.context.FhirVersionEnum;
 import ca.uhn.fhir.interceptor.api.IInterceptorBroadcaster;
 import ca.uhn.fhir.jpa.api.config.JpaStorageSettings;
 import ca.uhn.fhir.jpa.api.config.ThreadPoolFactoryConfig;
+import ca.uhn.fhir.jpa.api.dao.DaoRegistrationService;
 import ca.uhn.fhir.jpa.api.dao.DaoRegistry;
 import ca.uhn.fhir.jpa.api.dao.IFhirResourceDao;
 import ca.uhn.fhir.jpa.api.dao.IFhirSystemDao;
 import ca.uhn.fhir.jpa.batch.models.Batch2JobStartResponse;
 import ca.uhn.fhir.jpa.batch2.JpaJobPersistenceImpl;
-import ca.uhn.fhir.jpa.binary.api.IBinaryStorageSvc;
 import ca.uhn.fhir.jpa.binary.interceptor.BinaryStorageInterceptor;
 import ca.uhn.fhir.jpa.binary.provider.BinaryAccessProvider;
 import ca.uhn.fhir.jpa.bulk.export.api.IBulkExportProcessor;
 import ca.uhn.fhir.jpa.bulk.export.model.ExportPIDIteratorParameters;
 import ca.uhn.fhir.jpa.dao.data.*;
+import ca.uhn.fhir.jpa.dao.tx.HapiTransactionService;
+import ca.uhn.fhir.jpa.provider.ReferencingResourcesQuerySvc;
+import ca.uhn.fhir.jpa.term.TermValueSetStorageSvcImpl;
+import ca.uhn.fhir.jpa.term.api.ITermValueSetStorageSvc;
 import ca.uhn.fhir.mdm.svc.MdmExpansionCacheSvc;
 import ca.uhn.fhir.parser.IParser;
 import ca.uhn.fhir.jpa.dao.tx.IHapiTransactionService;
@@ -56,7 +57,6 @@ import ch.ahdis.matchbox.interceptors.MatchboxValidationInterceptor;
 import ch.ahdis.matchbox.mappinglanguage.StructureMapListProvider;
 import ch.ahdis.matchbox.mappinglanguage.StructureMapTransformProvider;
 import ch.ahdis.matchbox.packages.*;
-import ch.ahdis.matchbox.packages.migrations.MbInstalledStructureDefinitionV1Migration;
 import ch.ahdis.matchbox.providers.*;
 import ch.ahdis.matchbox.questionnaire.*;
 import ch.ahdis.matchbox.statistics.OperationOutcomeResourceProviderR4;
@@ -83,7 +83,6 @@ import org.springframework.core.env.Environment;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
 import org.springframework.data.domain.Page;
-import org.springframework.transaction.PlatformTransactionManager;
 
 import javax.annotation.Nullable;
 
@@ -480,6 +479,15 @@ public class MatchboxJpaConfig extends StarterJpaConfig {
 			public BatchInstanceStatusDTO getBatchInstanceStatus(final String s) {
 				return null;
 			}
+
+			@Override
+			public void enqueueBuildingJobForExecution(final String theInstanceId) {}
+
+			@Override
+			public void addAttachmentToBuildingJob(final String theInstanceId,
+			                                       final AttachmentDetails theAttachmentDetails) {
+
+			}
 		};
 	}
 
@@ -535,19 +543,23 @@ public class MatchboxJpaConfig extends StarterJpaConfig {
 
 	@Bean
 	public IJobPersistence batch2JobInstancePersister(
+		IBatch2AttachmentRepository theAttachmentRepository,
 		IBatch2JobInstanceRepository theJobInstanceRepository,
 		IBatch2WorkChunkRepository theWorkChunkRepository,
 		IBatch2WorkChunkMetadataViewRepository theWorkChunkMetadataViewRepo,
 		IHapiTransactionService theTransactionService,
 		EntityManager theEntityManager,
-		IInterceptorBroadcaster theInterceptorBroadcaster) {
+		IInterceptorBroadcaster theInterceptorBroadcaster,
+		IBatch2AttachmentChunkRepository theAttachmentChunkRepository) {
 		return new JpaJobPersistenceImpl(
+			theAttachmentRepository,
 			theJobInstanceRepository,
 			theWorkChunkRepository,
 			theWorkChunkMetadataViewRepo,
 			theTransactionService,
 			theEntityManager,
-			theInterceptorBroadcaster);
+			theInterceptorBroadcaster,
+			theAttachmentChunkRepository);
 	}
 
 	@Bean
@@ -635,6 +647,22 @@ public class MatchboxJpaConfig extends StarterJpaConfig {
 	@Bean
 	public MatchboxJpaPackageCache matchboxJpaPackageCache(final MbInstalledStructureDefinitionRepository installedStructureDefinitionRepository) {
 		return new MatchboxJpaPackageCache(installedStructureDefinitionRepository);
+	}
+
+	@Bean
+	public DaoRegistrationService daoRegistrationService(final DaoRegistry daoRegistry) {
+		return new DaoRegistrationService(daoRegistry);
+	}
+
+	@Bean
+	public ReferencingResourcesQuerySvc referencingResourcesQuerySvc(
+		IResourceLinkDao theResourceLinkDao, HapiTransactionService theHapiTransactionService) {
+		return new ReferencingResourcesQuerySvc(theResourceLinkDao, theHapiTransactionService);
+	}
+
+	@Bean
+	public ITermValueSetStorageSvc termValueSetStorageSvc() {
+		return new TermValueSetStorageSvcImpl();
 	}
 
 	private static void registerOptionalProvider(final MatchboxRestfulServer fhirServer,
