@@ -1,23 +1,17 @@
 package ca.uhn.fhir.jpa.starter.mcp;
 
-import ca.uhn.fhir.rest.server.McpBridge;
-import ca.uhn.fhir.rest.server.McpFhirBridge;
+import ca.uhn.fhir.rest.server.McpFhirReadBridge;
+import ca.uhn.fhir.rest.server.McpFhirWriteBridge;
 import ca.uhn.fhir.rest.server.McpMatchboxBridge;
 import ch.ahdis.matchbox.MatchboxRestfulServer;
-import ch.ahdis.matchbox.config.property.MatchboxFhirContextProperties;
 import ch.ahdis.matchbox.config.property.MatchboxFhirMcpProperties;
 import ch.ahdis.matchbox.providers.BundleResourceProvider;
-import io.modelcontextprotocol.server.McpServer;
-import io.modelcontextprotocol.server.McpSyncServer;
 import io.modelcontextprotocol.server.transport.HttpServletStreamableServerTransportProvider;
-import io.modelcontextprotocol.spec.McpStreamableServerTransportProvider;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnExpression;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.web.servlet.ServletRegistrationBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-
-import java.time.Duration;
-import java.util.List;
 
 // https://mcp-cn.ssshooter.com/sdk/java/mcp-server#sse-servlet
 // https://www.baeldung.com/spring-ai-model-context-protocol-mcp
@@ -25,6 +19,12 @@ import java.util.List;
 // https://github.com/spring-projects/spring-ai-examples/tree/main/model-context-protocol/weather/starter-stdio-server/src/main/java/org/springframework/ai/mcp/sample/server
 // https://github.com/spring-projects/spring-ai-examples/blob/main/model-context-protocol/sampling/mcp-weather-webmvc-server/src/main/java/org/springframework/ai/mcp/sample/server/WeatherService.java
 // https://docs.spring.io/spring-ai/reference/api/mcp/mcp-server-boot-starter-docs.html
+
+/**
+ * Matchbox MCP Server configuration.
+ * Most of the configuration work is done in the main auto-config class:
+ * {@link org.springframework.ai.mcp.server.common.autoconfigure.McpServerAutoConfiguration}.
+ */
 @Configuration
 @ConditionalOnProperty(
   prefix = "spring.ai.mcp.server",
@@ -35,21 +35,24 @@ public class McpServerConfig {
   private static final String SSE_ENDPOINT = "/sse";
   private static final String SSE_MESSAGE_ENDPOINT = "/mcp/message";
 
+  /**
+   * Read-only FHIR access tools (read + search), registered when
+   * {@code matchbox.fhir.context.onlyOneEngine=true}.
+   */
   @Bean
-  public McpSyncServer syncServer(final List<McpBridge> mcpBridges,
-                                  final McpStreamableServerTransportProvider transportProvider) {
-    return McpServer.sync(transportProvider)
-      .requestTimeout(Duration.ofSeconds(60))
-      .tools(mcpBridges.stream()
-               .flatMap(bridge -> bridge.generateTools().stream())
-               .toList())
-      .build();
+  @ConditionalOnExpression("${matchbox.fhir.context.onlyOneEngine:false}")
+  public McpFhirReadBridge mcpFhirReadOnlyBridge(final MatchboxRestfulServer restfulServer) {
+    return new McpFhirReadBridge(restfulServer);
   }
 
+  /**
+   * Read-write FHIR access tools (create/update/patch/delete/transaction), registered when
+   * {@code matchbox.fhir.context.onlyOneEngine=false} and {@code matchbox.fhir.context.httpReadOnly=false}.
+   */
   @Bean
-  public McpFhirBridge mcpFhirBridge(final MatchboxRestfulServer restfulServer,
-                                     final MatchboxFhirContextProperties matchboxContext) {
-    return new McpFhirBridge(restfulServer, matchboxContext);
+  @ConditionalOnExpression("${matchbox.fhir.context.onlyOneEngine:false} && !${matchbox.fhir.context.httpReadOnly:false}")
+  public McpFhirWriteBridge mcpFhirReadWriteBridge(final MatchboxRestfulServer restfulServer) {
+    return new McpFhirWriteBridge(restfulServer);
   }
 
   @Bean
@@ -69,7 +72,7 @@ public class McpServerConfig {
   }
 
   @Bean
-  public ServletRegistrationBean<?> customServletBean(final HttpServletStreamableServerTransportProvider transportProvider) {
+  public ServletRegistrationBean<HttpServletStreamableServerTransportProvider> customServletBean(final HttpServletStreamableServerTransportProvider transportProvider) {
     return new ServletRegistrationBean<>(transportProvider, SSE_MESSAGE_ENDPOINT, SSE_ENDPOINT);
   }
 }

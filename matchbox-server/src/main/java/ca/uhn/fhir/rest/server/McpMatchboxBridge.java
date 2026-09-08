@@ -3,7 +3,6 @@ package ca.uhn.fhir.rest.server;
 import ca.uhn.fhir.context.FhirContext;
 import ch.ahdis.matchbox.config.property.MatchboxFhirMcpProperties;
 import ch.ahdis.matchbox.engine.exception.MatchboxUnsupportedFhirVersionException;
-import ch.ahdis.matchbox.mcp.ToolFactory;
 import ch.ahdis.matchbox.providers.BundleResourceProvider;
 import ch.ahdis.matchbox.util.CrossVersionResourceUtils;
 import ch.ahdis.matchbox.util.http.MatchboxFhirFormat;
@@ -12,10 +11,10 @@ import ca.uhn.fhir.jpa.starter.mcp.Interaction;
 import ca.uhn.fhir.jpa.starter.mcp.RequestBuilder;
 
 import ch.ahdis.matchbox.validation.ValidationProvider;
-import io.modelcontextprotocol.server.McpServerFeatures;
 import io.modelcontextprotocol.server.McpSyncServerExchange;
 import io.modelcontextprotocol.spec.McpSchema;
 
+import jakarta.annotation.Nullable;
 import org.hl7.fhir.r5.model.Bundle;
 import org.hl7.fhir.r5.model.OperationDefinition.OperationDefinitionParameterComponent;
 import org.hl7.fhir.r5.model.Enumerations.OperationParameterUse;
@@ -23,6 +22,8 @@ import org.hl7.fhir.r5.model.OperationDefinition;
 import org.hl7.fhir.r5.model.Resource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.ai.mcp.annotation.McpTool;
+import org.springframework.ai.mcp.annotation.McpToolParam;
 import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.stereotype.Component;
 
@@ -35,7 +36,7 @@ import java.util.Map;
 import static java.util.HashMap.newHashMap;
 
 @Component
-public class McpMatchboxBridge implements McpBridge {
+public class McpMatchboxBridge {
 	private static final Logger logger = LoggerFactory.getLogger(McpMatchboxBridge.class);
   
   public static final String PARAM_REQUEST_ANALYSIS_FROM_CLIENT = "requestAnalysisFromClient";
@@ -59,40 +60,20 @@ public class McpMatchboxBridge implements McpBridge {
     this.bundleResourceProvider = bundleResourceProvider;
 	}
 
-	public List<McpServerFeatures.SyncToolSpecification> generateTools() {
-    return List.of(
-      new McpServerFeatures.SyncToolSpecification(
-        ToolFactory.validateFhirResource(),
-        (exchange, request) -> getValidationResult(exchange, request, Interaction.VALIDATE)
-      ),
-      new McpServerFeatures.SyncToolSpecification(
-        ToolFactory.listFhirImplementationGuides(),
-        (exchange, request) -> getFhirImplementationGuides(request, Interaction.SEARCH)
-      ),
-      new McpServerFeatures.SyncToolSpecification(
-        ToolFactory.listFhirProfilesToValidateFor(),
-        (exchange, request) -> getFhirProfilesToValidateFor(request, Interaction.READ)
-      ),
-      new McpServerFeatures.SyncToolSpecification(
-        ToolFactory.listValidationParameters(),
-        (exchange, request) -> getExtraValidationParameters(request, Interaction.READ)
-      ),
-      new McpServerFeatures.SyncToolSpecification(
-        ToolFactory.getProfilesForDocumentBundle(),
-        (exchange, request) -> getProfilesForDocumentBundle(request)
-      )
-    );
-	}
-
-	private McpSchema.CallToolResult getFhirProfilesToValidateFor(final McpSchema.CallToolRequest toolRequest,
-                                                                final Interaction interaction) {
-    final var arguments = toolRequest.arguments();
+  @McpTool(name = "list-fhir-profiles-to-validate-for",
+    description = "List FHIR Profiles available for validation.",
+    annotations = @McpTool.McpAnnotations(readOnlyHint = true, destructiveHint = false, idempotentHint = true, openWorldHint = false))
+	private McpSchema.CallToolResult getFhirProfilesToValidateFor(
+    @McpToolParam(description = "FHIR resource type list profiles for, if not provided all profiles for all resources and logical models are listed", required = false)
+    final @Nullable String resourceType,
+    @McpToolParam(description = "package id to list profiles for, if not provided all profiles for the latest ig versions are listed", required = false)
+    final @Nullable String ig
+  ) {
+    final HashMap<String, Object> arguments = HashMap.newHashMap(2);
 		var response = new MockHttpServletResponse();
-		final String resourceType = (String) arguments.get("resourceType");
-		// we need to overwrite it for calling the read interaction
 		arguments.put("resourceType", "OperationDefinition");
 		arguments.put("id", "-s-validate");
-		final String ig = (String) arguments.get("ig");
+    final var interaction = Interaction.SEARCH;
 		var request = new RequestBuilder(restfulServer, arguments, interaction).buildRequest();
 		try {
 			restfulServer.handleRequest(interaction.asRequestType(), request, response);
@@ -130,12 +111,15 @@ public class McpMatchboxBridge implements McpBridge {
 		}
 	}
 
-	private McpSchema.CallToolResult getExtraValidationParameters(final McpSchema.CallToolRequest toolRequest,
-                                                                final Interaction interaction) {
-    final var arguments = toolRequest.arguments();
+  @McpTool(name = "list-validation-parameters",
+    description = "List additional available parameters for validation",
+    annotations = @McpTool.McpAnnotations(readOnlyHint = true, destructiveHint = false, idempotentHint = true, openWorldHint = false))
+	private McpSchema.CallToolResult getExtraValidationParameters() {
+    final HashMap<String, Object> arguments = HashMap.newHashMap(2);
 		var response = new MockHttpServletResponse();
 		arguments.put("resourceType", "OperationDefinition");
 		arguments.put("id", "-s-validate");
+    final var interaction = Interaction.READ;
 		var request = new RequestBuilder(restfulServer, arguments, interaction).buildRequest();
 		try {
 			restfulServer.handleRequest(interaction.asRequestType(), request, response);
@@ -176,23 +160,20 @@ public class McpMatchboxBridge implements McpBridge {
 		}
 	}
 
-	private McpSchema.CallToolResult getFhirImplementationGuides(final McpSchema.CallToolRequest toolRequest,
-                                                               final Interaction interaction) {
-    final var arguments = toolRequest.arguments();
+  @McpTool(name = "list-fhir-igs",
+    description = "List FHIR Implementation Guides available for validation",
+    annotations = @McpTool.McpAnnotations(readOnlyHint = true, destructiveHint = false, idempotentHint = true, openWorldHint = false))
+	private McpSchema.CallToolResult getFhirImplementationGuides(
+    @McpToolParam(description = "include older versions of the installed FHIR Implementation Guides, defaults to false", required = false)
+    final @Nullable Boolean includeVersions
+  ) {
+    final HashMap<String, Object> arguments = HashMap.newHashMap(2);
 		var response = new MockHttpServletResponse();
 		arguments.put("resourceType", "ImplementationGuide");
-		if (arguments.containsKey("includeVersions")) {
-			if (arguments.get("includeVersions").equals("false")) {
-				Map<String, Object> map = new java.util.HashMap<>();
-				map.put("_tag", "http://matchbox.health/fhir/CodeSystem/tag|current");
-				arguments.put("query", map);
-			}
-			arguments.remove("includeVersions");
-		} else {
-				Map<String, Object> map = new java.util.HashMap<>();
-				map.put("_tag", "http://matchbox.health/fhir/CodeSystem/tag|current");
-				arguments.put("query", map);
+		if (includeVersions == null || includeVersions) {
+				arguments.put("query", Map.of("_tag", "http://matchbox.health/fhir/CodeSystem/tag|current"));
 		}
+    final var interaction = Interaction.SEARCH;
 		var request = new RequestBuilder(restfulServer, arguments, interaction).buildRequest();
 		try {
 			restfulServer.handleRequest(interaction.asRequestType(), request, response);
@@ -213,19 +194,27 @@ public class McpMatchboxBridge implements McpBridge {
 		}
 	}	
 
-	private McpSchema.CallToolResult getValidationResult(final McpSyncServerExchange exchange,
-                                                       final McpSchema.CallToolRequest toolRequest,
-                                                       final Interaction interaction) {
-    final var arguments = toolRequest.arguments();
+  @McpTool(name = "validate-fhir-resource",
+    description = "Validate a FHIR resource or logical model against a profile and return a FHIR OperationOutcome indicating the result of the validation",
+    annotations = @McpTool.McpAnnotations(readOnlyHint = true, destructiveHint = false, idempotentHint = true, openWorldHint = false))
+	private McpSchema.CallToolResult getValidationResult(
+    final McpSyncServerExchange exchange,
+    @McpToolParam(description = "The FHIR resource or logical model to validate in XML or JSON format")
+    final String resource,
+    @McpToolParam(description = "The FHIR profile to validate against")
+    final String profile,
+    @McpToolParam(description = "Additional validation parameters separated by ',' (comma). For example: 'txServer=http://tx.fhir.org,txUseEcosystem=false'.", required = false)
+    final @Nullable String validationparams
+  ) {
+    final var interaction = Interaction.VALIDATE;
     boolean requestAnalysisFromClient = this.globalRequestAnalysisFromClient;
 
 		final var response = new MockHttpServletResponse();
     final Map<String, String> requestQueryArguments;
-		if (arguments.containsKey(PARAM_VALIDATION_PARAMETERS)) {
+		if (validationparams != null) {
       requestQueryArguments = newHashMap(8);
-			String validationParams = (String) arguments.get(PARAM_VALIDATION_PARAMETERS);
 			// Parse the validationParams string into a Map
-			String[] params = validationParams.split(",");
+			String[] params = validationparams.split(",");
 
 			for (String param : params) {
 				String[] keyValue = param.split("=");
@@ -243,9 +232,15 @@ public class McpMatchboxBridge implements McpBridge {
 		}
     // Disable LLM analysis by Matchbox' LLM, we'll ask the client to do it if necessary
     requestQueryArguments.put(ValidationProvider.PARAM_ANALYZE_ERRORS_WITH_LLM, "false");
+    final Map<String, Object> arguments = HashMap.newHashMap(3);
     arguments.put("query", requestQueryArguments);
+    arguments.put("resource", resource);
+    if (profile != null && !profile.isBlank()) {
+      arguments.put("profile", profile);
+    }
 
 		final var request = new RequestBuilder(restfulServer, arguments, interaction).buildRequest();
+    request.setContent(resource.getBytes(StandardCharsets.UTF_8));
 
 		try {
 			restfulServer.handleRequest(interaction.asRequestType(), request, response);
@@ -271,20 +266,22 @@ public class McpMatchboxBridge implements McpBridge {
 		}
 	}
 
-  private McpSchema.CallToolResult getProfilesForDocumentBundle(final McpSchema.CallToolRequest toolRequest) {
-    final var arguments = toolRequest.arguments();
-    if (!arguments.containsKey("bundle")) {
-      return CallToolResultFactory.failure("Missing 'bundle' argument for getProfilesForDocumentBundle");
-    }
-    final var bundleSerialized = arguments.get("bundle").toString().trim().getBytes(StandardCharsets.UTF_8);
+  @McpTool(name = "get-profiles-for-document-bundle",
+    description = "Get the list of FHIR StructureDefinition profiles that match a FHIR document Bundle resource",
+    annotations = @McpTool.McpAnnotations(readOnlyHint = true, destructiveHint = false, idempotentHint = true, openWorldHint = false))
+  private McpSchema.CallToolResult getProfilesForDocumentBundle(
+    @McpToolParam(description = "The FHIR Bundle resource of type document to get the profiles for, in XML or JSON format")
+    final String bundleSerialized
+  ) {
+    final var bundleBytes = bundleSerialized.trim().getBytes(StandardCharsets.UTF_8);
     final var requestVersion = this.restfulServer.getFhirContext().getVersion().getVersion();
-    final var requestFormat = bundleSerialized[0] == '{' ? MatchboxFhirFormat.JSON : MatchboxFhirFormat.XML;
+    final var requestFormat = bundleBytes[0] == '{' ? MatchboxFhirFormat.JSON : MatchboxFhirFormat.XML;
     final Resource resource;
     try {
       resource = switch (requestVersion) {
-        case R4 -> CrossVersionResourceUtils.parseR4AsR5(bundleSerialized, requestFormat);
-        case R4B -> CrossVersionResourceUtils.parseR4bAsR5(bundleSerialized, requestFormat);
-        case R5 -> CrossVersionResourceUtils.parseR5(bundleSerialized, requestFormat);
+        case R4 -> CrossVersionResourceUtils.parseR4AsR5(bundleBytes, requestFormat);
+        case R4B -> CrossVersionResourceUtils.parseR4bAsR5(bundleBytes, requestFormat);
+        case R5 -> CrossVersionResourceUtils.parseR5(bundleBytes, requestFormat);
         default -> throw new MatchboxUnsupportedFhirVersionException("McpMatchboxBridge.getProfilesForDocumentBundle",
                                                                      requestVersion);
       };
