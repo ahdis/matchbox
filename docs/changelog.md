@@ -6,6 +6,8 @@ Unreleased
 - GUI: ask the engine to analyze Bundle documents for possible validation profiles (#355)
 - GUI: fix the XML syntax highlighting
 - GUI: fix the XML resource data extraction
+- Update to HAPI FHIR 8.12.0
+- Fix the MCP server tool declarations
 
 2026/08/31 Release 4.1.14
 
