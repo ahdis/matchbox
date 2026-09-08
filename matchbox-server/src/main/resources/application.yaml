@@ -42,6 +42,7 @@ spring:
         sse-message-endpoint: mcp/message
         stdio: false
         type: SYNC
+        request-timeout: 60s
         tool-change-notification: true
         resource-change-notification: false
         prompt-change-notification: false

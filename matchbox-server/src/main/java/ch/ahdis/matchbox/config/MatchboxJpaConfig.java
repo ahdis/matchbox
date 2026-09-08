@@ -141,6 +141,7 @@ public class MatchboxJpaConfig extends StarterJpaConfig {
 	                                           final Optional<CodeSystemResourceProvider> codeSystemProvider,
 	                                           final Optional<StructureMapTransformProvider> structureMapTransformProvider,
 	                                           final StructureMapListProvider structureMapListProvider,
+															 final BundleResourceProvider bundleResourceProvider,
 	                                           final Optional<QuestionnaireResourceProvider> questionnaireProvider,
 	                                           final Optional<QuestionnaireAssembleProviderR4> assembleProviderR4,
 	                                           final Optional<QuestionnaireAssembleProviderR4B> assembleProviderR4B,
@@ -199,9 +200,7 @@ public class MatchboxJpaConfig extends StarterJpaConfig {
 			validationProvider,
 			structureDefinitionProvider,
 			structureMapListProvider,
-			new BundleResourceProvider(matchboxFhirVersion,
-												installedStructureDefinitionRepository,
-												fhirContext.getVersion().getVersion())
+			bundleResourceProvider
 		);
 
 		registerOptionalProviders(
@@ -663,6 +662,15 @@ public class MatchboxJpaConfig extends StarterJpaConfig {
 	@Bean
 	public ITermValueSetStorageSvc termValueSetStorageSvc() {
 		return new TermValueSetStorageSvcImpl();
+	}
+
+	@Bean
+	public BundleResourceProvider bundleResourceProvider(final FhirContext fhirContext,
+																		  final MatchboxFhirVersion matchboxFhirVersion,
+																		  final MbInstalledStructureDefinitionRepository installedStructureDefinitionRepository) {
+		return new BundleResourceProvider(matchboxFhirVersion,
+													 installedStructureDefinitionRepository,
+													 fhirContext.getVersion().getVersion());
 	}
 
 	private static void registerOptionalProvider(final MatchboxRestfulServer fhirServer,
