@@ -11,6 +11,7 @@ public enum Interaction {
 	DELETE("delete"),
 	PATCH("patch"),
 	TRANSACTION("transaction"),
+  OPERATION("operation"),
 	VALIDATE("validate");
 	private final String name;
 
@@ -25,7 +26,7 @@ public enum Interaction {
 	public RequestTypeEnum asRequestType() {
 		return switch (this) {
 			case SEARCH, READ -> RequestTypeEnum.GET;
-			case CREATE, TRANSACTION, CALL_CDS_HOOK, VALIDATE -> RequestTypeEnum.POST;
+			case CREATE, TRANSACTION, CALL_CDS_HOOK, VALIDATE, OPERATION -> RequestTypeEnum.POST;
 			case UPDATE -> RequestTypeEnum.PUT;
 			case DELETE -> RequestTypeEnum.DELETE;
 			case PATCH -> RequestTypeEnum.PATCH;

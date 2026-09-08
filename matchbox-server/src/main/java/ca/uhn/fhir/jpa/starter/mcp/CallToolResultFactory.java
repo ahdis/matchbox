@@ -27,7 +27,7 @@ public class CallToolResultFactory {
 		}
 
 		return McpSchema.CallToolResult.builder()
-				.addContent(new McpSchema.TextContent(jacksonData))
+				.addContent(McpSchema.TextContent.builder(jacksonData).build())
 				.build();
 	}
 
@@ -41,7 +41,7 @@ public class CallToolResultFactory {
 			throw new RuntimeException(e);
 		}
 		return McpSchema.CallToolResult.builder()
-				.addContent(new McpSchema.TextContent(jacksonData))
+				.addContent(McpSchema.TextContent.builder(jacksonData).build())
 				.build();
 	}
 
@@ -49,7 +49,7 @@ public class CallToolResultFactory {
 	public static McpSchema.CallToolResult successFhirBody(
 			String response) {
 		return McpSchema.CallToolResult.builder()
-				.addContent(new McpSchema.TextContent(response))
+				.addContent(McpSchema.TextContent.builder(response).build())
 				.build();
 	}
 

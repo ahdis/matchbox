@@ -89,4 +89,21 @@ public class ToolFactory {
 			.description("List additional available parameters for validation")
 			.build();
 	}
+
+	public static Tool getProfilesForDocumentBundle() {
+		return Tool.builder(
+				"get-profiles-for-document-bundle",
+				Map.of(
+					"type", "object",
+					"properties", Map.of(
+						"bundle", Map.of(
+							"type", "string",
+							"description", "The FHIR Bundle resource of type document to get the profiles for in XML or JSON format"
+						)
+					),
+					"required", List.of("bundle")
+				))
+			.description("Get the list of FHIR StructureDefinition profiles that match a FHIR document Bundle resource")
+			.build();
+	}
 }
