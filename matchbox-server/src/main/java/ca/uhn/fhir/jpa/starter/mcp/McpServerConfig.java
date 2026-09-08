@@ -6,6 +6,7 @@ import ca.uhn.fhir.rest.server.McpMatchboxBridge;
 import ch.ahdis.matchbox.MatchboxRestfulServer;
 import ch.ahdis.matchbox.config.property.MatchboxFhirContextProperties;
 import ch.ahdis.matchbox.config.property.MatchboxFhirMcpProperties;
+import ch.ahdis.matchbox.providers.BundleResourceProvider;
 import io.modelcontextprotocol.server.McpServer;
 import io.modelcontextprotocol.server.McpSyncServer;
 import io.modelcontextprotocol.server.transport.HttpServletStreamableServerTransportProvider;
@@ -53,8 +54,9 @@ public class McpServerConfig {
 
   @Bean
   public McpMatchboxBridge mcpMatchboxBridge(final MatchboxRestfulServer restfulServer,
-                                             final MatchboxFhirMcpProperties matchboxFhirMcpProperties) {
-    return new McpMatchboxBridge(restfulServer, matchboxFhirMcpProperties);
+                                             final MatchboxFhirMcpProperties matchboxFhirMcpProperties,
+                                             final BundleResourceProvider bundleResourceProvider) {
+    return new McpMatchboxBridge(restfulServer, matchboxFhirMcpProperties, bundleResourceProvider);
   }
 
   @Bean

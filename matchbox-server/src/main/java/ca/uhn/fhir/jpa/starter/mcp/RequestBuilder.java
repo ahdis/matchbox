@@ -19,6 +19,8 @@ public class RequestBuilder {
 	private final String serverAddress;
 	private final String servletContextPath;
 	private final FhirContext fhirContext;
+  private final String operationName;
+
 	/**
 	 * Constructs a RequestBuilder for a specific FHIR interaction.
 	 *
@@ -31,6 +33,9 @@ public class RequestBuilder {
 		if (interaction == Interaction.TRANSACTION || interaction == Interaction.VALIDATE) this.resourceType = "";
 		else if (contextMap.get("resourceType") instanceof String rt && !rt.isBlank()) this.resourceType = rt;
 		else throw new IllegalArgumentException("Missing or invalid 'resourceType' in contextMap");
+    
+    if (contextMap.get("operationName") instanceof String op && !op.isBlank()) this.operationName = op;
+    else this.operationName = null;
 
 		this.interaction = interaction;
 		String serverAddressUrl = ((HardcodedServerAddressStrategy) restfulServer.getServerAddressStrategy()).getValue();
@@ -100,6 +105,14 @@ public class RequestBuilder {
 				req.setServletPath("/fhir");
 				applyPatchBody(req);
 			}
+      case OPERATION -> {
+        method = "POST";
+        String operationPath = basePath + "/$" + operationName;
+        req = new MockHttpServletRequest(method, operationPath);
+        req.setServerName(this.serverAddress);
+        req.setServletPath("/fhir");
+        applyResourceBody(req);
+      }
 			case VALIDATE -> {
 				method = "POST";
 

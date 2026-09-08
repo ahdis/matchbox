@@ -2,7 +2,9 @@ package ca.uhn.fhir.rest.server;
 
 import ca.uhn.fhir.context.FhirContext;
 import ch.ahdis.matchbox.config.property.MatchboxFhirMcpProperties;
+import ch.ahdis.matchbox.engine.exception.MatchboxUnsupportedFhirVersionException;
 import ch.ahdis.matchbox.mcp.ToolFactory;
+import ch.ahdis.matchbox.providers.BundleResourceProvider;
 import ch.ahdis.matchbox.util.CrossVersionResourceUtils;
 import ch.ahdis.matchbox.util.http.MatchboxFhirFormat;
 import ca.uhn.fhir.jpa.starter.mcp.CallToolResultFactory;
@@ -14,18 +16,23 @@ import io.modelcontextprotocol.server.McpServerFeatures;
 import io.modelcontextprotocol.server.McpSyncServerExchange;
 import io.modelcontextprotocol.spec.McpSchema;
 
+import org.hl7.fhir.r5.model.Bundle;
 import org.hl7.fhir.r5.model.OperationDefinition.OperationDefinitionParameterComponent;
 import org.hl7.fhir.r5.model.Enumerations.OperationParameterUse;
 import org.hl7.fhir.r5.model.OperationDefinition;
+import org.hl7.fhir.r5.model.Resource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.stereotype.Component;
 
 import java.io.StringWriter;
+import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+import static java.util.HashMap.newHashMap;
 
 @Component
 public class McpMatchboxBridge implements McpBridge {
@@ -35,6 +42,7 @@ public class McpMatchboxBridge implements McpBridge {
   public static final String PARAM_VALIDATION_PARAMETERS = "validationparams";
 
 	private final RestfulServer restfulServer;
+  private final BundleResourceProvider bundleResourceProvider;
 
   private final boolean globalRequestAnalysisFromClient;
 
@@ -44,9 +52,11 @@ public class McpMatchboxBridge implements McpBridge {
             "If there are no issues labeled 'fatal' or 'error' or 'warning', simply reply with: 'The resource is valid'. Nothing more. Else: keep your answer as short as possible. Return your full answer in markdown format.";
 
 	public McpMatchboxBridge(final RestfulServer restfulServer,
-                           final MatchboxFhirMcpProperties matchboxFhirMcpProperties) {
+                           final MatchboxFhirMcpProperties matchboxFhirMcpProperties,
+                           final BundleResourceProvider bundleResourceProvider) {
 		this.restfulServer = restfulServer;
     this.globalRequestAnalysisFromClient = matchboxFhirMcpProperties.isRequestAnalysisFromClient();
+    this.bundleResourceProvider = bundleResourceProvider;
 	}
 
 	public List<McpServerFeatures.SyncToolSpecification> generateTools() {
@@ -66,6 +76,10 @@ public class McpMatchboxBridge implements McpBridge {
       new McpServerFeatures.SyncToolSpecification(
         ToolFactory.listValidationParameters(),
         (exchange, request) -> getExtraValidationParameters(request, Interaction.READ)
+      ),
+      new McpServerFeatures.SyncToolSpecification(
+        ToolFactory.getProfilesForDocumentBundle(),
+        (exchange, request) -> getProfilesForDocumentBundle(request)
       )
     );
 	}
@@ -208,7 +222,7 @@ public class McpMatchboxBridge implements McpBridge {
 		final var response = new MockHttpServletResponse();
     final Map<String, String> requestQueryArguments;
 		if (arguments.containsKey(PARAM_VALIDATION_PARAMETERS)) {
-      requestQueryArguments = HashMap.newHashMap(8);
+      requestQueryArguments = newHashMap(8);
 			String validationParams = (String) arguments.get(PARAM_VALIDATION_PARAMETERS);
 			// Parse the validationParams string into a Map
 			String[] params = validationParams.split(",");
@@ -225,7 +239,7 @@ public class McpMatchboxBridge implements McpBridge {
         requestAnalysisFromClient = Boolean.parseBoolean(String.valueOf(requestQueryArguments.get(PARAM_REQUEST_ANALYSIS_FROM_CLIENT)));
       }
 		} else {
-      requestQueryArguments = HashMap.newHashMap(1);
+      requestQueryArguments = newHashMap(1);
 		}
     // Disable LLM analysis by Matchbox' LLM, we'll ask the client to do it if necessary
     requestQueryArguments.put(ValidationProvider.PARAM_ANALYZE_ERRORS_WITH_LLM, "false");
@@ -257,7 +271,37 @@ public class McpMatchboxBridge implements McpBridge {
 		}
 	}
 
-	public String addAiAnalysis(McpSyncServerExchange exchange, String fhirOperationOutcome) {
+  private McpSchema.CallToolResult getProfilesForDocumentBundle(final McpSchema.CallToolRequest toolRequest) {
+    final var arguments = toolRequest.arguments();
+    if (!arguments.containsKey("bundle")) {
+      return CallToolResultFactory.failure("Missing 'bundle' argument for getProfilesForDocumentBundle");
+    }
+    final var bundleSerialized = arguments.get("bundle").toString().trim().getBytes(StandardCharsets.UTF_8);
+    final var requestVersion = this.restfulServer.getFhirContext().getVersion().getVersion();
+    final var requestFormat = bundleSerialized[0] == '{' ? MatchboxFhirFormat.JSON : MatchboxFhirFormat.XML;
+    final Resource resource;
+    try {
+      resource = switch (requestVersion) {
+        case R4 -> CrossVersionResourceUtils.parseR4AsR5(bundleSerialized, requestFormat);
+        case R4B -> CrossVersionResourceUtils.parseR4bAsR5(bundleSerialized, requestFormat);
+        case R5 -> CrossVersionResourceUtils.parseR5(bundleSerialized, requestFormat);
+        default -> throw new MatchboxUnsupportedFhirVersionException("McpMatchboxBridge.getProfilesForDocumentBundle",
+                                                                     requestVersion);
+      };
+    } catch (final Exception e) {
+      return CallToolResultFactory.failure("Failed to parse the provided Bundle: " + e.getMessage());
+    }
+    if (!(resource instanceof final Bundle bundle)) {
+      return CallToolResultFactory.failure("The provided resource is not a Bundle");
+    }
+    final var analysis = this.bundleResourceProvider.getProfilesForBundle(bundle);
+    if (analysis == null) {
+      return CallToolResultFactory.failure("The Bundle could not be analyzed as a document");
+    }
+    return CallToolResultFactory.successPayload(analysis.profiles().toArray(new String[0]));
+  }
+
+	private String addAiAnalysis(McpSyncServerExchange exchange, String fhirOperationOutcome) {
 		// check if MCP Client supports Sampling
 		if (exchange.getClientCapabilities() != null && exchange.getClientCapabilities().sampling() != null) {
 				try {

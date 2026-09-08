@@ -2,6 +2,7 @@ package ch.ahdis.matchbox.providers;
 
 import ca.uhn.fhir.context.FhirVersionEnum;
 import ca.uhn.fhir.jpa.dao.data.MbInstalledStructureDefinitionRepository;
+import ca.uhn.fhir.jpa.model.entity.MbInstalledStructureDefinitionEntity;
 import ca.uhn.fhir.rest.annotation.Operation;
 import ca.uhn.fhir.rest.server.exceptions.InvalidRequestException;
 import ch.ahdis.matchbox.config.MatchboxFhirVersion;
@@ -14,6 +15,7 @@ import org.hl7.fhir.r5.model.*;
 import org.springframework.beans.factory.annotation.Value;
 
 import java.io.IOException;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -61,31 +63,18 @@ public class BundleResourceProvider extends AbstractMatchboxResourceProvider {
 
 		final var response = new Parameters();
 		response.setId(UUID.randomUUID().toString());
-		if (bundle.getType() != Bundle.BundleType.DOCUMENT) {
+
+		final var analysis = getProfilesForBundle(bundle);
+		if (analysis == null) {
 			wrapper.writeResponse(response);
 			return;
 		}
-		final var composition = Optional.of(bundle.getEntryFirstRep())
-			.map(Bundle.BundleEntryComponent::getResource)
-			.filter(Composition.class::isInstance)
-			.map(Composition.class::cast)
-			.orElse(null);
-		if (composition == null) {
-			wrapper.writeResponse(response);
-			return;
-		}
-		final var typeCoding = composition.getType().getCodingFirstRep();
-		final var categoryCoding = composition.getCategoryFirstRep().getCodingFirstRep();
-		response.addParameter("composition-type", composition.getType());
-		for (final var category : composition.getCategory()) {
+		response.addParameter("composition-type", analysis.type());
+		for (final var category : analysis.categories()) {
 			response.addParameter("composition-category", category);
 		}
-		final var typeCode = "%s#%s".formatted(nullToEmpty(typeCoding.getSystem()), nullToEmpty(typeCoding.getCode()));
-		final var categoryCode = "%s#%s".formatted(nullToEmpty(categoryCoding.getSystem()),
-																 nullToEmpty(categoryCoding.getCode()));
-		final var entities = this.installedStructureDefinitionRepository.findAllByDocumentTypeAndCategory(typeCode, categoryCode);
-		for (final var entity : entities) {
-			response.addParameter("profile", new CanonicalType(entity.getCanonicalUrl()));
+		for (final var profile : analysis.profiles()) {
+			response.addParameter("profile", profile);
 		}
 		wrapper.writeResponse(response);
 	}
@@ -109,7 +98,42 @@ public class BundleResourceProvider extends AbstractMatchboxResourceProvider {
 		return this.fhirVersion.convertForResponse(response);
 	}
 
+	@Nullable
+	public BundleAnalysis getProfilesForBundle(final Bundle bundle) {
+		if (bundle.getType() != Bundle.BundleType.DOCUMENT) {
+			return null;
+		}
+		final var composition = Optional.of(bundle.getEntryFirstRep())
+			.map(Bundle.BundleEntryComponent::getResource)
+			.filter(Composition.class::isInstance)
+			.map(Composition.class::cast)
+			.orElse(null);
+		if (composition == null) {
+			return null;
+		}
+		final var typeCoding = composition.getType().getCodingFirstRep();
+		final var categoryCoding = composition.getCategoryFirstRep().getCodingFirstRep();
+		final var typeCode = "%s#%s".formatted(nullToEmpty(typeCoding.getSystem()), nullToEmpty(typeCoding.getCode()));
+		final var categoryCode = "%s#%s".formatted(nullToEmpty(categoryCoding.getSystem()),
+																 nullToEmpty(categoryCoding.getCode()));
+		final var entities = this.installedStructureDefinitionRepository.findAllByDocumentTypeAndCategory(typeCode, categoryCode);
+
+		return new BundleAnalysis(
+			composition.getType(),
+			composition.getCategory(),
+			entities.stream()
+				.map(MbInstalledStructureDefinitionEntity::getCanonicalUrl)
+				.toList()
+		);
+	}
+
 	private String nullToEmpty(@Nullable final String value) {
 		return value == null ? "" : value;
 	}
+
+	public record BundleAnalysis(
+		CodeableConcept type,
+		List<CodeableConcept> categories,
+		List<String> profiles
+	) {}
 }
