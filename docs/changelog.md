@@ -8,6 +8,10 @@ Unreleased
 - GUI: fix the XML resource data extraction
 - Update to HAPI FHIR 8.12.0
 - Fix the MCP server tool declarations
+- Fix the resolution of unversioned canonicals in the validation engines copied from the main engine: the copy of
+  the context lost the package dependencies and the preference for the core package definitions, so the latest
+  version of a resource was used (e.g. the R5 CodeSystem `http://hl7.org/fhir/encounter-status` from
+  hl7.fhir.uv.xver-r5.r4 instead of the R4 one), which rejected the code `finished` of `Encounter.status` (#538)
 
 2026/08/31 Release 4.1.14
 
