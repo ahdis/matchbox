@@ -397,6 +397,11 @@ public abstract class BaseWorkerContext extends I18nBase implements IWorkerConte
       suppressedMappings = other.suppressedMappings;
       cutils.setSuppressedMappings(other.suppressedMappings);
       locale = other.locale; // matchbox patch https://github.com/ahdis/matchbox/issues/425
+      // matchbox patch https://github.com/ahdis/matchbox/issues/538: the package information is needed to resolve
+      // canonicals with the dependencies of the package of the referencing resource (see populatePVList), without it
+      // the copied context falls back to the latest version of a resource
+      packages.putAll(other.packages);
+      // END matchbox patch
     }
   }
 
