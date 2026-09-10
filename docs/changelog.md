@@ -12,6 +12,7 @@ Unreleased
   the context lost the package dependencies and the preference for the core package definitions, so the latest
   version of a resource was used (e.g. the R5 CodeSystem `http://hl7.org/fhir/encounter-status` from
   hl7.fhir.uv.xver-r5.r4 instead of the R4 one), which rejected the code `finished` of `Encounter.status` (#538)
+- Update org.hl7.fhir.core to 6.10.4
 
 2026/08/31 Release 4.1.14
 

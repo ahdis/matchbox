@@ -81,6 +81,9 @@ import org.hl7.fhir.r5.terminologies.client.TerminologyClientManager;
 import org.hl7.fhir.r5.terminologies.client.TerminologyClientR5;
 import org.hl7.fhir.r5.terminologies.expansion.ValueSetExpander;
 import org.hl7.fhir.r5.terminologies.expansion.ValueSetExpansionOutcome;
+import org.hl7.fhir.r5.terminologies.subsumption.SubsumptionException;
+import org.hl7.fhir.r5.terminologies.subsumption.SubsumptionOutcome;
+import org.hl7.fhir.r5.terminologies.subsumption.TerminologySubsumptionTester;
 import org.hl7.fhir.r5.terminologies.utilities.*;
 import org.hl7.fhir.r5.terminologies.utilities.TerminologyCache.CacheToken;
 import org.hl7.fhir.r5.terminologies.utilities.TerminologyCache.SourcedCodeSystem;
@@ -427,16 +430,8 @@ public abstract class BaseWorkerContext extends I18nBase implements IWorkerConte
         }
         // matchbox patch for duplicate resources, see https://github.com/ahdis/matchbox/issues/227 and issues/452
         // CanonicalResource ex = fetchResourceWithException(r.getType(), url, VersionResolutionRules.defaultRule());
-        // boolean forceDrop = false;
-        // if (url.startsWith("http://terminology.hl7.org/") && ex.getVersion()!=null && ex.getSourcePackage()!=null && ex.getVersion().equals(ex.getSourcePackage().getVersion()) ) {
-        //     forceDrop = true;
-        // }
-        // if (forceDrop || (packageInfo!=null && packageInfo.getVersion()!=null && !packageInfo.getVersion().equals(r.getVersion()))) {
-        //     dropResource(r.getType(), r.getId());
-        //     dropResource(r.getType(), url);
-        // } else {
-        //     return;
-        // }
+        // throw new DefinitionException(formatMessage(I18nConstants.DUPLICATE_RESOURCE_, url, r.getVersion(), ex.getVersion(),
+        //   ex.fhirType()));
         // END matchbox patch
       }
       boolean added = registerResource(r, packageInfo);
@@ -596,16 +591,8 @@ public abstract class BaseWorkerContext extends I18nBase implements IWorkerConte
           }
           // matchbox patch for duplicate resources, see https://github.com/ahdis/matchbox/issues/227 and issues/452
           // CanonicalResource ex = (CanonicalResource) fetchResourceWithException(r.getClass(), url, VersionResolutionRules.defaultRule());
-          // boolean forceDrop = false;
-          // if (url.startsWith("http://terminology.hl7.org/") && ex.getVersion()!=null && ex.getSourcePackage()!=null && ex.getVersion().equals(ex.getSourcePackage().getVersion()) ) {
-          //     forceDrop = true;
-          // }
-          // if (forceDrop || (m.getSourcePackage()!=null && m.getSourcePackage().getVersion()!=null && !m.getSourcePackage().getVersion().equals(m.getVersion()))) {
-          //     dropResource(m.fhirType(), m.getId());
-          //     dropResource(m.fhirType(), url);
-          // } else {
-          //     return;
-          // }
+          // throw new DefinitionException(formatMessage(I18nConstants.DUPLICATE_RESOURCE_, url, ((CanonicalResource) r).getVersion(), ex.getVersion(),
+          //   ex.fhirType()));
           // END matchbox patch
         }
         if (r instanceof StructureDefinition) {
@@ -1661,14 +1648,17 @@ public abstract class BaseWorkerContext extends I18nBase implements IWorkerConte
       }
     }
 
-    if (options.isUseClient() && parent.getSystem().equals(child.getSystem())) {
-      CodeSystem cs = fetchCodeSystem(parent.getSystem(), ExtensionUtilities.getVersionResolutionRules(parent.getSystemElement()));
-      if (cs != null) {
-        Boolean b = CodeSystemUtilities.subsumes(cs, parent.getCode(), child.getCode());
+    if (options.isUseClient()) {
+      try {
+        SubsumptionOutcome outcome = new TerminologySubsumptionTester(this).subsumes(parent, child);
+        Boolean b = outcome == SubsumptionOutcome.EQUIVALENT || outcome == SubsumptionOutcome.SUBSUMES;
         if (txCache != null && cachingAllowed) {
           txCache.cacheSubsumes(cacheToken, b, true);
         }
         return b;
+      } catch (SubsumptionException e) {
+        // we can't determine subsumption locally (unknown code system, not complete, hierarchy
+        // doesn't mean is-a, code not known...) so we ask the server, if there is one
       }
     }
 
