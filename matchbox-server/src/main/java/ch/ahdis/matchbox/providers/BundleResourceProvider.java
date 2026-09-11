@@ -19,6 +19,8 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
+import static ch.ahdis.matchbox.packages.documents.DocumentCompositionCodesExtractor.serializeCoding;
+
 public class BundleResourceProvider extends AbstractMatchboxResourceProvider {
 
 	private final MbInstalledStructureDefinitionRepository installedStructureDefinitionRepository;
@@ -93,7 +95,9 @@ public class BundleResourceProvider extends AbstractMatchboxResourceProvider {
 				.setName("profile")
 				.setValue(new CanonicalType(entity.getCanonicalUrl()));
 			parameter.addExtension("composition-type", new UriType(entity.getDocCompTypeCode()));
-			parameter.addExtension("composition-category", new UriType(entity.getDocCompCatCode()));
+			if (entity.getDocCompCatCode() != null) {
+				parameter.addExtension("composition-category", new UriType(entity.getDocCompCatCode()));
+			}
 		}
 		return this.fhirVersion.convertForResponse(response);
 	}
@@ -113,10 +117,17 @@ public class BundleResourceProvider extends AbstractMatchboxResourceProvider {
 		}
 		final var typeCoding = composition.getType().getCodingFirstRep();
 		final var categoryCoding = composition.getCategoryFirstRep().getCodingFirstRep();
-		final var typeCode = "%s#%s".formatted(nullToEmpty(typeCoding.getSystem()), nullToEmpty(typeCoding.getCode()));
-		final var categoryCode = "%s#%s".formatted(nullToEmpty(categoryCoding.getSystem()),
-																 nullToEmpty(categoryCoding.getCode()));
-		final var entities = this.installedStructureDefinitionRepository.findAllByDocumentTypeAndCategory(typeCode, categoryCode);
+		final var typeCode = serializeCoding(typeCoding);
+		if (typeCode == null) {
+			return null;
+		}
+		final var categoryCode = serializeCoding(categoryCoding);
+		final List<MbInstalledStructureDefinitionEntity> entities;
+		if (categoryCode != null) {
+			entities = this.installedStructureDefinitionRepository.findAllByDocumentTypeAndCategory(typeCode, categoryCode);
+		} else {
+			entities = this.installedStructureDefinitionRepository.findAllByDocumentTypeWithoutCategory(typeCode);
+		}
 
 		return new BundleAnalysis(
 			composition.getType(),
@@ -125,10 +136,6 @@ public class BundleResourceProvider extends AbstractMatchboxResourceProvider {
 				.map(MbInstalledStructureDefinitionEntity::getCanonicalUrl)
 				.toList()
 		);
-	}
-
-	private String nullToEmpty(@Nullable final String value) {
-		return value == null ? "" : value;
 	}
 
 	public record BundleAnalysis(

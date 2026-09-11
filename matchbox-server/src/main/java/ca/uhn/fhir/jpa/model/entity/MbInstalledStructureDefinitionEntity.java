@@ -26,7 +26,7 @@ public class MbInstalledStructureDefinitionEntity implements Serializable {
    * The current version of the metadata stored in this table. A lower value than current means a data migration needs
    * to be run against this row.
    */
-  public static final byte CURRENT_META_VERSION = 2;
+  public static final byte CURRENT_META_VERSION = 3;
 
   /**
    * The maximum length of {@link #title}.
