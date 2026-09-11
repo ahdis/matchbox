@@ -1,4 +1,4 @@
-Unreleased
+2026/09/11 Release 4.1.15
 
 - Fix reading a conformance resource (StructureMap, StructureDefinition, ...) by the string id it was created with,
   which failed with a 500 because the id was always parsed as a number; an unknown id now returns a 404 (#573)
