@@ -10,6 +10,7 @@ import ca.uhn.fhir.jpa.model.entity.NpmPackageVersionResourceEntity;
 import ch.ahdis.matchbox.util.CrossVersionResourceUtils;
 import ch.ahdis.matchbox.util.MatchboxServerUtils;
 import ch.ahdis.matchbox.util.http.MatchboxFhirFormat;
+import jakarta.annotation.Nonnull;
 import jakarta.annotation.Nullable;
 import org.hl7.fhir.instance.model.api.IBaseBinary;
 import org.hl7.fhir.r5.model.CodeableConcept;
@@ -74,7 +75,7 @@ public class DocumentCompositionCodesExtractor {
 
 		final var typeCode = extractFixedCodingAsCode(compositionSD, "Composition.type");
 		final var categoryCode = extractFixedCodingAsCode(compositionSD, "Composition.category");
-		if (typeCode != null || categoryCode != null) {
+		if (typeCode != null) {
 			log.debug("The Composition StructureDefinition '{}' has fixed codes: typeCode={}, categoryCode={}",
 						 typeCode,
 						 categoryCode,
@@ -212,11 +213,23 @@ public class DocumentCompositionCodesExtractor {
 				coding = patternCoding;
 			}
 
-			if (coding != null && coding.hasSystem() && coding.hasCode()) {
-				return coding.getSystem() + "#" + coding.getCode();
+			if (coding != null) {
+				return serializeCoding(coding);
 			}
 		}
 		return null;
+	}
+
+	@Nullable
+	public static String serializeCoding(final Coding coding) {
+		if (!coding.hasSystem() && !coding.hasCode()) {
+			return null;
+		}
+		return "%s#%s".formatted(nullToEmpty(coding.getSystem()), nullToEmpty(coding.getCode()));
+	}
+
+	private static String nullToEmpty(final @Nullable String value) {
+		return value == null ? "" : value;
 	}
 
 	/**
@@ -230,5 +243,5 @@ public class DocumentCompositionCodesExtractor {
 		return sd.getDifferential().getElement();
 	}
 
-	public record DocumentCompositionCodes(String typeCode, String categoryCode) {}
+	public record DocumentCompositionCodes(@Nonnull String typeCode, @Nullable String categoryCode) {}
 }

@@ -20,28 +20,34 @@ public interface MbInstalledStructureDefinitionRepository
   List<MbInstalledStructureDefinitionEntity> findAllValidatable();
   
   @Query("SELECT e FROM MbInstalledStructureDefinitionEntity e WHERE e.canonicalUrl = :canonical")
-  List<MbInstalledStructureDefinitionEntity> findAllByCanonical(@Param("canonical") final String canonical);
+  List<MbInstalledStructureDefinitionEntity> findAllByCanonical(@Param("canonical") String canonical);
   
   @Query("SELECT e FROM MbInstalledStructureDefinitionEntity e WHERE e.docCompTypeCode = ca.uhn.fhir.jpa.model.entity.MbInstalledStructureDefinitionEntity.DOC_BUNDLE_NEEDS_PROCESSING")
   List<MbInstalledStructureDefinitionEntity> findAllForDocumentBundleProcessing();
   
-  @Query("SELECT e FROM MbInstalledStructureDefinitionEntity e WHERE e.docCompTypeCode = :typeCode AND e.docCompCatCode = :categoryCode")
-  List<MbInstalledStructureDefinitionEntity> findAllByDocumentTypeAndCategory(@Param("typeCode") final String typeCode,
-                                                                              @Param("categoryCode") final String categoryCode);
+  @Query("SELECT e FROM MbInstalledStructureDefinitionEntity e WHERE e.docCompTypeCode = :typeCode AND (" +
+    "e.docCompCatCode = :categoryCode OR e.docCompCatCode IS NULL)")
+  List<MbInstalledStructureDefinitionEntity> findAllByDocumentTypeAndCategory(@Param("typeCode") String typeCode,
+                                                                              @Param("categoryCode") String categoryCode);
   
-  @Query("SELECT e FROM MbInstalledStructureDefinitionEntity e WHERE e.docCompTypeCode is not null OR e.docCompCatCode is not null")
+  @Query("SELECT e FROM MbInstalledStructureDefinitionEntity e WHERE e.docCompTypeCode = :typeCode AND e.docCompCatCode IS NULL")
+  List<MbInstalledStructureDefinitionEntity> findAllByDocumentTypeWithoutCategory(@Param("typeCode") String typeCode);
+  
+  @Query("SELECT e FROM MbInstalledStructureDefinitionEntity e WHERE e.docCompTypeCode IS NOT NULL OR e.docCompCatCode IS NOT NULL")
   List<MbInstalledStructureDefinitionEntity> findAllRecognizableDocuments();
   
   @Query("SELECT e FROM MbInstalledStructureDefinitionEntity e WHERE e.metaVersion = :metaVersion")
-  Slice<MbInstalledStructureDefinitionEntity> findAllByMetaVersion(@Param("metaVersion") final byte metaVersion,
-                                                                   final Pageable pageable);
+  Slice<MbInstalledStructureDefinitionEntity> findAllByMetaVersion(@Param("metaVersion") byte metaVersion,
+                                                                   Pageable pageable);
 
   @Query("SELECT CASE WHEN COUNT(e) > 0 THEN true ELSE false END FROM MbInstalledStructureDefinitionEntity e " +
     "WHERE e.canonicalUrl = :canonical AND e.type = :type")
-  boolean existsByCanonicalAndType(@Param("canonical") final String canonical,
-                                   @Param("type") final String type);
+  boolean existsByCanonicalAndType(@Param("canonical") String canonical,
+                                   @Param("type") String type);
 
   boolean existsByMetaVersion(byte metaVersion);
+  
+  boolean existsByDocCompTypeCode(String docCompTypeCode);
 
   long countByMetaVersion(byte metaVersion);
 }

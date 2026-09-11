@@ -17,6 +17,8 @@ import org.springframework.context.event.EventListener;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.annotation.Transactional;
 
+import static ca.uhn.fhir.jpa.model.entity.MbInstalledStructureDefinitionEntity.DOC_BUNDLE_NEEDS_PROCESSING;
+
 /**
  * Listener for Matchbox events, as per the Spring Boot event system.
  */
@@ -67,26 +69,7 @@ public class MatchboxEventListener {
 	@Transactional
 	public void handleImplementationGuideInstalledEvent(final ImplementationGuideInstalledEvent ignored) {
 		LOGGER.debug("Received an ImplementationGuideInstalledEvent");
-		final var extractor = new DocumentCompositionCodesExtractor(this.myDaoRegistry,
-		                                                            this.myBinaryStorageSvc,
-		                                                            this.myPackageVersionResourceDao,
-																						this.installedStructureDefinitionRepository);
-		final var entities = this.installedStructureDefinitionRepository.findAllForDocumentBundleProcessing();
-		for (final var entity : entities) {
-			try {
-				final var codes = extractor.extractCodes(entity.getNpmPackageVersionResourceEntity());
-				if (codes != null) {
-					entity.setDocCompTypeCode(codes.typeCode());
-					entity.setDocCompCatCode(codes.categoryCode());
-				} else {
-					entity.setDocCompTypeCode(null);
-				}
-				this.installedStructureDefinitionRepository.save(entity);
-			} catch (final Exception e) {
-				LOGGER.warn("Failed to extract document type/category codes from StructureDefinition '{}'",
-				            entity.getCanonicalUrl(), e);
-			}
-		}
+		this.runDocumentBundleAnalysis();
 		LOGGER.trace("Done processing the ImplementationGuideInstalledEvent");
 	}
 
@@ -123,6 +106,37 @@ public class MatchboxEventListener {
 			                                              this.myBinaryStorageSvc,
 			                                              this.myPackageVersionResourceDao,
 			                                              this.txManager).run();
+		}
+
+		// Restart the document Bundle analysis if needed
+		if (this.installedStructureDefinitionRepository.existsByDocCompTypeCode(DOC_BUNDLE_NEEDS_PROCESSING)) {
+			this.runDocumentBundleAnalysis();
+		}
+	}
+
+	/**
+	 *
+	 */
+	private void runDocumentBundleAnalysis() {
+		final var extractor = new DocumentCompositionCodesExtractor(this.myDaoRegistry,
+																						this.myBinaryStorageSvc,
+																						this.myPackageVersionResourceDao,
+																						this.installedStructureDefinitionRepository);
+		final var entities = this.installedStructureDefinitionRepository.findAllForDocumentBundleProcessing();
+		for (final var entity : entities) {
+			try {
+				final var codes = extractor.extractCodes(entity.getNpmPackageVersionResourceEntity());
+				if (codes != null) {
+					entity.setDocCompTypeCode(codes.typeCode());
+					entity.setDocCompCatCode(codes.categoryCode());
+				} else {
+					entity.setDocCompTypeCode(null);
+				}
+				this.installedStructureDefinitionRepository.save(entity);
+			} catch (final Exception e) {
+				LOGGER.warn("Failed to extract document type/category codes from StructureDefinition '{}'",
+								entity.getCanonicalUrl(), e);
+			}
 		}
 	}
 }
