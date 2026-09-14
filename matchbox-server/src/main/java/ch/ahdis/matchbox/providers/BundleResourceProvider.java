@@ -76,7 +76,7 @@ public class BundleResourceProvider extends AbstractMatchboxResourceProvider {
 			response.addParameter("composition-category", category);
 		}
 		for (final var profile : analysis.profiles()) {
-			response.addParameter("profile", profile);
+			response.addParameter("profile", new CanonicalType(profile));
 		}
 		wrapper.writeResponse(response);
 	}
