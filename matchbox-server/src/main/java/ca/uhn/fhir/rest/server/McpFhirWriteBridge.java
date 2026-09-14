@@ -4,6 +4,8 @@ import ca.uhn.fhir.jpa.starter.mcp.Interaction;
 import ca.uhn.fhir.jpa.starter.mcp.McpServerConfig;
 import io.modelcontextprotocol.spec.McpSchema;
 import jakarta.annotation.Nullable;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.ai.mcp.annotation.McpTool;
 import org.springframework.ai.mcp.annotation.McpToolParam;
 
@@ -16,12 +18,12 @@ import java.util.Map;
  * Registered when {@code matchbox.fhir.context.onlyOneEngine=true} and
  * {@code matchbox.fhir.context.httpReadOnly=false} (see {@link McpServerConfig}).
  */
-public class McpFhirWriteBridge extends McpFhirReadBridge {
-
+public class McpFhirWriteBridge extends AbstractMcpBridge {
+  
   public McpFhirWriteBridge(final RestfulServer restfulServer) {
     super(restfulServer);
   }
-
+  
   @McpTool(name = "create-fhir-resource",
     description = "Create a new FHIR resource")
   private McpSchema.CallToolResult createFhirResource(

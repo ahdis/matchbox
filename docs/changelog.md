@@ -1,3 +1,7 @@
+2026/09/14 Release 4.1.16
+
+- Fix starting the MCP server in onlyOneEngine mode
+
 2026/09/11 Release 4.1.15
 
 - Fix reading a conformance resource (StructureMap, StructureDefinition, ...) by the string id it was created with,
