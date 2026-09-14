@@ -1,6 +1,7 @@
 2026/09/14 Release 4.1.16
 
 - Fix starting the MCP server in onlyOneEngine mode
+- Fix the FHIR type of the profile in the $get-profiles response
 
 2026/09/11 Release 4.1.15
 
