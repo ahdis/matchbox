@@ -6,6 +6,8 @@ import Bundle = fhir.r4.Bundle;
 import OperationOutcome = fhir.r4.OperationOutcome;
 import Parameters = fhir.r4.Parameters;
 import { ValidationEntry } from '../validate/validation-entry';
+import { StructureDefinition } from '../validate/structure-definition';
+import Extension = fhir.r4.Extension;
 
 /**
  * A wrapper for the FHIR client that provides a simpler API for our needs, with the right types.
@@ -127,21 +129,44 @@ export class FhirClientWrapper {
     return result as unknown as OperationOutcome;
   }
 
-  async getProfiles(bundle: string,
-                    mediaType: string): Promise<string[]> {
+  async getProfiles(bundle: string, mediaType: string): Promise<StructureDefinition[]> {
     const response = await fetch(this.baseUrl + '/Bundle/$get-profiles', {
       method: 'POST',
       headers: {
         'Content-Type': mediaType,
-        'Accept': 'application/fhir+json',
+        Accept: 'application/fhir+json',
       },
       body: bundle,
     });
     const result = (await response.json()) as unknown as fhir.r4.Parameters;
-    return result.parameter
-      ?.filter((p) => p.name === 'profile')
-      ?.map((p) => p.valueCanonical)
-      .filter((p): p is string => p !== undefined) || [];
+    return (
+      result.parameter
+        ?.filter((p) => p.name === 'profile')
+        ?.map((p) => {
+          const extensions = p._valueCanonical?.extension ?? [];
+          const sd = new StructureDefinition(
+            this.getExtensionStringValue(extensions, 'sd-canonical'),
+            this.getExtensionStringValue(extensions, 'sd-title'),
+            this.getExtensionStringValue(extensions, 'ig-id'),
+            this.getExtensionStringValue(extensions, 'ig-version'),
+            false
+          );
+          if (this.getExtensionBoolValue(extensions, 'ig-current')) {
+            sd.isCurrent = true;
+          } else {
+            sd.canonical += `|${sd.igVersion}`;
+          }
+          return sd;
+        }) || []
+    );
+  }
+
+  private getExtensionStringValue(extensions: Extension[], url: string): string {
+    return extensions.find(extension => extension.url == url)?.valueString ?? '';
+  }
+
+  private getExtensionBoolValue(extensions: Extension[], url: string): boolean {
+    return extensions.find(extension => extension.url == url)?.valueBoolean ?? false;
   }
 }
 

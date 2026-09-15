@@ -76,7 +76,15 @@ public class BundleResourceProvider extends AbstractMatchboxResourceProvider {
 			response.addParameter("composition-category", category);
 		}
 		for (final var profile : analysis.profiles()) {
-			response.addParameter("profile", new CanonicalType(profile));
+			final var canonical = new CanonicalType(profile.canonical());
+			canonical.addExtension("ig-id", new StringType(profile.igId()));
+			canonical.addExtension("ig-version", new StringType(profile.igVersion()));
+			canonical.addExtension("ig-current", new BooleanType(profile.igCurrent()));
+			canonical.addExtension("sd-canonical", new StringType(profile.canonical()));
+			canonical.addExtension("sd-title", new StringType(profile.title()));
+			response.addParameter()
+				.setName("profile")
+				.setValue(canonical);
 		}
 		wrapper.writeResponse(response);
 	}
@@ -133,7 +141,13 @@ public class BundleResourceProvider extends AbstractMatchboxResourceProvider {
 			composition.getType(),
 			composition.getCategory(),
 			entities.stream()
-				.map(MbInstalledStructureDefinitionEntity::getCanonicalUrl)
+				.map(entity -> new ValidationProfile(
+					entity.getCanonicalUrl(),
+					entity.getPackageId(),
+					entity.getPackageVersion(),
+					entity.isCurrent() != null && entity.isCurrent(),
+					entity.getTitle()
+				))
 				.toList()
 		);
 	}
@@ -141,6 +155,14 @@ public class BundleResourceProvider extends AbstractMatchboxResourceProvider {
 	public record BundleAnalysis(
 		CodeableConcept type,
 		List<CodeableConcept> categories,
-		List<String> profiles
+		List<ValidationProfile> profiles
+	) {}
+
+	public record ValidationProfile(
+		String canonical,
+		String igId,
+		String igVersion,
+		boolean igCurrent,
+		String title
 	) {}
 }
