@@ -11,7 +11,7 @@ import { FormControl, Validators } from '@angular/forms';
 import { StructureDefinition } from './structure-definition';
 import { ValidationCodeEditor } from './validation-code-editor';
 import { Base64 } from 'js-base64';
-import { from, forkJoin, ReplaySubject, take, last } from 'rxjs';
+import { from, forkJoin, ReplaySubject, take } from 'rxjs';
 import { UploadedFile } from '../upload/uploaded-file';
 import { HotToastService } from '@ngxpert/hot-toast';
 import { FhirClientWrapper } from '../util/fhir-client-wrapper';
@@ -48,7 +48,7 @@ export class ValidateComponent implements AfterViewInit {
   selectedProfile: string | null = null;
   profileControl: FormControl = new FormControl<string>('', Validators.required);
   profileLocked: boolean = false;
-  proposedProfiles: string[] | null = null;
+  proposedProfiles: StructureDefinition[] | null = null;
 
   // Code editor
   editor: ValidationCodeEditor | null = null;
@@ -193,16 +193,23 @@ export class ValidateComponent implements AfterViewInit {
         if (!profileSet) {
           this.selectedProfile = 'http://hl7.org/fhir/StructureDefinition/' + entry.resourceType;
         }
-        if (this.selectedProfile == 'http://hl7.org/fhir/StructureDefinition/Bundle') {
+        if (entry.resourceType == 'Bundle') {
           const possibleProfiles = await this.bundleCanBeValidatedAsProfiles(entry);
           if (possibleProfiles && possibleProfiles.length > 0) {
-            if (possibleProfiles.length == 1) {
-              // We have only one possible profile, so we will select it automatically.
-              this.selectedProfile = possibleProfiles[0];
-            } else {
-              // We have multiple possible profiles, so we will show them in the GUI for the user to select one.
+            if (this.selectedProfile == 'http://hl7.org/fhir/StructureDefinition/Bundle') {
+              // If the selected profile is the FHIR Core one, we can try to select a more specific one
+              if (possibleProfiles.length == 1) {
+                // We have only one possible profile, so we will select it automatically.
+                this.selectedProfile = possibleProfiles[0].canonical;
+              } else {
+                // We have multiple possible profiles, so we will show them in the GUI for the user to select one.
+                this.proposedProfiles = possibleProfiles;
+                return false;
+              }
+            } else if (possibleProfiles.some((p) => p.canonical != this.selectedProfile)) {
+              // There was a profile selected (either by the user, or through `meta.profile`), we won't change it, but
+              // we'll propose the other possible (if any is different than the selected one).
               this.proposedProfiles = possibleProfiles;
-              return false;
             }
           }
         }
@@ -671,8 +678,8 @@ export class ValidateComponent implements AfterViewInit {
    * Checks whether a bundle can be validated as a set of profiles, and returns the list of profiles if so.
    * Otherwise, returns false.
    */
-  private async bundleCanBeValidatedAsProfiles(entry: ValidationEntry): Promise<string[] | false> {
-    if (entry.resource.resourceType !== 'Bundle' || entry.content.indexOf('"document"') == -1) {
+  private async bundleCanBeValidatedAsProfiles(entry: ValidationEntry): Promise<StructureDefinition[] | false> {
+    if (entry.resource.resourceType !== 'Bundle' || !entry.content.includes('"document"')) {
       // Not a document Bundle
       return false;
     }
@@ -683,8 +690,6 @@ export class ValidateComponent implements AfterViewInit {
       return false;
     }
   }
-
-  protected readonly last = last;
 }
 
 /**

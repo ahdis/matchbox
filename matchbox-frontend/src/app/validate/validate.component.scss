@@ -178,7 +178,7 @@ table {
   .canonical {
     font-family: monospace, serif;
     color: #778d9d;
-    letter-spacing: 0px;
+    letter-spacing: 0;
   }
 }
 
@@ -259,12 +259,24 @@ mat-option {
   }
   mat-list-item {
     cursor: pointer;
-    font-size: 0.8em;
-    font-family: monospace, serif;
     height: auto;
     padding: 0.3em 0;
-    @include mat.list-overrides((
-      list-item-hover-label-text-color: #46af81,
-    ));
+    ::ng-deep .mdc-list-item__content {
+      white-space: normal;
+    }
+    &:hover ::ng-deep {
+      & .ig, & .title {
+        color: #46af81;
+      }
+      & .canonical {
+        color: #26465e;
+      }
+    }
+    .profile-select-option-line1, .profile-select-option-line2 {
+      display: block;
+    }
+    .profile-select-option-line1 {
+      margin-bottom: 0.4rem;
+    }
   }
 }
