@@ -252,6 +252,27 @@ mat-option {
   border-radius: 1em;
   padding: 0.2em 1em;
   margin: 1em;
+  .proposed-profiles-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    mat-checkbox {
+      @include mat.checkbox-density(-3);
+      // The label text size is a fixed MDC token that doesn't follow the inherited font-size, so it's
+      // set explicitly to match the header text.
+      @include mat.checkbox-overrides((
+        label-text-size: 12.6px,
+        label-text-line-height: 16px,
+      ));
+
+      // The checkbox box itself has no size token (it's hardcoded to 18px by MDC), so it's scaled down
+      // directly to no longer dwarf the header text.
+      ::ng-deep .mdc-checkbox {
+        transform: scale(0.75);
+      }
+    }
+  }
   h4 {
     font-size: 0.9em;
     color: #5a5f5c;
@@ -265,11 +286,8 @@ mat-option {
       white-space: normal;
     }
     &:hover ::ng-deep {
-      & .ig, & .title {
+      & .ig, & .title, & .canonical {
         color: #46af81;
-      }
-      & .canonical {
-        color: #26465e;
       }
     }
     .profile-select-option-line1, .profile-select-option-line2 {

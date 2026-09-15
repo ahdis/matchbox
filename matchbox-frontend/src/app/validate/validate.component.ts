@@ -49,6 +49,7 @@ export class ValidateComponent implements AfterViewInit {
   profileControl: FormControl = new FormControl<string>('', Validators.required);
   profileLocked: boolean = false;
   proposedProfiles: StructureDefinition[] | null = null;
+  showOnlyCurrentProposedProfiles: boolean = false;
 
   // Code editor
   editor: ValidationCodeEditor | null = null;
@@ -477,6 +478,18 @@ export class ValidateComponent implements AfterViewInit {
         })
         .values()
     );
+  }
+
+  /**
+   * The proposed profiles to display, optionally restricted to the current ones only.
+   */
+  get filteredProposedProfiles(): StructureDefinition[] {
+    if (!this.proposedProfiles) {
+      return [];
+    }
+    return this.showOnlyCurrentProposedProfiles
+      ? this.proposedProfiles.filter((profile) => profile.isCurrent)
+      : this.proposedProfiles;
   }
 
   getDirectLink(entry: ValidationEntry): string {
