@@ -357,6 +357,10 @@ public class ValidationProvider {
 					cliContext.toString()
 				));
 
+			// Set the validator version, as per the FHIR Tooling Extensions
+			oo.addExtension("http://hl7.org/fhir/tools/StructureDefinition/validator-version",
+								 new StringType(VersionUtil.getPoweredBy()));
+
 			var ext = issue.addExtension().setUrl("http://matchbox.health/validation");
 			addExtension(ext, "profile", new UriType(structDefR5.getUrl()));
 			addExtension(ext, "profileVersion", new UriType(structDefR5.getVersion()));

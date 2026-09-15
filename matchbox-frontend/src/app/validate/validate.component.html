@@ -58,12 +58,22 @@
         </mat-form-field>
       </div>
 
+      <!-- Proposed profiles are shown when a bundle can be validated against multiple profiles. -->
       @if (proposedProfiles != null && proposedProfiles.length > 0) {
         <mat-list id="proposed-profiles">
-          <h4 mat-subheader>Proposed profiles</h4>
-          @for (proposedProfile of proposedProfiles; track proposedProfile) {
-            <mat-list-item (click)="selectProposedProfile(proposedProfile)" title="Validate against this profile">
-              – {{ proposedProfile }}
+          <div class="proposed-profiles-header">
+            <h4 mat-subheader>Proposed profiles</h4>
+            <mat-checkbox [(ngModel)]="showOnlyCurrentProposedProfiles">Current only</mat-checkbox>
+          </div>
+          @for (proposedProfile of filteredProposedProfiles; track proposedProfile) {
+            <mat-list-item (click)="selectProposedProfile(proposedProfile.canonical)" title="Validate against this profile" lines="2">
+              <span class="profile-select-option-line1" matListItemTitle>
+                  <span class="ig">{{ proposedProfile.igId }}#{{ proposedProfile.igVersion }}</span>
+                  <span class="title" [title]="proposedProfile.title">{{ proposedProfile.title }}</span>
+                </span>
+              <span class="profile-select-option-line2" matListItemLine>
+                  <span class="canonical">{{ proposedProfile.canonical }}</span>
+                </span>
             </mat-list-item>
             @if (!$last) {
               <mat-divider></mat-divider>

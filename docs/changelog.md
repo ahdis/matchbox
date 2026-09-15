@@ -1,3 +1,8 @@
+- Add the validator version to the validation OperationOutcome, as per the FHIR Tooling Extensions (#581)
+- Add proposed profiles in the validator even if a `meta.profile` is present (#335)
+- Add information about the proposed profiles in the validator: package ID and version, title, and canonical URL (#355)
+- Allow filtering proposed profiles by current version (#355)
+
 2026/09/14 Release 4.1.16
 
 - Fix starting the MCP server in onlyOneEngine mode
