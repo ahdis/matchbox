@@ -78,7 +78,12 @@
       <tbody>
       @for (entry of registryPage; track entry.name) {
         <tr (click)="selectRegistryPackage(entry)" [class.selected]="entry.name === registrySelection?.name">
-          <td>{{ entry.name }}</td>
+          <td>
+            {{ entry.name }}
+            @if (hasInstalledVersion(entry.name)) {
+              <span class="installed-badge">installed</span>
+            }
+          </td>
           <td class="secondary">{{ entry.version }}</td>
           <td class="secondary">{{ entry.fhirVersion }}</td>
           <td class="secondary">{{ entry.date | date: 'yyyy-MM-dd' }}</td>
@@ -93,6 +98,9 @@
                   @for (version of registryVersions; track version.version) {
                     <mat-option [value]="version.version">
                       {{ version.version }} ({{ version.fhirVersion }}, {{ version.date | date: 'yyyy-MM-dd' }})
+                      @if (isInstalled(entry.name, version.version)) {
+                        – installed
+                      }
                     </mat-option>
                   } @empty {
                     <mat-option [value]="entry.version">{{ entry.version }}</mat-option>
@@ -102,8 +110,15 @@
               &nbsp;
               @if (readOnly) {
                 <span class="secondary">The server is read-only, ImplementationGuides can only be installed through the configuration</span>
+              } @else if (update) {
+                <span class="installing">
+                  <mat-progress-spinner mode="indeterminate" diameter="32"></mat-progress-spinner>
+                  Installing {{ entry.name }}#{{ registryVersion.value }}…
+                </span>
               } @else {
-                <button class="btn-main" (click)="installRegistryPackage()" [disabled]="update" type="button">Install</button>
+                <button class="btn-main" (click)="installRegistryPackage()" type="button">
+                  {{ isInstalled(entry.name, registryVersion.value) ? 'Reinstall' : 'Install' }}
+                </button>
               }
             </td>
           </tr>

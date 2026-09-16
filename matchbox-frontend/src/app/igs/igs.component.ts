@@ -58,6 +58,8 @@ export class IgsComponent {
   registryError: string | null = null;
   registrySelection: PackageCatalogEntry | null = null;
   registryVersions: PackageVersion[] = [];
+  // The installed packages, as 'packageId#version'
+  installedPackages = new Set<string>();
 
   constructor(
     data: FhirConfigService,
@@ -70,11 +72,44 @@ export class IgsComponent {
     this.addUrl = new UntypedFormControl('');
     this.search();
     this.checkReadOnly();
+    this.loadInstalledPackages();
   }
 
   /**
    * The $install-npm-package operation is only registered when the server is not in httpReadOnly mode.
    */
+  /**
+   * Loads all installed packages, to mark them in the registry results. The server ignores the search parameters of
+   * ImplementationGuide, so the whole list is fetched.
+   */
+  loadInstalledPackages() {
+    this.client
+      .search({ resourceType: 'ImplementationGuide', searchParams: { _count: 10000 } })
+      .then((bundle: Bundle) => {
+        this.installedPackages = new Set(
+          (bundle.entry ?? [])
+            .map((entry) => <fhir.r4.ImplementationGuide>entry.resource)
+            .map((ig) => ig.packageId + '#' + (ig.version ?? '').replace(/ \(last\)$/, ''))
+        );
+      })
+      .catch(() => {
+        this.installedPackages = new Set();
+      });
+  }
+
+  isInstalled(packageId: string, version: string): boolean {
+    return this.installedPackages.has(packageId + '#' + version);
+  }
+
+  hasInstalledVersion(packageId: string): boolean {
+    for (const installed of this.installedPackages) {
+      if (installed.startsWith(packageId + '#')) {
+        return true;
+      }
+    }
+    return false;
+  }
+
   checkReadOnly() {
     this.client
       .capabilityStatement()
@@ -211,6 +246,7 @@ export class IgsComponent {
         this.operationResult = OperationResult.fromOperationOutcome(response);
         this.currentOffset = 0;
         this.search();
+        this.loadInstalledPackages();
       })
       .catch((error) => {
         this.errorMessage = 'Error creating Implementation Guide ' + packageId;
@@ -254,6 +290,7 @@ export class IgsComponent {
         this.operationResult = OperationResult.fromOperationOutcome(response);
         this.currentOffset = 0;
         this.search();
+        this.loadInstalledPackages();
       })
       .catch((error) => {
         this.errorMessage = 'Error updating Implementation Guide ' + selection.packageId;
@@ -291,6 +328,7 @@ export class IgsComponent {
         this.operationResult = OperationResult.fromOperationOutcome(response);
         this.currentOffset = 0;
         this.search();
+        this.loadInstalledPackages();
       })
       .catch((error) => {
         this.errorMessage = 'Error deleting Implementation Guide ' + selection.packageId;
