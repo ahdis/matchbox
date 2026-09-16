@@ -16,11 +16,15 @@ import ch.ahdis.matchbox.validation.gazelle.models.metadata.RestBinding;
 import ch.ahdis.matchbox.validation.gazelle.models.metadata.Service;
 import ch.ahdis.matchbox.validation.gazelle.models.validation.*;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.hl7.fhir.r5.model.StructureDefinition;
 import org.hl7.fhir.utilities.validation.ValidationMessage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import jakarta.servlet.http.HttpServletRequest;
@@ -32,7 +36,10 @@ import java.util.Objects;
 import java.util.Optional;
 
 /**
- * The WebService for validation with the new Gazelle Validation API.
+ * The WebService for validation with the Gazelle Validation Service API.
+ * <p>
+ * Both versions of the API are served: v2 under {@code /validation/v2/}, v1 under {@code /validation/}. The models
+ * follow v2; {@link GazelleApiV1Mapper} reads and writes the v1 JSON.
  *
  * @author Quentin Ligier
  **/
@@ -45,8 +52,19 @@ public class GazelleValidationWs {
 	 * HTTP paths.
 	 */
 	private static final String METADATA_PATH = "/metadata";
-	private static final String PROFILES_PATH = "/validation/profiles";
-	private static final String VALIDATE_PATH = "/validation/v2/validate";
+	private static final String V1_PROFILES_PATH = "/validation/profiles";
+	private static final String V1_VALIDATE_PATH = "/validation/validate";
+	private static final String V2_PROFILES_PATH = "/validation/v2/profiles";
+	private static final String V2_VALIDATE_PATH = "/validation/v2/validate";
+
+	/**
+	 * The single input declared by every profile: matchbox validates one FHIR resource against one profile. The id is
+	 * the one Maestro uses as fallback when a profile declares no input, so test definitions work either way.
+	 */
+	static final String INPUT_ID = "contentToValidate";
+
+	private static final List<SupportedInput> SUPPORTED_INPUTS = List.of(
+		new SupportedInput().setId(INPUT_ID).setLabel("FHIR resource (JSON or XML)").setRequired(true));
 
 	private final MatchboxEngineSupport matchboxEngineSupport;
 
@@ -57,21 +75,25 @@ public class GazelleValidationWs {
 	// The base CLI context, with the default parameters
 	private final CliContext baseCliContext;
 
+	private final GazelleApiV1Mapper v1Mapper;
+
 	public GazelleValidationWs(final MatchboxEngineSupport matchboxEngineSupport,
 										final CliContext baseCliContext,
 										final Optional<MatchboxMetrics> matchboxMetrics,
-										final MbInstalledStructureDefinitionRepository installedStructureDefinitionRepository) {
+										final MbInstalledStructureDefinitionRepository installedStructureDefinitionRepository,
+										final ObjectMapper objectMapper) {
 		this.matchboxEngineSupport = Objects.requireNonNull(matchboxEngineSupport);
 		this.baseCliContext = Objects.requireNonNull(baseCliContext);
 		this.matchboxMetrics = Objects.requireNonNull(matchboxMetrics);
 		this.installedStructureDefinitionRepository = Objects.requireNonNull(installedStructureDefinitionRepository);
+		this.v1Mapper = new GazelleApiV1Mapper(Objects.requireNonNull(objectMapper));
 	}
 
 	/**
 	 * Returns the metadata of the validation service.
 	 */
 	@GetMapping(path = METADATA_PATH, produces = MediaType.APPLICATION_JSON_VALUE)
-	public Service getMetadata(final HttpServletRequest request) {
+	public ResponseEntity<String> getMetadata(final HttpServletRequest request) throws JsonProcessingException {
 		final var service = new Service();
 		service.setName("Matchbox");
 		service.setVersion(VersionUtil.getVersion());
@@ -85,21 +107,60 @@ public class GazelleValidationWs {
 		theInterface.setRequired(true);
 
 		final var binding = new RestBinding();
-		binding.setServiceUrl(request.getRequestURL().toString().replace(METADATA_PATH, VALIDATE_PATH));
+		binding.setServiceUrl(request.getRequestURL().toString().replace(METADATA_PATH, V1_VALIDATE_PATH));
 		binding.setType("restBinding");
 
 		theInterface.setValidationProfiles(this.getProfiles());
 
 		theInterface.addBinding(binding);
-		service.setProvidedInterfaces(List.of(theInterface));
 
-		return service;
+		// v2: the binding is the base URL, the profiles are listed at /validation/v2/profiles
+		final var v2Interface = new Interface();
+		v2Interface.setType("validationInterface");
+		v2Interface.setInterfaceName("Validation Service API");
+		v2Interface.setInterfaceVersion("2.0.0");
+		v2Interface.setRequired(true);
+		final var v2Binding = new RestBinding();
+		v2Binding.setServiceUrl(request.getRequestURL().toString().replace(METADATA_PATH, ""));
+		v2Binding.setType("restBinding");
+		v2Interface.addBinding(v2Binding);
+
+		service.setProvidedInterfaces(List.of(theInterface, v2Interface));
+
+		return jsonResponse(HttpStatus.OK, this.v1Mapper.write(service));
 	}
 
 	/**
-	 * Returns the list of profiles supported by this server.
+	 * Returns the list of profiles supported by this server (v1).
 	 */
-	@GetMapping(path = PROFILES_PATH, produces = MediaType.APPLICATION_JSON_VALUE)
+	@GetMapping(path = V1_PROFILES_PATH, produces = MediaType.APPLICATION_JSON_VALUE)
+	public ResponseEntity<String> getProfilesV1() throws JsonProcessingException {
+		return jsonResponse(HttpStatus.OK, this.v1Mapper.write(this.getProfiles()));
+	}
+
+	/**
+	 * Performs the validation of the given items with the given profile (v1).
+	 */
+	@PostMapping(path = V1_VALIDATE_PATH, consumes = MediaType.APPLICATION_JSON_VALUE, produces =
+		MediaType.APPLICATION_JSON_VALUE)
+	public ResponseEntity<String> postValidateV1(@RequestBody final String body) throws JsonProcessingException {
+		final ValidationRequest validationRequest;
+		try {
+			validationRequest = this.v1Mapper.readRequest(body);
+		} catch (final JsonProcessingException exception) {
+			return jsonResponse(HttpStatus.BAD_REQUEST, "{\"error\":\"Invalid validation request\"}");
+		}
+		return jsonResponse(HttpStatus.OK, this.v1Mapper.write(this.postValidate(validationRequest)));
+	}
+
+	private static ResponseEntity<String> jsonResponse(final HttpStatus status, final String json) {
+		return ResponseEntity.status(status).contentType(MediaType.APPLICATION_JSON).body(json);
+	}
+
+	/**
+	 * Returns the list of profiles supported by this server (v2).
+	 */
+	@GetMapping(path = V2_PROFILES_PATH, produces = MediaType.APPLICATION_JSON_VALUE)
 	public List<ValidationProfile> getProfiles() {
 		final List<MbInstalledStructureDefinitionEntity> entities =
 			this.installedStructureDefinitionRepository.findAllValidatable();
@@ -114,6 +175,7 @@ public class GazelleValidationWs {
 																		  version));
 			profile.setDomain(installedStructDef.getPackageId());
 			profile.setVersion(version);
+			profile.setSupportedInputs(SUPPORTED_INPUTS);
 			profiles.add(profile);
 
 			// If the package is current, we also add it version-less
@@ -123,6 +185,7 @@ public class GazelleValidationWs {
 				profile2.setProfileName(installedStructDef.getTitle());
 				profile2.setDomain(installedStructDef.getPackageId());
 				profile2.setVersion(version);
+				profile2.setSupportedInputs(SUPPORTED_INPUTS);
 				profiles.add(profile2);
 			}
 		});
@@ -130,9 +193,9 @@ public class GazelleValidationWs {
 	}
 
 	/**
-	 * Performs the validation of the given items with the given profile.
+	 * Performs the validation of the given items with the given profile (v2).
 	 */
-	@PostMapping(path = VALIDATE_PATH, consumes = MediaType.APPLICATION_JSON_VALUE, produces =
+	@PostMapping(path = V2_VALIDATE_PATH, consumes = MediaType.APPLICATION_JSON_VALUE, produces =
 		MediaType.APPLICATION_JSON_VALUE)
 	public ValidationReport postValidate(@RequestBody final ValidationRequest validationRequest) {
 		this.matchboxMetrics.ifPresent(MatchboxMetrics::addValidation);
@@ -143,7 +206,7 @@ public class GazelleValidationWs {
 		final CliContext cliContext = new CliContext(this.baseCliContext);
 
 		final var report = new ValidationReport();
-		report.setValidationItems(new ArrayList<>(validationRequest.getInputs().size()));
+		report.setInputs(new ArrayList<>(validationRequest.getInputs().size()));
 		report.setReports(new ArrayList<>(validationRequest.getInputs().size()));
 		report.setDisclaimer("Matchbox disclaims");
 
@@ -216,7 +279,7 @@ public class GazelleValidationWs {
 		}
 
 		// Response: add the validation items (requests) to the response
-		report.getValidationItems().addAll(validationRequest.getInputs());
+		report.getInputs().addAll(validationRequest.getInputs());
 
 		// Perform the validation of all items with the given engine
 		for (final var item : validationRequest.getInputs()) {
@@ -267,11 +330,11 @@ public class GazelleValidationWs {
 		final var encoding = EncodingEnum.detectEncoding(content);
 
 		final var subReport = new ValidationSubReport();
-		subReport.setName("Validation of item #%s".formatted(item.getItemId()));
+		subReport.setName("Validation of item #%s".formatted(item.getItemId() != null ? item.getItemId() : item.getId()));
 		try {
 			final var messages = ValidationProvider.doValidate(engine, content, encoding, profile);
 			messages.stream()
-				.map(message -> this.convertMessageToReport(message, engine))
+				.map(message -> this.convertMessageToReport(message, engine, item.getId()))
 				.forEach(subReport::addAssertionReport);
 		} catch (final Exception e) {
 			log.error("Error during validation", e);
@@ -297,7 +360,8 @@ public class GazelleValidationWs {
 	 * Converts a validation message (HAPI) to an assertion report (Gazelle).
 	 */
 	AssertionReport convertMessageToReport(final ValidationMessage message,
-														final MatchboxEngine engine) {
+														final MatchboxEngine engine,
+														final String inputId) {
 		final var assertionReport = new AssertionReport();
 		switch (message.getLevel()) {
 			case FATAL, ERROR:
@@ -322,6 +386,11 @@ public class GazelleValidationWs {
 		assertionReport.setSubjectLocation("line %d, column %d, FHIRPath: %s".formatted(message.getLine(),
 																											     message.getCol(),
 																												  message.getLocation()));
+		assertionReport.setSubjectLocations(List.of(
+			new SubjectLocation().setInputId(inputId).setType(SubjectLocation.LINE_COLUMN_TYPE)
+				.setValue("line %d, column %d".formatted(message.getLine(), message.getCol())),
+			new SubjectLocation().setInputId(inputId).setType(SubjectLocation.FHIR_PATH_TYPE)
+				.setValue(message.getLocation())));
 
 		if (message.getInvId() != null) {
 			assertionReport.setAssertionID(message.getInvId());
