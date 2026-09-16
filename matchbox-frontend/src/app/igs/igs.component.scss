@@ -82,3 +82,31 @@ table {
     color: rgb(107, 114, 128);
   }
 }
+
+tbody tr.selected td {
+  background: #eee;
+}
+
+tbody tr.registry-install td {
+  padding-top: 0.5rem;
+  padding-bottom: 0;
+
+  &:hover {
+    background: inherit;
+  }
+
+  mat-form-field {
+    min-width: 320px;
+  }
+}
+
+.registry-filters {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.5rem 1rem;
+}
+
+.registry-error {
+  color: #b00020;
+}

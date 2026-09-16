@@ -33,6 +33,100 @@
   }
 </div>
 
+<div class="white-block card-igs">
+  <h3>Browse the package registry <a [href]="registryUrl" target="_blank" rel="noopener">packages2.fhir.org</a></h3>
+
+  <form class="registry-filters" (ngSubmit)="searchRegistry()">
+    <mat-form-field>
+      <mat-label>Package name contains</mat-label>
+      <input [formControl]="registryName" matInput placeholder="e.g. ch.fhir.ig"/>
+    </mat-form-field>
+    <mat-form-field>
+      <mat-label>FHIR version</mat-label>
+      <mat-select [formControl]="registryFhirVersion">
+        <mat-option value="">All</mat-option>
+        @for (fhirVersion of registryFhirVersions; track fhirVersion) {
+          <mat-option [value]="fhirVersion">{{ fhirVersion }}</mat-option>
+        }
+      </mat-select>
+    </mat-form-field>
+    <mat-form-field>
+      <mat-label>Published since</mat-label>
+      <input [formControl]="registrySince" matInput type="date"/>
+    </mat-form-field>
+    <button class="btn-main" type="submit" [disabled]="registrySearching">Search</button>
+  </form>
+
+  @if (registrySearching) {
+    <mat-progress-spinner mode="indeterminate" diameter="32"></mat-progress-spinner>
+  }
+  @if (registryError) {
+    <p class="registry-error">{{ registryError }}</p>
+  }
+
+  @if (registryPackages !== null) {
+    <table>
+      <thead>
+      <tr>
+        <th>Package</th>
+        <th>Latest version</th>
+        <th>FHIR</th>
+        <th>Published</th>
+        <th>Description</th>
+      </tr>
+      </thead>
+      <tbody>
+      @for (entry of registryPage; track entry.name) {
+        <tr (click)="selectRegistryPackage(entry)" [class.selected]="entry.name === registrySelection?.name">
+          <td>{{ entry.name }}</td>
+          <td class="secondary">{{ entry.version }}</td>
+          <td class="secondary">{{ entry.fhirVersion }}</td>
+          <td class="secondary">{{ entry.date | date: 'yyyy-MM-dd' }}</td>
+          <td class="secondary">{{ entry.description }}</td>
+        </tr>
+        @if (entry.name === registrySelection?.name) {
+          <tr class="registry-install">
+            <td colspan="5">
+              <mat-form-field>
+                <mat-label>Version</mat-label>
+                <mat-select [formControl]="registryVersion">
+                  @for (version of registryVersions; track version.version) {
+                    <mat-option [value]="version.version">
+                      {{ version.version }} ({{ version.fhirVersion }}, {{ version.date | date: 'yyyy-MM-dd' }})
+                    </mat-option>
+                  } @empty {
+                    <mat-option [value]="entry.version">{{ entry.version }}</mat-option>
+                  }
+                </mat-select>
+              </mat-form-field>
+              &nbsp;
+              @if (readOnly) {
+                <span class="secondary">The server is read-only, ImplementationGuides can only be installed through the configuration</span>
+              } @else {
+                <button class="btn-main" (click)="installRegistryPackage()" [disabled]="update" type="button">Install</button>
+              }
+            </td>
+          </tr>
+        }
+      } @empty {
+        <tr>
+          <td colspan="5">No packages found</td>
+        </tr>
+      }
+      </tbody>
+    </table>
+
+    @if (registryTotalPages > 1) {
+      <div class="pagination">
+        <button (click)="registryPreviousPage()" [disabled]="registryOffset === 0">&#8592; Previous</button>
+        <span class="page-info">Page {{ registryCurrentPage }} of {{ registryTotalPages }} ({{ registryPackages.length }} packages)</span>
+        <button (click)="registryNextPage()" [disabled]="registryCurrentPage >= registryTotalPages">Next &#8594;</button>
+      </div>
+    }
+  }
+</div>
+
+@if (!readOnly) {
 <div class="white-block Search card-igs">
   <h3>Install an ImplementationGuide</h3>
 
@@ -64,6 +158,7 @@
   <button class="btn-main" (click)="onDelete()" type="submit">Delete</button>
 }
 </div>
+}
 
 @if (update) {
   <mat-progress-spinner mode="indeterminate"></mat-progress-spinner>
