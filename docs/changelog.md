@@ -1,5 +1,6 @@
 - GUI: browse the FHIR package registry packages2.fhir.org on the IGs page, filtered by package name, FHIR version and
-  publication date, and install a selected package version (hidden when the server is in httpReadOnly mode) (#583)
+  publication date, mark the installed packages, and install a selected package version (hidden when the server is in
+  httpReadOnly mode) (#583)
 - Add the validator version to the validation OperationOutcome, as per the FHIR Tooling Extensions (#581)
 - Add proposed profiles in the validator even if a `meta.profile` is present (#335)
 - Add information about the proposed profiles in the validator: package ID and version, title, and canonical URL (#355)
