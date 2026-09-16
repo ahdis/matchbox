@@ -16,7 +16,9 @@ public class AssertionReport {
 	private String assertionID;
 	private String assertionType;
 	private String description;
+	// v1: a single string; v2: a list of typed locations
 	private String subjectLocation;
+	private List<SubjectLocation> subjectLocations;
 	private String subjectValue;
 	private String[] requirementIDs;
 	private SeverityLevel severity;
@@ -63,6 +65,15 @@ public class AssertionReport {
 
 	public AssertionReport setSubjectLocation(String subjectLocation) {
 		this.subjectLocation = subjectLocation;
+		return this;
+	}
+
+	public List<SubjectLocation> getSubjectLocations() {
+		return this.subjectLocations;
+	}
+
+	public AssertionReport setSubjectLocations(List<SubjectLocation> subjectLocations) {
+		this.subjectLocations = subjectLocations;
 		return this;
 	}
 
@@ -225,6 +236,7 @@ public class AssertionReport {
 			.setPriority(assertionReport.getPriority())
 			.setAssertionType(assertionReport.getAssertionType())
 			.setSubjectLocation(assertionReport.getSubjectLocation())
+			.setSubjectLocations(assertionReport.getSubjectLocations() != null ? List.copyOf(assertionReport.getSubjectLocations()) : null)
 			.setRequirementIDs(new String[]{Arrays.toString(assertionReport.getRequirementIDs())})
 			.setUnexpectedErrors(
 				assertionReport.getUnexpectedErrors() != null ? assertionReport.getUnexpectedErrors().stream().map(UnexpectedError::clone).toList() : null

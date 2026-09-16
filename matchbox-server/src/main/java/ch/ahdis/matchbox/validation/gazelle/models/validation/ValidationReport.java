@@ -12,6 +12,7 @@ import java.util.*;
 public class ValidationReport {
 	public static final String MODEL_VERSION = "2.0";
 
+	private String modelVersion = MODEL_VERSION;
 	private String uuid;
 	private Date dateTime;
 	private String disclaimer;
@@ -38,10 +39,11 @@ public class ValidationReport {
 	}
 
 	public String getModelVersion() {
-		return MODEL_VERSION;
+		return this.modelVersion;
 	}
 
 	public ValidationReport setModelVersion(String modelVersion) {
+		this.modelVersion = modelVersion;
 		return this;
 	}
 
@@ -117,7 +119,7 @@ public class ValidationReport {
 		return this;
 	}
 
-	public ValidationReport addValidationItem(Input input) {
+	public ValidationReport addInput(Input input) {
 		if (this.inputs == null) {
 			this.inputs = new ArrayList();
 		}
@@ -135,11 +137,11 @@ public class ValidationReport {
 		return this;
 	}
 
-	public List<Input> getValidationItems() {
+	public List<Input> getInputs() {
 		return this.inputs;
 	}
 
-	public ValidationReport setValidationItems(List<Input> inputs) {
+	public ValidationReport setInputs(List<Input> inputs) {
 		this.inputs = inputs;
 		return this;
 	}
@@ -204,7 +206,7 @@ public class ValidationReport {
 	}
 
 	@JsonIgnore
-	public boolean isValidationItemsValid() {
+	public boolean isInputsValid() {
 		return this.inputs == null || !this.inputs.isEmpty();
 	}
 
@@ -222,7 +224,7 @@ public class ValidationReport {
 			&& this.isValidationTestResultValid()
 			&& this.isReportsValid()
 			&& this.isAdditionalMetadataValid()
-			&& this.isValidationItemsValid()
+			&& this.isInputsValid()
 			&& this.isUuidValid();
 	}
 
@@ -235,8 +237,8 @@ public class ValidationReport {
 			.setModelVersion(validationReport.getModelVersion())
 			.setUuid(validationReport.getUuid())
 			.setValidationMethod(ValidationMethod.clone(validationReport.getValidationMethod()))
-			.setValidationItems(
-				validationReport.getValidationItems() != null ? validationReport.getValidationItems().stream().map(Input::clone).toList() : null
+			.setInputs(
+				validationReport.getInputs() != null ? validationReport.getInputs().stream().map(Input::clone).toList() : null
 			)
 			.setReports(validationReport.getReports() != null ? validationReport.getReports().stream().map(ValidationSubReport::clone).toList() : null)
 			.setAdditionalMetadata(
