@@ -45,6 +45,10 @@ public class GazelleApiR4Test extends AbstractGazelleTest {
 	void testProfiles() throws Exception {
 		final var profiles = this.client.getProfiles();
 		assertTrue(profiles.size() > 300);
+		final var inputs = profiles.getFirst().getSupportedInputs();
+		assertEquals(1, inputs.size());
+		assertEquals("contentToValidate", inputs.getFirst().getId());
+		assertTrue(inputs.getFirst().isRequired());
 
 		// Every returned profile must have complete, non-blank metadata
 		profiles.forEach(profile -> assertTrue(profile.isValid(), "Invalid profile: " + profile.getProfileID()));
@@ -79,6 +83,42 @@ public class GazelleApiR4Test extends AbstractGazelleTest {
 	}
 
 	@Test
+	void testProfilesV1() throws Exception {
+		final var profiles = this.client.getProfilesV1();
+		assertTrue(profiles.size() > 300);
+		final var profile = profiles.get(0);
+		assertTrue(profile.has("profileID"));
+		assertFalse(profile.has("inputs"));
+		assertFalse(profile.has("version"));
+	}
+
+	@Test
+	void validatePatientV1() throws Exception {
+		final String patient = """
+				<Patient xmlns="http://hl7.org/fhir">
+					<id value="example"/>
+					<text>
+						<status value="generated"/>
+						<div xmlns="http://www.w3.org/1999/xhtml">42 </div>
+					</text>
+				</Patient>""";
+
+		var report = this.client.validateV1(patient, "http://hl7.org/fhir/StructureDefinition/Patient");
+		assertEquals("0.1", report.get("modelVersion").asText());
+		assertEquals("PASSED", report.get("overallResult").asText());
+		assertFalse(report.has("inputs"));
+		assertEquals("first", report.get("validationItems").get(0).get("itemId").asText());
+		assertEquals("request", report.get("validationItems").get(0).get("role").asText());
+		assertFalse(report.get("counters").has("numberOfUndefined"));
+
+		report = this.client.validateV1(patient, "http://hl7.org/fhir/StructureDefinition/Bundle");
+		assertEquals("FAILED", report.get("overallResult").asText());
+		final var assertion = report.get("reports").get(0).get("assertionReports").get(0);
+		assertTrue(assertion.get("subjectLocation").asText().startsWith("line "));
+		assertFalse(assertion.has("subjectLocations"));
+	}
+
+	@Test
 	void validatePatientRawR4() throws Exception {
 		final String patient = """
 				<Patient xmlns="http://hl7.org/fhir">
@@ -92,7 +132,7 @@ public class GazelleApiR4Test extends AbstractGazelleTest {
 		ValidationReport report = this.client.validate(patient, "http://hl7.org/fhir/StructureDefinition/Patient");
 		assertEquals(0, countValidationFailures(report));
 		assertEquals(ValidationTestResult.PASSED, report.getOverallResult());
-		assertEquals("first", report.getValidationItems().getFirst().getItemId());
+		assertEquals("first", report.getInputs().getFirst().getItemId());
 		assertTrue(report.getReports().getFirst().getName().contains("first"));
 		assertEquals(1, report.getReports().getFirst().getAssertionReports().size());
 		assertEquals(ValidationTestResult.PASSED,
@@ -216,7 +256,7 @@ public class GazelleApiR4Test extends AbstractGazelleTest {
 				"http://hl7.org/fhir/StructureDefinition/RelatedPerson");
 		assertEquals(0, countValidationFailures(report));
 		assertEquals(ValidationTestResult.PASSED, report.getOverallResult());
-		assertEquals("first", report.getValidationItems().getFirst().getItemId());
+		assertEquals("first", report.getInputs().getFirst().getItemId());
 		assertTrue(report.getReports().getFirst().getName().contains("first"));
 		assertEquals(1, report.getReports().getFirst().getAssertionReports().size());
 	}
@@ -243,7 +283,7 @@ public class GazelleApiR4Test extends AbstractGazelleTest {
 				"http://matchbox.health/ig/test/r4/StructureDefinition/practitioner-identifier-required");
 		assertEquals(0, countValidationFailures(report));
 		assertEquals(ValidationTestResult.PASSED, report.getOverallResult());
-		assertEquals("first", report.getValidationItems().getFirst().getItemId());
+		assertEquals("first", report.getInputs().getFirst().getItemId());
 		assertTrue(report.getReports().getFirst().getName().contains("first"));
 		assertEquals(1, report.getReports().getFirst().getAssertionReports().size());
 	}

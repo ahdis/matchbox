@@ -15,7 +15,7 @@ import java.net.URI;
  * @author Achraf Achkari
  * @author Quentin Ligier
  **/
-@JsonRootName(value = "validationItem")
+@JsonRootName(value = "input")
 public class Input {
 
 	@JsonProperty(value = "id")
@@ -29,6 +29,9 @@ public class Input {
 
 	@JsonProperty(value = "location")
 	private String location;
+
+	@JsonProperty(value = "mimeType")
+	private String mimeType;
 
 	public String getId() {
 		return this.id;
@@ -63,6 +66,15 @@ public class Input {
 
 	public Input setLocation(String location) {
 		this.location = location;
+		return this;
+	}
+
+	public String getMimeType() {
+		return mimeType;
+	}
+
+	public Input setMimeType(String mimeType) {
+		this.mimeType = mimeType;
 		return this;
 	}
 
@@ -101,6 +113,7 @@ public class Input {
 			.setId(input.getId())
 			.setItemId(input.getItemId())
 			.setContent(input.getContent() != null ? input.getContent().clone():null)
-			.setLocation(input.getLocation());
+			.setLocation(input.getLocation())
+			.setMimeType(input.getMimeType());
 	}
 }

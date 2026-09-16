@@ -157,9 +157,15 @@ EVS API has also been implemented. See the
 [validation-service-api](https://gitlab.inria.fr/gazelle/library/validation-service-api) project for the existing 
 documentation.
 
-The list of available profiles is available at
-[[server]/gazelle/validation/profiles](https://test.ahdis.ch/matchboxv3/gazelle/validation/profiles), and the 
-validation request is sent to `POST [server]/gazelle/validation/v2/validate`.
+Both versions of the Validation Service API are served, with `[server]/gazelle` as base URL:
+
+| | v1 (EVSClient) | v2 (e.g. Gazelle Maestro) |
+|---|---|---|
+| Profiles | `GET [server]/gazelle/validation/profiles` | `GET [server]/gazelle/validation/v2/profiles` |
+| Validation | `POST [server]/gazelle/validation/validate` | `POST [server]/gazelle/validation/v2/validate` |
+
+In v2, every profile declares a single required input with the id `contentToValidate`: the FHIR resource (JSON or 
+XML) to validate against the profile.
 
 To configure a Matchbox instance in the EVSClient, the following actions shall be done:
 

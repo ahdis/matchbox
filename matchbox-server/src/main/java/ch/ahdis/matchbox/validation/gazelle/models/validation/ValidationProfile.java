@@ -36,7 +36,7 @@ public class ValidationProfile {
 	@JsonProperty("standards")
 	private List<String> standards = new ArrayList<>();
 
-	@JsonProperty("supportedInputs")
+	@JsonProperty("inputs")
 	private List<SupportedInput> supportedInputs = new ArrayList<>();
 
 
