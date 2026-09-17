@@ -295,7 +295,7 @@ public class McpMatchboxBridge {
     if (analysis == null) {
       return CallToolResultFactory.failure("The Bundle could not be analyzed as a document");
     }
-    return CallToolResultFactory.successPayload(analysis.profiles().toArray(new String[0]));
+    return CallToolResultFactory.successPayload(analysis.profiles().toArray(new BundleResourceProvider.ValidationProfile[0]));
   }
 
 	private String addAiAnalysis(McpSyncServerExchange exchange, String fhirOperationOutcome) {
