@@ -541,6 +541,7 @@ public class Element extends Base implements NamedItem {
       if (childForValue.property.getName().endsWith("[x]"))
         childForValue.name = childForValue.name.replace("[x]", "")+Utilities.capitalize(value.fhirType());
       // Matchbox patch: setValue can't be used for xhtml
+      // Remove patch once https://github.com/hapifhir/org.hl7.fhir.core/pull/2643 has landed in a release
       if (childForValue.isXhtml()) {
         if (value instanceof final XhtmlType xhtmlValue) {
           // Avoid reparsing the XHTML content if we can
