@@ -127,6 +127,13 @@ public class ValidationHelper {
 	}
 
 	/**
+	 * Returns the id of the cached engine, or {@code null}.
+	 */
+	public @Nullable String getSessionId(final MatchboxEngine engine) {
+		return this.matchboxEngineSupport.getSessionId(engine);
+	}
+
+	/**
 	 * Validates the content against the profile.
 	 *
 	 * @param profile the profile canonical, without version.
@@ -137,8 +144,8 @@ public class ValidationHelper {
 																	 final String profile) throws EOperationOutcome {
 		final List<ValidationMessage> messages = new ArrayList<>();
 
-		if (content.startsWith("﻿")) {
-			content = content.replace("﻿", "");
+		if (content.startsWith("\uFEFF")) {
+			content = content.replace("\uFEFF", "");
 			final var m = new ValidationMessage();
 			m.setLevel(ValidationMessage.IssueSeverity.WARNING);
 			m.setMessage(

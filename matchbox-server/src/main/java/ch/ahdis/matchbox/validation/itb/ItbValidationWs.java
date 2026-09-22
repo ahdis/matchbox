@@ -9,6 +9,7 @@ import ch.ahdis.matchbox.engine.cli.VersionUtil;
 import ch.ahdis.matchbox.engine.exception.MatchboxEngineCreationException;
 import ch.ahdis.matchbox.util.metrics.MatchboxMetrics;
 import ch.ahdis.matchbox.validation.ValidationHelper;
+import ch.ahdis.matchbox.validation.itb.models.AnyContent;
 import ch.ahdis.matchbox.validation.itb.models.ConfigurationType;
 import ch.ahdis.matchbox.validation.itb.models.GetModuleDefinitionResponse;
 import ch.ahdis.matchbox.validation.itb.models.Metadata;
@@ -245,6 +246,9 @@ public class ItbValidationWs {
 
 		final TAR tar = ItbTarMapper.toTar(messages, engine, failOn, includeContent ? ItbTarMapper.CONTEXT_CONTENT : null);
 
+		// How the validation was done, readable in the step report
+		tar.getContext().addItem(this.getValidationContextItem(engine, structDef, cliContext, millis));
+
 		// The OperationOutcome that $validate returns, in the FHIR version of the server
 		final var operationOutcome = this.validationHelper.getOperationOutcome(tar.getId(), messages, canonical,
 																										  engine, millis, cliContext);
@@ -263,6 +267,74 @@ public class ItbValidationWs {
 																			  true));
 		}
 		return withOverview(tar, profileId, note);
+	}
+
+	/**
+	 * Returns the context item that describes how the validation was done: the profile, the packages, the validator
+	 * and the validation parameters. It is the information of the first issue of the OperationOutcome, as a map that
+	 * ITB shows in the step report (short values inline, the lists as collapsed groups).
+	 */
+	AnyContent getValidationContextItem(final MatchboxEngine engine,
+													final StructureDefinition structDef,
+													final CliContext cliContext,
+													final long millis) {
+		final var validation = new AnyContent()
+			.setName(ItbTarMapper.CONTEXT_VALIDATION)
+			.setType("map")
+			.addItem(ItbTarMapper.contextItem("profile", "%s|%s".formatted(structDef.getUrl(), structDef.getVersion()),
+														 "text/plain", true));
+		if (structDef.hasDate()) {
+			validation.addItem(ItbTarMapper.contextItem("profileDate", structDef.getDateElement().asStringValue(),
+																	  "text/plain", true));
+		}
+		validation.addItem(ItbTarMapper.contextItem("validator", VersionUtil.getPoweredBy(), "text/plain", true));
+		validation.addItem(ItbTarMapper.contextItem("duration", millis + " ms", "text/plain", true));
+		final String sessionId = this.validationHelper.getSessionId(engine);
+		if (sessionId != null) {
+			validation.addItem(ItbTarMapper.contextItem("sessionId", sessionId, "text/plain", true));
+		}
+		validation.addItem(listItem("packages", engine.getContext().getLoadedPackages()));
+
+		final var parameters = new AnyContent().setName("parameters").setType("map");
+		for (final Field field : cliContext.getValidateEngineParameters()) {
+			final String value = getValue(field, cliContext);
+			if (value != null) {
+				parameters.addItem(ItbTarMapper.contextItem(field.getName(), value, "text/plain", true));
+			}
+		}
+		validation.addItem(parameters);
+
+		if (!engine.getSuppressedWarnInfoPatterns().isEmpty()) {
+			validation.addItem(listItem("suppressedWarnings", engine.getSuppressedWarnInfoPatterns()));
+		}
+		if (!engine.getSuppressedErrors().isEmpty()) {
+			validation.addItem(listItem("suppressedErrors", engine.getSuppressedErrors()));
+		}
+		return validation;
+	}
+
+	private static AnyContent listItem(final String name, final Iterable<String> values) {
+		final var list = new AnyContent().setName(name).setType("list");
+		for (final String value : values) {
+			list.addItem(ItbTarMapper.contextItem(null, value, "text/plain", true));
+		}
+		return list;
+	}
+
+	/**
+	 * Returns the value of a validation parameter as text, or {@code null} if it is not set.
+	 */
+	private static @Nullable String getValue(final Field field, final CliContext cliContext) {
+		try {
+			field.setAccessible(true);
+			final Object value = field.get(cliContext);
+			if (value instanceof final String[] values) {
+				return values.length == 0 ? null : String.join(", ", values);
+			}
+			return value == null ? null : String.valueOf(value);
+		} catch (final IllegalAccessException e) {
+			return null;
+		}
 	}
 
 	/**
@@ -357,16 +429,7 @@ public class ItbValidationWs {
 	}
 
 	private String getDefaultValue(final Field field) {
-		try {
-			field.setAccessible(true);
-			final Object value = field.get(this.baseCliContext);
-			if (value instanceof final String[] values) {
-				return String.join(", ", values);
-			}
-			return String.valueOf(value);
-		} catch (final IllegalAccessException e) {
-			return "unknown";
-		}
+		return Objects.requireNonNullElse(getValue(field, this.baseCliContext), "not set");
 	}
 
 	private static ResponseEntity<Map<String, String>> error(final HttpStatus status, final String message) {

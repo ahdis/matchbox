@@ -16,6 +16,7 @@ import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
+import java.util.Objects;
 import java.util.UUID;
 
 /**
@@ -28,6 +29,7 @@ final class ItbTarMapper {
 	static final String CONTEXT_WARNING_COUNT = "warningCount";
 	static final String CONTEXT_INFORMATION_COUNT = "informationCount";
 	static final String CONTEXT_SEVERITY = "severity";
+	static final String CONTEXT_VALIDATION = "validation";
 	static final String CONTEXT_OPERATION_OUTCOME = "operationOutcome";
 	static final String CONTEXT_CONTENT = "content";
 
@@ -104,14 +106,16 @@ final class ItbTarMapper {
 		item.setLevel(toLevel(message.getLevel()));
 		item.setDescription(ValidationHelper.getMessageWithSliceInfo(message, engine));
 
-		// ITB links a location of the form '<context item name>:<line>:<column>' to that point in the content, so the
-		// FHIRPath of the element goes into 'test'
+		// ITB links a location '<context item name>:<line>:<column>' to that point in the content, and shows the text
+		// after a '|' as the location, here the FHIRPath of the element
 		if (contentName != null && message.getLine() > 0) {
-			item.setLocation("%s:%d:%d".formatted(contentName, message.getLine(), Math.max(message.getCol(), 0)));
+			item.setLocation("%s:%d:%d|%s".formatted(contentName,
+																 message.getLine(),
+																 Math.max(message.getCol(), 0),
+																 Objects.requireNonNullElse(message.getLocation(), "")));
 		} else {
 			item.setLocation(message.getLocation());
 		}
-		item.setTest(message.getLocation());
 
 		if (message.getMessageId() != null) {
 			item.setAssertionID(message.getMessageId());
@@ -157,7 +161,7 @@ final class ItbTarMapper {
 	 *
 	 * @param forDisplay whether ITB shows the item in the report; hidden items can still be read by the test session.
 	 */
-	static AnyContent contextItem(final String name,
+	static AnyContent contextItem(final @Nullable String name,
 											final String value,
 											final String mimeType,
 											final boolean forDisplay) {

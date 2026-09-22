@@ -224,11 +224,12 @@ The report (TAR) contains:
 - `result`: `FAILURE` if there are errors, `WARNING` if there are only warnings, `SUCCESS` otherwise; `failOn` makes
   warnings or information issues a `FAILURE`. `UNDEFINED` if the validation engine failed.
 - `items`: one per issue, with the message as `description`, the message id as `assertionID` and the issue type as
-  `type`. The `location` is `content:<line>:<column>`, which ITB links to the validated content; the FHIRPath of the
-  element is in `test` (and in `location` when the content is not in the report).
+  `type`. The `location` is `content:<line>:<column>|<FHIRPath>`: ITB shows the FHIRPath and links it to the line in
+  the validated content. Without the content in the report, the `location` is the FHIRPath only.
 - `counters`: the number of errors, warnings and information issues.
 - `overview`: the profile used (`canonical|version`), the matchbox version, and the ITB test session id as `note`.
-- `context`: the items `errorCount`, `warningCount`, `informationCount` and `severity` (the highest severity), hidden in
+- `context`: the item `validation`, how the validation was done (profile, packages, validator version, duration and
+  the validation parameters), which ITB shows as a group in the step report; the items `errorCount`, `warningCount`, `informationCount` and `severity` (the highest severity), hidden in
   the displayed report; `operationOutcome`, the OperationOutcome that `$validate` returns; and `content`, the validated
   resource.
 

@@ -107,6 +107,14 @@ public class ItbApiR4Test {
 		assertEquals("information", getContext(tar, "severity").getValue());
 		assertFalse(getContext(tar, "errorCount").getForDisplay());
 
+		// How the validation was done, shown in the ITB step report
+		final var validation = getContext(tar, "validation");
+		assertEquals("map", validation.getType());
+		assertEquals(PATIENT_PROFILE + "|4.0.1", getItem(validation, "profile").getValue());
+		assertTrue(getItem(validation, "packages").getItem().stream()
+						  .anyMatch(item -> item.getValue().startsWith("hl7.fhir.r4.core#4.0.1")));
+		assertNotNull(getItem(getItem(validation, "parameters"), "txServer").getValue());
+
 		final var operationOutcome = getContext(tar, "operationOutcome");
 		assertEquals("application/fhir+json", operationOutcome.getMimeType());
 		final var oo = this.client.readTree(operationOutcome.getValue());
@@ -140,7 +148,7 @@ public class ItbApiR4Test {
 		final ReportItem item = getFirstError(tar);
 		assertNotNull(item.getAssertionID());
 		assertNotNull(item.getType());
-		assertTrue(item.getLocation().startsWith("content:"), item.getLocation());
+		assertTrue(item.getLocation().matches("content:\\d+:\\d+\\|Patient.*"), item.getLocation());
 
 		// Without the content in the report, the location is the FHIRPath
 		tar = this.client.validate(PATIENT, Map.of("profiles", BUNDLE_PROFILE, "includeContentInReport", "false"));
@@ -280,6 +288,11 @@ public class ItbApiR4Test {
 	private static AnyContent getContextOrNull(final TAR tar, final String name) {
 		assertEquals("map", tar.getContext().getType());
 		return tar.getContext().getItem().stream().filter(item -> name.equals(item.getName())).findFirst().orElse(null);
+	}
+
+	private static AnyContent getItem(final AnyContent map, final String name) {
+		return map.getItem().stream().filter(item -> name.equals(item.getName())).findFirst()
+			.orElseThrow(() -> new AssertionError("Missing item " + name));
 	}
 
 	private static String getContent(final String resourceName) throws IOException {

@@ -82,8 +82,8 @@ These are the upstream §3.1 inputs plus the matchbox extras.
 - [x] `items[].level` from the message severity: fatal or error → `ERROR`, warning → `WARNING`, information → `INFO`
 - [x] `items[].description` is the message text, plus the slicing details from `engine.filterSlicingMessages` as
       Gazelle does
-- [x] `items[].location` is `content:<line>:<column>` (ITB's `<context item>:<line>:<column>` link into the content),
-      the FHIRPath is in `items[].test`. **Still to check in the ITB demo that the link highlights the line**
+- [x] `items[].location` is `content:<line>:<column>|<FHIRPath>`: ITB links it to the line in the context item
+      `content` and shows the FHIRPath
 - [x] `items[].assertionID` is the messageId (fallback: invId, then the issue type). `items[].type` is the issue type
 - [x] `result` comes from the counters and `failOn`:
   - errors > 0 → `FAILURE`
@@ -95,6 +95,8 @@ These are the upstream §3.1 inputs plus the matchbox extras.
 - [x] `context[]` items:
   - `errorCount`, `warningCount`, `informationCount` and `severity` (the highest severity seen), all with
     `forDisplay=false`
+  - `validation`: a map with the profile, packages, validator, duration and the validation parameters, the
+    information of the first OperationOutcome issue, so the ITB step report shows how the validation was done
   - `context` is one AnyContent of type `map` holding these items, as `gitb_vs.json` defines it (upstream sends an
     array, see the backlog)
   - `operationOutcome`: the same OperationOutcome that `$validate` returns
@@ -158,22 +160,25 @@ another session validates against.
 
 ## Demo in `../gazelle/maestro-tutorial/itb`
 
-- [ ] Move the four `isaitb/*` images in `docker-compose.yml` to **1.30.0**, then run `docker compose down -v`,
-      because environment settings are only applied on first boot
-- [ ] Add matchbox to the compose file (`ghcr.io/ahdis/matchbox` or a locally built image, with `hl7.fhir.r4.core`
-      and one CH IG preloaded), so `gitb-srv` can reach it at `http://matchbox:8080/matchboxv3/itb/fhir`.
-      **Port clash:** `itb-srv` already publishes 8080 on the host, so publish matchbox on host port 8081. If matchbox
-      runs outside Docker, use `http://host.docker.internal:8081/matchboxv3/itb/fhir`
-- [ ] Extend `setup-itb.sh` to register a domain test service `FHIRValidator` with API type REST, using the automation
-      API's `createTestService` operation
-- [ ] Add a test suite `testsuite/fhir-demo/` with a test case `validatePatient.xml`:
-  - a `<verify handler="$DOMAIN{FHIRValidator}" handlerApiType="REST" output="$ctx">` step with `contentToValidate`
-    and `profiles` set to a CH Core Patient profile
-  - a follow-up `assign` or `verify` step that checks `$ctx{errorCount}`
-  - one valid instance that gives SUCCESS, and one invalid instance that gives FAILURE and shows the matchbox issues
-    in the ITB report
+Verified on 2026-09-22 against ITB 1.30.0 and a local matchbox build: `./run-fhir-demo.sh` gives SUCCESS for the
+valid and FAILURE (3 errors) for the invalid CH Core Patient, with the issues in the ITB report.
+
+- [x] Move the four `isaitb/*` images in `docker-compose.yml` to **1.30.0** (`docker compose down -v` first)
+- [x] matchbox runs from the local jar (`start-matchbox.sh`, `matchbox/application.yaml`: port 8081, CH Core 6.0.0),
+      `gitb-srv` reaches it at `http://host.docker.internal:8081/matchboxv3/itb/fhir` (`extra_hosts` for Linux)
+- [x] `setup-itb.sh` registers `FHIRValidator` and deploys the `fhirDemo` suite. **It is a domain parameter, not a
+      test service**: the automation API of 1.30.0 refuses `apiType: "rest"` ("Only services with a SOAP API are
+      currently supported."), a REST test service can only be created in the UI
+- [x] Test suite `testsuite/fhir-demo/`: `fhirPatientValid` (verify + `StringValidator` on `$ctx{errorCount}`) and
+      `fhirPatientInvalid` (verify fails, `log` of `$ctx{errorCount}` and `$ctx{severity}`); the patients are binary
+      artifacts, sent base64 encoded
+- [x] `run-fhir-demo.sh` starts both test cases over the automation API and prints the report items
+- [x] Item locations: the ITB UI links `name:line:col` to the context item `name`, and shows the text after `|`
+      (`test-assertion-report.component.ts`), so matchbox now sends `content:<line>:<col>|<FHIRPath>`
+- [ ] Look at the report in the ITB UI (http://localhost:9000) once, to see the link open the content at the line
 - [ ] Optional: a `testrun-itb-matchbox.json` that starts this test case through Maestro's ITB step, so the chain is
       Maestro → ITB → matchbox. Maestro's `UNDEFINED` verdict bug (issue 1 in `itb/README.md`) affects this too
+- [ ] Optional: a matchbox container in the compose file instead of the local jar
 
 ## Docs and PR
 
@@ -199,3 +204,9 @@ another session validates against.
   - `TAR.context` is one `AnyContent` (a map with `item[]`), not an array
   - the display flag of `AnyContent` is `forDisplay`, not `forReport`
   - `ValidationModule.inputs` is an array of `TypedParameter` with `desc`, not `{param: [...]}` with `description`
+- [ ] Ask ITB (ISAITB/gitb-types) to add `metadata` to `AnyContent` in the REST contracts, as in `gitb_core.xsd`.
+      gitb-srv drops it today, so REST services cannot set the step report display hints (`level=INFO` renders an item
+      as an info box, `forceDisplay=true` shows values over 100 characters inline); matchbox would use it for the
+      `validation` context item
+- [ ] ITB rejects the whole step report when one context item has a type it does not know (e.g. `list[string]`
+      instead of `list`: "Unsupported data type"), keep an eye on the types matchbox sends
