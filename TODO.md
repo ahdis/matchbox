@@ -42,24 +42,26 @@ Endpoints, below the context path (e.g. `http://host:8080/matchboxv3/itb/fhir`):
 
 ### Code
 
-- [ ] New package `ch.ahdis.matchbox.validation.itb`
-  - [ ] `ItbValidationWs`: `@RestController`, registered in `Application` next to `GazelleValidationWs`
-  - [ ] `models/`: hand-written POJOs from `gitb_vs.json`: `AnyContent`, `Configuration`, `TypedParameter`,
+- [x] New package `ch.ahdis.matchbox.validation.itb`
+  - [x] `ItbValidationWs`: `@RestController`, registered in `Application` next to `GazelleValidationWs`
+  - [x] `models/`: hand-written POJOs from `gitb_vs.json`: `AnyContent`, `Configuration`, `TypedParameter`,
         `Parameter`, `Metadata`, `ValidationModule`, `GetModuleDefinitionResponse`, `ValidateRequest`,
         `ValidationResponse`, `TAR`, `ReportItem`, `ValidationCounters`, `ValidationOverview`, plus the enums
         `ValueEmbeddingEnumeration`, `SeverityLevel`, `TestResultType`, `UsageEnumeration`, `ConfigurationType`
-  - [ ] `ItbInputs`: resolves `AnyContent` values
+  - [x] `ItbInputs`: resolves `AnyContent` values
     - supports `STRING` and `BASE_64`
     - rejects `URI` with HTTP 400, as upstream does, because fetching a caller-supplied URL is an SSRF risk
     - HTTP 400 with `{"error": ...}` for a missing required input, a required input that is empty, or an invalid
       encoding (upstream §2.6)
-  - [ ] `ItbTarMapper`: converts a list of `ValidationMessage` into TAR items, counters and result
-- [ ] Refactor, so the logic is not copied a third time:
-  - [ ] extract the private `ValidationProvider.getOperationOutcome(...)` and the loop that applies validation
+  - [x] `ItbTarMapper`: converts a list of `ValidationMessage` into TAR items, counters and result
+  - [x] `bpWarnings` and `resourceIdRule` are new `CliContext` fields (so `$validate` has them too), `displayWarnings`
+        maps to `displayIssuesAreWarnings`
+- [x] Refactor, so the logic is not copied a third time:
+  - [x] extract the private `ValidationProvider.getOperationOutcome(...)` and the loop that applies validation
         parameters (`ValidationProvider.getValidation`, reflection over
         `CliContext.getValidateEngineParameters()`) into a shared helper
-  - [ ] move Gazelle's `canonical|version` split and `getEngine()` lookup into the same helper
-  - [ ] make `$validate`, Gazelle and ITB all use the helper
+  - [x] move Gazelle's `canonical|version` split and `getEngine()` lookup into the same helper
+  - [x] make `$validate`, Gazelle and ITB all use the helper
 
 ### Inputs
 
@@ -77,37 +79,39 @@ These are the upstream §3.1 inputs plus the matchbox extras.
 
 ### Response (upstream §2.8)
 
-- [ ] `items[].level` from the message severity: fatal or error → `ERROR`, warning → `WARNING`, information → `INFO`
-- [ ] `items[].description` is the message text, plus the slicing details from `engine.filterSlicingMessages` as
+- [x] `items[].level` from the message severity: fatal or error → `ERROR`, warning → `WARNING`, information → `INFO`
+- [x] `items[].description` is the message text, plus the slicing details from `engine.filterSlicingMessages` as
       Gazelle does
-- [ ] `items[].location` holds the FHIRPath plus line and column. Check which location format ITB needs to highlight
-      the line in its content viewer
-- [ ] `items[].assertionID` is the messageId (fallback: invId, then the issue type). `items[].type` is the issue type
-- [ ] `result` comes from the counters and `failOn`:
+- [x] `items[].location` is `content:<line>:<column>` (ITB's `<context item>:<line>:<column>` link into the content),
+      the FHIRPath is in `items[].test`. **Still to check in the ITB demo that the link highlights the line**
+- [x] `items[].assertionID` is the messageId (fallback: invId, then the issue type). `items[].type` is the issue type
+- [x] `result` comes from the counters and `failOn`:
   - errors > 0 → `FAILURE`
   - no errors but warnings → `WARNING`
   - neither → `SUCCESS`
   - the engine threw an exception → `UNDEFINED`
   - `failOn=warning` makes warnings a `FAILURE`; `failOn=information` makes any issue a `FAILURE`
-- [ ] `counters`: `nrOfErrors`, `nrOfWarnings`, `nrOfAssertions` (the information count)
-- [ ] `context[]` items:
+- [x] `counters`: `nrOfErrors`, `nrOfWarnings`, `nrOfAssertions` (the information count)
+- [x] `context[]` items:
   - `errorCount`, `warningCount`, `informationCount` and `severity` (the highest severity seen), all with
     `forDisplay=false`
+  - `context` is one AnyContent of type `map` holding these items, as `gitb_vs.json` defines it (upstream sends an
+    array, see the backlog)
   - `operationOutcome`: the same OperationOutcome that `$validate` returns
   - `content`: the validated payload, only when `includeContentInReport` is true
-- [ ] `overview` fields:
+- [x] `overview` fields:
   - `profileID` is the resolved `canonical|version`
   - `validationServiceName` is `matchbox`
   - `validationServiceVersion` is the matchbox version
   - `note` is the `Gitb-Test-Session-Identifier` header
-- [ ] Log the other `Gitb-*` headers (`Gitb-Reply-To`, `Gitb-Test-Case-Identifier`, `Gitb-Test-Step-Identifier`,
+- [x] Log the other `Gitb-*` headers (`Gitb-Reply-To`, `Gitb-Test-Case-Identifier`, `Gitb-Test-Step-Identifier`,
       `Gitb-Test-Engine-Version`). Do not make any callbacks
-- [ ] A domain failure (unknown profile, parse error) returns HTTP 200 with a TAR whose result is `FAILURE`. HTTP 5xx is
+- [x] A domain failure (unknown profile, parse error) returns HTTP 200 with a TAR whose result is `FAILURE`. HTTP 5xx is
       only for server bugs
 
 ### Config
 
-- [ ] Always on and read-only, like Gazelle. An `itb.enabled` flag can be added later if needed
+- [x] Always on and read-only, like Gazelle. An `itb.enabled` flag can be added later if needed
 
 ## Phase 2: processing services (not in the first PR, see decision 2)
 
@@ -137,18 +141,18 @@ another session validates against.
 
 ## Tests
 
-- [ ] `ItbApiR4Test` in `matchbox-server/src/test/java/ch/ahdis/matchbox/itb/`, set up like
+- [x] `ItbApiR4Test` in `matchbox-server/src/test/java/ch/ahdis/matchbox/itb/`, set up like
       [GazelleApiR4Test](matchbox-server/src/test/java/ch/ahdis/matchbox/gazelle/GazelleApiR4Test.java)
       (`DEFINED_PORT`, profiles `tests` and `test-r4`), with a small `ItbClient`
-  - [ ] `getModuleDefinition` lists the inputs
-  - [ ] a valid Patient gives `SUCCESS`
-  - [ ] the `ehs-431` and `ehs-419` fixtures give `FAILURE` with the expected counters
-  - [ ] `failOn=warning` changes the result
-  - [ ] `profiles` with `|version` selects the right IG engine
-  - [ ] a missing `contentToValidate`, a `URI` embedding, and more than one profile in `profiles` each give HTTP 400
-  - [ ] an unknown profile gives HTTP 200 with a `FAILURE` TAR
-  - [ ] `context[]` contains `operationOutcome` and the counts
-  - [ ] `BASE_64` embedding works
+  - [x] `getModuleDefinition` lists the inputs
+  - [x] a valid Patient gives `SUCCESS`
+  - [x] the `ehs-431` and `ehs-419` fixtures give `FAILURE` with the expected counters
+  - [x] `failOn=warning` changes the result
+  - [x] `profiles` with `|version` selects the right IG engine
+  - [x] a missing `contentToValidate`, a `URI` embedding, and more than one profile in `profiles` each give HTTP 400
+  - [x] an unknown profile gives HTTP 200 with a `FAILURE` TAR
+  - [x] `context[]` contains `operationOutcome` and the counts
+  - [x] `BASE_64` embedding works
 - [ ] The Gazelle tests and the `$validate` tests still pass after the refactor
 - [ ] Phase 2: a `FHIRTransformer` test using `qr2patgender.map`
 
@@ -173,9 +177,9 @@ another session validates against.
 
 ## Docs and PR
 
-- [ ] A new section "ITB (GITB REST) API" in [docs/validation.md](docs/validation.md), next to "Gazelle EVS API":
+- [x] A new section "ITB (GITB REST) API" in [docs/validation.md](docs/validation.md), next to "Gazelle EVS API":
       endpoint table, inputs, a TDL snippet, and how to register the service in ITB
-- [ ] Add the change to `docs/changelog.md` under a new release heading, referencing #589
+- [x] Add the change to `docs/changelog.md` under a new release heading, referencing #589
 - [ ] Open the PR against `ahdis/matchbox` (`gh pr create --repo ahdis/matchbox`)
 - [ ] Comment on #589, ISAITB/gitb#199 and WHO-ITB-Trusted-Tests-Tools#16 with the matchbox endpoint
 - [ ] Delete this TODO.md before merging
@@ -191,3 +195,7 @@ another session validates against.
 
 - [ ] Contract alignment with upstream #2615: propose that `profiles` accepts an optional `|version`, and that the extra
       validation-parameter inputs are allowed, so both implementations stay aligned
+- [ ] Also report to #2615 where its wire format differs from `gitb_vs.json` (matchbox follows `gitb_vs.json`):
+  - `TAR.context` is one `AnyContent` (a map with `item[]`), not an array
+  - the display flag of `AnyContent` is `forDisplay`, not `forReport`
+  - `ValidationModule.inputs` is an array of `TypedParameter` with `desc`, not `{param: [...]}` with `description`

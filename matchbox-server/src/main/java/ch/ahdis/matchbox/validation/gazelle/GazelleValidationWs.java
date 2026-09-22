@@ -5,12 +5,11 @@ import ca.uhn.fhir.jpa.model.entity.MbInstalledStructureDefinitionEntity;
 import ca.uhn.fhir.rest.api.EncodingEnum;
 import ca.uhn.fhir.util.StopWatch;
 import ch.ahdis.matchbox.util.metrics.MatchboxMetrics;
-import ch.ahdis.matchbox.validation.ValidationProvider;
+import ch.ahdis.matchbox.validation.ValidationHelper;
 import ch.ahdis.matchbox.CliContext;
 import ch.ahdis.matchbox.util.MatchboxEngineSupport;
 import ch.ahdis.matchbox.engine.MatchboxEngine;
 import ch.ahdis.matchbox.engine.cli.VersionUtil;
-import ch.ahdis.matchbox.engine.exception.MatchboxEngineCreationException;
 import ch.ahdis.matchbox.validation.gazelle.models.metadata.Interface;
 import ch.ahdis.matchbox.validation.gazelle.models.metadata.RestBinding;
 import ch.ahdis.matchbox.validation.gazelle.models.metadata.Service;
@@ -68,6 +67,8 @@ public class GazelleValidationWs {
 
 	private final MatchboxEngineSupport matchboxEngineSupport;
 
+	private final ValidationHelper validationHelper;
+
 	private final Optional<MatchboxMetrics> matchboxMetrics;;
 
 	private final MbInstalledStructureDefinitionRepository installedStructureDefinitionRepository;
@@ -78,11 +79,13 @@ public class GazelleValidationWs {
 	private final GazelleApiV1Mapper v1Mapper;
 
 	public GazelleValidationWs(final MatchboxEngineSupport matchboxEngineSupport,
+										final ValidationHelper validationHelper,
 										final CliContext baseCliContext,
 										final Optional<MatchboxMetrics> matchboxMetrics,
 										final MbInstalledStructureDefinitionRepository installedStructureDefinitionRepository,
 										final ObjectMapper objectMapper) {
 		this.matchboxEngineSupport = Objects.requireNonNull(matchboxEngineSupport);
+		this.validationHelper = Objects.requireNonNull(validationHelper);
 		this.baseCliContext = Objects.requireNonNull(baseCliContext);
 		this.matchboxMetrics = Objects.requireNonNull(matchboxMetrics);
 		this.installedStructureDefinitionRepository = Objects.requireNonNull(installedStructureDefinitionRepository);
@@ -210,8 +213,6 @@ public class GazelleValidationWs {
 		report.setReports(new ArrayList<>(validationRequest.getInputs().size()));
 		report.setDisclaimer("Matchbox disclaims");
 
-		String profileCanonical = validationRequest.getValidationProfileId();
-
 		// Response: create the validation method now, with the info we already have
 		final var method = new ValidationMethod();
 		method.setValidationProfileID(validationRequest.getValidationProfileId());
@@ -221,19 +222,14 @@ public class GazelleValidationWs {
 		report.setValidationMethod(method);
 
 		// Split the profile ID to get the specified version, if any
-		final int versionSeparator = profileCanonical.lastIndexOf('|');
-		if (versionSeparator != -1) {
-			final String version = profileCanonical.substring(versionSeparator + 1);
-			profileCanonical = profileCanonical.substring(0, versionSeparator);
-			method.setValidationProfileVersion(version);
-		} else {
-			method.setValidationProfileVersion("not determined yet");
-		}
+		final var profileReference = ValidationHelper.ProfileReference.parse(validationRequest.getValidationProfileId());
+		final String profileCanonical = profileReference.canonical();
+		method.setValidationProfileVersion(Objects.requireNonNullElse(profileReference.version(), "not determined yet"));
 
 		// Get the Matchbox engine for the requested profile
 		final MatchboxEngine engine;
 		try {
-			engine = this.getEngine(validationRequest.getValidationProfileId(), profileCanonical, cliContext);
+			engine = this.validationHelper.getEngine(validationRequest.getValidationProfileId(), cliContext, false);
 		} catch (final Exception exception) {
 			report.addValidationSubReport(unexpectedError(exception.getMessage()));
 			return updateReportFields(report);
@@ -298,29 +294,6 @@ public class GazelleValidationWs {
 	}
 
 	/**
-	 * Retrieves the Matchbox engine for the given profile.
-	 */
-	MatchboxEngine getEngine(final String canonicalWithVersion,
-									 final String canonical,
-									 final CliContext cliContext) {
-		final MatchboxEngine engine;
-		try {
-			engine = this.matchboxEngineSupport.getMatchboxEngine(canonicalWithVersion, cliContext, true, false);
-		} catch (final Exception e) {
-			log.error("Error while initializing the validation engine", e);
-			throw new MatchboxEngineCreationException("Error while initializing the validation engine: %s".formatted(e.getMessage()), e);
-		}
-		if (engine == null || engine.getStructureDefinitionR5(canonical) == null) {
-			throw new MatchboxEngineCreationException(
-				"Validation for profile '%s' not supported by this validator instance".formatted(canonicalWithVersion));
-		}
-		if (!this.matchboxEngineSupport.isInitialized()) {
-			throw new RuntimeException("Validation engine not initialized, please try again");
-		}
-		return engine;
-	}
-
-	/**
 	 * Performs the validation of the given item with the given engine.
 	 */
 	ValidationSubReport validateItem(final MatchboxEngine engine,
@@ -332,7 +305,7 @@ public class GazelleValidationWs {
 		final var subReport = new ValidationSubReport();
 		subReport.setName("Validation of item #%s".formatted(item.getItemId() != null ? item.getItemId() : item.getId()));
 		try {
-			final var messages = ValidationProvider.doValidate(engine, content, encoding, profile);
+			final var messages = ValidationHelper.doValidate(engine, content, encoding, profile);
 			messages.stream()
 				.map(message -> this.convertMessageToReport(message, engine, item.getId()))
 				.forEach(subReport::addAssertionReport);

@@ -11,6 +11,8 @@ import java.util.stream.Collectors;
 import org.apache.commons.beanutils.BeanUtils;
 import org.hl7.fhir.r5.model.*;
 import org.hl7.fhir.r5.terminologies.JurisdictionUtilities;
+import org.hl7.fhir.r5.utils.validation.constants.BestPracticeWarningLevel;
+import org.hl7.fhir.r5.utils.validation.constants.IdStatus;
 import org.hl7.fhir.validation.service.model.HtmlInMarkdownCheck;
 import org.hl7.fhir.validation.service.utils.EngineMode;
 import org.hl7.fhir.validation.service.utils.QuestionnaireMode;
@@ -236,6 +238,14 @@ public class CliContext {
 
   @JsonProperty("disableDefaultResourceFetcher")
   private boolean disableDefaultResourceFetcher = true;
+
+  // Ignore, Hint, Warning or Error; null keeps the validator default
+  @JsonProperty("bpWarnings")
+  private String bpWarnings = null;
+
+  // OPTIONAL, REQUIRED or PROHIBITED; null keeps the validator default
+  @JsonProperty("resourceIdRule")
+  private String resourceIdRule = null;
 
   @Autowired
   public CliContext(Environment environment) {
@@ -516,6 +526,54 @@ public class CliContext {
     this.displayIssuesAreWarnings = displayIssuesAreWarnings;
   }
 
+  public String getBpWarnings() {
+    return bpWarnings;
+  }
+
+  public void setBpWarnings(String bpWarnings) {
+    this.bpWarnings = bpWarnings;
+  }
+
+  /**
+   * Returns the best practice warning level, or null if not set.
+   *
+   * @throws IllegalArgumentException if the value is not one of Ignore, Hint, Warning or Error.
+   */
+  public BestPracticeWarningLevel getBestPracticeWarningLevel() {
+    if (this.bpWarnings == null || this.bpWarnings.isBlank()) {
+      return null;
+    }
+    return Arrays.stream(BestPracticeWarningLevel.values())
+      .filter(level -> level.name().equalsIgnoreCase(this.bpWarnings.strip()))
+      .findFirst()
+      .orElseThrow(() -> new IllegalArgumentException(
+        "Invalid bpWarnings '%s', expected one of Ignore, Hint, Warning, Error".formatted(this.bpWarnings)));
+  }
+
+  public String getResourceIdRule() {
+    return resourceIdRule;
+  }
+
+  public void setResourceIdRule(String resourceIdRule) {
+    this.resourceIdRule = resourceIdRule;
+  }
+
+  /**
+   * Returns the resource id rule, or null if not set.
+   *
+   * @throws IllegalArgumentException if the value is not one of OPTIONAL, REQUIRED or PROHIBITED.
+   */
+  public IdStatus getResourceIdStatus() {
+    if (this.resourceIdRule == null || this.resourceIdRule.isBlank()) {
+      return null;
+    }
+    return Arrays.stream(IdStatus.values())
+      .filter(status -> status.name().equalsIgnoreCase(this.resourceIdRule.strip()))
+      .findFirst()
+      .orElseThrow(() -> new IllegalArgumentException(
+        "Invalid resourceIdRule '%s', expected one of OPTIONAL, REQUIRED, PROHIBITED".formatted(this.resourceIdRule)));
+  }
+
   public boolean isWantInvariantsInMessages() {
     return wantInvariantsInMessages;
   }
@@ -696,7 +754,9 @@ public class CliContext {
         && Arrays.equals(suppressErrors, that.suppressErrors)
         && Arrays.equals(suppressWarnInfos, that.suppressWarnInfos)
         && Arrays.equals(igs, that.igs)
-        && Objects.equals(r5BundleRelativeReferencePolicy, that.r5BundleRelativeReferencePolicy);
+        && Objects.equals(r5BundleRelativeReferencePolicy, that.r5BundleRelativeReferencePolicy)
+        && Objects.equals(bpWarnings, that.bpWarnings)
+        && Objects.equals(resourceIdRule, that.resourceIdRule);
   }
 
   @Override
@@ -742,7 +802,9 @@ public class CliContext {
         disableDefaultResourceFetcher,
         checkIpsCodes,
         bundle,
-        r5BundleRelativeReferencePolicy);
+        r5BundleRelativeReferencePolicy,
+        bpWarnings,
+        resourceIdRule);
     result = 31 * result + Arrays.hashCode(extensions);
     result = 31 * result + Arrays.hashCode(suppressErrors);
     result = 31 * result + Arrays.hashCode(suppressWarnInfos);
@@ -802,6 +864,8 @@ public class CliContext {
         ", suppressErrors=" + Arrays.toString(suppressErrors) +
         ", suppressWarnInfos=" + Arrays.toString(suppressWarnInfos) +
         ", igs=" + Arrays.toString(igs) +
+        ", bpWarnings='" + bpWarnings + '\'' +
+        ", resourceIdRule='" + resourceIdRule + '\'' +
         '}';
   }
 
@@ -862,6 +926,8 @@ public class CliContext {
     addExtension(ext, "disableDefaultResourceFetcher", new BooleanType(this.disableDefaultResourceFetcher));
     addExtension(ext, "check-ips-codes", new BooleanType(this.checkIpsCodes));
     addExtension(ext, "bundle", new StringType(this.bundle));
+    addExtension(ext, "bpWarnings", new StringType(this.bpWarnings));
+    addExtension(ext, "resourceIdRule", new StringType(this.resourceIdRule));
     if (this.extensions != null && this.extensions.length > 0) {
       for( var extension : this.extensions) {
         addExtension(ext, "extensions", new StringType(extension));
