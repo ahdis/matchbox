@@ -69,6 +69,53 @@ public class GazelleClient {
 	}
 
 	/**
+	 * Fetches the v2 profile list and returns the raw HTTP response, optionally revalidating with the given ETag.
+	 */
+	public HttpResponse<String> getProfilesRaw(final String ifNoneMatch) throws IOException, InterruptedException {
+		return this.conditionalGet("validation/v2/profiles", ifNoneMatch);
+	}
+
+	/**
+	 * Fetches the v1 profile list and returns the raw HTTP response, optionally revalidating with the given ETag.
+	 */
+	public HttpResponse<String> getProfilesV1Raw(final String ifNoneMatch) throws IOException, InterruptedException {
+		return this.conditionalGet("validation/profiles", ifNoneMatch);
+	}
+
+	private HttpResponse<String> conditionalGet(final String path,
+															  final String ifNoneMatch) throws IOException, InterruptedException {
+		final var builder = HttpRequest.newBuilder().uri(this.serverUri.resolve(path)).GET();
+		if (ifNoneMatch != null) {
+			builder.header("If-None-Match", ifNoneMatch);
+		}
+		return this.httpClient.send(builder.build(), HttpResponse.BodyHandlers.ofString());
+	}
+
+	/**
+	 * Sends a raw v2 validation request and returns the raw HTTP response.
+	 */
+	public HttpResponse<String> validateRaw(final String requestJson) throws IOException, InterruptedException {
+		final var dest = this.serverUri.resolve("validation/v2/validate");
+		final HttpRequest request = HttpRequest.newBuilder(dest)
+			.POST(HttpRequest.BodyPublishers.ofString(requestJson))
+			.header("Content-Type", MediaType.APPLICATION_JSON_VALUE)
+			.build();
+		return this.httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+	}
+
+	/**
+	 * Sends a raw v1 validation request and returns the raw HTTP response.
+	 */
+	public HttpResponse<String> validateV1Raw(final String requestJson) throws IOException, InterruptedException {
+		final var dest = this.serverUri.resolve("validation/validate");
+		final HttpRequest request = HttpRequest.newBuilder(dest)
+			.POST(HttpRequest.BodyPublishers.ofString(requestJson))
+			.header("Content-Type", MediaType.APPLICATION_JSON_VALUE)
+			.build();
+		return this.httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+	}
+
+	/**
 	 * Returns the raw JSON of the v1 profile list.
 	 */
 	public JsonNode getProfilesV1() throws IOException, InterruptedException {

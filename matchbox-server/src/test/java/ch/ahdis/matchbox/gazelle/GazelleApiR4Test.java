@@ -14,11 +14,15 @@ import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.ContextConfiguration;
 
+import java.nio.charset.StandardCharsets;
+import java.util.Base64;
 import java.util.List;
 import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
@@ -80,6 +84,60 @@ public class GazelleApiR4Test extends AbstractGazelleTest {
 		assertFalse(profileIds.contains("http://hl7.org/fhir/StructureDefinition/patient-citizenship"));
 		assertFalse(profileIds.contains("http://hl7.org/fhir/StructureDefinition/string"));
 		assertFalse(profileIds.contains("http://hl7.org/fhir/StructureDefinition/Address"));
+	}
+
+	/**
+	 * The profile list carries an ETag and answers a revalidation with a 304, so a client does not transfer the whole
+	 * list (~1 MB) again when nothing changed. https://github.com/ahdis/matchbox/issues/591
+	 */
+	@Test
+	void testProfilesEtag() throws Exception {
+		final var response = this.client.getProfilesRaw(null);
+		assertEquals(200, response.statusCode());
+		final String etag = response.headers().firstValue("ETag").orElseThrow();
+		assertTrue(etag.startsWith("\"") && etag.endsWith("\""), "Unexpected ETag: " + etag);
+		assertEquals("no-cache", response.headers().firstValue("Cache-Control").orElseThrow());
+
+		// The ETag is deterministic: an unchanged list yields the same one
+		assertEquals(etag, this.client.getProfilesRaw(null).headers().firstValue("ETag").orElseThrow());
+
+		// Revalidating with it: no body, same ETag
+		final var notModified = this.client.getProfilesRaw(etag);
+		assertEquals(304, notModified.statusCode());
+		assertEquals("", notModified.body());
+		assertEquals(etag, notModified.headers().firstValue("ETag").orElseThrow());
+
+		// '*' matches any existing representation, and the comparison is weak
+		assertEquals(304, this.client.getProfilesRaw("*").statusCode());
+		assertEquals(304, this.client.getProfilesRaw("W/" + etag).statusCode());
+		assertEquals(304, this.client.getProfilesRaw("\"0badcafe\", " + etag).statusCode());
+
+		// An ETag that does not match gets the full list back
+		final var stale = this.client.getProfilesRaw("\"0badcafe\"");
+		assertEquals(200, stale.statusCode());
+		assertEquals(etag, stale.headers().firstValue("ETag").orElseThrow());
+		assertFalse(stale.body().isBlank());
+	}
+
+	/**
+	 * Same as {@link #testProfilesEtag()} for v1, which is a different (smaller) representation and therefore has its
+	 * own ETag.
+	 */
+	@Test
+	void testProfilesEtagV1() throws Exception {
+		final var response = this.client.getProfilesV1Raw(null);
+		assertEquals(200, response.statusCode());
+		final String etag = response.headers().firstValue("ETag").orElseThrow();
+
+		final var notModified = this.client.getProfilesV1Raw(etag);
+		assertEquals(304, notModified.statusCode());
+		assertEquals("", notModified.body());
+
+		// The v1 ETag must not be accepted on the v2 list, and vice versa
+		final String etagV2 = this.client.getProfilesRaw(null).headers().firstValue("ETag").orElseThrow();
+		assertNotEquals(etag, etagV2);
+		assertEquals(200, this.client.getProfilesRaw(etag).statusCode());
+		assertEquals(200, this.client.getProfilesV1Raw(etagV2).statusCode());
 	}
 
 	@Test
@@ -288,4 +346,106 @@ public class GazelleApiR4Test extends AbstractGazelleTest {
 		assertEquals(1, report.getReports().getFirst().getAssertionReports().size());
 	}
 
+	/**
+	 * A profile that is unknown to this instance means that nothing could be validated: the result must be UNDEFINED,
+	 * not PASSED. https://github.com/ahdis/matchbox/issues/590
+	 */
+	@Test
+	void validateUnknownProfile() throws Exception {
+		final ValidationReport report = this.client.validate(PATIENT, "http://example.org/nope");
+
+		assertEquals(ValidationTestResult.UNDEFINED, report.getOverallResult());
+		final var subReport = report.getReports().getFirst();
+		assertEquals(ValidationTestResult.UNDEFINED, subReport.getSubReportResult());
+		assertEquals(1, subReport.getUnexpectedErrors().size());
+		assertTrue(subReport.getUnexpectedErrors().getFirst().getMessage()
+						  .contains("not supported by this validator instance"),
+					  "Unexpected message: " + subReport.getUnexpectedErrors().getFirst().getMessage());
+		// No 'the validation has passed' assertion shall be added to a sub-report that failed with an unexpected error
+		assertNull(subReport.getAssertionReports());
+		assertEquals(0, report.getCounters().getNumberOfAssertions());
+		assertEquals(1, report.getCounters().getNumberOfUnexpectedErrors());
+	}
+
+	/**
+	 * Same as {@link #validateUnknownProfile()}, over the v1 API.
+	 */
+	@Test
+	void validateUnknownProfileV1() throws Exception {
+		final var report = this.client.validateV1(PATIENT, "http://example.org/nope");
+
+		assertEquals("UNDEFINED", report.get("overallResult").asText());
+		final var subReport = report.get("reports").get(0);
+		assertEquals("UNDEFINED", subReport.get("subReportResult").asText());
+		assertEquals(1, subReport.get("unexpectedErrors").size());
+		assertFalse(subReport.has("assertionReports"));
+		assertEquals(1, report.get("counters").get("numberOfUnexpectedErrors").asInt());
+	}
+
+	/**
+	 * A request without a profile ID (or without inputs) cannot be validated and must be rejected with a 400, not
+	 * crash with a 500. https://github.com/ahdis/matchbox/issues/590
+	 */
+	@Test
+	void validateIncompleteRequest() throws Exception {
+		var response = this.client.validateRaw(
+			"{\"inputs\":[{\"id\":\"contentToValidate\",\"content\":\"%s\"}]}".formatted(PATIENT_BASE64));
+		assertEquals(400, response.statusCode());
+		assertTrue(response.body().contains("validationProfileId"), "Unexpected body: " + response.body());
+
+		// A misspelled field name deserializes to null and must be treated the same way
+		response = this.client.validateRaw(
+			("{\"validationProfileID\":\"http://hl7.org/fhir/StructureDefinition/Patient\","
+				+ "\"inputs\":[{\"id\":\"contentToValidate\",\"content\":\"%s\"}]}").formatted(PATIENT_BASE64));
+		assertEquals(400, response.statusCode());
+
+		// A blank profile ID is not usable either
+		response = this.client.validateRaw(
+			("{\"validationProfileId\":\" \","
+				+ "\"inputs\":[{\"id\":\"contentToValidate\",\"content\":\"%s\"}]}").formatted(PATIENT_BASE64));
+		assertEquals(400, response.statusCode());
+
+		// No inputs at all
+		response = this.client.validateRaw(
+			"{\"validationProfileId\":\"http://hl7.org/fhir/StructureDefinition/Patient\"}");
+		assertEquals(400, response.statusCode());
+		assertTrue(response.body().contains("inputs"), "Unexpected body: " + response.body());
+
+		response = this.client.validateRaw(
+			"{\"validationProfileId\":\"http://hl7.org/fhir/StructureDefinition/Patient\",\"inputs\":[]}");
+		assertEquals(400, response.statusCode());
+	}
+
+	/**
+	 * Same as {@link #validateIncompleteRequest()}, over the v1 API.
+	 */
+	@Test
+	void validateIncompleteRequestV1() throws Exception {
+		var response = this.client.validateV1Raw(
+			("{\"apiVersion\":\"0.1\",\"validationItems\":"
+				+ "[{\"itemId\":\"first\",\"role\":\"request\",\"content\":\"%s\"}]}").formatted(PATIENT_BASE64));
+		assertEquals(400, response.statusCode());
+		assertTrue(response.body().contains("validationProfileId"), "Unexpected body: " + response.body());
+
+		response = this.client.validateV1Raw(
+			"{\"apiVersion\":\"0.1\",\"validationProfileId\":\"http://hl7.org/fhir/StructureDefinition/Patient\"}");
+		assertEquals(400, response.statusCode());
+		assertTrue(response.body().contains("validationItems"), "Unexpected body: " + response.body());
+
+		// An unparseable body is still a 400
+		response = this.client.validateV1Raw("not json");
+		assertEquals(400, response.statusCode());
+	}
+
+	private static final String PATIENT = """
+			<Patient xmlns="http://hl7.org/fhir">
+				<id value="example"/>
+				<text>
+					<status value="generated"/>
+					<div xmlns="http://www.w3.org/1999/xhtml">42 </div>
+				</text>
+			</Patient>""";
+
+	private static final String PATIENT_BASE64 =
+		Base64.getEncoder().encodeToString(PATIENT.getBytes(StandardCharsets.UTF_8));
 }
