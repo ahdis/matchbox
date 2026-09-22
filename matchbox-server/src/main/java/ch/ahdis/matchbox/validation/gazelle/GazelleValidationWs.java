@@ -19,7 +19,6 @@ import ch.ahdis.matchbox.validation.gazelle.models.validation.*;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.commons.codec.digest.DigestUtils;
-import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hl7.fhir.r5.model.StructureDefinition;
 import org.hl7.fhir.utilities.validation.ValidationMessage;
 import org.slf4j.Logger;
@@ -30,6 +29,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.context.request.WebRequest;
 
 import jakarta.servlet.http.HttpServletRequest;
 import java.lang.reflect.Field;
@@ -148,10 +148,8 @@ public class GazelleValidationWs {
 	 * Returns the list of profiles supported by this server (v1).
 	 */
 	@GetMapping(path = V1_PROFILES_PATH, produces = MediaType.APPLICATION_JSON_VALUE)
-	public ResponseEntity<String> getProfilesV1(
-		@RequestHeader(name = HttpHeaders.IF_NONE_MATCH, required = false) final @Nullable String ifNoneMatch)
-		throws JsonProcessingException {
-		return profileListResponse(this.v1Mapper.write(this.getProfiles()), ifNoneMatch);
+	public ResponseEntity<String> getProfilesV1(final WebRequest webRequest) throws JsonProcessingException {
+		return profileListResponse(this.v1Mapper.write(this.getProfiles()), webRequest);
 	}
 
 	/**
@@ -202,10 +200,8 @@ public class GazelleValidationWs {
 	 * Returns the list of profiles supported by this server (v2).
 	 */
 	@GetMapping(path = V2_PROFILES_PATH, produces = MediaType.APPLICATION_JSON_VALUE)
-	public ResponseEntity<String> getProfilesV2(
-		@RequestHeader(name = HttpHeaders.IF_NONE_MATCH, required = false) final @Nullable String ifNoneMatch)
-		throws JsonProcessingException {
-		return profileListResponse(this.objectMapper.writeValueAsString(this.getProfiles()), ifNoneMatch);
+	public ResponseEntity<String> getProfilesV2(final WebRequest webRequest) throws JsonProcessingException {
+		return profileListResponse(this.objectMapper.writeValueAsString(this.getProfiles()), webRequest);
 	}
 
 	/**
@@ -215,45 +211,24 @@ public class GazelleValidationWs {
 	 * built from is written to often enough that invalidating a cache reliably would be harder than the query it
 	 * saves. The ETag is a hash of the bytes that would be sent, so it changes exactly when the list changes, and a
 	 * client that revalidates with {@code If-None-Match} is spared the transfer (~1 MB for a few thousand profiles).
+	 * <p>
+	 * The {@code If-None-Match} comparison is left to {@link WebRequest#checkNotModified(String)}: it implements the
+	 * weak comparison function and the comma-separated list, and ignores {@code *}, which only makes sense as a
+	 * precondition on a write.
 	 * https://github.com/ahdis/matchbox/issues/591
 	 */
-	static ResponseEntity<String> profileListResponse(final String json, final @Nullable String ifNoneMatch) {
+	static ResponseEntity<String> profileListResponse(final String json, final WebRequest webRequest) {
 		final String etag = "\"%s\"".formatted(DigestUtils.sha256Hex(json));
-		if (matchesEtag(ifNoneMatch, etag)) {
-			return ResponseEntity.status(HttpStatus.NOT_MODIFIED)
-				.eTag(etag)
-				.cacheControl(CacheControl.noCache())
-				.build();
+		if (webRequest.checkNotModified(etag)) {
+			// Spring has set the 304 and the ETag on the response. Cache-Control is not repeated: a cache keeps the
+			// header fields that a 304 does not carry (RFC 9111 §3.2), so the no-cache sent with the 200 still holds.
+			return ResponseEntity.status(HttpStatus.NOT_MODIFIED).build();
 		}
 		return ResponseEntity.ok()
 			.eTag(etag)
 			.cacheControl(CacheControl.noCache())
 			.contentType(MediaType.APPLICATION_JSON)
 			.body(json);
-	}
-
-	/**
-	 * Returns whether an {@code If-None-Match} header matches the given ETag, as per RFC 9110 §13.1.2: the header is
-	 * either {@code *}, which matches any existing representation, or a comma-separated list of entity tags compared
-	 * with the weak comparison function (so the {@code W/} prefix is ignored).
-	 *
-	 * @param ifNoneMatch the value of the {@code If-None-Match} header, may be {@code null}.
-	 * @param etag        the ETag of the current representation, in its quoted form.
-	 */
-	static boolean matchesEtag(final @Nullable String ifNoneMatch, final String etag) {
-		if (ifNoneMatch == null || ifNoneMatch.isBlank()) {
-			return false;
-		}
-		if ("*".equals(ifNoneMatch.trim())) {
-			return true;
-		}
-		for (final String candidate : ifNoneMatch.split(",")) {
-			final String trimmed = candidate.trim();
-			if (etag.equals(trimmed.startsWith("W/") ? trimmed.substring(2) : trimmed)) {
-				return true;
-			}
-		}
-		return false;
 	}
 
 	/**
