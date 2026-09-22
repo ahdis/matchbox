@@ -107,10 +107,12 @@ public class GazelleApiR4Test extends AbstractGazelleTest {
 		assertEquals("", notModified.body());
 		assertEquals(etag, notModified.headers().firstValue("ETag").orElseThrow());
 
-		// '*' matches any existing representation, and the comparison is weak
-		assertEquals(304, this.client.getProfilesRaw("*").statusCode());
+		// The comparison is weak, and accepts a list
 		assertEquals(304, this.client.getProfilesRaw("W/" + etag).statusCode());
 		assertEquals(304, this.client.getProfilesRaw("\"0badcafe\", " + etag).statusCode());
+
+		// '*' only makes sense as a precondition on a write: it gets the list, not a 304
+		assertEquals(200, this.client.getProfilesRaw("*").statusCode());
 
 		// An ETag that does not match gets the full list back
 		final var stale = this.client.getProfilesRaw("\"0badcafe\"");

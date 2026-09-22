@@ -12,6 +12,10 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.mock.env.MockEnvironment;
+import org.springframework.mock.web.MockHttpServletRequest;
+import org.springframework.mock.web.MockHttpServletResponse;
+import org.springframework.web.context.request.ServletWebRequest;
+import org.springframework.web.context.request.WebRequest;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Optional;
@@ -152,36 +156,10 @@ class GazelleValidationWsTest {
 	}
 
 	@Test
-	void matchesEtagFollowsRfc9110() {
-		final String etag = "\"abcdef\"";
-
-		assertFalse(GazelleValidationWs.matchesEtag(null, etag));
-		assertFalse(GazelleValidationWs.matchesEtag("", etag));
-		assertFalse(GazelleValidationWs.matchesEtag("   ", etag));
-
-		// '*' matches any existing representation
-		assertTrue(GazelleValidationWs.matchesEtag("*", etag));
-		assertTrue(GazelleValidationWs.matchesEtag(" * ", etag));
-
-		assertTrue(GazelleValidationWs.matchesEtag(etag, etag));
-		// If-None-Match uses the weak comparison function, so the W/ prefix is ignored
-		assertTrue(GazelleValidationWs.matchesEtag("W/" + etag, etag));
-		// A comma-separated list, with the optional whitespace RFC 9110 allows
-		assertTrue(GazelleValidationWs.matchesEtag("\"other\", " + etag, etag));
-		assertTrue(GazelleValidationWs.matchesEtag("\"other\"," + etag + ",\"third\"", etag));
-		assertTrue(GazelleValidationWs.matchesEtag("W/\"other\", W/" + etag, etag));
-
-		assertFalse(GazelleValidationWs.matchesEtag("\"other\"", etag));
-		assertFalse(GazelleValidationWs.matchesEtag("\"other\", \"third\"", etag));
-		// The quotes are part of the entity tag
-		assertFalse(GazelleValidationWs.matchesEtag("abcdef", etag));
-	}
-
-	@Test
 	void profileListEtagIsDeterministic() {
 		final String json = "[{\"profileID\":\"http://hl7.org/fhir/StructureDefinition/Patient\"}]";
 
-		final ResponseEntity<String> response = GazelleValidationWs.profileListResponse(json, null);
+		final ResponseEntity<String> response = GazelleValidationWs.profileListResponse(json, webRequest(null));
 		assertEquals(HttpStatus.OK, response.getStatusCode());
 		assertEquals(json, response.getBody());
 		final String etag = response.getHeaders().getETag();
@@ -189,17 +167,64 @@ class GazelleValidationWsTest {
 		assertEquals("no-cache", response.getHeaders().getCacheControl());
 
 		// The same list yields the same ETag, a different one does not
-		assertEquals(etag, GazelleValidationWs.profileListResponse(json, null).getHeaders().getETag());
-		assertNotEquals(etag, GazelleValidationWs.profileListResponse(json + " ", null).getHeaders().getETag());
+		assertEquals(etag, GazelleValidationWs.profileListResponse(json, webRequest(null)).getHeaders().getETag());
+		assertNotEquals(etag,
+							 GazelleValidationWs.profileListResponse(json + " ", webRequest(null)).getHeaders().getETag());
+	}
 
-		// Revalidating with it: 304, the same ETag, and no body
-		final ResponseEntity<String> notModified = GazelleValidationWs.profileListResponse(json, etag);
-		assertEquals(HttpStatus.NOT_MODIFIED, notModified.getStatusCode());
-		assertEquals(etag, notModified.getHeaders().getETag());
-		assertNull(notModified.getBody());
+	/**
+	 * The If-None-Match comparison is Spring's, through {@link org.springframework.web.context.request.WebRequest}:
+	 * the weak comparison function and the comma-separated list are honoured, {@code *} is not.
+	 */
+	@Test
+	void profileListHonoursIfNoneMatch() {
+		final String json = "[{\"profileID\":\"http://hl7.org/fhir/StructureDefinition/Patient\"}]";
+		final String etag = GazelleValidationWs.profileListResponse(json, webRequest(null)).getHeaders().getETag();
 
-		// A stale ETag gets the list back
-		assertEquals(HttpStatus.OK, GazelleValidationWs.profileListResponse(json, "\"stale\"").getStatusCode());
+		assertEquals(HttpStatus.NOT_MODIFIED, statusFor(json, etag));
+		assertEquals(HttpStatus.NOT_MODIFIED, statusFor(json, "W/" + etag));
+		assertEquals(HttpStatus.NOT_MODIFIED, statusFor(json, "\"other\", " + etag));
+		assertEquals(HttpStatus.NOT_MODIFIED, statusFor(json, "\"other\"," + etag + ",\"third\""));
+
+		assertEquals(HttpStatus.OK, statusFor(json, "\"other\""));
+		assertEquals(HttpStatus.OK, statusFor(json, ""));
+		// The quotes are part of the entity tag
+		assertEquals(HttpStatus.OK, statusFor(json, etag.replace("\"", "")));
+		// '*' only makes sense as a precondition on a write: asking unconditionally for a 304 gets the list instead
+		assertEquals(HttpStatus.OK, statusFor(json, "*"));
+	}
+
+	/**
+	 * The 304 carries the ETag, set by Spring on the response, but no Cache-Control: a cache keeps the header fields
+	 * that a 304 does not carry (RFC 9111 §3.2), so the no-cache sent with the 200 still holds.
+	 */
+	@Test
+	void notModifiedResponseCarriesTheEtag() {
+		final String json = "[{\"profileID\":\"http://hl7.org/fhir/StructureDefinition/Patient\"}]";
+		final String etag = GazelleValidationWs.profileListResponse(json, webRequest(null)).getHeaders().getETag();
+
+		final var request = new MockHttpServletRequest("GET", "/gazelle/validation/v2/profiles");
+		request.addHeader(HttpHeaders.IF_NONE_MATCH, etag);
+		final var servletResponse = new MockHttpServletResponse();
+
+		final ResponseEntity<String> response =
+			GazelleValidationWs.profileListResponse(json, new ServletWebRequest(request, servletResponse));
+
+		assertEquals(HttpStatus.NOT_MODIFIED, response.getStatusCode());
+		assertNull(response.getBody());
+		assertEquals(etag, servletResponse.getHeader(HttpHeaders.ETAG));
+	}
+
+	private static HttpStatus statusFor(final String json, final String ifNoneMatch) {
+		return (HttpStatus) GazelleValidationWs.profileListResponse(json, webRequest(ifNoneMatch)).getStatusCode();
+	}
+
+	private static WebRequest webRequest(final String ifNoneMatch) {
+		final var request = new MockHttpServletRequest("GET", "/gazelle/validation/v2/profiles");
+		if (ifNoneMatch != null) {
+			request.addHeader(HttpHeaders.IF_NONE_MATCH, ifNoneMatch);
+		}
+		return new ServletWebRequest(request, new MockHttpServletResponse());
 	}
 
 	/**
