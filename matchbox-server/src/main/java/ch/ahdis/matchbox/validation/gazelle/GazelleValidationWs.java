@@ -18,10 +18,14 @@ import ch.ahdis.matchbox.validation.gazelle.models.validation.*;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.apache.commons.codec.digest.DigestUtils;
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hl7.fhir.r5.model.StructureDefinition;
 import org.hl7.fhir.utilities.validation.ValidationMessage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.http.CacheControl;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -32,6 +36,7 @@ import java.lang.reflect.Field;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 
@@ -63,6 +68,11 @@ public class GazelleValidationWs {
 	 */
 	static final String INPUT_ID = "contentToValidate";
 
+	/**
+	 * The value of the {@code Retry-After} header sent when the validation engine is not yet initialized, in seconds.
+	 */
+	static final int RETRY_AFTER_SECONDS = 5;
+
 	private static final List<SupportedInput> SUPPORTED_INPUTS = List.of(
 		new SupportedInput().setId(INPUT_ID).setLabel("FHIR resource (JSON or XML)").setRequired(true));
 
@@ -77,6 +87,9 @@ public class GazelleValidationWs {
 
 	private final GazelleApiV1Mapper v1Mapper;
 
+	// The mapper used by Spring for the v2 responses, to serialize the profile list exactly as it is sent
+	private final ObjectMapper objectMapper;
+
 	public GazelleValidationWs(final MatchboxEngineSupport matchboxEngineSupport,
 										final CliContext baseCliContext,
 										final Optional<MatchboxMetrics> matchboxMetrics,
@@ -86,7 +99,8 @@ public class GazelleValidationWs {
 		this.baseCliContext = Objects.requireNonNull(baseCliContext);
 		this.matchboxMetrics = Objects.requireNonNull(matchboxMetrics);
 		this.installedStructureDefinitionRepository = Objects.requireNonNull(installedStructureDefinitionRepository);
-		this.v1Mapper = new GazelleApiV1Mapper(Objects.requireNonNull(objectMapper));
+		this.objectMapper = Objects.requireNonNull(objectMapper);
+		this.v1Mapper = new GazelleApiV1Mapper(objectMapper);
 	}
 
 	/**
@@ -134,8 +148,10 @@ public class GazelleValidationWs {
 	 * Returns the list of profiles supported by this server (v1).
 	 */
 	@GetMapping(path = V1_PROFILES_PATH, produces = MediaType.APPLICATION_JSON_VALUE)
-	public ResponseEntity<String> getProfilesV1() throws JsonProcessingException {
-		return jsonResponse(HttpStatus.OK, this.v1Mapper.write(this.getProfiles()));
+	public ResponseEntity<String> getProfilesV1(
+		@RequestHeader(name = HttpHeaders.IF_NONE_MATCH, required = false) final @Nullable String ifNoneMatch)
+		throws JsonProcessingException {
+		return profileListResponse(this.v1Mapper.write(this.getProfiles()), ifNoneMatch);
 	}
 
 	/**
@@ -150,7 +166,32 @@ public class GazelleValidationWs {
 		} catch (final JsonProcessingException exception) {
 			return jsonResponse(HttpStatus.BAD_REQUEST, "{\"error\":\"Invalid validation request\"}");
 		}
-		return jsonResponse(HttpStatus.OK, this.v1Mapper.write(this.postValidate(validationRequest)));
+		final String requestError = checkRequest(validationRequest, "validationItems");
+		if (requestError != null) {
+			return jsonResponse(HttpStatus.BAD_REQUEST, "{\"error\":\"%s\"}".formatted(requestError));
+		}
+		final ValidationOutcome outcome = this.validate(validationRequest);
+		return outcome.toResponse(this.v1Mapper.write(outcome.report()));
+	}
+
+	/**
+	 * Checks that the validation request contains everything needed to perform a validation.
+	 *
+	 * @param validationRequest the request to check, may be {@code null}.
+	 * @param inputsFieldName   the name of the inputs field in the request, which differs between v1 and v2.
+	 * @return the error message if the request is invalid, {@code null} if it is valid.
+	 */
+	static String checkRequest(final ValidationRequest validationRequest, final String inputsFieldName) {
+		if (validationRequest == null) {
+			return "The validation request is missing";
+		}
+		if (!validationRequest.isValidationProfileIdValid()) {
+			return "The field 'validationProfileId' is missing or empty";
+		}
+		if (!validationRequest.isInputsValid()) {
+			return "The field '%s' is missing or empty".formatted(inputsFieldName);
+		}
+		return null;
 	}
 
 	private static ResponseEntity<String> jsonResponse(final HttpStatus status, final String json) {
@@ -161,6 +202,63 @@ public class GazelleValidationWs {
 	 * Returns the list of profiles supported by this server (v2).
 	 */
 	@GetMapping(path = V2_PROFILES_PATH, produces = MediaType.APPLICATION_JSON_VALUE)
+	public ResponseEntity<String> getProfilesV2(
+		@RequestHeader(name = HttpHeaders.IF_NONE_MATCH, required = false) final @Nullable String ifNoneMatch)
+		throws JsonProcessingException {
+		return profileListResponse(this.objectMapper.writeValueAsString(this.getProfiles()), ifNoneMatch);
+	}
+
+	/**
+	 * Writes the profile list as an HTTP response, with an {@code ETag} derived from the serialized list.
+	 * <p>
+	 * The list is fetched and serialized on every request: nothing is cached server-side, because the table it is
+	 * built from is written to often enough that invalidating a cache reliably would be harder than the query it
+	 * saves. The ETag is a hash of the bytes that would be sent, so it changes exactly when the list changes, and a
+	 * client that revalidates with {@code If-None-Match} is spared the transfer (~1 MB for a few thousand profiles).
+	 * https://github.com/ahdis/matchbox/issues/591
+	 */
+	static ResponseEntity<String> profileListResponse(final String json, final @Nullable String ifNoneMatch) {
+		final String etag = "\"%s\"".formatted(DigestUtils.sha256Hex(json));
+		if (matchesEtag(ifNoneMatch, etag)) {
+			return ResponseEntity.status(HttpStatus.NOT_MODIFIED)
+				.eTag(etag)
+				.cacheControl(CacheControl.noCache())
+				.build();
+		}
+		return ResponseEntity.ok()
+			.eTag(etag)
+			.cacheControl(CacheControl.noCache())
+			.contentType(MediaType.APPLICATION_JSON)
+			.body(json);
+	}
+
+	/**
+	 * Returns whether an {@code If-None-Match} header matches the given ETag, as per RFC 9110 §13.1.2: the header is
+	 * either {@code *}, which matches any existing representation, or a comma-separated list of entity tags compared
+	 * with the weak comparison function (so the {@code W/} prefix is ignored).
+	 *
+	 * @param ifNoneMatch the value of the {@code If-None-Match} header, may be {@code null}.
+	 * @param etag        the ETag of the current representation, in its quoted form.
+	 */
+	static boolean matchesEtag(final @Nullable String ifNoneMatch, final String etag) {
+		if (ifNoneMatch == null || ifNoneMatch.isBlank()) {
+			return false;
+		}
+		if ("*".equals(ifNoneMatch.trim())) {
+			return true;
+		}
+		for (final String candidate : ifNoneMatch.split(",")) {
+			final String trimmed = candidate.trim();
+			if (etag.equals(trimmed.startsWith("W/") ? trimmed.substring(2) : trimmed)) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	/**
+	 * Builds the list of profiles supported by this server.
+	 */
 	public List<ValidationProfile> getProfiles() {
 		final List<MbInstalledStructureDefinitionEntity> entities =
 			this.installedStructureDefinitionRepository.findAllValidatable();
@@ -197,7 +295,22 @@ public class GazelleValidationWs {
 	 */
 	@PostMapping(path = V2_VALIDATE_PATH, consumes = MediaType.APPLICATION_JSON_VALUE, produces =
 		MediaType.APPLICATION_JSON_VALUE)
-	public ValidationReport postValidate(@RequestBody final ValidationRequest validationRequest) {
+	public ResponseEntity<?> postValidate(@RequestBody final ValidationRequest validationRequest) {
+		final String requestError = checkRequest(validationRequest, "inputs");
+		if (requestError != null) {
+			return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+				.contentType(MediaType.APPLICATION_JSON)
+				.body(Map.of("error", requestError));
+		}
+		final ValidationOutcome outcome = this.validate(validationRequest);
+		return outcome.toResponse(outcome.report());
+	}
+
+	/**
+	 * Performs the validation of the given items with the given profile. The request must have been checked with
+	 * {@link #checkRequest(ValidationRequest, String)} beforehand.
+	 */
+	ValidationOutcome validate(final ValidationRequest validationRequest) {
 		this.matchboxMetrics.ifPresent(MatchboxMetrics::addValidation);
 		final var sw = new StopWatch();
 		sw.startTask("Total");
@@ -234,9 +347,13 @@ public class GazelleValidationWs {
 		final MatchboxEngine engine;
 		try {
 			engine = this.getEngine(validationRequest.getValidationProfileId(), profileCanonical, cliContext);
+		} catch (final EngineNotInitializedException exception) {
+			// The engine may be ready later: answer with a well-formed report and a retryable status
+			report.addValidationSubReport(unexpectedError(exception.getMessage()));
+			return ValidationOutcome.unavailable(updateReportFields(report));
 		} catch (final Exception exception) {
 			report.addValidationSubReport(unexpectedError(exception.getMessage()));
-			return updateReportFields(report);
+			return ValidationOutcome.ok(updateReportFields(report));
 		}
 		final StructureDefinition structDef = engine.getStructureDefinitionR5(profileCanonical);
 
@@ -294,7 +411,38 @@ public class GazelleValidationWs {
 		sw.endCurrentTask();
 		report.addAdditionalMetadata(new Metadata().setName("total").setValue(sw.getMillis() + "ms"));
 
-		return updateReportFields(report);
+		return ValidationOutcome.ok(updateReportFields(report));
+	}
+
+	/**
+	 * The outcome of a validation: the report to send back, and the HTTP status to send it with.
+	 * <p>
+	 * The status is {@code 200} in all cases but one: if the validation engine is not yet initialized, the same
+	 * request may succeed later, so it is answered with a {@code 503} and a {@code Retry-After} header. The report is
+	 * well-formed in both cases, with an {@code UNDEFINED} overall result when nothing could be validated.
+	 * https://github.com/ahdis/matchbox/issues/590
+	 */
+	record ValidationOutcome(HttpStatus status, ValidationReport report) {
+
+		static ValidationOutcome ok(final ValidationReport report) {
+			return new ValidationOutcome(HttpStatus.OK, report);
+		}
+
+		static ValidationOutcome unavailable(final ValidationReport report) {
+			return new ValidationOutcome(HttpStatus.SERVICE_UNAVAILABLE, report);
+		}
+
+		/**
+		 * Writes the outcome as an HTTP response, with the given body (the report as a v2 object or as v1 JSON).
+		 */
+		<T> ResponseEntity<T> toResponse(final T body) {
+			final var builder = ResponseEntity.status(this.status).contentType(MediaType.APPLICATION_JSON);
+			if (this.status == HttpStatus.SERVICE_UNAVAILABLE) {
+				// MatchboxEngineSupport polls the initialization flag every 2 seconds
+				builder.header(HttpHeaders.RETRY_AFTER, String.valueOf(RETRY_AFTER_SECONDS));
+			}
+			return builder.body(body);
+		}
 	}
 
 	/**
@@ -311,13 +459,36 @@ public class GazelleValidationWs {
 			throw new MatchboxEngineCreationException("Error while initializing the validation engine: %s".formatted(e.getMessage()), e);
 		}
 		if (engine == null || engine.getStructureDefinitionR5(canonical) == null) {
+			// A reload may have been started in the meantime: the profile is then not unknown, the engine is only not
+			// ready yet, and the same request may succeed later.
+			this.requireInitializedEngine();
 			throw new MatchboxEngineCreationException(
 				"Validation for profile '%s' not supported by this validator instance".formatted(canonicalWithVersion));
 		}
-		if (!this.matchboxEngineSupport.isInitialized()) {
-			throw new RuntimeException("Validation engine not initialized, please try again");
-		}
+		this.requireInitializedEngine();
 		return engine;
+	}
+
+	/**
+	 * Throws if the validation engine is not (yet) initialized.
+	 *
+	 * @throws EngineNotInitializedException if the engine is not initialized.
+	 */
+	private void requireInitializedEngine() {
+		if (!this.matchboxEngineSupport.isInitialized()) {
+			throw new EngineNotInitializedException("Validation engine not initialized, please try again");
+		}
+	}
+
+	/**
+	 * Thrown when the validation engine is not (yet) initialized, i.e. during startup or while an implementation guide
+	 * is being (re)loaded. Unlike the other failures of {@link #getEngine(String, String, CliContext)}, the same
+	 * request may succeed later, so it is answered with a {@code 503} and a {@code Retry-After} header.
+	 */
+	static class EngineNotInitializedException extends RuntimeException {
+		EngineNotInitializedException(final String message) {
+			super(message);
+		}
 	}
 
 	/**
@@ -343,7 +514,10 @@ public class GazelleValidationWs {
 
 		// The EVSClient expects at least one assertion report, otherwise it will show it as DONE_UNDEFINED
 		// https://github.com/ahdis/matchbox/issues/274
-		if (subReport.getAssertionReports() == null || subReport.getAssertionReports().isEmpty()) {
+		// But if the validation failed with an unexpected error, DONE_UNDEFINED is exactly what shall be shown, so no
+		// 'has passed' assertion is added in that case (https://github.com/ahdis/matchbox/issues/590)
+		if ((subReport.getUnexpectedErrors() == null || subReport.getUnexpectedErrors().isEmpty())
+			&& (subReport.getAssertionReports() == null || subReport.getAssertionReports().isEmpty())) {
 			subReport.addAssertionReport(
 				new AssertionReport()
 					.setResult(ValidationTestResult.PASSED)
@@ -427,9 +601,10 @@ public class GazelleValidationWs {
 	static ValidationSubReport unexpectedError(final String message) {
 		final var report = new ValidationSubReport();
 		report.setName("Unexpected error");
-		report.setSubReportResult(ValidationTestResult.FAILED);
+		// Nothing could be validated, so the result is neither PASSED nor FAILED but UNDEFINED. The counters are
+		// computed from the unexpected errors by ValidationSubReport#computeCountersSubReport().
+		report.setSubReportResult(ValidationTestResult.UNDEFINED);
 		report.addUnexpectedError(new UnexpectedError().setMessage(message));
-		report.getSubCounters().incrementUnexpectedErrors();
 		return report;
 	}
 
