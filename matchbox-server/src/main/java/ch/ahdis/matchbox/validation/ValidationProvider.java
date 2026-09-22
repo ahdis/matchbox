@@ -37,20 +37,16 @@ import ch.ahdis.matchbox.util.MatchboxEngineSupport;
 import ch.ahdis.matchbox.util.metrics.MatchboxMetrics;
 import ch.ahdis.matchbox.validation.matchspark.LlmConnector;
 import ch.ahdis.matchbox.engine.MatchboxEngine;
-import ch.ahdis.matchbox.engine.cli.VersionUtil;
+import ch.ahdis.matchbox.engine.exception.MatchboxEngineCreationException;
 import ch.ahdis.matchbox.packages.MatchboxImplementationGuideProvider;
 import dev.langchain4j.model.chat.listener.ChatModelListener;
-import org.apache.commons.beanutils.BeanUtils;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.hl7.fhir.instance.model.api.IBase;
 import org.hl7.fhir.instance.model.api.IBaseOperationOutcome;
 import org.hl7.fhir.instance.model.api.IBaseResource;
 import org.hl7.fhir.r5.model.*;
-import org.hl7.fhir.r5.elementmodel.Manager.FhirFormat;
 import org.hl7.fhir.r5.extensions.ExtensionDefinitions;
-import org.hl7.fhir.r5.utils.EOperationOutcome;
-import org.hl7.fhir.r5.utils.OperationOutcomeUtilities;
 import org.hl7.fhir.utilities.validation.ValidationMessage;
 import org.springframework.beans.factory.annotation.Autowired;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -58,19 +54,13 @@ import ch.ahdis.matchbox.validation.matchspark.LlmErrorMessage;
 
 import jakarta.servlet.http.HttpServletRequest;
 
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
-import java.lang.reflect.Field;
-import java.lang.reflect.InvocationTargetException;
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
 import static ch.ahdis.matchbox.config.MatchboxFhirVersion.convertToR4;
 import static ch.ahdis.matchbox.config.MatchboxFhirVersion.convertToR4B;
-import static ch.ahdis.matchbox.util.MatchboxServerUtils.addExtension;
 
 /**
  * The HAPI provider of the operation $validate
@@ -91,6 +81,9 @@ public class ValidationProvider {
 
 	@Autowired
 	protected CliContext cliContext;
+
+	@Autowired
+	private ValidationHelper validationHelper;
 
 	@Autowired
 	private MatchboxFhirVersion matchboxFhirVersion;
@@ -178,40 +171,7 @@ public class ValidationProvider {
 		// we extract here all config
 		final CliContext cliContext = new CliContext(this.cliContext);
 
-		// get al list of all JsonProperty of cliContext with return values property name and property type
-		List<Field> cliContextProperties = cliContext.getValidateEngineParameters();
-
-		// check for each cliContextProperties if it is in the request parameter
-		for (final Field field : cliContextProperties) {
-			final String cliContextProperty = field.getName();
-			if (field.getType() == String[].class) {
-				if (theRequest.getParameterValues(cliContextProperty) != null) {
-					try {
-						final String[] value = theRequest.getParameterValues(cliContextProperty);
-						field.setAccessible(true);
-						field.set(cliContext, value);
-					} catch (final IllegalAccessException e) {
-						log.error("error setting property %s to %s".formatted(cliContextProperty,
-							theRequest.getParameter(cliContextProperty)));
-					}
-				}
-			} else {
-				if (theRequest.getParameter(cliContextProperty) != null) {
-					try {
-						final String value = theRequest.getParameter(cliContextProperty);
-						// currently only handles boolean or String
-						if (field.getType() == boolean.class || field.getType() == Boolean.class) {
-							BeanUtils.setProperty(cliContext, cliContextProperty, Boolean.parseBoolean(value));
-						} else {
-							BeanUtils.setProperty(cliContext, cliContextProperty, value);
-						}
-					} catch (final IllegalAccessException | InvocationTargetException e) {
-						log.error("error setting property %s to %s".formatted(cliContextProperty,
-							theRequest.getParameter(cliContextProperty)));
-					}
-				}
-			}
-		}
+		ValidationHelper.applyValidationParameters(cliContext, theRequest::getParameterValues);
 
 		if (theRequest.getParameter("profile") == null) {
 			return this.getOoForError("The 'profile' parameter must be provided");
@@ -238,27 +198,11 @@ public class ValidationProvider {
 
 		final MatchboxEngine engine;
 		try {
-			engine = this.matchboxEngineSupport.getMatchboxEngine(profile, cliContext, true, reload);
-		} catch (final Exception e) {
-			log.error("Error while initializing the validation engine", e);
-			return this.getOoForError("Error while initializing the validation engine: %s".formatted(e.getMessage()));
+			engine = this.validationHelper.getEngine(profile, cliContext, reload);
+		} catch (final MatchboxEngineCreationException e) {
+			return this.getOoForError(e.getMessage());
 		}
-		if (engine == null) {
-			return this.getOoForError(
-				"Matchbox engine for profile '%s' could not be created, check the installed IGs".formatted(
-					profile));
-		}
-		int versionSeparator = profile.lastIndexOf('|');
-		if (versionSeparator != -1) {
-			profile = profile.substring(0, versionSeparator);
-		}
-		if (engine.getStructureDefinitionR5(profile) == null) {
-			return this.getOoForError(
-				"Engine configured, but validation for profile '%s' not found. %s".formatted(profile, engine));
-		}
-		if (!this.matchboxEngineSupport.isInitialized()) {
-			return this.getOoForError("Validation engine not initialized, please try again");
-		}
+		profile = ValidationHelper.ProfileReference.parse(profile).canonical();
 
 		final String sha3Hex = new DigestUtils("SHA3-256").digestAsHex(contentString + profile);
 
@@ -269,7 +213,7 @@ public class ValidationProvider {
 
 		final List<ValidationMessage> messages;
 		try {
-			messages = doValidate(engine, contentString, encoding, profile);
+			messages = ValidationHelper.doValidate(engine, contentString, encoding, profile);
 		} catch (final Exception e) {
 			sw.endCurrentTask();
 			log.debug("Validation time: {}", sw);
@@ -281,7 +225,7 @@ public class ValidationProvider {
 		log.debug("Validation time: {}", sw);
 		this.matchboxMetrics.ifPresent(m -> m.addValidationDuration(java.time.Duration.ofMillis(millis)));
 
-		final OperationOutcome oo = this.getOperationOutcome(sha3Hex, messages, profile, engine, millis, cliContext);
+		final OperationOutcome oo = this.validationHelper.getOperationOutcome(sha3Hex, messages, profile, engine, millis, cliContext);
 
 		// Check if we should analyze errors with LLM, either from the request parameter or from the configuration
 		boolean analyzeErrorsWithLlm = this.matchboxProps.getValidation().isAnalyzeErrorsWithLlm();
@@ -325,114 +269,6 @@ public class ValidationProvider {
 		return oo;
 	}
 
-	private OperationOutcome getOperationOutcome(final String id,
-																final List<ValidationMessage> messages,
-																final String profile,
-																final MatchboxEngine engine,
-																final long ms,
-																final CliContext cliContext) {
-		final var oo = new OperationOutcome();
-		oo.setId(id);
-
-		{
-			// Add an information message about the validation
-			final var issue = oo.addIssue();
-			issue.setSeverity(OperationOutcome.IssueSeverity.INFORMATION);
-			issue.setCode(OperationOutcome.IssueType.INFORMATIONAL);
-
-			final org.hl7.fhir.r5.model.StructureDefinition structDefR5 = engine.getStructureDefinitionR5(profile);
-
-			final var profileDate = (structDefR5.getDateElement() != null)
-				? " (%s)".formatted(structDefR5.getDateElement().asStringValue())
-				: " ";
-
-			issue.setDiagnostics(
-				"Validation for profile %s|%s%s. Loaded packages: %s. Duration: %s. %s. Validation parameters: %s".formatted(
-					structDefR5.getUrl(),
-					structDefR5.getVersion(),
-					profileDate,
-					String.join(", ", engine.getContext().getLoadedPackages()),
-					ms / 1000.0 + "s",
-					VersionUtil.getPoweredBy(),
-					cliContext.toString()
-				));
-
-			// Set the validator version, as per the FHIR Tooling Extensions
-			oo.addExtension("http://hl7.org/fhir/tools/StructureDefinition/validator-version",
-								 new StringType(VersionUtil.getPoweredBy()));
-
-			var ext = issue.addExtension().setUrl("http://matchbox.health/validation");
-			addExtension(ext, "profile", new UriType(structDefR5.getUrl()));
-			addExtension(ext, "profileVersion", new UriType(structDefR5.getVersion()));
-			addExtension(ext, "profileDate", structDefR5.getDateElement());
-
-			ext.addExtension("total", new Duration().setUnit("ms").setValue(ms));
-			addExtension(ext, "validatorVersion", new StringType(VersionUtil.getPoweredBy()));
-			cliContext.addContextToExtension(ext);
-			ext.addExtension("onlyOneEngine", new BooleanType(this.matchboxProps.getContext().isOnlyOneEngine()));
-			ext.addExtension("httpReadOnly", new BooleanType(this.matchboxProps.getContext().isHttpReadOnly()));
-			ext.addExtension("ssrfProtectionEnabled", new BooleanType(this.matchboxProps.getContext().isSsrfProtectionEnabled()));
-
-			final var sessionId = this.matchboxEngineSupport.getSessionId(engine);
-			if (sessionId != null) {
-				addExtension(ext, "sessionId", new StringType(sessionId));
-			}
-			for (final String pkg : engine.getContext().getLoadedPackages()) {
-				addExtension(ext, "package", new StringType(pkg));
-			}
-			for (final String suppressedWarning : engine.getSuppressedWarnInfoPatterns()) {
-				addExtension(ext, "suppressedWarning", new StringType(suppressedWarning));
-			}
-			for (final String suppressedError : engine.getSuppressedErrors()) {
-				addExtension(ext, "suppressedError", new StringType(suppressedError));
-			}
-		}
-
-		// Map the SingleValidationMessages to OperationOutcomeIssue
-		for (final ValidationMessage message : messages) {
-			if (message.getType() == null) {
-				// Note: this did not happen with previous core versions
-				message.setType(ValidationMessage.IssueType.UNKNOWN);
-			}
-			final var issue = OperationOutcomeUtilities.convertToIssue(message, oo);
-
-			// Note: the message is mapped to details.text by HAPI, but we still need it in diagnostics for the EVSClient,
-			//       so we move it. This could be changed in the future.
-			issue.setDiagnostics(message.getMessage());
-			issue.setDetails(null);
-
-			// Add slice info to diagnostics
-			if (message.hasSliceInfo() && message.sliceHtml != null) {
-				List<String> sliceInfo = engine.filterSlicingMessages(message.sliceHtml);
-				if (!sliceInfo.isEmpty()) {
-					final var newDiagnostics = new StringBuilder();
-					newDiagnostics.append(issue.getDiagnostics());
-					newDiagnostics.append(" Slice info:");
-
-					for (int i = 0; i < sliceInfo.size(); ++i) {
-						newDiagnostics.append(" ");
-						newDiagnostics.append(i + 1);
-						newDiagnostics.append(".) ");
-						newDiagnostics.append(sliceInfo.get(i));
-					}
-					issue.setDiagnostics(newDiagnostics.toString());
-				}
-			}
-
-			oo.addIssue(issue);
-		}
-
-		// Add an information message about success, if needed
-		if (messages.stream().noneMatch(m -> m.getLevel() == ValidationMessage.IssueSeverity.FATAL || m.getLevel() == ValidationMessage.IssueSeverity.ERROR)) {
-			final var issue = oo.addIssue();
-			issue.setSeverity(OperationOutcome.IssueSeverity.INFORMATION);
-			issue.setCode(OperationOutcome.IssueType.INFORMATIONAL);
-			issue.setDiagnostics("No fatal or error issues detected, the validation has passed");
-		}
-
-		return oo;
-	}
-
 	private OperationOutcome getOoForError(final @NonNull String message) {
 		final var oo = new OperationOutcome();
 		final var issue = oo.addIssue();
@@ -441,40 +277,6 @@ public class ValidationProvider {
 		issue.setDiagnostics(message);
 		issue.addExtension().setUrl(ExtensionDefinitions.EXT_ISSUE_SOURCE).setValue(new StringType("ValidationProvider"));
 		return oo;
-	}
-
-	public static List<ValidationMessage> doValidate(final MatchboxEngine engine,
-																	 String content,
-																	 final EncodingEnum encoding,
-																	 final String profile) throws EOperationOutcome {
-		final List<ValidationMessage> messages = new ArrayList<>();
-
-		if (content.startsWith("\uFEFF")) {
-			content = content.replace("\uFEFF", "");
-			final var m = new ValidationMessage();
-			m.setLevel(ValidationMessage.IssueSeverity.WARNING);
-			m.setMessage(
-				"Resource content has a UTF-8 BOM marking, skipping BOM, see https://en.wikipedia.org/wiki/Byte_order_mark");
-			m.setCol(0);
-			m.setLine(0);
-			messages.add(m);
-		}
-
-		final var format = encoding == EncodingEnum.XML ? FhirFormat.XML : FhirFormat.JSON;
-		final var stream = new ByteArrayInputStream(content.getBytes(StandardCharsets.UTF_8));
-		try {
-			messages.addAll(engine.validate(format, stream, profile));
-		} catch (IOException e) {
-			log.error("Internal validation error", e);
-			final var m = new ValidationMessage();
-			m.setLevel(ValidationMessage.IssueSeverity.FATAL);
-			m.setMessage(
-				"Internal validation exception, contact support " + e.getMessage());
-			m.setCol(0);
-			m.setLine(0);
-			messages.add(m);
-		}
-		return messages;
 	}
 
 	public void addAIIssueToOperationOutcome(final OperationOutcome outcome, final String aiResponse) {

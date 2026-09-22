@@ -1,3 +1,11 @@
+2026/09/22 Release 4.1.18
+
+- Add the ITB (GITB REST) validation service `FHIRValidator` under `[server]/itb/fhir`, so the Interoperability Test Bed
+  1.30.0 can validate FHIR resources with matchbox; it follows the contract of the HL7 validator's ITB services
+  (hapifhir/org.hl7.fhir.core#2615) (#589)
+- Add the validation parameters `bpWarnings` and `resourceIdRule` (#589)
+- Share the validation logic of `$validate`, the Gazelle API and the ITB API (#589)
+
 2026/09/21 Release 4.1.17
 
 - GUI: browse the FHIR package registry packages2.fhir.org on the IGs page, filtered by package name, FHIR version and

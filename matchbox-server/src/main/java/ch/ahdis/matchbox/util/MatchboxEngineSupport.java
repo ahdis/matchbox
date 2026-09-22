@@ -643,6 +643,16 @@ public class MatchboxEngineSupport {
 			}
 		}
 		validator.getDefaultInstanceValidatorParameters().setR5BundleRelativeReferencePolicy(R5BundleRelativeReferencePolicy.fromCode(cli.getR5BundleRelativeReferencePolicy()));
+		try {
+			if (cli.getBestPracticeWarningLevel() != null) {
+				validator.getDefaultInstanceValidatorParameters().setBestPracticeLevel(cli.getBestPracticeWarningLevel());
+			}
+			if (cli.getResourceIdStatus() != null) {
+				validator.getDefaultInstanceValidatorParameters().setResourceIdRule(cli.getResourceIdStatus());
+			}
+		} catch (final IllegalArgumentException e) {
+			throw new MatchboxEngineCreationException(e.getMessage(), e);
+		}
 	    ReferenceValidationPolicy refpol = ReferenceValidationPolicy.CHECK_VALID;
 		if (!cli.isDisableDefaultResourceFetcher()) {
 			StandAloneValidatorFetcher fetcher = new StandAloneValidatorFetcher(validator.getPcm(), validator.getContext(),
