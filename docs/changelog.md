@@ -1,3 +1,10 @@
+2026/09/23 Release 4.1.18
+
+- Docker: the JVM options can be configured with the `JDK_JAVA_OPTIONS` environment variable, which defaults to
+  `-Xmx12g` (#594)
+- Docker: use the exec form of the entrypoint, so that matchbox receives the stop signal and shuts down gracefully;
+  arguments given to the container are now passed to matchbox as Spring Boot arguments instead of being ignored (#594)
+
 2026/09/21 Release 4.1.17
 
 - GUI: browse the FHIR package registry packages2.fhir.org on the IGs page, filtered by package name, FHIR version and
