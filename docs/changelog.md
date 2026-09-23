@@ -3,7 +3,8 @@
 - Docker: the JVM options can be configured with the `JDK_JAVA_OPTIONS` environment variable, which defaults to
   `-Xmx12g` (#594)
 - Docker: use the exec form of the entrypoint, so that matchbox receives the stop signal and shuts down gracefully;
-  arguments given to the container are now passed to matchbox as Spring Boot arguments instead of being ignored (#594)
+  arguments given to the container are now passed to matchbox as Spring Boot arguments instead of being ignored (#594).
+  Thanks @reva!
 
 2026/09/21 Release 4.1.17
 
