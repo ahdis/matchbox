@@ -25,7 +25,7 @@ ENV HEALTHCHECK_URL=http://localhost:8080/matchboxv3/actuator/health
 HEALTHCHECK --interval=10s --timeout=3s --start-period=30s --retries=3 \
   CMD curl -sf $HEALTHCHECK_URL || exit 1
 
-ENV JDK_JAVA_OPTIONS="-Xmx12g"
+ENV JDK_JAVA_OPTIONS="-Xmx12g -XX:+ExitOnOutOfMemoryError"
 
 ENTRYPOINT ["java", \
   "-Dfhir.settings.path=/config/fhir-settings.json", \

@@ -1,7 +1,9 @@
 2026/09/23 Release 4.1.18
 
 - Docker: the JVM options can be configured with the `JDK_JAVA_OPTIONS` environment variable, which defaults to
-  `-Xmx12g` (#594)
+  `-Xmx12g -XX:+ExitOnOutOfMemoryError` (#594)
+- Docker: exit on the first `OutOfMemoryError` (`-XX:+ExitOnOutOfMemoryError`) instead of continuing in an undefined
+  state while the health check still reports UP, so that the container gets restarted (#457)
 - Docker: use the exec form of the entrypoint, so that matchbox receives the stop signal and shuts down gracefully;
   arguments given to the container are now passed to matchbox as Spring Boot arguments instead of being ignored (#594).
   Thanks @reva!
