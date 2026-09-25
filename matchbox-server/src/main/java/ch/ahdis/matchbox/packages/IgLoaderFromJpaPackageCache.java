@@ -25,9 +25,11 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 
 import javax.annotation.Nonnull;
 
@@ -47,9 +49,13 @@ import org.hl7.fhir.r5.model.PackageInformation;
 import org.hl7.fhir.r5.model.Resource;
 import org.hl7.fhir.utilities.ByteProvider;
 import org.hl7.fhir.utilities.FileUtilities;
+import org.hl7.fhir.utilities.Utilities;
 import org.hl7.fhir.utilities.VersionUtilities;
+import org.hl7.fhir.utilities.json.model.JsonObject;
+import org.hl7.fhir.utilities.json.parser.JsonParser;
 import org.hl7.fhir.utilities.npm.FilesystemPackageCacheManager;
 import org.hl7.fhir.utilities.npm.NpmPackage;
+import org.hl7.fhir.utilities.npm.NpmPackage.PackageResourceInformation;
 import org.hl7.fhir.validation.IgLoader;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.transaction.PlatformTransactionManager;
@@ -89,6 +95,22 @@ public class IgLoaderFromJpaPackageCache extends IgLoader {
 	private final Map<FhirVersionEnum, FhirContext> myVersionToContext = Collections.synchronizedMap(new HashMap<>());
 
 	private FhirContext myCtx;
+
+	/**
+	 * The types of the conformance resources that are loaded from a package.
+	 */
+	private static final Set<String> LOADED_RESOURCE_TYPES = Utilities.stringSet("NamingSystem", "CapabilityStatement",
+		"CodeSystem", "ValueSet", "StructureDefinition", "Measure", "Library", "ConceptMap", "SearchParameter",
+		"StructureMap", "Questionnaire", "OperationDefinition", "ActorDefinition", "Requirements");
+
+	/**
+	 * The types of the conformance resources that are registered as proxies and parsed when they're first used. The
+	 * other types are parsed when the package is loaded: the validator iterates over all StructureDefinitions in many
+	 * places (e.g. FHIRPathEngine, ContextUtilities.getStructures()), so they would be parsed by the first validation
+	 * anyway, like the core validator parses them at startup.
+	 */
+	private static final Set<String> LAZY_LOADED_RESOURCE_TYPES = Utilities.stringSet("CodeSystem", "ValueSet",
+		"NamingSystem", "ConceptMap");
 
 	public IgLoaderFromJpaPackageCache(FilesystemPackageCacheManager packageCacheManager, SimpleWorkerContext context,
 			String theVersion, boolean debug, IHapiPackageCacheManager myPackageCacheManager,
@@ -232,6 +254,11 @@ public class IgLoaderFromJpaPackageCache extends IgLoader {
 				log.error("Package not found: " + id +" "+version );
 				return null;
 			}
+			if (getContext().getLoadedPackages().contains(npm.name() + "#" + npm.version())) {
+				// e.g. a dependency on ch.fhir.ig.ch-term#3.3.x that is resolved to an already loaded 3.3.0
+				log.info("Package '{}' already in context as '{}#{}'", src, npm.name(), npm.version());
+				return null;
+			}
 			for (final String dependency : npm.dependencies()) {
 				if (VersionUtilities.isCorePackage(dependency)) {
 					// The FHIR core package is loaded manually for the FHIR version of the engine, see
@@ -276,29 +303,35 @@ public class IgLoaderFromJpaPackageCache extends IgLoader {
 				PackageInformation packageInfo = new PackageInformation(pi);
 				getContext().getLoadedPackages().add(pi.name() + "#" + pi.version());
 				
+				final String fhirVersion = npm.fhirVersion();
 				try {
-					for (String s : pi.listResources("NamingSystem", "CapabilityStatement", "CodeSystem", "ValueSet", "StructureDefinition", "Measure", "Library",
-					"ConceptMap", "SearchParameter", "StructureMap", "Questionnaire", "OperationDefinition","ActorDefinition","Requirements")) {
+					// The terminology resources are registered with the metadata of the package index and parsed when
+					// they're first used (lazy loading), like the core validator does for packages on the filesystem. Most
+					// of them, e.g. of the several versions of hl7.terminology that the dependencies pull in, are never
+					// used for a validation.
+					for (final PackageResourceInformation pri : pi.listIndexedResources(LOADED_RESOURCE_TYPES)) {
+						final String s = getPackageFolderFilename(pri);
+						if (s == null) {
+							continue;
+						}
 						++count;
-						Resource r = null;
 						try {
-							r = loadResourceByVersion(npm.fhirVersion(), FileUtilities.streamToBytes(pi.load("package", s)), s);
-							// https://github.com/ahdis/matchbox/issues/227
-							if (r instanceof org.hl7.fhir.r5.model.StructureMap ) {
-								cleanModifierExtensions((org.hl7.fhir.r5.model.StructureMap) r);
-							}			
-							if (r instanceof org.hl7.fhir.r5.model.ConceptMap ) {
-								cleanModifierExtensions((org.hl7.fhir.r5.model.ConceptMap) r);
-							}			
-							if (r instanceof CanonicalResource) {
-								// go through context to replace to newer version if needed (see ahdis/matchbox#447)
-								this.getContext().cacheResourceFromPackage(r, packageInfo);
-							} else {
-								log.error("Resource is not a CanonicalResource: " + r.getClass().getName() + " from package " +pi.name() + "#" + pi.version());
+							final byte[] content = FileUtilities.streamToBytes(pi.load("package", s));
+							if (!LAZY_LOADED_RESOURCE_TYPES.contains(pri.getResourceType()) || !pri.hasId()
+								 || pri.getUrl() == null) {
+								cacheResource(parsePackageResource(fhirVersion, content, s), packageInfo);
+								continue;
 							}
-						} catch (FHIRException e) {
-							log.error(s, e);
-						} catch (IOException e) {
+							if ("CodeSystem".equals(pri.getResourceType()) || "NamingSystem".equals(pri.getResourceType())) {
+								registerOids(pri, content);
+							}
+							getContext().registerResourceFromPackage(
+								new CompressedPackageResourceProxy(pri, s, content,
+																			  (bytes, filename) -> parsePackageResource(fhirVersion, bytes,
+																																		filename),
+																			  packageInfo),
+								packageInfo);
+						} catch (FHIRException | IOException e) {
 							log.error(s, e);
 						}
 					}
@@ -328,6 +361,72 @@ public class IgLoaderFromJpaPackageCache extends IgLoader {
 			}
 			return null;
 		});
+	}
+
+	/**
+	 * Returns the filename of a resource in the 'package' folder of the package (the folder that
+	 * NpmPackage.listResources() lists), or null for a resource in another folder.
+	 */
+	private static String getPackageFolderFilename(final PackageResourceInformation pri) {
+		final String prefix = "@package/";
+		final String filename = pri.getFilename();
+		if (filename == null || !filename.startsWith(prefix) || filename.indexOf('/', prefix.length()) >= 0) {
+			return null;
+		}
+		return filename.substring(prefix.length());
+	}
+
+	private Resource parsePackageResource(final String fhirVersion, final byte[] content, final String filename)
+			throws IOException {
+		final Resource r = loadResourceByVersion(fhirVersion, content, filename);
+		// https://github.com/ahdis/matchbox/issues/227
+		if (r instanceof final org.hl7.fhir.r5.model.StructureMap sm) {
+			cleanModifierExtensions(sm);
+		}
+		if (r instanceof final org.hl7.fhir.r5.model.ConceptMap cm) {
+			cleanModifierExtensions(cm);
+		}
+		return r;
+	}
+
+	private void cacheResource(final Resource r, final PackageInformation packageInfo) {
+		if (r instanceof CanonicalResource) {
+			// go through context to replace to newer version if needed (see ahdis/matchbox#447)
+			this.getContext().cacheResourceFromPackage(r, packageInfo);
+		} else {
+			log.error("Resource is not a CanonicalResource: " + r.getClass().getName() + " from package "
+							 + packageInfo.getVID());
+		}
+	}
+
+	/**
+	 * Registers the OIDs of a CodeSystem or NamingSystem that is registered as a proxy. cacheResourceFromPackage() finds
+	 * them in the parsed resource, here they're read from the JSON content without parsing the resource.
+	 */
+	private void registerOids(final PackageResourceInformation pri, final byte[] content) throws IOException {
+		final JsonObject json = JsonParser.parseObject(content);
+		String url = null;
+		final Set<String> oids = new HashSet<>();
+		if ("CodeSystem".equals(pri.getResourceType())) {
+			url = json.asString("url");
+			for (final JsonObject identifier : json.getJsonObjects("identifier")) {
+				final String value = identifier.asString("value");
+				if (value != null && value.startsWith("urn:oid:")) {
+					oids.add(value.substring(8));
+				}
+			}
+		} else if ("codesystem".equals(json.asString("kind"))) {
+			for (final JsonObject uniqueId : json.getJsonObjects("uniqueId")) {
+				if ("uri".equals(uniqueId.asString("type"))) {
+					url = uniqueId.asString("value");
+				} else if ("oid".equals(uniqueId.asString("type"))) {
+					oids.add(uniqueId.asString("value"));
+				}
+			}
+		}
+		if (url != null && !oids.isEmpty()) {
+			getContext().registerOids(pri.getResourceType(), url, json.asString("version"), oids);
+		}
 	}
 
 	/**

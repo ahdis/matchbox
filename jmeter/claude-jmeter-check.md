@@ -139,6 +139,19 @@ for name in ['1141.jtl', '1152.jtl', '<new>.jtl']:
 
 Then add a row to the results table below.
 
+### 8. Startup, first and second validation
+
+`measure_startup.py` measures what a load test hides: for each run it starts a fresh container on port 8080 and
+records the time until `/actuator/health` is UP, the time to create the ch-elm engine (from the log), the client and
+server time of the first, second and third validation (the request of `memory.jmx`), and the live heap after a full GC
+before and after these validations. The container is removed after each run.
+
+```bash
+cd jmeter && python3 measure_startup.py <image> <label> [runs] ["<JDK_JAVA_OPTIONS>"]
+```
+
+It writes `startup-<label>.csv` (git-ignored). Run it 3 times per image, with nothing else running.
+
 ## Reading the numbers
 
 - **Check the heap limit of each image**
@@ -180,6 +193,25 @@ All runs: 8,000 validations, 0 failures. Runs from 25 Sep 2026 on the same machi
 ⁴ `-e JDK_JAVA_OPTIONS="-Xmx3g -XX:+ExitOnOutOfMemoryError"`; the JVM never ran out of memory.
 ⁵ As ⁴ plus `-XX:+UseStringDeduplication`.
 
+### Startup, first and second validation (lazy loading)
+
+`measure_startup.py`, 3 runs each, image default `JDK_JAVA_OPTIONS` (`-Xmx12g`, string deduplication), ch-elm 1.15.2
+content. Ranges over the 3 runs:
+
+| Image | Healthy after | ch-elm engine created in | 1st / 2nd / 3rd validation | Live heap after startup / after 3 validations |
+|---|---|---|---|---|
+| PR #598 (baseline) | 53–57 s | 25.5–26.3 s | 820–900 / 150–170 / 130–140 ms | 1,032–1,043 / 1,033–1,043 MB |
+| Lazy loading of all types ⁶ | 43–52 s | 17.0–20.0 s | **2,290–2,430** / 155–180 / 130–155 ms | 695–701 / 771–777 MB |
+| **Lazy loading of terminology** | **46–52 s** | **19.3–21.5 s** | 840–890 / 155–160 / 128–136 ms | **808–814 / 810–817 MB** |
+
+JMeter load test with `-Xmx3g` and string deduplication: 3.9 min, validation median 99 ms (p95 126 ms), **829 MB live
+heap after the test** (1,161 MB with PR #598), 0 failures, same issues as before.
+
+⁶ With StructureDefinitions as proxies, the first validation parses them all: the FHIRPathEngine constructor, and then
+`ContextUtilities.getStructures()` and other places, iterate over all StructureDefinitions. The core validator parses
+all StructureDefinitions at startup (`ValidationEngine.prepare()`). So only CodeSystem, ValueSet, NamingSystem and
+ConceptMap are loaded lazily.
+
 ### Findings so far
 
 - **4.1.9 → 4.1.11: validation 2× slower** (213 → 453 ms). HAPI stays at 8.8.0; core 6.9.8 → 6.9.11 is the likely
@@ -203,7 +235,11 @@ All runs: 8,000 validations, 0 failures. Runs from 25 Sep 2026 on the same machi
   deduplicated) at no measurable cost in validation time.
 - **Releasing the package content held by `BytesFromPackageProvider`** (matchbox patch in `BaseWorkerContext`) lowers
   the live heap by another 171 MB (1.27 → 1.11 GiB, with string deduplication); no `NpmPackage` is left on the heap.
-- **Next candidate: lazy loading.** All 44,650 conformance resources are parsed up front (977 MB), because
+- **Lazy loading of the terminology resources** of the IG packages (`IgLoaderFromJpaPackageCache`) lowers the live
+  heap by another 225–330 MB, and the ch-elm engine is created about 6 s faster; the first validation takes the same
+  time. The classpath packages of the main engine (R4 core, hl7.terminology.r4 7.3.0, extensions, xver) are still
+  parsed up front: they're mostly StructureDefinitions, which the validator needs anyway.
+- **Before: lazy loading.** All 44,650 conformance resources are parsed up front (977 MB), because
   `IgLoaderFromJpaPackageCache` parses and caches every resource itself and the classpath packages are in-memory
   `NpmPackage`s, for which core's lazy `PackageResourceLoader` path is disabled (`canLazyLoad()` is false). The core
   validator, also in its HTTP server mode, registers proxies and parses a resource only when it's first needed.

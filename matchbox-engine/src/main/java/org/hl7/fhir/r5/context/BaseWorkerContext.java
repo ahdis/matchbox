@@ -437,23 +437,36 @@ public abstract class BaseWorkerContext extends I18nBase implements IWorkerConte
       }
 
       String url = r.getUrl();
-      if (!allowLoadingDuplicates && hasResourceVersion(r.getType(), url, r.getVersion()) && !packageInfo.isTHO()) {
+      // matchbox patch for duplicate resources, see https://github.com/ahdis/matchbox/issues/227 and issues/452: the
+      // exception for a duplicate is disabled, so only check for a duplicate where the result is used. The check parses
+      // the registered resource if it's a proxy (lazy loading).
+      if (!allowLoadingDuplicates && Utilities.existsInList(url, "http://hl7.org/fhir/SearchParameter/example")
+          && hasResourceVersion(r.getType(), url, r.getVersion()) && !packageInfo.isTHO()) {
         // special workaround for known problems with existing packages
-        if (Utilities.existsInList(url, "http://hl7.org/fhir/SearchParameter/example")) {
-          return;
-        }
-        // matchbox patch for duplicate resources, see https://github.com/ahdis/matchbox/issues/227 and issues/452
+        return;
         // CanonicalResource ex = fetchResourceWithException(r.getType(), url, VersionResolutionRules.defaultRule());
         // throw new DefinitionException(formatMessage(I18nConstants.DUPLICATE_RESOURCE_, url, r.getVersion(), ex.getVersion(),
         //   ex.fhirType()));
-        // END matchbox patch
       }
+      // END matchbox patch
       boolean added = registerResource(r, packageInfo);
       if (added) {
         registerInAllResourceIndex(r, packageInfo);
       }
     }
   }
+
+  // matchbox patch: register the OIDs of a CodeSystem or NamingSystem that is registered as a proxy (lazy loading);
+  // cacheResourceFromPackage() does this for parsed resources
+  public void registerOids(String resourceType, String url, String version, Set<String> oids) {
+    synchronized (lock) {
+      for (String oid : oids) {
+        oidCacheManual.computeIfAbsent(oid, k -> new HashSet<>())
+          .add(new IOIDServices.OIDDefinition(resourceType, oid, url, version, null, null));
+      }
+    }
+  }
+  // END matchbox patch
 
   private void registerInAllResourceIndex(CanonicalResourceProxy r, PackageInformation packageInfo) {
     if (r.getId() != null) {
@@ -598,17 +611,18 @@ public abstract class BaseWorkerContext extends I18nBase implements IWorkerConte
       if (r instanceof CanonicalResource) {
         CanonicalResource m = (CanonicalResource) r;
         String url = m.getUrl();
-        if (!allowLoadingDuplicates && hasResource(r.getClass(), url)) {
+        // matchbox patch for duplicate resources, see https://github.com/ahdis/matchbox/issues/227 and issues/452: the
+        // exception for a duplicate is disabled, so only check for a duplicate where the result is used. The check
+        // parses the registered resource if it's a proxy (lazy loading).
+        if (!allowLoadingDuplicates && Utilities.existsInList(url, "http://hl7.org/fhir/SearchParameter/example")
+            && hasResource(r.getClass(), url)) {
           // special workaround for known problems with existing packages
-          if (Utilities.existsInList(url, "http://hl7.org/fhir/SearchParameter/example")) {
-            return;
-          }
-          // matchbox patch for duplicate resources, see https://github.com/ahdis/matchbox/issues/227 and issues/452
+          return;
           // CanonicalResource ex = (CanonicalResource) fetchResourceWithException(r.getClass(), url, VersionResolutionRules.defaultRule());
           // throw new DefinitionException(formatMessage(I18nConstants.DUPLICATE_RESOURCE_, url, ((CanonicalResource) r).getVersion(), ex.getVersion(),
           //   ex.fhirType()));
-          // END matchbox patch
         }
+        // END matchbox patch
         if (r instanceof StructureDefinition) {
           StructureDefinition sd = (StructureDefinition) m;
           if ("1.4.0".equals(version)) {
