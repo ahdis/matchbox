@@ -7,9 +7,9 @@
 - Load the terminology resources (CodeSystem, ValueSet, NamingSystem, ConceptMap) of the implementation guide packages
   and their dependencies lazily: they're registered with the metadata of the package index and parsed when they're
   first used, like the core validator does. For the ch-elm implementation guide, which pulls in 7 versions of
-  `hl7.terminology.r4`, the engine keeps about 225 MB less heap and is created about 6 s faster
+  `hl7.terminology.r4`, the engine keeps about 225 MB less heap and is created about 6 s faster (#599)
 - Don't load a package again when a dependency with a wildcard version (e.g. `ch.fhir.ig.ch-term#3.3.x`) resolves to an
-  already loaded version
+  already loaded version (#599)
 - Add a JMeter runbook with the memory and validation time of the ch-elm images from 1.13.1 to 1.15.2
   (`jmeter/claude-jmeter-check.md`)
 - Docker: the JVM options can be configured with the `JDK_JAVA_OPTIONS` environment variable, which defaults to
