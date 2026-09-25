@@ -25,7 +25,6 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -34,6 +33,7 @@ import java.util.Set;
 import javax.annotation.Nonnull;
 
 import ch.ahdis.matchbox.engine.exception.MatchboxUnsupportedFhirVersionException;
+import ch.ahdis.matchbox.engine.packages.LazyTerminologyLoader;
 import ch.ahdis.matchbox.util.MatchboxServerUtils;
 import org.hl7.fhir.convertors.factory.VersionConvertorFactory_30_50;
 import org.hl7.fhir.convertors.factory.VersionConvertorFactory_40_50;
@@ -51,8 +51,6 @@ import org.hl7.fhir.utilities.ByteProvider;
 import org.hl7.fhir.utilities.FileUtilities;
 import org.hl7.fhir.utilities.Utilities;
 import org.hl7.fhir.utilities.VersionUtilities;
-import org.hl7.fhir.utilities.json.model.JsonObject;
-import org.hl7.fhir.utilities.json.parser.JsonParser;
 import org.hl7.fhir.utilities.npm.FilesystemPackageCacheManager;
 import org.hl7.fhir.utilities.npm.NpmPackage;
 import org.hl7.fhir.utilities.npm.NpmPackage.PackageResourceInformation;
@@ -102,15 +100,6 @@ public class IgLoaderFromJpaPackageCache extends IgLoader {
 	private static final Set<String> LOADED_RESOURCE_TYPES = Utilities.stringSet("NamingSystem", "CapabilityStatement",
 		"CodeSystem", "ValueSet", "StructureDefinition", "Measure", "Library", "ConceptMap", "SearchParameter",
 		"StructureMap", "Questionnaire", "OperationDefinition", "ActorDefinition", "Requirements");
-
-	/**
-	 * The types of the conformance resources that are registered as proxies and parsed when they're first used. The
-	 * other types are parsed when the package is loaded: the validator iterates over all StructureDefinitions in many
-	 * places (e.g. FHIRPathEngine, ContextUtilities.getStructures()), so they would be parsed by the first validation
-	 * anyway, like the core validator parses them at startup.
-	 */
-	private static final Set<String> LAZY_LOADED_RESOURCE_TYPES = Utilities.stringSet("CodeSystem", "ValueSet",
-		"NamingSystem", "ConceptMap");
 
 	public IgLoaderFromJpaPackageCache(FilesystemPackageCacheManager packageCacheManager, SimpleWorkerContext context,
 			String theVersion, boolean debug, IHapiPackageCacheManager myPackageCacheManager,
@@ -310,27 +299,21 @@ public class IgLoaderFromJpaPackageCache extends IgLoader {
 					// of them, e.g. of the several versions of hl7.terminology that the dependencies pull in, are never
 					// used for a validation.
 					for (final PackageResourceInformation pri : pi.listIndexedResources(LOADED_RESOURCE_TYPES)) {
-						final String s = getPackageFolderFilename(pri);
+						final String s = LazyTerminologyLoader.getPackageFolderFilename(pri);
 						if (s == null) {
 							continue;
 						}
 						++count;
 						try {
 							final byte[] content = FileUtilities.streamToBytes(pi.load("package", s));
-							if (!LAZY_LOADED_RESOURCE_TYPES.contains(pri.getResourceType()) || !pri.hasId()
-								 || pri.getUrl() == null) {
+							if (!LazyTerminologyLoader.canLoadLazily(pri)) {
 								cacheResource(parsePackageResource(fhirVersion, content, s), packageInfo);
 								continue;
 							}
-							if ("CodeSystem".equals(pri.getResourceType()) || "NamingSystem".equals(pri.getResourceType())) {
-								registerOids(pri, content);
-							}
-							getContext().registerResourceFromPackage(
-								new CompressedPackageResourceProxy(pri, s, content,
-																			  (bytes, filename) -> parsePackageResource(fhirVersion, bytes,
-																																		filename),
-																			  packageInfo),
-								packageInfo);
+							LazyTerminologyLoader.registerProxy(getContext(), pri, pri.getUrl(), s, content,
+																			(bytes, filename) -> parsePackageResource(fhirVersion, bytes,
+																																	filename),
+																			packageInfo);
 						} catch (FHIRException | IOException e) {
 							log.error(s, e);
 						}
@@ -363,19 +346,6 @@ public class IgLoaderFromJpaPackageCache extends IgLoader {
 		});
 	}
 
-	/**
-	 * Returns the filename of a resource in the 'package' folder of the package (the folder that
-	 * NpmPackage.listResources() lists), or null for a resource in another folder.
-	 */
-	private static String getPackageFolderFilename(final PackageResourceInformation pri) {
-		final String prefix = "@package/";
-		final String filename = pri.getFilename();
-		if (filename == null || !filename.startsWith(prefix) || filename.indexOf('/', prefix.length()) >= 0) {
-			return null;
-		}
-		return filename.substring(prefix.length());
-	}
-
 	private Resource parsePackageResource(final String fhirVersion, final byte[] content, final String filename)
 			throws IOException {
 		final Resource r = loadResourceByVersion(fhirVersion, content, filename);
@@ -396,36 +366,6 @@ public class IgLoaderFromJpaPackageCache extends IgLoader {
 		} else {
 			log.error("Resource is not a CanonicalResource: " + r.getClass().getName() + " from package "
 							 + packageInfo.getVID());
-		}
-	}
-
-	/**
-	 * Registers the OIDs of a CodeSystem or NamingSystem that is registered as a proxy. cacheResourceFromPackage() finds
-	 * them in the parsed resource, here they're read from the JSON content without parsing the resource.
-	 */
-	private void registerOids(final PackageResourceInformation pri, final byte[] content) throws IOException {
-		final JsonObject json = JsonParser.parseObject(content);
-		String url = null;
-		final Set<String> oids = new HashSet<>();
-		if ("CodeSystem".equals(pri.getResourceType())) {
-			url = json.asString("url");
-			for (final JsonObject identifier : json.getJsonObjects("identifier")) {
-				final String value = identifier.asString("value");
-				if (value != null && value.startsWith("urn:oid:")) {
-					oids.add(value.substring(8));
-				}
-			}
-		} else if ("codesystem".equals(json.asString("kind"))) {
-			for (final JsonObject uniqueId : json.getJsonObjects("uniqueId")) {
-				if ("uri".equals(uniqueId.asString("type"))) {
-					url = uniqueId.asString("value");
-				} else if ("oid".equals(uniqueId.asString("type"))) {
-					oids.add(uniqueId.asString("value"));
-				}
-			}
-		}
-		if (url != null && !oids.isEmpty()) {
-			getContext().registerOids(pri.getResourceType(), url, json.asString("version"), oids);
 		}
 	}
 

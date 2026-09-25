@@ -202,10 +202,16 @@ content. Ranges over the 3 runs:
 |---|---|---|---|---|
 | PR #598 (baseline) | 53–57 s | 25.5–26.3 s | 820–900 / 150–170 / 130–140 ms | 1,032–1,043 / 1,033–1,043 MB |
 | Lazy loading of all types ⁶ | 43–52 s | 17.0–20.0 s | **2,290–2,430** / 155–180 / 130–155 ms | 695–701 / 771–777 MB |
-| **Lazy loading of terminology** | **46–52 s** | **19.3–21.5 s** | 840–890 / 155–160 / 128–136 ms | **808–814 / 810–817 MB** |
+| Lazy loading of terminology, IG packages | 46–52 s | 19.3–21.5 s | 840–890 / 155–160 / 128–136 ms | 808–814 / 810–817 MB |
+| **Lazy loading of terminology, also core and classpath packages** | **39–46 s** | **15.9–18.1 s** | 840–900 / 160–195 / 140–165 ms | **702–707 / 704–707 MB** |
 
-JMeter load test with `-Xmx3g` and string deduplication: 3.9 min, validation median 99 ms (p95 126 ms), **829 MB live
-heap after the test** (1,161 MB with PR #598), 0 failures, same issues as before.
+JMeter load test with `-Xmx3g` and string deduplication, 0 failures and the same issues in all runs:
+
+| Image | Duration | Validation median / p95 | Live heap after the test |
+|---|---|---|---|
+| PR #598 | 4.0 min | 104 / 126 ms | 1,161 MB |
+| Lazy loading of terminology, IG packages | 3.9 min | 99 / 126 ms | 829 MB |
+| Lazy loading of terminology, also core and classpath packages | 3.8 min | 99 / 116 ms | **720 MB** |
 
 ⁶ With StructureDefinitions as proxies, the first validation parses them all: the FHIRPathEngine constructor, and then
 `ContextUtilities.getStructures()` and other places, iterate over all StructureDefinitions. The core validator parses
@@ -237,8 +243,9 @@ ConceptMap are loaded lazily.
   the live heap by another 171 MB (1.27 → 1.11 GiB, with string deduplication); no `NpmPackage` is left on the heap.
 - **Lazy loading of the terminology resources** of the IG packages (`IgLoaderFromJpaPackageCache`) lowers the live
   heap by another 225–330 MB, and the ch-elm engine is created about 6 s faster; the first validation takes the same
-  time. The classpath packages of the main engine (R4 core, hl7.terminology.r4 7.3.0, extensions, xver) are still
-  parsed up front: they're mostly StructureDefinitions, which the validator needs anyway.
+  time. Doing the same for the core package and the classpath packages of the main engine (hl7.terminology.r4 7.3.0,
+  extensions, xver, CDA) saves another 105 MB and 4–6 s of startup. The core terminology resources are pinned to the
+  core versions when they're parsed (`MetadataCoreVersionPinner`), like `SimpleWorkerContext.finishLoading()` does.
 - **Before: lazy loading.** All 44,650 conformance resources are parsed up front (977 MB), because
   `IgLoaderFromJpaPackageCache` parses and caches every resource itself and the classpath packages are in-memory
   `NpmPackage`s, for which core's lazy `PackageResourceLoader` path is disabled (`canLazyLoad()` is false). The core
