@@ -171,11 +171,14 @@ All runs: 8,000 validations, 0 failures. Runs from 25 Sep 2026 on the same machi
 | `1152` | 1.15.2 | 4.1.17 / 8.12.1 / 6.10.4 | 12 GB | 3.7 min | 95 / 122 | 4.19 / 7.87 | 2026-09-25 |
 | `1152-pr596` | 1.15.2 on PR #596 ³ | 4.1.17 / 8.12.1 / 6.10.4 | 12 GB | 3.7 min | 93 / 113 | 3.60 / 5.69 | 2026-09-25 |
 | `1152-pr596-xmx3g` | 1.15.2 on PR #596 ³ | 4.1.17 / 8.12.1 / 6.10.4 | 3 GB ⁴ | 4.0 min | 105 / 131 | 2.67 / 3.35 | 2026-09-25 |
+| `1152-pr596-xmx3g-dedup` | 1.15.2 on PR #596 ³ | 4.1.17 / 8.12.1 / 6.10.4 | 3 GB ⁵ | 4.0 min | 103 / 127 | 2.53 / 3.35 | 2026-09-25 |
+| `1152-fix1-xmx3g-dedup` | 1.15.2 on branch `jmeter-check-runbook` ³ | 4.1.17 + fix / 8.12.1 / 6.10.4 | 3 GB ⁵ | 4.0 min | 104 / 126 | 2.46 / 3.36 | 2026-09-25 |
 
 ¹ Rebuilt from ch-elm commit `f3dd030` on `matchbox:v4.0.16`; the published 1.13.1 image is no longer in the registry.
 ² Machine was busy during this run.
 ³ Local build: ch-elm commit `3deaf40` with only the `FROM` line changed.
 ⁴ `-e JDK_JAVA_OPTIONS="-Xmx3g -XX:+ExitOnOutOfMemoryError"`; the JVM never ran out of memory.
+⁵ As ⁴ plus `-XX:+UseStringDeduplication`.
 
 ### Findings so far
 
@@ -191,3 +194,16 @@ All runs: 8,000 validations, 0 failures. Runs from 25 Sep 2026 on the same machi
 - **PR #596** (JVM options through `JDK_JAVA_OPTIONS`, exec-form entrypoint) performs the same as 4.1.17.
 - **4.1.17 fits in a 3 GB heap:** all 8,000 validations passed at only about 12% slower (105 vs 93 ms median),
   and about 3× faster than 1.13.1 with the same 3 GB cap.
+- **Live heap of 4.1.17 with ch-elm: 1.49 GiB** after a full GC (`jcmd 1 GC.heap_info`). A heap dump analysed in
+  Eclipse MAT shows 977 MB of parsed conformance resources (44,650, all parsed up front; 7 versions of
+  hl7.terminology.r4 and 5 of hl7.fhir.uv.extensions.r4, which are needed) and 210 MB of raw package files of
+  hl7.fhir.uv.xver-r5.r4 and hl7.fhir.r4.core, kept alive by `BytesFromPackageProvider` entries in the main engine's
+  `SimpleWorkerContext.binaries`.
+- **`-XX:+UseStringDeduplication` lowers the live heap by 15%** (1.49 → 1.27 GiB; 4.85 million strings, 223 MB
+  deduplicated) at no measurable cost in validation time.
+- **Releasing the package content held by `BytesFromPackageProvider`** (matchbox patch in `BaseWorkerContext`) lowers
+  the live heap by another 171 MB (1.27 → 1.11 GiB, with string deduplication); no `NpmPackage` is left on the heap.
+- **Next candidate: lazy loading.** All 44,650 conformance resources are parsed up front (977 MB), because
+  `IgLoaderFromJpaPackageCache` parses and caches every resource itself and the classpath packages are in-memory
+  `NpmPackage`s, for which core's lazy `PackageResourceLoader` path is disabled (`canLazyLoad()` is false). The core
+  validator, also in its HTTP server mode, registers proxies and parses a resource only when it's first needed.
