@@ -1,9 +1,9 @@
 2026/09/23 Release 4.1.18
 
 - Docker: enable the string deduplication of the garbage collector (`-XX:+UseStringDeduplication`) by default; it
-  reduces the heap used by the ch-elm validation engine by about 15% at no measurable cost in validation time
+  reduces the heap used by the ch-elm validation engine by about 15% at no measurable cost in validation time (#597)
 - Don't keep the whole content of a package in memory for the few binaries of its `other` folder: this kept e.g. all
-  files of `hl7.fhir.uv.xver-r5.r4` and `hl7.fhir.r4.core` (about 210 MB) on the heap of the main engine
+  files of `hl7.fhir.uv.xver-r5.r4` and `hl7.fhir.r4.core` (about 210 MB) on the heap of the main engine (#597)
 - Add a JMeter runbook with the memory and validation time of the ch-elm images from 1.13.1 to 1.15.2
   (`jmeter/claude-jmeter-check.md`)
 - Docker: the JVM options can be configured with the `JDK_JAVA_OPTIONS` environment variable, which defaults to

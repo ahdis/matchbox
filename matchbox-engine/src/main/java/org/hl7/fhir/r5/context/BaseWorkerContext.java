@@ -139,7 +139,7 @@ public abstract class BaseWorkerContext extends I18nBase implements IWorkerConte
 
   public class BytesFromPackageProvider implements IByteProvider {
 
-    // matchbox patch: keep only a provider for the single file instead of the whole NpmPackage. Packages loaded from
+    // matchbox patch https://github.com/ahdis/matchbox/issues/597: keep only a provider for the single file instead of the whole NpmPackage. Packages loaded from
     // the classpath hold the content of all their files in memory, so a reference to the package kept e.g. all files
     // of hl7.fhir.uv.xver-r5.r4 (about 160 MB) on the heap for the few binaries in its 'other' folder.
     private final org.hl7.fhir.utilities.ByteProvider provider;
