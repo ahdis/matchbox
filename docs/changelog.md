@@ -4,6 +4,12 @@
   reduces the heap used by the ch-elm validation engine by about 15% at no measurable cost in validation time (#597)
 - Don't keep the whole content of a package in memory for the few binaries of its `other` folder: this kept e.g. all
   files of `hl7.fhir.uv.xver-r5.r4` and `hl7.fhir.r4.core` (about 210 MB) on the heap of the main engine (#597)
+- Load the terminology resources (CodeSystem, ValueSet, NamingSystem, ConceptMap) of the implementation guide packages
+  and their dependencies lazily: they're registered with the metadata of the package index and parsed when they're
+  first used, like the core validator does. For the ch-elm implementation guide, which pulls in 7 versions of
+  `hl7.terminology.r4`, the engine keeps about 225 MB less heap and is created about 6 s faster
+- Don't load a package again when a dependency with a wildcard version (e.g. `ch.fhir.ig.ch-term#3.3.x`) resolves to an
+  already loaded version
 - Add a JMeter runbook with the memory and validation time of the ch-elm images from 1.13.1 to 1.15.2
   (`jmeter/claude-jmeter-check.md`)
 - Docker: the JVM options can be configured with the `JDK_JAVA_OPTIONS` environment variable, which defaults to
