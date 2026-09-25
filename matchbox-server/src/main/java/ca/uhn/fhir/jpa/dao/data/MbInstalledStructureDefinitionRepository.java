@@ -16,7 +16,10 @@ import java.util.List;
 public interface MbInstalledStructureDefinitionRepository
   extends JpaRepository<MbInstalledStructureDefinitionEntity, Long> {
 
-  @Query("SELECT e FROM MbInstalledStructureDefinitionEntity e WHERE e.isValidatable = TRUE ORDER BY e.title ASC")
+  // The order is total, and not only by title: the Gazelle profile list is served with an ETag computed over its
+  // serialization, which is only stable if two calls with the same data return the rows in the same order.
+  @Query("SELECT e FROM MbInstalledStructureDefinitionEntity e WHERE e.isValidatable = TRUE "
+    + "ORDER BY e.title ASC, e.canonicalUrl ASC, e.packageVersion ASC")
   List<MbInstalledStructureDefinitionEntity> findAllValidatable();
   
   @Query("SELECT e FROM MbInstalledStructureDefinitionEntity e WHERE e.canonicalUrl = :canonical")

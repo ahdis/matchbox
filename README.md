@@ -32,8 +32,11 @@ The easiest way to run this server entirely depends on your environment requirem
 ## using prebuilt image
 
 ```bash
-docker run -d --name matchbox -p 8080:8080  europe-west6-docker.pkg.dev/ahdis-ch/ahdis/matchbox:v3.9.10 -v /Users/oegger/Documents/github/matchbox/matchbox-server/with-settings:/config matchbox
+docker run -d --name matchbox -p 8080:8080 -v /Users/oegger/Documents/github/matchbox/matchbox-server/with-settings:/config europe-west6-docker.pkg.dev/ahdis-ch/ahdis/matchbox:latest
 ```
+
+Docker options (`-v`, `-e`, ...) go before the image name: arguments after it are passed to matchbox as Spring Boot
+arguments (e.g. `--matchbox.fhir.context.onlyOneEngine=true`).
 
 note replace /Users/oegger/Documents/github/matchbox/matchbox-server/with-settings with the folder where you have your application.yaml (and since v3.9.10) your [fhir-settings.json](https://confluence.hl7.org/display/FHIR/Using+fhir-settings.json).
 
@@ -88,6 +91,17 @@ docker run -d --name matchbox -p 8080:8080 -e HEALTHCHECK_URL=http://localhost:8
 ```
 
 Note: In Kubernetes environments, Docker HEALTHCHECK is ignored — use `livenessProbe`/`readinessProbe` in your pod spec instead.
+
+The JVM options are set with the `JDK_JAVA_OPTIONS` environment variable, which defaults to
+`-Xmx12g -XX:+ExitOnOutOfMemoryError`, so that the container exits on an `OutOfMemoryError` and can be restarted.
+Setting it replaces the default, so include a heap setting and `-XX:+ExitOnOutOfMemoryError`, e.g. to size the heap
+relative to the memory limit of the container:
+
+```bash
+docker run -d --name matchbox -p 8080:8080 -m 6g -e JDK_JAVA_OPTIONS="-XX:MaxRAMPercentage=70 -XX:+ExitOnOutOfMemoryError" matchbox
+```
+
+See [Running matchbox in docker](https://ahdis.github.io/matchbox/docker/#jvm-options) for details.
 
 To dynamically configure run in a kubernetes environment and add a kubernetes config map that provides /config/application.yaml file with implementation guide list like in "with-preload/application.yaml"
 
