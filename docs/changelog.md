@@ -8,6 +8,9 @@
   and their dependencies lazily: they're registered with the metadata of the package index and parsed when they're
   first used, like the core validator does. For the ch-elm implementation guide, which pulls in 7 versions of
   `hl7.terminology.r4`, the engine keeps about 225 MB less heap and is created about 6 s faster (#599)
+- Load the terminology resources of the FHIR core package and of the packages from the classpath (hl7.terminology,
+  extensions, xver, CDA) lazily too; the core terminology resources are pinned to the core versions when they're
+  parsed. Another 105 MB less heap and 4–6 s faster startup (#599)
 - Don't load a package again when a dependency with a wildcard version (e.g. `ch.fhir.ig.ch-term#3.3.x`) resolves to an
   already loaded version (#599)
 - Add a JMeter runbook with the memory and validation time of the ch-elm images from 1.13.1 to 1.15.2

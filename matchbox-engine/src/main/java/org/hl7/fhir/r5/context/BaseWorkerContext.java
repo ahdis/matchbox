@@ -468,6 +468,22 @@ public abstract class BaseWorkerContext extends I18nBase implements IWorkerConte
   }
   // END matchbox patch
 
+  // matchbox patch: the version of the CodeSystem, ValueSet or StructureDefinition that a canonical URL without version
+  // resolves to, without parsing it if it's a proxy (lazy loading); used to pin the versions of the core package
+  public String getResourceVersion(Class<? extends CanonicalResource> type, String url) {
+    synchronized (lock) {
+      if (type == CodeSystem.class) {
+        return codeSystems.getVersion(url);
+      } else if (type == ValueSet.class) {
+        return valueSets.getVersion(url);
+      } else if (type == StructureDefinition.class) {
+        return structures.getVersion(ProfileUtilities.sdNs(url, null));
+      }
+      throw new IllegalArgumentException("Unsupported type " + type);
+    }
+  }
+  // END matchbox patch
+
   private void registerInAllResourceIndex(CanonicalResourceProxy r, PackageInformation packageInfo) {
     if (r.getId() != null) {
       Map<String, ResourceProxy> map = allResourcesById.get(r.getType());

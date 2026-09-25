@@ -724,6 +724,16 @@ public class CanonicalResourceManager<T extends CanonicalResource> {
       return false;
   }
 
+  // matchbox patch: the version of the resource that get(url) returns, without parsing it if it's a proxy (lazy loading)
+  public String getVersion(String url) {
+    CachedCanonicalResource<T> cr = masterDefinitions.get(url);
+    if (cr == null) {
+      cr = indexedResources.get(url);
+    }
+    return cr == null ? null : cr.getVersion();
+  }
+  // END matchbox patch
+
   public T get(String url) {
     CachedCanonicalResource<T> cr = masterDefinitions.get(url);
     if (cr != null) {

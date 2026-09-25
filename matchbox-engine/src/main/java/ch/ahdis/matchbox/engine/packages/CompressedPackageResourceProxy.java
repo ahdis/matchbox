@@ -1,4 +1,4 @@
-package ch.ahdis.matchbox.packages;
+package ch.ahdis.matchbox.engine.packages;
 
 import java.io.ByteArrayOutputStream;
 import java.util.zip.DataFormatException;
@@ -37,12 +37,19 @@ public class CompressedPackageResourceProxy extends CanonicalResourceProxy {
 	private final ResourceParser parser;
 	private final PackageInformation packageInformation;
 
+	/**
+	 * @param pri      the index information of the resource
+	 * @param url      the canonical URL of the resource (the loader may patch the one of the index)
+	 * @param filename the filename in the package
+	 * @param content  the file content
+	 */
 	public CompressedPackageResourceProxy(final PackageResourceInformation pri,
+													  final String url,
 													  final String filename,
 													  final byte[] content,
 													  final ResourceParser parser,
 													  final PackageInformation packageInformation) {
-		super(pri.getResourceType(), pri.getId(), pri.getUrl(), pri.getVersion(), pri.getSupplements(),
+		super(pri.getResourceType(), pri.getId(), url, pri.getVersion(), pri.getSupplements(),
 				pri.getDerivation(), pri.getContent());
 		this.compressed = compress(content);
 		this.length = content.length;

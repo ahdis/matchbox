@@ -19,6 +19,11 @@ package ch.ahdis.matchbox.engine;
  * limitations under the License.
  * #L%
  */
+import java.util.List;
+import org.hl7.fhir.r5.model.PackageInformation;
+import org.hl7.fhir.r5.context.IContextResourceLoader;
+import ch.ahdis.matchbox.engine.packages.MetadataCoreVersionPinner;
+import ch.ahdis.matchbox.engine.packages.LazyTerminologyLoader;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.FileNotFoundException;
@@ -262,8 +267,7 @@ public class MatchboxEngine extends ValidationEngine {
 			log.info(VersionUtil.getPoweredBy());
 			final MatchboxEngine engine ;
 			try {
-					engine = new MatchboxEngine(
-									new SimpleWorkerContextBuilder().fromPackage(NpmPackage.fromPackage(getClass().getResourceAsStream("/hl7.fhir.r4.core.tgz")), ValidatorUtils.loaderForVersion("4.0.1"), false));
+					engine = new MatchboxEngine(createCoreWorkerContext("/hl7.fhir.r4.core.tgz", "4.0.1"));
 			}
 			catch (final Exception e) { throw new MatchboxEngineCreationException(e); }
 			log.info("loaded hl7.fhir.r4.core#4.0.1 from classpath");
@@ -306,7 +310,7 @@ public class MatchboxEngine extends ValidationEngine {
 			log.info("Initializing Matchbox Engine (FHIR R4B with terminology provided in classpath)");
 			log.info(VersionUtil.getPoweredBy());
 			final MatchboxEngine engine ;
-			try { engine = new MatchboxEngine(new SimpleWorkerContextBuilder().fromPackage(NpmPackage.fromPackage(getClass().getResourceAsStream("/hl7.fhir.r4b.core.tgz")), ValidatorUtils.loaderForVersion("4.3.0"), false));
+			try { engine = new MatchboxEngine(createCoreWorkerContext("/hl7.fhir.r4b.core.tgz", "4.3.0"));
 			}
 			catch (final Exception e) { throw new MatchboxEngineCreationException(e); }
 			log.info("loaded hl7.fhir.r4b.core#4.3.0 from classpath");
@@ -471,12 +475,25 @@ public class MatchboxEngine extends ValidationEngine {
 	}
 
 	public static SimpleWorkerContext createR5WorkerContext() throws IOException {
-		return new SimpleWorkerContextBuilder()
-			.fromPackage(
-				NpmPackage.fromPackage(MatchboxEngine.class.getResourceAsStream("/hl7.fhir.r5.core.tgz")),
-				ValidatorUtils.loaderForVersion("5.0.0"),
-				false
-			);
+		return createCoreWorkerContext("/hl7.fhir.r5.core.tgz", "5.0.0");
+	}
+
+	/**
+	 * Creates a worker context with a FHIR core package from the classpath. Its terminology resources are loaded lazily
+	 * (see {@link LazyTerminologyLoader}) and pinned to the core versions when they're parsed, like
+	 * SimpleWorkerContext.finishLoading() pins them when it parses them all.
+	 */
+	public static SimpleWorkerContext createCoreWorkerContext(final String packageResource,
+																				 final String fhirVersion) throws IOException {
+		final NpmPackage pi = NpmPackage.fromPackage(MatchboxEngine.class.getResourceAsStream(packageResource));
+		final IContextResourceLoader loader = ValidatorUtils.loaderForVersion(fhirVersion);
+		final SimpleWorkerContext context = new SimpleWorkerContextBuilder()
+			.fromPackage(pi, LazyTerminologyLoader.withoutLazyLoadedTypes(loader), false);
+		final MetadataCoreVersionPinner pinner = new MetadataCoreVersionPinner(context);
+		LazyTerminologyLoader.registerProxies(context, pi, new PackageInformation(pi, true), loader, pinner);
+		// finishLoading() pinned the StructureDefinitions before the ValueSets were registered, pin their bindings now
+		pinner.pinCoreVersions(List.of(), List.of(), context.listStructures());
+		return context;
 	}
 
 	/**
@@ -1104,7 +1121,14 @@ public class MatchboxEngine extends ValidationEngine {
 
 		// Remove the dependencies to disable recursive loading
 		npmPackage.getNpm().set("dependencies", new JsonObject());
-		this.getIgLoader().loadPackage(npmPackage, true);
+		if (npmPackage.isCoreExamples()) {
+			return;
+		}
+		// Like IgLoader.loadPackage(npmPackage, true), but the terminology resources are loaded lazily
+		final IContextResourceLoader loader = ValidatorUtils.loaderForVersion(npmPackage.fhirVersion());
+		this.getContext().loadFromPackage(npmPackage, LazyTerminologyLoader.withoutLazyLoadedTypes(loader));
+		LazyTerminologyLoader.registerProxies(this.getContext(), npmPackage, new PackageInformation(npmPackage, false),
+														  loader, null);
 	}
 
 	/**
