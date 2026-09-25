@@ -17,17 +17,20 @@ We recommend to put at least 2.5 GB of RAM for the container instance, depending
 ## JVM options
 
 The image sets the JVM options through the `JDK_JAVA_OPTIONS` environment variable, which defaults to
-`-Xmx12g -XX:+ExitOnOutOfMemoryError`. With `-XX:+ExitOnOutOfMemoryError` the JVM exits on the first
-`OutOfMemoryError` instead of continuing in an undefined state, so that the container can be restarted (e.g. with
-`--restart unless-stopped` or by Kubernetes). You can override the options, e.g. to size the heap relative to the memory
-limit of the container:
+`-Xmx12g -XX:+ExitOnOutOfMemoryError -XX:+UseStringDeduplication`. With `-XX:+ExitOnOutOfMemoryError` the JVM exits
+on the first `OutOfMemoryError` instead of continuing in an undefined state, so that the container can be restarted
+(e.g. with `--restart unless-stopped` or by Kubernetes). With `-XX:+UseStringDeduplication` the garbage collector
+merges identical strings in the background. The loaded implementation guides and their dependencies, often in several
+versions, contain many identical strings, so this reduces the memory needed by the validation engines (by about 15% for
+the ch-elm implementation guide). You can override the options, e.g. to size the heap relative to the memory limit of the
+container:
 
 ```bash
-docker run -d --name matchbox -p 8080:8080 -m 6g -e JDK_JAVA_OPTIONS="-XX:MaxRAMPercentage=70 -XX:+ExitOnOutOfMemoryError" europe-west6-docker.pkg.dev/ahdis-ch/ahdis/matchbox:latest
+docker run -d --name matchbox -p 8080:8080 -m 6g -e JDK_JAVA_OPTIONS="-XX:MaxRAMPercentage=70 -XX:+ExitOnOutOfMemoryError -XX:+UseStringDeduplication" europe-west6-docker.pkg.dev/ahdis-ch/ahdis/matchbox:latest
 ```
 
-Setting `JDK_JAVA_OPTIONS` replaces the default, so include a heap setting (`-Xmx` or `-XX:MaxRAMPercentage`) and
-`-XX:+ExitOnOutOfMemoryError` together with any other option you add, otherwise the JVM uses its default of 25% of the
+Setting `JDK_JAVA_OPTIONS` replaces the default, so include a heap setting (`-Xmx` or `-XX:MaxRAMPercentage`),
+`-XX:+ExitOnOutOfMemoryError` and `-XX:+UseStringDeduplication` together with any other option you add, otherwise the JVM uses its default of 25% of the
 container memory and keeps running after an `OutOfMemoryError`. Keep the heap well
 below the memory limit of the container: matchbox also needs a substantial amount of memory outside the heap.
 

@@ -139,18 +139,32 @@ public abstract class BaseWorkerContext extends I18nBase implements IWorkerConte
 
   public class BytesFromPackageProvider implements IByteProvider {
 
-    private NpmPackage pi;
-    private String name;
+    // matchbox patch: keep only a provider for the single file instead of the whole NpmPackage. Packages loaded from
+    // the classpath hold the content of all their files in memory, so a reference to the package kept e.g. all files
+    // of hl7.fhir.uv.xver-r5.r4 (about 160 MB) on the heap for the few binaries in its 'other' folder.
+    private final org.hl7.fhir.utilities.ByteProvider provider;
+    private final IOException loadException;
 
     public BytesFromPackageProvider(NpmPackage pi, String name) {
-      this.pi = pi;
-      this.name = name;
+      org.hl7.fhir.utilities.ByteProvider provider = null;
+      IOException loadException = null;
+      try {
+        provider = pi.getProvider("other", name);
+      } catch (IOException e) {
+        loadException = e;
+      }
+      this.provider = provider;
+      this.loadException = loadException;
     }
 
     @Override
     public byte[] bytes() throws IOException {
-      return FileUtilities.streamToBytes(pi.load("other", name));
+      if (loadException != null) {
+        throw loadException;
+      }
+      return provider.getBytes();
     }
+    // END matchbox patch
 
   }
 
