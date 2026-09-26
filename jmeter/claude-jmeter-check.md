@@ -203,7 +203,8 @@ content. Ranges over the 3 runs:
 | PR #598 (baseline) | 53–57 s | 25.5–26.3 s | 820–900 / 150–170 / 130–140 ms | 1,032–1,043 / 1,033–1,043 MB |
 | Lazy loading of all types ⁶ | 43–52 s | 17.0–20.0 s | **2,290–2,430** / 155–180 / 130–155 ms | 695–701 / 771–777 MB |
 | Lazy loading of terminology, IG packages | 46–52 s | 19.3–21.5 s | 840–890 / 155–160 / 128–136 ms | 808–814 / 810–817 MB |
-| **Lazy loading of terminology, also core and classpath packages** | **39–46 s** | **15.9–18.1 s** | 840–900 / 160–195 / 140–165 ms | **702–707 / 704–707 MB** |
+| Lazy loading of terminology, also core and classpath packages | 39–46 s | 15.9–18.1 s | 840–900 / 160–195 / 140–165 ms | 702–707 / 704–707 MB |
+| **+ no R4 core StructureDefinitions for the JPA search parameter extractor** | **39–49 s** | **16.0–18.4 s** | 858–891 / 160–180 / 136–148 ms | **659–660 / 663–665 MB** |
 
 JMeter load test with `-Xmx3g` and string deduplication, 0 failures and the same issues in all runs:
 
@@ -217,6 +218,11 @@ JMeter load test with `-Xmx3g` and string deduplication, 0 failures and the same
 `ContextUtilities.getStructures()` and other places, iterate over all StructureDefinitions. The core validator parses
 all StructureDefinitions at startup (`ValidationEngine.prepare()`). So only CodeSystem, ValueSet, NamingSystem and
 ConceptMap are loaded lazily.
+
+The last row: the FHIRPathEngine of HAPI's JPA search parameter extractors (`SearchParamExtractorR4/R4B/R5`) listed all
+StructureDefinitions in its constructor, which made HAPI's `DefaultProfileValidationSupport` parse and keep all 649 R4
+core StructureDefinitions (40 MB). `NoAllStructureDefinitionsValidationSupport` returns an empty list for it; single
+type definitions are still fetched when a search parameter expression needs them.
 
 ### Smaller heaps (lazy loading of terminology, also core and classpath packages)
 

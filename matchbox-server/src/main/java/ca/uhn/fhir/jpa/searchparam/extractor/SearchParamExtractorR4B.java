@@ -19,6 +19,7 @@
  */
 package ca.uhn.fhir.jpa.searchparam.extractor;
 
+import ch.ahdis.matchbox.util.NoAllStructureDefinitionsValidationSupport;
 import ca.uhn.fhir.context.FhirContext;
 import ca.uhn.fhir.jpa.model.config.PartitionSettings;
 import ca.uhn.fhir.jpa.model.entity.StorageSettings;
@@ -97,7 +98,10 @@ public class SearchParamExtractorR4B extends BaseSearchParamExtractor implements
 	}
 
 	public void initFhirPath() {
-		IWorkerContext worker = new HapiWorkerContext(getContext(), getContext().getValidationSupport());
+		// matchbox: don't make the FHIRPathEngine constructor load all StructureDefinitions of the FHIR core, see
+		// NoAllStructureDefinitionsValidationSupport
+		IWorkerContext worker = new HapiWorkerContext(getContext(),
+			new NoAllStructureDefinitionsValidationSupport(getContext(), getContext().getValidationSupport()));
 		myFhirPathEngine = new FHIRPathEngine(worker);
 		myParsedFhirPathCache = CacheFactory.build(TimeUnit.MINUTES.toMillis(10));
 	}
