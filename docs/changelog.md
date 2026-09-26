@@ -1,3 +1,11 @@
+2026/09/26 Release 4.1.19
+
+- Tests: replace the fixed 10 s "give the server some time to start up" sleep of the server integration tests with a
+  readiness check (`ServerStartup`) that waits for the validation engine to be initialized and `/fhir/metadata` to
+  answer. The startup, including the loading of the IGs, is already synchronous, so the check passes immediately and
+  each test class starts about 10 s earlier
+- Make the `initialized` flag of `MatchboxEngineSupport` volatile, as it's polled by request threads
+
 2026/09/26 Release 4.1.18
 
 - Docker: size the heap relative to the memory limit of the container (`-XX:MaxRAMPercentage=70` instead of `-Xmx12g`
