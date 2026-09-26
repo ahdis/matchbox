@@ -19,6 +19,8 @@
   engine registers the resources that another engine has loaded instead of loading and parsing the package again. The
   cache keeps them only as long as an engine that uses them is alive. With ch-core and ch-epr-fhir, the resources that
   were loaded in both engines (53 MB) exist once (#599)
+- Update the `with-preload` sample configuration to the latest released versions of its IGs (`ihe.iti.mhd` and
+  `ihe.iti.pixm` replace `ihe.mhd.fhir` and `IHE.ITI.PIXm`, `ch.fhir.ig.ch-epr-fhir` replaces `ch.fhir.ig.ch-epr-mhealth`)
 - Fix the `with-ch` sample configuration, which didn't start since 4.1.12: its local terminology server is reached over
   http, so it needs `matchbox.fhir.context.ssrfProtectionEnabled: false`
 - Add a JMeter test with several IGs (`jmeter/multi-ig.jmx`) to check which packages the validation engines share (#599)

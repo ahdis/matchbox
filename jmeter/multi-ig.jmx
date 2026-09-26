@@ -125,7 +125,7 @@
       <ThreadGroup guiclass="ThreadGroupGui" testclass="ThreadGroup" testname="validate multi-ig" enabled="true">
         <stringProp name="ThreadGroup.on_sample_error">stoptestnow</stringProp>
         <elementProp name="ThreadGroup.main_controller" elementType="LoopController" guiclass="LoopControlPanel" testclass="LoopController" testname="Loop Controller" enabled="true">
-          <stringProp name="LoopController.loops">100</stringProp>
+          <stringProp name="LoopController.loops">${__P(loops,100)}</stringProp>
           <boolProp name="LoopController.continue_forever">false</boolProp>
         </elementProp>
         <stringProp name="ThreadGroup.num_threads">4</stringProp>
@@ -140,7 +140,7 @@
         <CSVDataSet guiclass="TestBeanGUI" testclass="CSVDataSet" testname="profiles and examples (multi-ig.csv)" enabled="true">
           <stringProp name="delimiter">,</stringProp>
           <stringProp name="fileEncoding">UTF-8</stringProp>
-          <stringProp name="filename">multi-ig.csv</stringProp>
+          <stringProp name="filename">${__P(csv,multi-ig.csv)}</stringProp>
           <boolProp name="ignoreFirstLine">true</boolProp>
           <boolProp name="quotedData">false</boolProp>
           <boolProp name="recycle">true</boolProp>

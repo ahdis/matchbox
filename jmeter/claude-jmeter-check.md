@@ -172,6 +172,10 @@ Run it with `-p 8080:8080` (this configuration serves on port 8080), then `./jme
 package, version and URL: one object per resource means that the engines share it, several objects mean that it's
 loaded again in each engine.
 
+Other configurations: `./jmeter_multi_ig.sh -Jcsv=<file>.csv -Jloops=<loops per thread>`. The CSV lists a profile and
+an example file (absolute path) per row; one row per IG creates one validation engine per IG. For `with-preload`, an
+example of each IG's own profiles can be taken from the `package/example` folder of its package.
+
 ## Reading the numbers
 
 - **Check the heap limit of each image**
@@ -281,6 +285,23 @@ loaded, it registers the same resource and proxy objects instead of loading and 
 keeps only weak references; the worker contexts of the engines that use a package keep it alive
 (`BaseWorkerContext.retain()`), so it's released when the last of these engines is dropped (e.g. when transient engines
 expire after 60 minutes). Uninstalling an IG evicts it from the cache.
+
+### Many IGs (with-preload, 12 IGs with profiles, 55 packages with the dependencies)
+
+`matchbox-server/with-preload` with the latest released versions (2026-09-26) on H2, one example per IG (12 IG engines)
+plus an R4 core validation, 400 validations, 0 failures:
+
+| | PR #598 | PR #600 | PR #600, `-Xmx3g` | PR #600, `-Xmx2g` |
+|---|---|---|---|---|
+| Live heap after startup | 549 MB | 397 MB | 395 MB | 390 MB |
+| Live heap after all 12 engines and 400 validations | **3,410 MB** | **1,195 MB** | 1,331 MB | 1,345 MB |
+| Retained by the 12 IG engines alone, total (median per engine) | 2,550 MB (188 MB) | 177 MB (14 MB) | | |
+| Resource objects loaded in several engines | 133,472 (1,674 MB) | 83 (1 MB) | | |
+| First validation per IG incl. engine creation, median / max | 38.0 / 50.3 s | 13.0 / 27.1 s | 13.1 / 27.0 s | 13.4 / 27.6 s |
+| Old generation after the test / GC time | 81% / 4.0 s | 36% / 1.7 s | 92% / 2.1 s | 93% / 2.8 s |
+
+With PR #600, a 3 GB heap is more than twice the live heap of 12 IG engines; 2 GB passes but is tight. Without it, 3 GB
+would not suffice (3.4 GB live heap).
 
 ### Findings so far
 
