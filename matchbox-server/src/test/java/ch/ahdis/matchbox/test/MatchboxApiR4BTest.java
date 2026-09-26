@@ -6,6 +6,7 @@ import ca.uhn.fhir.context.FhirVersionEnum;
 import ca.uhn.fhir.context.RuntimeResourceDefinition;
 import ca.uhn.fhir.jpa.starter.Application;
 
+import ch.ahdis.matchbox.util.MatchboxEngineSupport;
 import org.apache.commons.io.FileUtils;
 import org.hl7.fhir.instance.model.api.*;
 import org.hl7.fhir.r4b.model.OperationOutcome;
@@ -14,6 +15,7 @@ import org.hl7.fhir.r4b.model.OperationOutcome.OperationOutcomeIssueComponent;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.context.SpringBootTest.WebEnvironment;
 import org.springframework.core.io.ClassPathResource;
@@ -66,11 +68,12 @@ public class MatchboxApiR4BTest {
 	private final FhirContext context = FhirContext.forR4BCached();
 	private final HttpClient httpClient = HttpClient.newHttpClient();
 
+	@Autowired
+	private MatchboxEngineSupport matchboxEngineSupport;
+
 	@BeforeAll
 	void waitUntilStartup() throws Exception {
-		Thread.sleep(10000); // give the server some time to start up
-		ValidationClient validationClient = new ValidationClient(this.context, this.targetServer + "/fhir");
-		validationClient.capabilities();
+		ServerStartup.awaitServerReady(this.targetServer, this.matchboxEngineSupport);
 		CompareUtil.logMemory();
 	}
 

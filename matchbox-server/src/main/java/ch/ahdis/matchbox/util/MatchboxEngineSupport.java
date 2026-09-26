@@ -61,7 +61,11 @@ public class MatchboxEngineSupport {
 	 */
 	private final SharedPackageResourcesCache sharedPackageResources = new SharedPackageResourcesCache();
 
-	private boolean initialized = false;
+	/**
+	 * Set by the IG loading on the startup thread and polled by request threads in {@link #getMatchboxEngine}, hence
+	 * volatile.
+	 */
+	private volatile boolean initialized = false;
 
 	@Autowired
 	private DaoRegistry myDaoRegistry;
