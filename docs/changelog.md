@@ -1,4 +1,4 @@
-2026/09/26 Release 4.1.19
+2026/10/xx Release 4.1.19
 
 - Tests: replace the fixed 10 s "give the server some time to start up" sleep of the server integration tests with a
   readiness check (`ServerStartup`) that waits for the validation engine to be initialized and `/fhir/metadata` to
