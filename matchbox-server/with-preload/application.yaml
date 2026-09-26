@@ -17,48 +17,46 @@ spring:
 hapi:
   fhir:
     implementationguides:
-      terminology:
-        name: hl7.terminology
-        version: 3.1.0
+      # latest released R4 versions on packages2.fhir.org (2026-09-26); the dependencies are installed with them
       iheformatcodefhir:
         name: ihe.formatcode.fhir
-        version: 1.0.0
+        version: 1.6.0
       eprterm:
         name: ch.fhir.ig.ch-epr-term
-        version: 2.0.7
+        version: 2.0.10
       core:
         name: ch.fhir.ig.ch-core
-        version: 2.0.0
+        version: 6.0.0
       emed:
         name: ch.fhir.ig.ch-emed
-        version: 2.0.0
+        version: 6.0.0
       vacd:
         name: ch.fhir.ig.ch-vacd
-        version: 2.0.0
+        version: 6.0.0
       atc:
         name: ch.fhir.ig.ch-atc
-        version: 3.1.0
+        version: 3.3.0
       sdc:
         name: hl7.fhir.uv.sdc
-        version: 2.7.0
+        version: 4.0.0
       chorf:
         name: ch.fhir.ig.ch-orf
-        version: 1.0.0
+        version: 3.0.2
       chradorder:
         name: ch.fhir.ig.ch-rad-order
-        version: 1.0.0
+        version: 2.0.1
       chetoc:
         name: ch.fhir.ig.ch-etoc
-        version: 1.0.0
+        version: 3.0.1
       mhd:
-        name: ihe.mhd.fhir
-        version: 4.0.1
+        name: ihe.iti.mhd
+        version: 4.2.4
       pixm:
-        name: IHE.ITI.PIXm
-        version: 3.0.0
-      cheprmhealth:
-        name: ch.fhir.ig.ch-epr-mhealth
-        version: 1.0.0
+        name: ihe.iti.pixm
+        version: 3.1.0
+      chepr:
+        name: ch.fhir.ig.ch-epr-fhir
+        version: 5.0.0
       challergyintolerance:
         name: ch.fhir.ig.ch-allergyintolerance
-        version": 1.0.0
+        version: 3.0.1
