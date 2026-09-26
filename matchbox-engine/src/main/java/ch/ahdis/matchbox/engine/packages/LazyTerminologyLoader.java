@@ -66,20 +66,31 @@ public final class LazyTerminologyLoader {
 	}
 
 	/**
-	 * Registers a terminology resource as a proxy, and its OIDs.
+	 * The OIDs of a CodeSystem or NamingSystem, see {@link #readOids}.
 	 */
-	public static void registerProxy(final SimpleWorkerContext context,
-												final PackageResourceInformation pri,
-												final String url,
-												final String filename,
-												final byte[] content,
-												final CompressedPackageResourceProxy.ResourceParser parser,
-												final PackageInformation packageInfo) throws IOException {
-		if ("CodeSystem".equals(pri.getResourceType()) || "NamingSystem".equals(pri.getResourceType())) {
-			registerOids(context, pri, content);
+	public record OidRegistration(String resourceType, String url, String version, Set<String> oids) {
+
+		public void registerIn(final SimpleWorkerContext context) {
+			context.registerOids(this.resourceType, this.url, this.version, this.oids);
 		}
-		context.registerResourceFromPackage(
-			new CompressedPackageResourceProxy(pri, url, filename, content, parser, packageInfo), packageInfo);
+	}
+
+	/**
+	 * Registers a terminology resource as a proxy, and its OIDs.
+	 *
+	 * @return the OIDs that were registered, or null
+	 */
+	public static OidRegistration registerProxy(final SimpleWorkerContext context,
+															  final CompressedPackageResourceProxy proxy,
+															  final PackageResourceInformation pri,
+															  final byte[] content,
+															  final PackageInformation packageInfo) throws IOException {
+		final OidRegistration oids = readOids(pri, content);
+		if (oids != null) {
+			oids.registerIn(context);
+		}
+		context.registerResourceFromPackage(proxy, packageInfo);
+		return oids;
 	}
 
 	/**
@@ -120,8 +131,10 @@ public final class LazyTerminologyLoader {
 				}
 				continue;
 			}
-			registerProxy(context, pri, loader.patchUrl(pri.getUrl(), pri.getResourceType()), filename, content, parser,
-							  packageInfo);
+			registerProxy(context,
+							  new CompressedPackageResourceProxy(pri, loader.patchUrl(pri.getUrl(), pri.getResourceType()),
+																			 filename, content, parser, packageInfo),
+							  pri, content, packageInfo);
 			++count;
 		}
 		return count;
@@ -144,12 +157,16 @@ public final class LazyTerminologyLoader {
 	}
 
 	/**
-	 * Registers the OIDs of a CodeSystem or NamingSystem that is registered as a proxy. cacheResourceFromPackage() finds
+	 * Reads the OIDs of a CodeSystem or NamingSystem that is registered as a proxy. cacheResourceFromPackage() finds
 	 * them in the parsed resource, here they're read from the JSON content without parsing the resource.
+	 *
+	 * @return the OIDs, or null if the resource has none (or isn't a CodeSystem or NamingSystem)
 	 */
-	private static void registerOids(final SimpleWorkerContext context,
-												final PackageResourceInformation pri,
-												final byte[] content) throws IOException {
+	public static OidRegistration readOids(final PackageResourceInformation pri,
+														final byte[] content) throws IOException {
+		if (!"CodeSystem".equals(pri.getResourceType()) && !"NamingSystem".equals(pri.getResourceType())) {
+			return null;
+		}
 		final JsonObject json = JsonParser.parseObject(content);
 		String url = null;
 		final Set<String> oids = new HashSet<>();
@@ -170,9 +187,10 @@ public final class LazyTerminologyLoader {
 				}
 			}
 		}
-		if (url != null && !oids.isEmpty()) {
-			context.registerOids(pri.getResourceType(), url, json.asString("version"), oids);
+		if (url == null || oids.isEmpty()) {
+			return null;
 		}
+		return new OidRegistration(pri.getResourceType(), url, json.asString("version"), oids);
 	}
 
 	/**

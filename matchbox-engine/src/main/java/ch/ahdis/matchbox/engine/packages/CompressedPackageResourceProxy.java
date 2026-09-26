@@ -31,7 +31,7 @@ public class CompressedPackageResourceProxy extends CanonicalResourceProxy {
 		Resource parse(byte[] content, String filename) throws Exception;
 	}
 
-	private final byte[] compressed;
+	private byte[] compressed;
 	private final int length;
 	private final String filename;
 	private final ResourceParser parser;
@@ -61,12 +61,25 @@ public class CompressedPackageResourceProxy extends CanonicalResourceProxy {
 	@Override
 	public CanonicalResource loadResource() throws FHIRException {
 		try {
-			final Resource resource = this.parser.parse(decompress(this.compressed, this.length), this.filename);
+			final byte[] content;
+			synchronized (this) {
+				if (this.compressed == null) {
+					throw new FHIRException("Resource " + this.filename + " of package " + this.packageInformation.getVID()
+														+ " was already loaded");
+				}
+				content = decompress(this.compressed, this.length);
+			}
+			final Resource resource = this.parser.parse(content, this.filename);
 			if (!(resource instanceof final CanonicalResource canonicalResource)) {
 				throw new FHIRException("Resource " + this.filename + " of package " + this.packageInformation.getVID()
 													+ " is not a canonical resource");
 			}
 			canonicalResource.setSourcePackage(this.packageInformation);
+			// the proxy keeps the loaded resource (CanonicalResourceProxy.getResource()), the content isn't needed anymore;
+			// the proxy may be shared between several contexts (SharedPackageResourcesCache)
+			synchronized (this) {
+				this.compressed = null;
+			}
 			return canonicalResource;
 		} catch (final FHIRException e) {
 			throw e;

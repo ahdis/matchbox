@@ -1,5 +1,6 @@
 package ch.ahdis.matchbox.util;
 
+import ch.ahdis.matchbox.packages.SharedPackageResourcesCache;
 import java.io.File;
 import java.io.IOException;
 import java.util.*;
@@ -53,6 +54,12 @@ public class MatchboxEngineSupport {
 
 	private static MatchboxEngine mainEngine = null;
 	private final MatchboxEngineCache engineCache;
+
+	/**
+	 * The resources of the packages that are loaded in the engines, shared between the engines as long as one of them
+	 * is alive.
+	 */
+	private final SharedPackageResourcesCache sharedPackageResources = new SharedPackageResourcesCache();
 
 	private boolean initialized = false;
 
@@ -206,7 +213,8 @@ public class MatchboxEngineSupport {
 																				this.myNpmPackageVersionDao,
 																				this.myDaoRegistry,
 																				this.myBinaryStorageSvc,
-																				this.myTxManager));
+																				this.myTxManager,
+																	this.sharedPackageResources));
 		if (ig != null) {
 			try {
 				validator.getIgLoader().loadIg(validator.getIgs(), validator.getBinaries(), ig, true);
@@ -315,7 +323,8 @@ public class MatchboxEngineSupport {
 																			this.myNpmPackageVersionDao,
 																			this.myDaoRegistry,
 																			this.myBinaryStorageSvc,
-																			this.myTxManager));
+																			this.myTxManager,
+																	this.sharedPackageResources));
 					log.debug("Load R5 Specials");
 					final var r5e = new R5ExtensionsLoader(mainEngine.getPcm(), mainEngine.getContext());
 					r5e.load();
@@ -341,7 +350,8 @@ public class MatchboxEngineSupport {
 				this.myNpmPackageVersionDao,
 				this.myDaoRegistry,
 				this.myBinaryStorageSvc,
-				this.myTxManager));
+				this.myTxManager,
+																	this.sharedPackageResources));
 				cliContextMain.setIg(this.getFhirCorePackage(cliContextMain));
 				this.configureValidationEngine(mainEngine, cliContextMain);
 			} else if (this.serverFhirVersion == FhirVersionEnum.R5) {
@@ -355,7 +365,8 @@ public class MatchboxEngineSupport {
 				this.myNpmPackageVersionDao,
 				this.myDaoRegistry,
 				this.myBinaryStorageSvc,
-				this.myTxManager));
+				this.myTxManager,
+																	this.sharedPackageResources));
 				cliContextMain.setIg(this.getFhirCorePackage(cliContextMain));
 				this.configureValidationEngine(mainEngine, cliContextMain);
 			} else {
@@ -500,6 +511,8 @@ public class MatchboxEngineSupport {
 	 * @param packageVersion the version of the uninstalled package.
 	 */
 	public synchronized void onImplementationGuideUninstalled(final String packageId, final String packageVersion) {
+		// the package isn't shared anymore with the engines that are created from now on
+		this.sharedPackageResources.evict(packageId + "#" + packageVersion);
 		if (this.matchboxFhirProperties.getContext().isOnlyOneEngine()) {
 			log.info("Recreating the main engine after uninstalling package {}#{} (onlyOneEngine mode)", packageId, packageVersion);
 			final MatchboxEngine engine = this.getMatchboxEngineNotSynchronized(null, this.cliContext, false, true);

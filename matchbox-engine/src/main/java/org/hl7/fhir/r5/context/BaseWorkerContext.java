@@ -295,6 +295,9 @@ public abstract class BaseWorkerContext extends I18nBase implements IWorkerConte
 
   private UcumService ucumService;
   protected Map<String, IByteProvider> binaries = new HashMap<String, IByteProvider>();
+  // matchbox patch: objects that must be kept alive as long as this context (and its copies) is used, e.g. the
+  // resources of a package that are shared between several contexts through a cache of weak references
+  private final List<Object> retainedObjects = new ArrayList<>();
   protected Map<String, Set<IOIDServices.OIDDefinition>> oidCacheManual = new HashMap<>();
   protected List<OIDSource> oidSources = new ArrayList<>();
 
@@ -403,6 +406,7 @@ public abstract class BaseWorkerContext extends I18nBase implements IWorkerConte
       codeSystemsUsed.addAll(other.codeSystemsUsed);
       ucumService = other.ucumService;
       binaries.putAll(other.binaries);
+      retainedObjects.addAll(other.retainedObjects); // matchbox patch
       oidSources.addAll(other.oidSources);
       oidCacheManual.putAll(other.oidCacheManual);
       validationCache.putAll(other.validationCache);
@@ -456,6 +460,14 @@ public abstract class BaseWorkerContext extends I18nBase implements IWorkerConte
     }
   }
 
+  // matchbox patch: keeps an object alive as long as this context (and its copies) is used
+  public void retain(Object object) {
+    synchronized (lock) {
+      retainedObjects.add(object);
+    }
+  }
+  // END matchbox patch
+
   // matchbox patch: register the OIDs of a CodeSystem or NamingSystem that is registered as a proxy (lazy loading);
   // cacheResourceFromPackage() does this for parsed resources
   public void registerOids(String resourceType, String url, String version, Set<String> oids) {
@@ -469,18 +481,18 @@ public abstract class BaseWorkerContext extends I18nBase implements IWorkerConte
   // END matchbox patch
 
   // matchbox patch: the version of the CodeSystem, ValueSet or StructureDefinition that a canonical URL without version
-  // resolves to, without parsing it if it's a proxy (lazy loading); used to pin the versions of the core package
+  // resolves to, without parsing it if it's a proxy (lazy loading); used to pin the versions of the core package when a
+  // proxy is loaded. It doesn't acquire the lock of this context: it's called while a (shared) proxy is loaded, which
+  // another thread may wait for while it holds the lock, and the indexes of the core package don't change anymore.
   public String getResourceVersion(Class<? extends CanonicalResource> type, String url) {
-    synchronized (lock) {
-      if (type == CodeSystem.class) {
-        return codeSystems.getVersion(url);
-      } else if (type == ValueSet.class) {
-        return valueSets.getVersion(url);
-      } else if (type == StructureDefinition.class) {
-        return structures.getVersion(ProfileUtilities.sdNs(url, null));
-      }
-      throw new IllegalArgumentException("Unsupported type " + type);
+    if (type == CodeSystem.class) {
+      return codeSystems.getVersion(url);
+    } else if (type == ValueSet.class) {
+      return valueSets.getVersion(url);
+    } else if (type == StructureDefinition.class) {
+      return structures.getVersion(ProfileUtilities.sdNs(url, null));
     }
+    throw new IllegalArgumentException("Unsupported type " + type);
   }
   // END matchbox patch
 

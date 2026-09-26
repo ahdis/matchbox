@@ -262,19 +262,25 @@ headroom for larger documents, more parallel requests or more IGs.
 
 `multi-ig.jmx`, 400 validations, 0 failures, same issues on both images:
 
-| | PR #598 | PR #600 |
-|---|---|---|
-| Live heap after startup (main engine) | 547 MB | 398 MB |
-| Live heap after 400 validations (main, ch-core and ch-epr-fhir engines) | 1,160 MB | 766 MB |
-| Retained by the ch-core / ch-epr-fhir engine alone | 197 / 206 MB | 94 / 91 MB |
-| Resources loaded twice (in both IG engines) | 14,595, 175 MB | 14,599, 53 MB |
-| First validation per IG, incl. engine creation: ch-core / ch-epr-fhir | 10.6 / 25.8 s | 7.2 / 17.2 s |
+| | PR #598 | Lazy loading | + shared package cache |
+|---|---|---|---|
+| Live heap after startup (main engine) | 547 MB | 398 MB | 395 MB |
+| Live heap after 400 validations (main, ch-core and ch-epr-fhir engines) | 1,160 MB | 766 MB | **687 MB** |
+| Retained by the ch-core / ch-epr-fhir engine alone | 197 / 206 MB | 94 / 91 MB | **14 / 20 MB** |
+| Resources loaded twice (in both IG engines) | 14,595, 175 MB | 14,599, 53 MB | **34, 1 MB** |
+| First validation per IG, incl. engine creation: ch-core / ch-epr-fhir | 10.6 / 25.8 s | 7.2 / 17.2 s | 7.2 / **14.1 s** |
 
 The packages of the main engine (R4 core, hl7.terminology.r4 7.3.0, extensions 5.3.0, xver) exist once: the IG
 engines are copies of the main engine and share its resources. The dependencies that both IGs have in common (ch-core,
 ch-term, hl7.terminology.r4 6.3.0/6.5.0/7.0.1, extensions 5.2.0/5.3.0-ballot-tc1) are loaded separately in each IG
 engine. With lazy loading their terminology resources stay unparsed, what remains duplicated are the
 StructureDefinitions (53 MB).
+
+`SharedPackageResourcesCache` shares them too: when an engine needs a package (id#version) that another engine has
+loaded, it registers the same resource and proxy objects instead of loading and parsing the package again. The cache
+keeps only weak references; the worker contexts of the engines that use a package keep it alive
+(`BaseWorkerContext.retain()`), so it's released when the last of these engines is dropped (e.g. when transient engines
+expire after 60 minutes). Uninstalling an IG evicts it from the cache.
 
 ### Findings so far
 
