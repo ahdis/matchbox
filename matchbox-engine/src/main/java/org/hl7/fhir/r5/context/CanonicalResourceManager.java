@@ -95,7 +95,9 @@ public class CanonicalResourceManager<T extends CanonicalResource> {
       this.derivation = derivation;
     }
 
-    public CanonicalResource getResource() throws FHIRException {
+    // matchbox patch: synchronized, a proxy can be shared between several contexts (the copies of the main engine, the
+    // SharedPackageResourcesCache), which have different locks; loadResource() doesn't acquire any other lock
+    public synchronized CanonicalResource getResource() throws FHIRException {
       if (resource == null) {
         resource = loadResource();
         if (hacked) {

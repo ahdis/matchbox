@@ -15,6 +15,10 @@
   the JPA search parameter extractors, which only uses them for its static type analysis (#599)
 - Don't load a package again when a dependency with a wildcard version (e.g. `ch.fhir.ig.ch-term#3.3.x`) resolves to an
   already loaded version (#599)
+- Share the conformance resources of a package between the validation engines of several IGs that depend on it: an
+  engine registers the resources that another engine has loaded instead of loading and parsing the package again. The
+  cache keeps them only as long as an engine that uses them is alive. With ch-core and ch-epr-fhir, the resources that
+  were loaded in both engines (53 MB) exist once (#599)
 - Fix the `with-ch` sample configuration, which didn't start since 4.1.12: its local terminology server is reached over
   http, so it needs `matchbox.fhir.context.ssrfProtectionEnabled: false`
 - Add a JMeter test with several IGs (`jmeter/multi-ig.jmx`) to check which packages the validation engines share (#599)
