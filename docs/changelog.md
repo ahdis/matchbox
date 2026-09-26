@@ -1,5 +1,12 @@
+2026/09/26 Release 4.1.19
+
 - Add a manual workflow (`Create a release`) that creates the tag and the GitHub release of the version in the POM with
   the notes from the changelog, and starts the Docker and Maven Central workflows
+- Tests: replace the fixed 10 s "give the server some time to start up" sleep of the server integration tests with a
+  readiness check (`ServerStartup`) that waits for the validation engine to be initialized and `/fhir/metadata` to
+  answer. The startup, including the loading of the IGs, is already synchronous, so the check passes immediately and
+  each test class starts about 10 s earlier
+- Make the `initialized` flag of `MatchboxEngineSupport` volatile, as it's polled by request threads
 
 2026/09/26 Release 4.1.18
 

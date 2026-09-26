@@ -1,6 +1,8 @@
 package ch.ahdis.matchbox.gazelle;
 
 import ca.uhn.fhir.jpa.starter.Application;
+import ch.ahdis.matchbox.test.ServerStartup;
+import ch.ahdis.matchbox.util.MatchboxEngineSupport;
 import ch.ahdis.matchbox.validation.gazelle.models.validation.SeverityLevel;
 import ch.ahdis.matchbox.validation.gazelle.models.validation.ValidationProfile;
 import ch.ahdis.matchbox.validation.gazelle.models.validation.ValidationReport;
@@ -9,6 +11,7 @@ import ch.ahdis.matchbox.test.CompareUtil;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ActiveProfiles;
@@ -39,9 +42,12 @@ public class GazelleApiR4Test extends AbstractGazelleTest {
 
 	private final GazelleClient client = new GazelleClient("http://localhost:8081/matchboxv3/gazelle/");
 
+	@Autowired
+	private MatchboxEngineSupport matchboxEngineSupport;
+
 	@BeforeAll
 	void waitUntilStartup() throws Exception {
-		Thread.sleep(10000); // give the server some time to start up
+		ServerStartup.awaitServerReady("http://localhost:8081/matchboxv3", this.matchboxEngineSupport);
 		CompareUtil.logMemory();
 	}
 
