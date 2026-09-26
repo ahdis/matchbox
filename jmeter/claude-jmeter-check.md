@@ -152,6 +152,26 @@ cd jmeter && python3 measure_startup.py <image> <label> [runs] ["<JDK_JAVA_OPTIO
 
 It writes `startup-<label>.csv` (git-ignored). Run it 3 times per image, with nothing else running.
 
+### 9. Several IGs: shared or duplicated dependencies
+
+`multi-ig.jmx` checks the memory with several validation engines. `multi-ig.csv` rotates through profiles and example
+files (`multi-ig-*.json`) of `ch.fhir.ig.ch-core#6.0.0`, `ch.fhir.ig.ch-epr-fhir#5.0.0` and the R4 core (main engine):
+4 threads × 100 loops.
+
+Build an image with the configuration of `matchbox-server/with-ch` (packages installed at build time):
+
+```dockerfile
+ARG BASE
+FROM ${BASE}
+COPY application.yaml /config/application.yaml
+RUN java -Xmx3G -jar /matchbox.jar --hapi.fhir.only_install_packages=true
+```
+
+Run it with `-p 8080:8080` (this configuration serves on port 8080), then `./jmeter_multi_ig.sh`, then a heap dump
+(`jcmd 1 GC.heap_dump`). In Eclipse MAT, group the `CanonicalResourceManager$CachedCanonicalResource` objects by
+package, version and URL: one object per resource means that the engines share it, several objects mean that it's
+loaded again in each engine.
+
 ## Reading the numbers
 
 - **Check the heap limit of each image**
@@ -237,6 +257,24 @@ size, 0 failures and no OutOfMemoryError in all runs. GC time and old generation
 
 2 GB costs about 8% of validation time. 1 GB works, but about 40% slower, with 3 full GCs during startup and little
 headroom for larger documents, more parallel requests or more IGs.
+
+### Several IGs (with-ch: ch-core and ch-epr-fhir)
+
+`multi-ig.jmx`, 400 validations, 0 failures, same issues on both images:
+
+| | PR #598 | PR #600 |
+|---|---|---|
+| Live heap after startup (main engine) | 547 MB | 398 MB |
+| Live heap after 400 validations (main, ch-core and ch-epr-fhir engines) | 1,160 MB | 766 MB |
+| Retained by the ch-core / ch-epr-fhir engine alone | 197 / 206 MB | 94 / 91 MB |
+| Resources loaded twice (in both IG engines) | 14,595, 175 MB | 14,599, 53 MB |
+| First validation per IG, incl. engine creation: ch-core / ch-epr-fhir | 10.6 / 25.8 s | 7.2 / 17.2 s |
+
+The packages of the main engine (R4 core, hl7.terminology.r4 7.3.0, extensions 5.3.0, xver) exist once: the IG
+engines are copies of the main engine and share its resources. The dependencies that both IGs have in common (ch-core,
+ch-term, hl7.terminology.r4 6.3.0/6.5.0/7.0.1, extensions 5.2.0/5.3.0-ballot-tc1) are loaded separately in each IG
+engine. With lazy loading their terminology resources stay unparsed, what remains duplicated are the
+StructureDefinitions (53 MB).
 
 ### Findings so far
 
