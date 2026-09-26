@@ -218,6 +218,20 @@ JMeter load test with `-Xmx3g` and string deduplication, 0 failures and the same
 all StructureDefinitions at startup (`ValidationEngine.prepare()`). So only CodeSystem, ValueSet, NamingSystem and
 ConceptMap are loaded lazily.
 
+### Smaller heaps (lazy loading of terminology, also core and classpath packages)
+
+JMeter load test with `-XX:+UseStringDeduplication` and `-XX:+ExitOnOutOfMemoryError`, a fresh container per heap
+size, 0 failures and no OutOfMemoryError in all runs. GC time and old generation from `jstat -gcutil 1`.
+
+| Folder | `-Xmx` | Duration | Validation median / p95 | GC time during the test | Old generation after the test | Live heap after full GC |
+|---|---|---|---|---|---|---|
+| `1152-lazy5-xmx3g` | 3 GB | 3.7 min | 93 / 115 ms | 4.3 s | 81% | 720 MB |
+| `1152-lazy5-xmx2g` | 2 GB | 3.9 min | 101 / 125 ms | 7.7 s | 88% | 778 MB |
+| `1152-lazy5-xmx1g` | 1 GB | 4.9 min | 132 / 148 ms | 49 s | 94% | 758 MB |
+
+2 GB costs about 8% of validation time. 1 GB works, but about 40% slower, with 3 full GCs during startup and little
+headroom for larger documents, more parallel requests or more IGs.
+
 ### Findings so far
 
 - **4.1.9 → 4.1.11: validation 2× slower** (213 → 453 ms). HAPI stays at 8.8.0; core 6.9.8 → 6.9.11 is the likely
