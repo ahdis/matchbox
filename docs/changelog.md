@@ -1,5 +1,8 @@
 2026/09/23 Release 4.1.18
 
+- Docker: size the heap relative to the memory limit of the container (`-XX:MaxRAMPercentage=70` instead of `-Xmx12g`
+  in the default `JDK_JAVA_OPTIONS`); a memory limit of 4 GB is enough for a typical setup of implementation guides
+  (measured with the 12 IGs of `with-preload`: about 1.3 GB of live heap) (#599)
 - Docker: enable the string deduplication of the garbage collector (`-XX:+UseStringDeduplication`) by default; it
   reduces the heap used by the ch-elm validation engine by about 15% at no measurable cost in validation time (#597)
 - Don't keep the whole content of a package in memory for the few binaries of its `other` folder: this kept e.g. all
