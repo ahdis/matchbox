@@ -464,8 +464,9 @@ The `upstream` remote points to `hapifhir/hapi-fhir-jpaserver-starter`, which is
 2. Create PR and wait for tests to pass
 3. Merge PR to main, but on origin (https://github.com/ahdis/matchbox.git) not on upstream
 4. Wait for Angular build workflow to complete
-5. Create GitHub release with tag (e.g., `v4.0.16`)
-6. Automated workflows publish:
+5. Run the `Create a release` workflow (`.github/workflows/release.yml`) with the version (e.g., `4.1.19`); it creates
+   the tag `v4.1.19` and the GitHub release with the notes from `docs/changelog.md`
+6. The release workflow starts the workflows that publish:
    - Docker image to Google Artifact Registry
    - Maven artifacts to Maven Central
 
