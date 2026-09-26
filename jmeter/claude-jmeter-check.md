@@ -303,6 +303,9 @@ plus an R4 core validation, 400 validations, 0 failures:
 With PR #600, a 3 GB heap is more than twice the live heap of 12 IG engines; 2 GB passes but is tight. Without it, 3 GB
 would not suffice (3.4 GB live heap).
 
+The image's default `-XX:MaxRAMPercentage=70` in a container with a 4 GB limit (`-m 4g`, heap 2.8 GB): 400 validations,
+0 failures, 12 engines, not OOM killed, container memory 3.54 GiB of 4 GiB (`preload-4g`).
+
 ### Findings so far
 
 - **4.1.9 → 4.1.11: validation 2× slower** (213 → 453 ms). HAPI stays at 8.8.0; core 6.9.8 → 6.9.11 is the likely

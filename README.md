@@ -93,14 +93,17 @@ docker run -d --name matchbox -p 8080:8080 -e HEALTHCHECK_URL=http://localhost:8
 Note: In Kubernetes environments, Docker HEALTHCHECK is ignored — use `livenessProbe`/`readinessProbe` in your pod spec instead.
 
 The JVM options are set with the `JDK_JAVA_OPTIONS` environment variable, which defaults to
-`-Xmx12g -XX:+ExitOnOutOfMemoryError -XX:+UseStringDeduplication`, so that the container exits on an
-`OutOfMemoryError` and can be restarted, and identical strings of the loaded packages share their memory.
-Setting it replaces the default, so include a heap setting, `-XX:+ExitOnOutOfMemoryError` and
-`-XX:+UseStringDeduplication`, e.g. to size the heap relative to the memory limit of the container:
+`-XX:MaxRAMPercentage=70 -XX:+ExitOnOutOfMemoryError -XX:+UseStringDeduplication`: the heap is 70% of the memory
+limit of the container, the container exits on an `OutOfMemoryError` and can be restarted, and identical strings of the
+loaded packages share their memory. Set a memory limit for the container; 4 GB is enough for a typical setup of
+implementation guides:
 
 ```bash
-docker run -d --name matchbox -p 8080:8080 -m 6g -e JDK_JAVA_OPTIONS="-XX:MaxRAMPercentage=70 -XX:+ExitOnOutOfMemoryError -XX:+UseStringDeduplication" matchbox
+docker run -d --name matchbox -p 8080:8080 -m 4g matchbox
 ```
+
+Setting `JDK_JAVA_OPTIONS` replaces the default, so include a heap setting, `-XX:+ExitOnOutOfMemoryError` and
+`-XX:+UseStringDeduplication`.
 
 See [Running matchbox in docker](https://ahdis.github.io/matchbox/docker/#jvm-options) for details.
 
