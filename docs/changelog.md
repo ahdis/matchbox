@@ -1,4 +1,4 @@
-2026/09/23 Release 4.1.18
+2026/09/26 Release 4.1.18
 
 - Docker: size the heap relative to the memory limit of the container (`-XX:MaxRAMPercentage=70` instead of `-Xmx12g`
   in the default `JDK_JAVA_OPTIONS`); a memory limit of 4 GB is enough for a typical setup of implementation guides
