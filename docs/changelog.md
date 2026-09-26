@@ -15,6 +15,9 @@
   the JPA search parameter extractors, which only uses them for its static type analysis (#599)
 - Don't load a package again when a dependency with a wildcard version (e.g. `ch.fhir.ig.ch-term#3.3.x`) resolves to an
   already loaded version (#599)
+- Fix the `with-ch` sample configuration, which didn't start since 4.1.12: its local terminology server is reached over
+  http, so it needs `matchbox.fhir.context.ssrfProtectionEnabled: false`
+- Add a JMeter test with several IGs (`jmeter/multi-ig.jmx`) to check which packages the validation engines share (#599)
 - Add a JMeter runbook with the memory and validation time of the ch-elm images from 1.13.1 to 1.15.2
   (`jmeter/claude-jmeter-check.md`)
 - Docker: the JVM options can be configured with the `JDK_JAVA_OPTIONS` environment variable, which defaults to
