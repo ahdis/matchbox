@@ -1,3 +1,6 @@
+- Add a manual workflow (`Create a release`) that creates the tag and the GitHub release of the version in the POM with
+  the notes from the changelog, and starts the Docker and Maven Central workflows
+
 2026/09/26 Release 4.1.18
 
 - Docker: size the heap relative to the memory limit of the container (`-XX:MaxRAMPercentage=70` instead of `-Xmx12g`
