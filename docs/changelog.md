@@ -1,4 +1,4 @@
-2026/09/26 Release 4.1.19
+2026/10/xx Release 4.1.19
 
 - Add a manual workflow (`Create a release`) that creates the tag and the GitHub release of the version in the POM with
   the notes from the changelog, and starts the Docker and Maven Central workflows
