@@ -35,7 +35,7 @@ The easiest way to run this server entirely depends on your environment requirem
 docker run -d --name matchbox -p 8080:8080 -v /Users/oegger/Documents/github/matchbox/matchbox-server/with-settings:/config europe-west6-docker.pkg.dev/ahdis-ch/ahdis/matchbox:latest
 ```
 
-Docker options (`-v`, `-e`, ...) go before the image name: arguments after it are passed to matchbox as Spring Boot
+Docker options (`-v`, `-e`, ...) go before the image name: arguments after it are passed to Matchbox as Spring Boot
 arguments (e.g. `--matchbox.fhir.context.onlyOneEngine=true`).
 
 note replace /Users/oegger/Documents/github/matchbox/matchbox-server/with-settings with the folder where you have your application.yaml (and since v3.9.10) your [fhir-settings.json](https://confluence.hl7.org/display/FHIR/Using+fhir-settings.json).
@@ -105,7 +105,7 @@ docker run -d --name matchbox -p 8080:8080 -m 4g matchbox
 Setting `JDK_JAVA_OPTIONS` replaces the default, so include a heap setting, `-XX:+ExitOnOutOfMemoryError` and
 `-XX:+UseStringDeduplication`.
 
-See [Running matchbox in docker](https://ahdis.github.io/matchbox/docker/#jvm-options) for details.
+See [Running Matchbox in docker](https://ahdis.github.io/matchbox/docker/#jvm-options) for details.
 
 To dynamically configure run in a kubernetes environment and add a kubernetes config map that provides /config/application.yaml file with implementation guide list like in "with-preload/application.yaml"
 
@@ -121,7 +121,7 @@ For the first time, you might need to do
 docker-compose up matchbox-db
 ```
 
-that the database gets initialized before matchbox is starting up (needs a fix)
+that the database gets initialized before Matchbox is starting up (needs a fix)
 
 ```bash
 mkdir data
