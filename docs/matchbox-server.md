@@ -25,9 +25,9 @@ They can be set in the Spring configuration (e.g. `application.properties`/`appl
 | `matchbox.fhir.context.ssrfProtectionEnabled`       | `true`        | Whether the [SSRF protection](https://github.com/hapifhir/org.hl7.fhir.core/blob/master/SECURITY.md#network-access) is enabled or not.                          |
 | `matchbox.fhir.validation.analyzeErrorsWithLlm`     | `false`       | Whether the validation outcome should be analyzed by a LLM, when it includes `error` or `fatal` issues, or not. Requires the LLM parameters to be correctly set |
 | `matchbox.fhir.mcp.requestAnalysisFromClient`       | `false`       | Whether to request an analysis of the validation outcome by the MCP client or not.                                                                              |
-| `spring.ai.mcp.server.enabled`                      |               | Whether matchbox should be provided as MCP-Server or not.                                                                                                       |
+| `spring.ai.mcp.server.enabled`                      |               | Whether Matchbox should be provided as MCP-Server or not.                                                                                                       |
 
-In addition for validation the different [java validator parameters](https://confluence.hl7.org/spaces/FHIR/pages/35718580/Using+the+FHIR+Validator) can also be configured for default values: e.g: matchbox.fhir.context.displayIssuesAreWarnings is set default to true, but you can overwrite that by providing another value. To see the current supported list of parameters, you can check the OperationDefinition of $validate on matchbox [test instance](https://test.ahdis.ch/matchboxv3/fhir/OperationDefinition/-s-validate).
+In addition for validation the different [java validator parameters](https://confluence.hl7.org/spaces/FHIR/pages/35718580/Using+the+FHIR+Validator) can also be configured for default values: e.g: matchbox.fhir.context.displayIssuesAreWarnings is set default to true, but you can overwrite that by providing another value. To see the current supported list of parameters, you can check the OperationDefinition of $validate on Matchbox [test instance](https://test.ahdis.ch/matchboxv3/fhir/OperationDefinition/-s-validate).
 
 See an example of configuration, to show the expected format:
 

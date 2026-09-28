@@ -1,6 +1,6 @@
-# Running matchbox in docker
+# Running Matchbox in docker
 
-You can run matchbox directly in docker.
+You can run Matchbox directly in docker.
 
 ```bash
 docker run -d --name matchbox -p 8080:8080 -e matchbox.fhir.context.onlyOneEngine=true -v ${PWD}/config/:/config/ europe-west6-docker.pkg.dev/ahdis-ch/ahdis/matchbox:latest
@@ -21,12 +21,12 @@ The image sets the JVM options through the `JDK_JAVA_OPTIONS` environment variab
 `-XX:MaxRAMPercentage=70 -XX:+ExitOnOutOfMemoryError -XX:+UseStringDeduplication`.
 
 With `-XX:MaxRAMPercentage=70` the maximum heap is 70% of the memory limit of the container: a container with a limit of
-4 GB (`-m 4g`) gets a heap of 2.8 GB, and the rest remains for the memory matchbox needs outside the heap. **Set a memory
+4 GB (`-m 4g`) gets a heap of 2.8 GB, and the rest remains for the memory Matchbox needs outside the heap. **Set a memory
 limit for the container**: without one, the heap is sized from the memory of the host (e.g. of the Docker Desktop VM) and
 can grow to 70% of it.
 
 A memory limit of **4 GB** is enough for a typical setup of implementation guides. Measured with the Swiss IGs of
-`with-preload` (12 IGs with their dependencies, 55 packages, each validated in its own engine), matchbox needs about
+`with-preload` (12 IGs with their dependencies, 55 packages, each validated in its own engine), Matchbox needs about
 1.3 GB of live heap; a single IG such as ch-elm needs about 0.7 GB (a limit of 2 GB is enough then). Plan more memory
 for many more IGs in use at the same time, for large documents or many parallel requests.
 
@@ -50,10 +50,10 @@ docker run -d --name matchbox -p 8080:8080 -m 4g -e JDK_JAVA_OPTIONS="-Xmx2g -XX
 Setting `JDK_JAVA_OPTIONS` replaces the default, so include a heap setting (`-XX:MaxRAMPercentage` or `-Xmx`),
 `-XX:+ExitOnOutOfMemoryError` and `-XX:+UseStringDeduplication` together with any other option you add, otherwise the JVM uses its default of 25% of the
 container memory and keeps running after an `OutOfMemoryError`. `-Xmx` takes precedence over `-XX:MaxRAMPercentage`, and
-a fixed `-Xmx` doesn't follow the memory limit of the container: keep it well below the limit, matchbox also needs a
+a fixed `-Xmx` doesn't follow the memory limit of the container: keep it well below the limit, Matchbox also needs a
 substantial amount of memory outside the heap, otherwise the container is killed when it exceeds its limit.
 
-Arguments given after the image name are passed to matchbox as Spring Boot arguments, e.g.
+Arguments given after the image name are passed to Matchbox as Spring Boot arguments, e.g.
 `--matchbox.fhir.context.onlyOneEngine=true`.
 
 ## Live and Readiness checks

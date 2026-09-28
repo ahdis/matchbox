@@ -16,9 +16,9 @@ default fhir package configuration:
 - hl7.terminology.r4#7.3.0.tgz
 - hl7.fhir.uv.extensions.r4#5.3.0.tgz
 
-## Library based on matchbox and hapi-fhir / org.hl7.fhir.core
+## Library based on Matchbox and hapi-fhir / org.hl7.fhir.core
 
-The transformation and validation functionality has been extracted out of matchbox ([https://github.com/ahdis/matchbox](https://github.com/ahdis/matchbox)) into the matchbox-engine ([https://github.com/ahdis/matchbox/tree/main/matchbox-engine](https://github.com/ahdis/matchbox/tree/main/matchbox-engine)) library. This has been done in a way, that the matchbox project contains different modules:
+The transformation and validation functionality has been extracted out of Matchbox ([https://github.com/ahdis/matchbox](https://github.com/ahdis/matchbox)) into the matchbox-engine ([https://github.com/ahdis/matchbox/tree/main/matchbox-engine](https://github.com/ahdis/matchbox/tree/main/matchbox-engine)) library. This has been done in a way, that the Matchbox project contains different modules:
 
 ```
 [INFO] ------------------------------------------------------------------------
@@ -32,7 +32,7 @@ The transformation and validation functionality has been extracted out of matchb
 [INFO] Building matchbox 3.0.0-SNAPSHOT                                   [1/4]
 ```
 
-matchbox-engine creates the java library, matchbox-engine-cli adds all dependencies as a fat jar which can be directly executed (>100 MB) and matchbox-server provides the FHIR API as a microservice. It also uses matchbox-engine, so if matchbox is used during developing and testing the mapping, matchbox-engine will deliver the same result.
+matchbox-engine creates the java library, matchbox-engine-cli adds all dependencies as a fat jar which can be directly executed (>100 MB) and matchbox-server provides the FHIR API as a microservice. It also uses matchbox-engine, so if Matchbox is used during developing and testing the mapping, matchbox-engine will deliver the same result.
 
 matchbox-engine is only based on org.hl7.fhir.core libraries (HAPI FHIR - HL7 FHIR Core Artifacts), the dependency to hapi-fhir is not necessary for the library. The library is derived from the [HL7 Java FHIR Validator](https://confluence.hl7.org/display/FHIR/Using+the+FHIR+Validator) and [FHIR Mapping Language](https://www.hl7.org/fhir/mapping-language.html) implementation. During the development of the mapping a few missing functionalities in the Mapping Language have been discovered and have been also contributed back to the org.hl7.fhir.core project ([Pull requests](https://github.com/hapifhir/org.hl7.fhir.core/pulls?q=is%3Apr+is%3Aclosed+author%3Aoliveregger+)). Note however that there are some classes patched in matchbox-engine because of peculiarities in the parsing/mapping of CDA and package handling ([patched files](https://github.com/ahdis/matchbox/tree/main/matchbox-engine/src/main/java/org/hl7/fhir)). These patched files are [updated](https://github.com/ahdis/matchbox/blob/main/updatehapi.sh) and changes applied during each new release of org.hl7.fhir.core and tests are run to verify the correctness of the defined mappings. The library requires JDK11 which is also the minimum requirement for HAPI FHIR - HL7 FHIR Core Artifacts.
 

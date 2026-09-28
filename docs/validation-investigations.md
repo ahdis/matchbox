@@ -2,7 +2,7 @@
 
 ## Setup
 
-To build matchbox and matchbox-ch-elm:
+To build Matchbox and matchbox-ch-elm:
 ```bash
 cd matchbox
 mvn --batch-mode --update-snapshots package -DskipTests -P release
@@ -15,7 +15,7 @@ matchbox-ch-elm is configured with `txServer: http://host.docker.internal:18002/
 
 ## Start up
 
-At startup, matchbox makes two HTTP requests to the terminology server:
+At startup, Matchbox makes two HTTP requests to the terminology server:
 ```http
 GET http://host.docker.internal:18002/eprik-cara/camel/tx/r4/metadata?_summary=true HTTP/1.1
 ```
