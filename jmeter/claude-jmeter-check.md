@@ -429,6 +429,64 @@ depends on older versions that only it uses (`hl7.fhir.uv.extensions.r4` 5.1.0 a
 5.1.0, `hl7.terminology.r4` 5.5.0, 5.3.0 and 3.1.0, `hl7.terminology` 6.1.0, ch-core 5.0.0, …), and the
 StructureDefinitions of the extensions packages (about 1.1 s per version) are parsed up front.
 
+### Narrative not parsed (#614)
+
+The narrative of the package resources is dropped after parsing (#566), but its XHTML was still parsed: about half of
+the parse time of a terminology resource, and about 28% for IG profiles with generated narrative (the core packages
+have none). Now the narrative is removed from the JSON before parsing, and the JSON is parsed with Gson instead of R4's
+`JsonTrackingParser`: in the server by `PackageResourceParser` (all IG packages), in the engine by the core loaders
+with the matchbox patch option `skipNarrative` (core package and classpath packages of the main engine).
+
+Images: `issue614-base` is main after #610 (`d6b02d301`), `issue614-full` the same with #614 (server part and loader
+patch). 2026-09-29, **the machine was not idle** (other work during the runs, more during the ch-elm and with-ch runs);
+the runs alternate between the images, so the tendencies hold, single values vary more than usual. 0 failures, no
+OOM, the same issues in all runs.
+
+**Many IGs** (`preload_engines.sh h2`, 3 runs each, results in `i614b-<image>-h2-r<n>`):
+
+| | base | #614 |
+|---|---|---|
+| Healthy after start on the initialized database | 27–28 s | **24–26 s** |
+| Engine creation of the 12 engines, total | 20–22 s | **15–17 s** |
+| Engine creation per IG, median / max (ch-atc) | 0.6–0.7 / 8.6–9.2 s | 0.5–0.6 / **6.1–6.4 s** |
+| ch-allergyintolerance / ch-epr-fhir engine | 4.7–5.9 / 1.4–1.5 s | **3.9–4.1 / 1.0–1.2 s** |
+| First validation per IG incl. waiting, median / max | 3.2–3.5 / 13.3–15.3 s | 2.6–3.3 / **10.0–10.4 s** |
+| Validation once the engines exist, median | 18–20 ms | 19–24 ms |
+| Live heap after startup / after the test | 394–397 MB / 1.23–1.33 GB | 395–398 MB / 1.22–1.24 GB |
+
+The startup is faster because the main engine parses the core and classpath packages faster (loader patch). The
+engines whose packages other engines have already loaded don't change (ch-core 0.2–0.3 s); the gain is in the engines
+that parse packages no other engine has loaded (ch-atc and its old dependency versions).
+
+**ch-elm 1.15.3** (commit `0071e49` on both images; `measure_startup.py`, 1 run per label, alternating, 3 each,
+`startup-i614b-<image>-r<n>.csv`):
+
+| | base | #614 |
+|---|---|---|
+| Healthy after | 34–36 s | 32–37 s |
+| ch-elm engine created in | 8.7–9.2 s | **7.4–7.8 s** (9.4 s in a run that was slower throughout) |
+| 1st / 2nd / 3rd validation | 889–941 / 171–201 / 155–219 ms | 879–1,083 / 171–253 / 154–254 ms |
+| Live heap after startup / after 3 validations | 663–664 / 670–671 MB | 662–667 / 670–674 MB |
+
+`memory.jmx` (8,000 validations, `-Xmx3g`, string deduplication, `1153-i614b-<image>`): 3.9 / 3.9 min, validation median
+99 / 99 ms, p95 122 / 123 ms, live heap after the test 680 / 679 MB, response 34,596 / 34,594 bytes. Unchanged, as
+expected: the narrative was already dropped after parsing.
+
+**Several IGs** (with-ch, `multi-ig.jmx`, 400 validations, 2 runs each, `withch-i614b-<image>-r<n>`; both images
+slower than usual here, the machine was busy):
+
+| | base | #614 |
+|---|---|---|
+| Healthy after | 30–49 s | 28–39 s |
+| ch-core / ch-epr-fhir engine created in | 4.6–5.5 / 4.9–6.1 s | **4.2–4.6 / 3.9–4.0 s** |
+| First validation per profile (ch-core-patient, ch-mhd-documentreference-comprehensive, ch-core-composition, PpqmConsentTemplate201) | 5.2–6.2, 10.5–12.5, 9.4–11.5, 9.1–11.2 s | 5.0–5.4, 9.3–10.4, 8.0–9.0, 7.7–8.6 s |
+| Live heap after startup / after the test | 402–405 / 701–703 MB | 400–401 / 698–704 MB |
+
+**Main engine alone** (`new MatchboxEngineBuilder().getEngineR4()` 6 times in one JVM, 2 runs each, engine jar
+without / with the loader patch): 4.55–4.60 → 3.55–3.68 s once warm, 7.0 → 6.1 s for the first. The core loaders parse
+the classpath packages (R4 core, extensions 5.3.0, xver-r5.r4; 4,259 resources) in 1.37 instead of 2.24 s, here
+mostly because of Gson, as these packages have no narrative.
+
 ### Findings so far
 
 - **4.1.9 → 4.1.11: validation 2× slower** (213 → 453 ms). HAPI stays at 8.8.0; core 6.9.8 → 6.9.11 is the likely
