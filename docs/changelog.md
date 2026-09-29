@@ -1,5 +1,12 @@
 2026/10/xx Release 4.1.19
 
+- The narrative of the package resources is no longer parsed, only to be dropped afterwards (#566): the server
+  (`PackageResourceParser`) and the engine (matchbox patch of core's `BaseLoaderR5` and version loaders, option
+  `skipNarrative`, to be contributed upstream) remove it from the JSON before parsing, and parse the JSON with Gson
+  instead of R4's `JsonTrackingParser`. The parsed resources are the same apart from the narrative (checked on 25,297
+  resources of the core, terminology, extensions and IG packages). `matchbox-server/with-preload` (12 IGs): engine
+  creation 20–21 → 16 s for the 12 engines, ch-atc 8.6–9.1 → 6.0–6.1 s; ch-elm engine 8.2–10.9 → 6.5–6.6 s; ch-core
+  and ch-epr-fhir engines of `with-ch` 3.6 → 2.6–3.0 s; main R4 engine 4.6 → 3.6 s (#614)
 - Package resources whose file name ends with `template.json` are loaded again, e.g. the SDC template extraction
   profile `sdc-questionnaire-extr-template` of `hl7.fhir.uv.sdc#4.0.0`: the server parsed the package resources with
   core's `IgLoader.loadResourceByVersion()`, which rejects these file names ("Unsupported format"), now with the parser
