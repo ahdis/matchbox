@@ -1,0 +1,1 @@
+{"resourceType":"Parameters","id":"ex-patchParameters","meta":{"profile":["https://profiles.ihe.net/ITI/MHD/StructureDefinition/IHE.MHD.Patch.Parameters"]},"parameter":[{"name":"operation","part":[{"name":"path","valueString":"DocumentReference.status"},{"name":"type","valueCode":"replace"},{"name":"value","valueCode":"superseded"}]}]}
