@@ -35,6 +35,7 @@ import javax.annotation.Nonnull;
 import ch.ahdis.matchbox.engine.exception.MatchboxUnsupportedFhirVersionException;
 import ch.ahdis.matchbox.engine.packages.CompressedPackageResourceProxy;
 import ch.ahdis.matchbox.engine.packages.LazyTerminologyLoader;
+import ch.ahdis.matchbox.engine.packages.PackageResourceParser;
 import ch.ahdis.matchbox.util.MatchboxServerUtils;
 import org.hl7.fhir.convertors.factory.VersionConvertorFactory_30_50;
 import org.hl7.fhir.convertors.factory.VersionConvertorFactory_40_50;
@@ -278,6 +279,12 @@ public class IgLoaderFromJpaPackageCache extends IgLoader {
 					log.info("Ignoring core dependency '{}' for '{}'", dependency, src);
 					continue;
 				}
+				if (isCoreExamplesPackage(dependency)) {
+					// e.g. hl7.fhir.r4.examples#4.0.1 of hl7.fhir.uv.sdc, which HAPI doesn't install; MatchboxEngine.loadPackage()
+					// skips it too (#610)
+					log.info("Ignoring core examples dependency '{}' for '{}'", dependency, src);
+					continue;
+				}
 				log.debug("Loading depending package " + dependency + " for "+src);
 				try {
 					loadIg(igs, binaries, dependency, recursive);
@@ -336,14 +343,14 @@ public class IgLoaderFromJpaPackageCache extends IgLoader {
 					try {
 						final byte[] content = FileUtilities.streamToBytes(pi.load("package", s));
 						if (!LazyTerminologyLoader.canLoadLazily(pri)) {
-							final Resource r = parsePackageResource(fhirVersion, content, s);
+							final Resource r = parsePackageResource(fhirVersion, content);
 							if (cacheResource(r, packageInfo)) {
 								shared.addResource(r);
 							}
 							continue;
 						}
 						final CompressedPackageResourceProxy proxy = new CompressedPackageResourceProxy(
-							pri, pri.getUrl(), s, content, (bytes, filename) -> parsePackageResource(fhirVersion, bytes, filename),
+							pri, pri.getUrl(), s, content, (bytes, filename) -> parsePackageResource(fhirVersion, bytes),
 							packageInfo);
 						final LazyTerminologyLoader.OidRegistration oids =
 							LazyTerminologyLoader.registerProxy(getContext(), proxy, pri, content, packageInfo);
@@ -389,9 +396,18 @@ public class IgLoaderFromJpaPackageCache extends IgLoader {
 		return packageVersion.getPackageBinary().getId().getId();
 	}
 
-	private Resource parsePackageResource(final String fhirVersion, final byte[] content, final String filename)
+	/**
+	 * Whether a package is the examples package of a FHIR version, like NpmPackage.isCoreExamples().
+	 */
+	private static boolean isCoreExamplesPackage(final String packageId) {
+		final String name = packageId.contains("#") ? packageId.substring(0, packageId.indexOf("#")) : packageId;
+		return name.startsWith("hl7.fhir.r") && name.endsWith(".examples");
+	}
+
+	private Resource parsePackageResource(final String fhirVersion, final byte[] content)
 			throws IOException {
-		final Resource r = loadResourceByVersion(fhirVersion, content, filename);
+		// Not IgLoader.loadResourceByVersion(), it rejects file names ending with template.json (#610)
+		final Resource r = PackageResourceParser.parseJson(fhirVersion, content);
 		// https://github.com/ahdis/matchbox/issues/227
 		if (r instanceof final org.hl7.fhir.r5.model.StructureMap sm) {
 			cleanModifierExtensions(sm);

@@ -1,5 +1,11 @@
 2026/10/xx Release 4.1.19
 
+- Package resources whose file name ends with `template.json` are loaded again, e.g. the SDC template extraction
+  profile `sdc-questionnaire-extr-template` of `hl7.fhir.uv.sdc#4.0.0`: the server parsed the package resources with
+  core's `IgLoader.loadResourceByVersion()`, which rejects these file names ("Unsupported format"), now with the parser
+  of the package's FHIR version (`PackageResourceParser`). The examples package of a FHIR version (e.g.
+  `hl7.fhir.r4.examples`, a dependency of SDC) is skipped as a dependency instead of logging "Package not found", like
+  `MatchboxEngine.loadPackage()` does (#610)
 - Faster creation of the validation engine of an IG whose packages other engines have already loaded: the name,
   version and dependencies of the installed packages are kept in memory, so the package archive is no longer read from
   the database and unpacked for every package and dependency, and a package that isn't loaded yet is read once instead
