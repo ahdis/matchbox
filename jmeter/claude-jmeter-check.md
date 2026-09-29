@@ -429,6 +429,62 @@ depends on older versions that only it uses (`hl7.fhir.uv.extensions.r4` 5.1.0 a
 5.1.0, `hl7.terminology.r4` 5.5.0, 5.3.0 and 3.1.0, `hl7.terminology` 6.1.0, ch-core 5.0.0, …), and the
 StructureDefinitions of the extensions packages (about 1.1 s per version) are parsed up front.
 
+### Narrative not parsed (#614)
+
+The narrative of the package resources is dropped after parsing (#566), but its XHTML was still parsed: about half of
+the parse time of a terminology resource, and about 28% for IG profiles with generated narrative (the core packages
+have none). `PackageResourceParser` (server, all IG packages) removes it from the JSON before parsing and parses the
+JSON with Gson instead of R4's `JsonTrackingParser`; the core loaders of the engine do the same with the matchbox
+patch option `skipNarrative`.
+
+Images: `issue614-base` is main after #610 (`d6b02d301`), `issue614-nonarrative` the same with the server part of #614
+(`PackageResourceParser`, without the loader patch). 2026-09-29, **the machine was not idle** (other work during the
+runs); the runs alternate between the images, so the tendencies hold, single values vary more than usual. 0 failures,
+no OOM, the same issues in all runs.
+
+**Many IGs** (`preload_engines.sh h2`, 3 runs each, results in `i614-<image>-h2-r<n>`):
+
+| | base | narrative not parsed |
+|---|---|---|
+| Engine creation of the 12 engines, total | 20–21 s | **16 s** |
+| Engine creation per IG, median / max (ch-atc) | 0.6 / 8.6–9.1 s | 0.5–0.6 / **6.0–6.1 s** |
+| ch-allergyintolerance / ch-epr-fhir engine | 4.7–5.1 / 1.5–1.7 s | **3.8–4.1 / 1.0 s** |
+| First validation per IG incl. waiting, median / max | 3.1–3.2 / 13.3–14.1 s | 2.9–3.0 / **9.8–10.1 s** |
+| Validation once the engines exist, median | 18–19 ms | 19–23 ms |
+| Healthy after start on the initialized database | 26–29 s | 24–26 s |
+| Live heap after startup / after the test | 394–397 MB / 1.23–1.33 GB | 394–398 MB / 1.23–1.25 GB |
+
+The engines whose packages other engines have already loaded don't change (ch-core 0.2 s); the gain is in the engines
+that parse packages no other engine has loaded (ch-atc and its old dependency versions).
+
+**ch-elm 1.15.3** (commit `0071e49` on both images; `measure_startup.py`, 1 run per label, alternating, 3 each,
+`startup-i614-<image>-r<n>.csv`):
+
+| | base | narrative not parsed |
+|---|---|---|
+| Healthy after | 32–40 s | 30–31 s |
+| ch-elm engine created in | 8.2–10.9 s | **6.5–6.6 s** |
+| 1st / 2nd / 3rd validation | 841–902 / 164–200 / 126–178 ms | 806–814 / 163–167 / 138–144 ms |
+| Live heap after startup / after 3 validations | 663–668 / 665–674 MB | 663–666 / 673–676 MB |
+
+`memory.jmx` (8,000 validations, `-Xmx3g`, string deduplication, `1153-i614-<image>`): 3.7 / 3.8 min, validation median
+95 / 95 ms, p95 106 / 122 ms, live heap after the test 678 / 680 MB, response 34,593 / 34,594 bytes. Unchanged, as
+expected: the narrative was already dropped after parsing.
+
+**Several IGs** (with-ch, `multi-ig.jmx`, 400 validations, 2 runs each, `withch-i614-<image>-r<n>`):
+
+| | base | narrative not parsed |
+|---|---|---|
+| ch-core / ch-epr-fhir engine created in | 3.6 / 3.6 s | **2.9–3.0 / 2.6 s** |
+| First validation per profile (ch-core-patient, ch-mhd-documentreference-comprehensive, ch-core-composition, PpqmConsentTemplate201) | 3.9–4.0, 7.9, 6.8–6.9, 6.6 s | 3.3–3.4, 6.2–6.4, 5.2–5.3, 5.0–5.1 s |
+| Validation once the engines exist, median | 23–24 ms | 22 ms |
+| Live heap after startup / after the test | 401–402 / 705–708 MB | 397–404 / 701 MB |
+
+**Main engine** (engine part, the loader patch; not in the images above): `new MatchboxEngineBuilder().getEngineR4()`
+6 times in one JVM, 2 runs each: 4.55–4.60 → 3.55–3.68 s once warm, 7.0 → 6.1 s for the first. The core loaders
+parse the classpath packages (R4 core, extensions 5.3.0, xver-r5.r4; 4,259 resources) in 1.37 instead of 2.24 s,
+here mostly because of Gson, as these packages have no narrative.
+
 ### Findings so far
 
 - **4.1.9 → 4.1.11: validation 2× slower** (213 → 453 ms). HAPI stays at 8.8.0; core 6.9.8 → 6.9.11 is the likely
