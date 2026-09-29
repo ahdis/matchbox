@@ -1,5 +1,19 @@
 2026/10/xx Release 4.1.19
 
+- Faster creation of the validation engine of an IG whose packages other engines have already loaded: the name,
+  version and dependencies of the installed packages are kept in memory, so the package archive is no longer read from
+  the database and unpacked for every package and dependency, and a package that isn't loaded yet is read once instead
+  of twice. With the next change, `matchbox-server/with-preload` (12 IGs): engine creation median 3.3–3.5 → 0.6–0.7 s,
+  57–59 → 20–22 s for the 12 engines, first validation per IG median 16 → 3 s, the same on H2 and PostgreSQL (#609)
+- Registering the resources of a `hl7.terminology` package no longer gets slower with each further version of it in
+  the context: `CanonicalResourceManager.see()` looked through all resources of the type for a resource of the core
+  package with the same URL, now it only looks at those with the URL (port of the core fix `3b4427401`). A version of
+  `hl7.terminology.r4` is registered in about 0.4 s instead of 1.6–2.0 s (#609)
+- Updating a ci-build (or localhost) package of an installed version, e.g. through the GUI, replaces the package in the
+  database; now the cached engines with the package and its shared resources are dropped too, like when the package
+  is uninstalled, so that the new content is used (#609)
+- JMeter: add `preload_engines.sh` and `engine_creation.py` to measure the engine creation with
+  `matchbox-server/with-preload` on H2 and PostgreSQL, see `jmeter/claude-jmeter-check.md` (#609)
 - Add a manual workflow (`Create a release`) that creates the tag and the GitHub release of the version in the POM with
   the notes from the changelog, and starts the Docker and Maven Central workflows
 - Tests: replace the fixed 10 s "give the server some time to start up" sleep of the server integration tests with a
