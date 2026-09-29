@@ -91,6 +91,25 @@ To use docker-compose with Matchbox you need to check out Matchbox from [github]
 
 The database will be stored in the "data" directory. The configuration can be found in the "with-postgres" directory or in the "with-preload" directory.
 
+The compose files use PostgreSQL 18, which keeps its data in a subdirectory per major version (`data/18/docker`), so
+the "data" directory is mounted at `/var/lib/postgresql`. A "data" directory created with an earlier version of these
+files (PostgreSQL 17 or older, mounted at `/var/lib/postgresql/data`) isn't used by PostgreSQL 18. Either keep the old
+mount and pin the image to the old version, or move the database to PostgreSQL 18 with a dump:
+
+```
+# with the old docker-compose.yml, and the image pinned to the version that created the data (e.g. postgres:17)
+docker-compose up -d matchbox-db
+docker-compose exec -T matchbox-db pg_dump -Fc -U matchbox matchbox > mydump
+docker-compose down
+mv data data-old && mkdir data
+
+# with the new docker-compose.yml
+docker-compose up -d matchbox-db
+# wait until 'docker-compose logs matchbox-db' shows "PostgreSQL init process complete"
+docker-compose exec -T matchbox-db pg_restore -U matchbox -d matchbox < mydump
+docker-compose up -d
+```
+
 Change to either with-posgres directory or the with-preload directory
 
 For the first time, you might need to do
@@ -112,13 +131,13 @@ Matchbox-gui will be available at [http://localhost:8080/matchboxv3/#/](http://l
 Export the DB data:
 
 ```
-docker-compose exec -T matchbox-test-db pg_dump -Fc -U matchbox matchbox > mydump
+docker-compose exec -T matchbox-db pg_dump -Fc -U matchbox matchbox > mydump
 ```
 
 Reimport the DB data:
 
 ```
-docker-compose exec -T matchbox-test-db pg_restore -c -U matchbox -d matchbox < mydump
+docker-compose exec -T matchbox-db pg_restore -c -U matchbox -d matchbox < mydump
 ```
 
 ## Configure an own docker image with preinstalled packages
