@@ -365,7 +365,12 @@ public abstract class BaseWorkerContext extends I18nBase implements IWorkerConte
 
   protected void copy(BaseWorkerContext other) {
     synchronized (other.lock) { // tricky, because you need to lock this as well, but it's really not in use yet 
-      allResourcesById.putAll(other.allResourcesById);
+      // matchbox patch https://github.com/ahdis/matchbox/issues/608: copy the maps per resource type, otherwise they are
+      // shared and the resources registered in a copy are also found by the untyped lookups of the original context
+      for (Map.Entry<String, Map<String, ResourceProxy>> entry : other.allResourcesById.entrySet()) {
+        allResourcesById.put(entry.getKey(), new HashMap<>(entry.getValue()));
+      }
+      // END matchbox patch
       codeSystems.copy(other.codeSystems);
       valueSets.copy(other.valueSets);
       maps.copy(other.maps);
@@ -408,8 +413,14 @@ public abstract class BaseWorkerContext extends I18nBase implements IWorkerConte
       binaries.putAll(other.binaries);
       retainedObjects.addAll(other.retainedObjects); // matchbox patch
       oidSources.addAll(other.oidSources);
-      oidCacheManual.putAll(other.oidCacheManual);
-      validationCache.putAll(other.validationCache);
+      // matchbox patch https://github.com/ahdis/matchbox/issues/608: copy the inner sets and maps, as for allResourcesById
+      for (Map.Entry<String, Set<IOIDServices.OIDDefinition>> entry : other.oidCacheManual.entrySet()) {
+        oidCacheManual.put(entry.getKey(), new HashSet<>(entry.getValue()));
+      }
+      for (Map.Entry<String, Map<String, ValidationResult>> entry : other.validationCache.entrySet()) {
+        validationCache.put(entry.getKey(), new HashMap<>(entry.getValue()));
+      }
+      // END matchbox patch
       tlogging = other.tlogging;
       locator = other.locator;
       userAgent = other.userAgent;

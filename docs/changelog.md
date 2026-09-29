@@ -7,6 +7,12 @@
   answer. The startup, including the loading of the IGs, is already synchronous, so the check passes immediately and
   each test class starts about 10 s earlier
 - Make the `initialized` flag of `MatchboxEngineSupport` volatile, as it's polled by request threads
+- The engines of the IGs no longer share their resources with the main engine and with each other: the copy of the
+  context (`BaseWorkerContext.copy()`) shared the resource index per type and the OID index, so the resources of an IG
+  were also found by the untyped lookups of the other engines, and the validation results of the main engine depended
+  on the IG engines created since the start of the server (#608)
+- Tests: add the Matchbox test IG (`matchbox.health.test.ig.r4`) to the test resources of matchbox-engine, and document
+  it
 - Docker `with-postgres` and `with-preload`: use HAPI's `HapiFhirPostgresDialect` instead of Hibernate's
   `PostgreSQLDialect`, so that Hibernate doesn't create check constraints with the values of enum columns in a new
   database (24 of them), which newer HAPI FHIR versions that add values would violate (#605)
