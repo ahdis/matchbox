@@ -18,8 +18,11 @@
   PostgreSQL version needs to be upgraded, see the Docker documentation. `with-postgres` also didn't mount its
   configuration, so Matchbox started with H2, and the export and import commands in the Docker documentation used a
   wrong service name (#605)
-- Upgrade Jackson 3 (`tools.jackson.core:jackson-databind`) to 3.2.2 to fix CVE-2026-68497 (unbounded number parse
-  DoS when deserializing `Duration`/`XMLGregorianCalendar`)
+- Upgrade Jackson 3 (`tools.jackson.core:jackson-databind`) to 3.2.2 to fix CVE-2026-68497, CVE-2026-19032 and
+  CVE-2026-83557
+- Frontend: override `csv-parse` to 7.x (CVE-2026-85063); it's a declared but unused dependency of
+  `@lhncbc/ucum-lhc`, which still requires 4.x
+- Documentation: upgrade `mkdocs-material` to 9.7.7 (CVE-2026-73295)
 
 2026/09/26 Release 4.1.18
 
