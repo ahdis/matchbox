@@ -40,6 +40,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import org.fhir.ucum.UcumEssenceService;
 import org.hl7.fhir.convertors.factory.VersionConvertorFactory_40_50;
 import org.hl7.fhir.convertors.factory.VersionConvertorFactory_43_50;
+import org.hl7.fhir.convertors.loaders.loaderR5.BaseLoaderR5;
 import org.hl7.fhir.exceptions.FHIRException;
 import org.hl7.fhir.instance.model.api.IBaseResource;
 import org.hl7.fhir.r4.model.OperationOutcome;
@@ -474,6 +475,18 @@ public class MatchboxEngine extends ValidationEngine {
 		}
 	}
 
+	/**
+	 * The core loader of the resources of a package of a FHIR version, without parsing their narrative, which the
+	 * worker context doesn't need (#614).
+	 */
+	private static BaseLoaderR5 loaderForVersion(final String fhirVersion) {
+		final BaseLoaderR5 loader = ValidatorUtils.loaderForVersion(fhirVersion);
+		if (loader != null) {
+			loader.setSkipNarrative(true);
+		}
+		return loader;
+	}
+
 	public static SimpleWorkerContext createR5WorkerContext() throws IOException {
 		return createCoreWorkerContext("/hl7.fhir.r5.core.tgz", "5.0.0");
 	}
@@ -486,7 +499,7 @@ public class MatchboxEngine extends ValidationEngine {
 	public static SimpleWorkerContext createCoreWorkerContext(final String packageResource,
 																				 final String fhirVersion) throws IOException {
 		final NpmPackage pi = NpmPackage.fromPackage(MatchboxEngine.class.getResourceAsStream(packageResource));
-		final IContextResourceLoader loader = ValidatorUtils.loaderForVersion(fhirVersion);
+		final IContextResourceLoader loader = loaderForVersion(fhirVersion);
 		final SimpleWorkerContext context = new SimpleWorkerContextBuilder()
 			.fromPackage(pi, LazyTerminologyLoader.withoutLazyLoadedTypes(loader), false);
 		final MetadataCoreVersionPinner pinner = new MetadataCoreVersionPinner(context);
@@ -1125,7 +1138,7 @@ public class MatchboxEngine extends ValidationEngine {
 			return;
 		}
 		// Like IgLoader.loadPackage(npmPackage, true), but the terminology resources are loaded lazily
-		final IContextResourceLoader loader = ValidatorUtils.loaderForVersion(npmPackage.fhirVersion());
+		final IContextResourceLoader loader = loaderForVersion(npmPackage.fhirVersion());
 		this.getContext().loadFromPackage(npmPackage, LazyTerminologyLoader.withoutLazyLoadedTypes(loader));
 		LazyTerminologyLoader.registerProxies(this.getContext(), npmPackage, new PackageInformation(npmPackage, false),
 														  loader, null);
