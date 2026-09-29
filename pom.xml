@@ -53,7 +53,7 @@
         <junit_version>5.14.3</junit_version>
         <logback_version>1.6.3</logback_version>
         <jackson2_version>2.22.2</jackson2_version>
-        <jackson3_version>3.2.1</jackson3_version>
+        <jackson3_version>3.2.2</jackson3_version>
         <jackson_annotations_version>2.22</jackson_annotations_version>
         <okhttp_version>5.4.0</okhttp_version>
         <log4j_to_slf4j_version>2.26.1</log4j_to_slf4j_version>
