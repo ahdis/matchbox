@@ -306,6 +306,62 @@ would not suffice (3.4 GB live heap).
 The image's default `-XX:MaxRAMPercentage=70` in a container with a 4 GB limit (`-m 4g`, heap 2.8 GB): 400 validations,
 0 failures, 12 engines, not OOM killed, container memory 3.54 GiB of 4 GiB (`preload-4g`).
 
+### H2 or PostgreSQL (with-preload, matchbox 4.1.18)
+
+`matchbox-server/with-preload` on `matchbox:v4.1.18` (`-m 4g`), once with its PostgreSQL configuration
+(`postgres:latest`, 18.6, in the same Docker network) and once with only the datasource changed to
+`jdbc:h2:file:./database/h2` (`HapiFhirH2Dialect`, file on a Docker volume). Each run starts with an empty database:
+install the 55 packages (`--hapi.fhir.only_install_packages=true`), start a new container on the initialized database,
+then `multi-ig.jmx` with one example per IG (from `package/example` of each package) and an R4 core validation, 400
+validations. 3 runs per database, alternating; results in `db-<database>-r<n>` (git-ignored). Engine creation is
+measured in the server log from `Creating new cached validate engine` to `Terminology server` in the same thread.
+
+| | PostgreSQL (3 runs) | H2 file (3 runs) |
+|---|---|---|
+| Install of the 55 packages | 181–184 s | 171–189 s |
+| Database size | 411 MB | 883–896 MB |
+| Healthy after start on the initialized database | 28–29 s | 28–29 s |
+| Live heap after startup | 373–374 MB | 387–389 MB |
+| Engine creation per IG, median / max (12 engines, total) | 4.1–4.2 / 17.6 s (69–70 s) | 4.1–4.3 / 17.4–17.6 s (69–70 s) |
+| First validation per IG incl. waiting, median / max | 19.3–19.8 / 36 s | 19.4–19.7 / 36 s |
+| Validation once the engines exist, median / p95 | 20–21 / 28–29 ms | 19–21 / 29–31 ms |
+| Live heap after the test | 1.25–1.29 GB | 1.26–1.30 GB |
+| Container memory after the test | 3.7 GiB + 210 MiB PostgreSQL | 3.7–3.8 GiB |
+
+0 failures, no OOM, the same OperationOutcomes in all runs (apart from durations and the session id). The database is
+not on the critical path when it runs next to matchbox: engine creation is CPU bound (parsing the packages), and the
+H2 page cache in the JVM costs about 15 MB of heap. PostgreSQL compresses the package binaries in `hfj_res_ver` (TOAST,
+364 MB), H2 needs twice the disk.
+
+**Latency to the database matters, the database product doesn't.** With 2 ms more round trip to PostgreSQL (`tc
+netem` on the PostgreSQL container, `db-pg-lat2ms`), engine creation grew only by 5% (73 s for 12 engines), but every
+validation went from 20 to 50 ms (server time 16 → 46 ms). A `$validate` with a `profile` that isn't in the main
+engine and without `ig` looks up the IG of the profile in the database on every request
+(`MatchboxEngineSupport.loadPackageAssetByUrl()`: the package resource by canonical, its package version and the
+Binary's `hfj_resource` row, in a transaction, about 6 round trips), and does so inside the `synchronized`
+`getMatchboxEngine()`, so the lookups of parallel requests queue. ch-core practitioner, curl:
+
+| | sequential | 4 parallel clients |
+|---|---|---|
+| `profile`, PostgreSQL next to matchbox | 18 ms | 20 ms |
+| `profile`, +2 ms latency | 30 ms | **48 ms** |
+| `profile` and `ig=ch.fhir.ig.ch-core#6.0.0`, +2 ms latency | 14 ms | 16 ms |
+
+With `ig`, matchbox doesn't access the database for a validation; the engine (same session id) and the issues are
+the same. The synchronized engine lookup also makes every request wait while an engine is created (up to 17.6 s here),
+also those for IGs whose engine exists.
+
+**`HapiFhirPostgresDialect` instead of `PostgreSQLDialect`** (`db-pghapi-r<n>`, `db-pghapi-lat2ms`, 3 runs + 1 with
+2 ms latency, each on an empty database): the same install time (181–183 s), database size (411 MB), startup (28 s),
+engine creation (69 s for 12 engines), validation time (21–22 ms, 51 ms with 2 ms latency), live heap (1.26–1.28 GB)
+and OperationOutcomes. The dialect only differs in `supportsColumnCheck()` (false) and `getDriverType()`: a new
+database has no check constraints with the values of enum columns (Hibernate's dialect creates 24, e.g. on
+`bt2_work_chunk.stat`, which newer HAPI FHIR versions that add values violate). HAPI's own services still see
+Hibernate's dialect ("Dialect is not a HAPI FHIR dialect", "Database schema check skipped"):
+`JpaHibernatePropertiesProvider` was the version of the jpaserver-starter of matchbox 3.0.0 and resolved the dialect
+from the JDBC metadata, also for `HapiFhirH2Dialect` in the default configuration. Since the port of the upstream
+version (4.1.19), it uses `hibernate.dialect` when it's set, and both warnings are gone.
+
 ### Findings so far
 
 - **4.1.9 → 4.1.11: validation 2× slower** (213 → 453 ms). HAPI stays at 8.8.0; core 6.9.8 → 6.9.11 is the likely
