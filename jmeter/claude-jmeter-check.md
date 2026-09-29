@@ -176,6 +176,28 @@ Other configurations: `./jmeter_multi_ig.sh -Jcsv=<file>.csv -Jloops=<loops per 
 an example file (absolute path) per row; one row per IG creates one validation engine per IG. For `with-preload`, an
 example of each IG's own profiles can be taken from the `package/example` folder of its package.
 
+### 10. Many IGs: engine creation (with-preload)
+
+`preload_engines.sh` runs `matchbox-server/with-preload` (12 IGs, 55 packages with the dependencies) on an empty
+database, like a new installation: it installs the packages (`--hapi.fhir.only_install_packages=true`), starts
+matchbox on the initialized database (`-m 4g`, host port 8080), runs `multi-ig.jmx` with `preload.csv` (an example of
+each IG from the `package/example` folder of its package, `preload-*.json`, and an R4 core validation; 4 threads × 100
+loops), saves one OperationOutcome per profile and the server log, and removes the containers and the database.
+
+```bash
+cd jmeter
+./preload_engines.sh <h2|postgres> <label> <image> [<runs>]   # results in <label>-r<n>/ (git-ignored)
+python3 engine_creation.py <label>-r1 <label>-r2 ...
+```
+
+`postgres` uses the configuration of `with-preload` and a `postgres:18` container, `h2` the same configuration with the
+H2 datasource of the default configuration (file on a Docker volume). The first request per IG creates the engine of
+the IG; engine creation is synchronized, so the requests of the other threads wait for it. `engine_creation.py` reads
+the engine creation per IG from the server log (from `Creating new cached validate engine` to `Terminology server` in
+the same thread), the first validation per IG (including the waiting) and the validation time once the engines exist
+from the `.jtl`, and compares the issues of the OperationOutcomes with those of the first run given. Alternate the
+images and databases between runs (a run takes about 4–5 minutes, most of it for the install).
+
 ## Reading the numbers
 
 - **Check the heap limit of each image**
@@ -361,6 +383,51 @@ Hibernate's dialect ("Dialect is not a HAPI FHIR dialect", "Database schema chec
 `JpaHibernatePropertiesProvider` was the version of the jpaserver-starter of matchbox 3.0.0 and resolved the dialect
 from the JDBC metadata, also for `HapiFhirH2Dialect` in the default configuration. Since the port of the upstream
 version (4.1.19), it uses `hibernate.dialect` when it's set, and both warnings are gone.
+
+### Engine creation (with-preload, #609)
+
+`preload_engines.sh` (step 10), 3 runs per image and database, alternating, each on an empty database (2026-09-29).
+`main` is `d33e1acde` (4.1.19 development, after #608), `#609` the same with the changes of #609. Results in
+`i609-<image>-<database>-r<n>` (git-ignored).
+
+| | 4.1.18 (H2 / PostgreSQL) ¹ | main (H2 / PostgreSQL) | #609 (H2 / PostgreSQL) |
+|---|---|---|---|
+| Engine creation per IG, median / max | 4.1–4.3 / 17.4–17.8 s | 3.3–3.5 / 14.4–15.1 s | **0.6–0.7 / 8.6–9.3 s** |
+| Engine creation of the 12 engines, total | 69–70 s | 57–59 s | **20–22 s** |
+| ch-core engine (all its packages loaded by other engines) | 3.6–3.9 s | 3.0–3.3 s | **0.2–0.3 s** |
+| First validation per IG incl. waiting, median / max | 19.1–19.8 / 36 s | 15.8–16.4 / 29–31 s | **3.0–3.6 / 13–15 s** |
+| Validation once the engines exist, median | 19–21 ms | 18–19 ms | 18–20 ms ² |
+| Live heap after the test | 1.26–1.30 GB | 1.33–1.39 GB | 1.21–1.30 GB |
+| Install of the 55 packages / healthy after | 171–189 / 28–29 s | 152–165 / 22–27 s | 152–162 / 23–34 s |
+
+0 failures, no OOM, and the same issues in all 12 runs. H2 and PostgreSQL give the same times.
+
+¹ The runs of the section above, on `postgres:latest` (18.6).
+² One run (H2) 27 ms.
+
+Two changes:
+
+- **The package archives are only read to load resources.** For every package and dependency,
+  `IgLoaderFromJpaPackageCache.loadIg()` read the package archive from the database and unpacked it
+  (`JpaPackageCache.loadPackageFromCacheOnly()`), only to get its name, version and dependencies, and then checked
+  whether another engine had already loaded the package. A package that wasn't loaded yet was read and unpacked a
+  second time. Now the version is resolved in the database without reading the archive
+  (`JpaPackageCache.findPackageVersionFromCacheOnly()`), the name, version, dependencies and internal dependencies are
+  kept in `SharedPackageResourcesCache` (by the id of the archive's Binary, so a package version that is installed
+  again, e.g. a ci-build, is read again), and the archive is read at most once.
+- **Registering a version of `hl7.terminology` no longer gets slower with each further version in the context.** For
+  each resource of a `hl7.terminology` package, `CanonicalResourceManager.see()` looked through all resources of the
+  type for a resource of the core package with the same URL ("UTG support prior to version 5"). With JFR, more than
+  half of the samples of loading 4 versions of `hl7.terminology.r4` into a copy of the main engine were in this loop
+  (`HashMap$KeyIterator`); the time per version grew from 0.92 to 1.48 s (6.3.0, 7.0.1, 6.5.0, 6.2.0, including the
+  unpacking). It now looks up the resources with the URL in `listForUrl`, as in core `3b4427401` (not yet released):
+  0.51–0.58 s for each version. In the server, a version of `hl7.terminology.r4` that isn't shared yet is registered
+  in 0.3–0.4 s instead of 1.6–2.0 s, and one that another engine has loaded in a few ms.
+
+What remains of the engine creation is loading the packages that no other engine has loaded yet: ch-atc (8.6 s)
+depends on older versions that only it uses (`hl7.fhir.uv.extensions.r4` 5.1.0 and 1.0.0, `hl7.fhir.uv.extensions.r5`
+5.1.0, `hl7.terminology.r4` 5.5.0, 5.3.0 and 3.1.0, `hl7.terminology` 6.1.0, ch-core 5.0.0, …), and the
+StructureDefinitions of the extensions packages (about 1.1 s per version) are parsed up front.
 
 ### Findings so far
 
