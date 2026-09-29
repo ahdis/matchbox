@@ -52,6 +52,10 @@ You can add the matchbox-engine dependency in your `pom.xml`:
 
 The source code is documented with [Javadoc](https://ahdis.github.io/matchbox/apidocs/). Test cases illustrate the main functionality for transformation with the [FHIR Mapping Language](https://github.com/ahdis/matchbox/blob/main/matchbox-engine/src/test/java/ch/ahdis/matchbox/engine/tests/FhirMappingLanguageTests.java) and for [CDA to FHIR transformation](https://github.com/ahdis/matchbox/blob/main/matchbox-engine/src/test/java/ch/ahdis/matchbox/engine/tests/CdaToFhirTransformTests.java).
 
+Tests of matchbox-engine and matchbox-server that need an implementation guide use the
+[Matchbox test IG](https://github.com/ahdis/matchbox-test-ig) (`matchbox.health.test.ig.r4`), whose package is in the
+test resources of both modules.
+
 For validation or transformation, you need to instantiate a matchbox-engine. This matchbox-engine can be configured
 with a specific version of an implementation guide and its dependencies. You can instantiate multiple engines with different ig's.
 
