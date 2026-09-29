@@ -7,6 +7,17 @@
   answer. The startup, including the loading of the IGs, is already synchronous, so the check passes immediately and
   each test class starts about 10 s earlier
 - Make the `initialized` flag of `MatchboxEngineSupport` volatile, as it's polled by request threads
+- Docker `with-postgres` and `with-preload`: use HAPI's `HapiFhirPostgresDialect` instead of Hibernate's
+  `PostgreSQLDialect`, so that Hibernate doesn't create check constraints with the values of enum columns in a new
+  database (24 of them), which newer HAPI FHIR versions that add values would violate (#605)
+- HAPI FHIR services now use the dialect set in `hibernate.dialect` (e.g. `HapiFhirPostgresDialect`, `HapiFhirH2Dialect`)
+  instead of the one Hibernate derives from the database, so the database schema check is no longer skipped (port of
+  `JpaHibernatePropertiesProvider` from the hapi-fhir-jpaserver-starter) (#605)
+- Docker `with-postgres` and `with-preload`: pin PostgreSQL to 18 and mount the data directory at `/var/lib/postgresql`;
+  `postgres:latest` (18) refused to start with the mount at `/var/lib/postgresql/data`. A data directory of an earlier
+  PostgreSQL version needs to be upgraded, see the Docker documentation. `with-postgres` also didn't mount its
+  configuration, so Matchbox started with H2, and the export and import commands in the Docker documentation used a
+  wrong service name (#605)
 
 2026/09/26 Release 4.1.18
 

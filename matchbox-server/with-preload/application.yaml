@@ -13,7 +13,7 @@ spring:
       maximum-pool-size: 10
   jpa:
     properties:
-      hibernate.dialect: org.hibernate.dialect.PostgreSQLDialect
+      hibernate.dialect: ca.uhn.fhir.jpa.model.dialect.HapiFhirPostgresDialect
 hapi:
   fhir:
     implementationguides:
