@@ -245,17 +245,30 @@ public class IgLoaderFromJpaPackageCache extends IgLoader {
 				version = src.substring(src.indexOf("#") + 1);
 				id = src.substring(0, src.indexOf("#"));
 			}
-			NpmPackage npm = ((JpaPackageCache) myPackageCacheManager).loadPackageFromCacheOnly(id, version);
-			if (npm == null) {
+			final Optional<NpmPackageVersionEntity> packageVersion =
+				((JpaPackageCache) myPackageCacheManager).findPackageVersionFromCacheOnly(id, version);
+			if (packageVersion.isEmpty()) {
 				log.error("Package not found: " + id +" "+version );
 				return null;
 			}
-			if (getContext().getLoadedPackages().contains(npm.name() + "#" + npm.version())) {
+			// The package archive is only read and unpacked if the metadata of the package isn't cached yet, or if no
+			// other engine has loaded its resources, and then only once (#609)
+			NpmPackage npm = null;
+			PackageMetadata metadata = this.sharedPackageResources == null ? null
+				: this.sharedPackageResources.getMetadata(getMetadataKey(packageVersion.get()));
+			if (metadata == null) {
+				npm = this.loadPackage(packageVersion.get());
+				metadata = new PackageMetadata(npm.name(), npm.version(), npm.dependencies(), getInternalDependencies(npm));
+				if (this.sharedPackageResources != null) {
+					this.sharedPackageResources.putMetadata(getMetadataKey(packageVersion.get()), metadata);
+				}
+			}
+			if (getContext().getLoadedPackages().contains(metadata.packageId())) {
 				// e.g. a dependency on ch.fhir.ig.ch-term#3.3.x that is resolved to an already loaded 3.3.0
-				log.info("Package '{}' already in context as '{}#{}'", src, npm.name(), npm.version());
+				log.info("Package '{}' already in context as '{}'", src, metadata.packageId());
 				return null;
 			}
-			for (final String dependency : npm.dependencies()) {
+			for (final String dependency : metadata.dependencies()) {
 				if (VersionUtilities.isCorePackage(dependency)) {
 					// The FHIR core package is loaded manually for the FHIR version of the engine, see
 					// MatchboxEngineSupport.getMatchboxEngineNotSynchronized(). Loading the core package of another FHIR
@@ -274,7 +287,7 @@ public class IgLoaderFromJpaPackageCache extends IgLoader {
 				log.info("Finished loading depending package " + dependency + " for "+ src);
 			}
 			// Load internal dependencies declared in the ImplementationGuide resource (see #481)
-			for (final String internalDep : getInternalDependencies(npm)) {
+			for (final String internalDep : metadata.internalDependencies()) {
 				if (VersionUtilities.isCorePackage(internalDep)) {
 					log.info("Ignoring core internal dependency '{}' for '{}'", internalDep, src);
 					continue;
@@ -287,94 +300,93 @@ public class IgLoaderFromJpaPackageCache extends IgLoader {
 				}
 				log.info("Finished loading internal dependency " + internalDep + " for " + src);
 			}
-			// use above version because of potential .x version we resolve in the cache
-			version = npm.version();
 			// The resources of a package that another engine has already loaded are shared, see
 			// SharedPackageResourcesCache
 			final SharedPackageResources cached = this.sharedPackageResources == null ? null
-				: this.sharedPackageResources.get(npm.name() + "#" + npm.version());
+				: this.sharedPackageResources.get(metadata.packageId());
 			if (cached != null) {
 				cached.registerIn(getContext());
-				log.info("Registered the {} conformance resources of package {}#{} that another engine has loaded",
-							cached.size(), npm.name(), npm.version());
+				log.info("Registered the {} conformance resources of package {} that another engine has loaded",
+							cached.size(), metadata.packageId());
 				return null;
 			}
-			Optional<NpmPackageVersionEntity> npmPackage = myNpmPackageVersionDao.findByPackageIdAndVersion(id, version);
-			if (npmPackage.isPresent()) {
-				int count = 0;
-				log.info("Loading package " + src);
+			int count = 0;
+			log.info("Loading package " + src);
 
-				// this way we have 0.5 seconds per 100 resources (eg hl7.fhir.r4.core has 15 seconds for 3128 resources)
-				NpmPackage pi = this.loadPackage(npmPackage.get());
-				PackageInformation packageInfo = new PackageInformation(pi);
-				getContext().getLoadedPackages().add(pi.name() + "#" + pi.version());
-				final SharedPackageResources shared = new SharedPackageResources(pi.name() + "#" + pi.version(),
-																									  packageInfo);
-				getContext().retain(shared);
+			// this way we have 0.5 seconds per 100 resources (eg hl7.fhir.r4.core has 15 seconds for 3128 resources)
+			final NpmPackage pi = npm != null ? npm : this.loadPackage(packageVersion.get());
+			PackageInformation packageInfo = new PackageInformation(pi);
+			getContext().getLoadedPackages().add(pi.name() + "#" + pi.version());
+			final SharedPackageResources shared = new SharedPackageResources(pi.name() + "#" + pi.version(),
+																								  packageInfo);
+			getContext().retain(shared);
 
-				final String fhirVersion = npm.fhirVersion();
-				try {
-					// The terminology resources are registered with the metadata of the package index and parsed when
-					// they're first used (lazy loading), like the core validator does for packages on the filesystem. Most
-					// of them, e.g. of the several versions of hl7.terminology that the dependencies pull in, are never
-					// used for a validation.
-					for (final PackageResourceInformation pri : pi.listIndexedResources(LOADED_RESOURCE_TYPES)) {
-						final String s = LazyTerminologyLoader.getPackageFolderFilename(pri);
-						if (s == null) {
+			final String fhirVersion = pi.fhirVersion();
+			try {
+				// The terminology resources are registered with the metadata of the package index and parsed when
+				// they're first used (lazy loading), like the core validator does for packages on the filesystem. Most
+				// of them, e.g. of the several versions of hl7.terminology that the dependencies pull in, are never
+				// used for a validation.
+				for (final PackageResourceInformation pri : pi.listIndexedResources(LOADED_RESOURCE_TYPES)) {
+					final String s = LazyTerminologyLoader.getPackageFolderFilename(pri);
+					if (s == null) {
+						continue;
+					}
+					++count;
+					try {
+						final byte[] content = FileUtilities.streamToBytes(pi.load("package", s));
+						if (!LazyTerminologyLoader.canLoadLazily(pri)) {
+							final Resource r = parsePackageResource(fhirVersion, content, s);
+							if (cacheResource(r, packageInfo)) {
+								shared.addResource(r);
+							}
 							continue;
 						}
-						++count;
-						try {
-							final byte[] content = FileUtilities.streamToBytes(pi.load("package", s));
-							if (!LazyTerminologyLoader.canLoadLazily(pri)) {
-								final Resource r = parsePackageResource(fhirVersion, content, s);
-								if (cacheResource(r, packageInfo)) {
-									shared.addResource(r);
-								}
-								continue;
-							}
-							final CompressedPackageResourceProxy proxy = new CompressedPackageResourceProxy(
-								pri, pri.getUrl(), s, content, (bytes, filename) -> parsePackageResource(fhirVersion, bytes, filename),
-								packageInfo);
-							final LazyTerminologyLoader.OidRegistration oids =
-								LazyTerminologyLoader.registerProxy(getContext(), proxy, pri, content, packageInfo);
-							shared.addProxy(proxy);
-							if (oids != null) {
-								shared.addOids(oids);
-							}
-						} catch (FHIRException | IOException e) {
-							log.error(s, e);
+						final CompressedPackageResourceProxy proxy = new CompressedPackageResourceProxy(
+							pri, pri.getUrl(), s, content, (bytes, filename) -> parsePackageResource(fhirVersion, bytes, filename),
+							packageInfo);
+						final LazyTerminologyLoader.OidRegistration oids =
+							LazyTerminologyLoader.registerProxy(getContext(), proxy, pri, content, packageInfo);
+						shared.addProxy(proxy);
+						if (oids != null) {
+							shared.addOids(oids);
 						}
+					} catch (FHIRException | IOException e) {
+						log.error(s, e);
 					}
-				} catch (IOException e) {
-					log.error("Error reading package", e);
-					return null;
 				}
-
-				log.info("Finished loading " + count + " conformance resources for package " + pi.name() + "#" + pi.version());
-				if (this.sharedPackageResources != null) {
-					this.sharedPackageResources.put(shared);
-				}
-
-				// with hsql or psql this slow around 7 seconds per 100 resources (oe dev)
-				// machine)
-				// lets load the package directly
-//				List<NpmPackageVersionResourceEntity> resources = npmPackage.get().getResources();
-//				for (NpmPackageVersionResourceEntity resource: resources) {
-//					++count;
-//					if (count % 100 == 0) {
-//						log.info(" ... loading "+count);
-//					}
-//					this.getContext().cacheResource(loadPackageEntity(resource));
-//				}
-//s				this.getContext().getLoadedPackages().add(id + "#" + version);
-
-
-			} else {
-				throw new RuntimeException(Msg.code(1305) + "Failed to load package resource " + src);
+			} catch (IOException e) {
+				log.error("Error reading package", e);
+				return null;
 			}
+
+			log.info("Finished loading " + count + " conformance resources for package " + pi.name() + "#" + pi.version());
+			if (this.sharedPackageResources != null) {
+				this.sharedPackageResources.put(shared);
+			}
+
+			// with hsql or psql this slow around 7 seconds per 100 resources (oe dev)
+			// machine)
+			// lets load the package directly
+//			List<NpmPackageVersionResourceEntity> resources = npmPackage.get().getResources();
+//			for (NpmPackageVersionResourceEntity resource: resources) {
+//				++count;
+//				if (count % 100 == 0) {
+//					log.info(" ... loading "+count);
+//				}
+//				this.getContext().cacheResource(loadPackageEntity(resource));
+//			}
+//s				this.getContext().getLoadedPackages().add(id + "#" + version);
 			return null;
 		});
+	}
+
+	/**
+	 * The metadata of a package version is cached by the id of its package archive (Binary), which is new when the
+	 * package version is installed again.
+	 */
+	private static long getMetadataKey(final NpmPackageVersionEntity packageVersion) {
+		return packageVersion.getPackageBinary().getId().getId();
 	}
 
 	private Resource parsePackageResource(final String fhirVersion, final byte[] content, final String filename)

@@ -382,17 +382,24 @@ public class CanonicalResourceManager<T extends CanonicalResource> {
     }
 
     // special case logic for UTG support prior to version 5
-    if (cr.getPackageInfo() != null && cr.getPackageInfo().getId().startsWith("hl7.terminology")) {
-      List<CachedCanonicalResource<T>> toDrop = new ArrayList<>();
-      for (CachedCanonicalResource<T> n : allResources) {
-        if (n.getUrl() != null && n.getUrl().equals(cr.getUrl()) && isBasePackage(n.getPackageInfo())) {
-          toDrop.add(n);
+    // matchbox patch https://github.com/ahdis/matchbox/issues/609, from core 3b4427401 (not yet released): listForUrl
+    // holds the same resources as allResources, indexed by url, so look the url up instead of scanning all resources.
+    // The scan made registering a hl7.terminology package slower with each further version of it in the context.
+    if (cr.getPackageInfo() != null && cr.getPackageInfo().getId().startsWith("hl7.terminology") && cr.getUrl() != null) {
+      List<CachedCanonicalResource<T>> sameUrl = listForUrl.get(cr.getUrl());
+      if (sameUrl != null) {
+        List<CachedCanonicalResource<T>> toDrop = new ArrayList<>();
+        for (CachedCanonicalResource<T> n : sameUrl) {
+          if (isBasePackage(n.getPackageInfo())) {
+            toDrop.add(n);
+          }
+        }
+        for (CachedCanonicalResource<T> n : toDrop) {
+          drop(n);
         }
       }
-      for (CachedCanonicalResource<T> n : toDrop) {
-        drop(n);
-      }
     }
+    // END matchbox patch
 //    CachedCanonicalResource<T> existing = cr.hasVersion() ? map.get(cr.getUrl()+"|"+cr.getVersion()) : map.get(cr.getUrl()+"|#0");
 //    if (existing != null) {
 //      drop(existing); // was list.remove(existing)

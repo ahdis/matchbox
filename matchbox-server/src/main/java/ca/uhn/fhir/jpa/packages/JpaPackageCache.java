@@ -171,6 +171,15 @@ public class JpaPackageCache extends BasePackageCacheManager implements IHapiPac
 	@Override
 	@Transactional
 	public NpmPackage loadPackageFromCacheOnly(String theId, @Nullable String theVersion) {
+		return findPackageVersionFromCacheOnly(theId, theVersion).map(t -> loadPackage(t)).orElse(null);
+	}
+
+	/**
+	 * matchbox: the package version that {@link #loadPackageFromCacheOnly(String, String)} loads (a version like
+	 * 3.3.x resolved to the latest installed 3.3 version), without reading and unpacking the package archive (#609)
+	 */
+	@Transactional
+	public Optional<NpmPackageVersionEntity> findPackageVersionFromCacheOnly(String theId, @Nullable String theVersion) {
 		Optional<NpmPackageVersionEntity> packageVersion = loadPackageVersionEntity(theId, theVersion);
 		if (!packageVersion.isPresent() && theVersion.endsWith(".x")) {
 			String lookupVersion = theVersion;
@@ -186,8 +195,7 @@ public class JpaPackageCache extends BasePackageCacheManager implements IHapiPac
 						loadPackageVersionEntity(theId, candidateVersionIds.get(candidateVersionIds.size() - 1));
 			}
 		}
-
-		return packageVersion.map(t -> loadPackage(t)).orElse(null);
+		return packageVersion;
 	}
 
 	private Optional<NpmPackageVersionEntity> loadPackageVersionEntity(String theId, @Nullable String theVersion) {
