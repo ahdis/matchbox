@@ -68,6 +68,12 @@
 - Frontend: override `csv-parse` to 7.x (CVE-2026-85063); it's a declared but unused dependency of
   `@lhncbc/ucum-lhc`, which still requires 4.x
 - Documentation: upgrade `mkdocs-material` to 9.7.7 (CVE-2026-73295)
+- Tests: the matchbox-server test suite no longer keeps the contexts of the finished Spring test classes. Spring
+  Boot's static `OnAvailableEndpointCondition` cache kept them softly reachable, so the JVM grew the heap instead of
+  clearing them (surefire now runs with `-XX:SoftRefLRUPolicyMSPerMB=0`), and JUnit kept the instance of the first
+  `PER_CLASS` test class, with its `MatchboxEngineSupport`, until the end of the run (the Spring tests now release
+  their autowired fields in `@AfterAll`). Used memory after GC at `MbInstalledStructureDefinitionIsCurrentTest`
+  4006 → 1523 MB, heap 13.8 → 5.3 GB
 
 2026/09/26 Release 4.1.18
 

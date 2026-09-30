@@ -8,6 +8,7 @@ import ch.ahdis.matchbox.validation.gazelle.models.validation.ValidationProfile;
 import ch.ahdis.matchbox.validation.gazelle.models.validation.ValidationReport;
 import ch.ahdis.matchbox.validation.gazelle.models.validation.ValidationTestResult;
 import ch.ahdis.matchbox.test.CompareUtil;
+import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
@@ -49,6 +50,12 @@ public class GazelleApiR4Test extends AbstractGazelleTest {
 	void waitUntilStartup() throws Exception {
 		ServerStartup.awaitServerReady("http://localhost:8081/matchboxv3", this.matchboxEngineSupport);
 		CompareUtil.logMemory();
+	}
+
+	@AfterAll
+	void releaseContext() {
+		// JUnit can keep the PER_CLASS test instance until the end of the run: don't let it retain the closed context
+		this.matchboxEngineSupport = null;
 	}
 
 	@Test

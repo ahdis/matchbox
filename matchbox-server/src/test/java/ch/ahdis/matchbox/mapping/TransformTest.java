@@ -11,6 +11,7 @@ import org.apache.commons.io.FileUtils;
 import org.hl7.fhir.r4.model.OperationOutcome;
 import org.hl7.fhir.r4.model.Parameters;
 import org.hl7.fhir.r4.model.StringType;
+import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
@@ -57,6 +58,12 @@ public class TransformTest {
 	void waitUntilStartup() throws Exception {
 		ServerStartup.awaitServerReady(TARGET_SERVER, this.matchboxEngineSupport);
 		CompareUtil.logMemory();
+	}
+
+	@AfterAll
+	void releaseContext() {
+		// JUnit can keep the PER_CLASS test instance until the end of the run: don't let it retain the closed context
+		this.matchboxEngineSupport = null;
 	}
 
 	@Test

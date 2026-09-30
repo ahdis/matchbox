@@ -12,6 +12,7 @@ import org.hl7.fhir.instance.model.api.*;
 import org.hl7.fhir.r5.model.OperationOutcome;
 import org.hl7.fhir.r5.model.OperationOutcome.IssueSeverity;
 import org.hl7.fhir.r5.model.OperationOutcome.OperationOutcomeIssueComponent;
+import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
@@ -79,6 +80,12 @@ public class MatchboxApiR5Test {
 	void waitUntilStartup() throws Exception {
 		ServerStartup.awaitServerReady(this.targetServer, this.matchboxEngineSupport);
 		CompareUtil.logMemory();
+	}
+
+	@AfterAll
+	void releaseContext() {
+		// JUnit can keep the PER_CLASS test instance until the end of the run: don't let it retain the closed context
+		this.matchboxEngineSupport = null;
 	}
 
 	private static IBaseExtension<?, ?> getMatchboxValidationExtension(FhirContext theCtx,
