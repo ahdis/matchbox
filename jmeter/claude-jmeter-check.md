@@ -190,12 +190,32 @@ cd jmeter
 python3 engine_creation.py <label>-r1 <label>-r2 ...
 ```
 
+Options (environment variables):
+
+- `DB_TEMPLATE=1`: install the packages only once per database into a Docker volume (`mbpreload-h2-template`,
+  `mbpreload-postgres-template`) and start each run on a copy of it. The install takes most of the time of a run (7 min
+  on H2), and the installed database is the same for images that install the same way. Remove the volume
+  (`docker volume rm mbpreload-h2-template`) when the installation changes.
+- `LATENCY=2ms` (postgres): add this delay to the packets that PostgreSQL sends (`tc netem` in the network namespace of
+  its container, with `alpine` and `iproute2-tc`), after the install, so every round trip to the database takes 2 ms
+  more.
+
+Besides `multi-ig.jmx`, each run
+
+- validates an R4 core Patient (main engine, exists from the start) every 200 ms (`probe.py`, `probe.csv`): whether
+  the requests for an existing engine wait while other engines are created (#616),
+- measures the validation of the ch-core practitioner with `profile` alone and with `profile` and
+  `ig=ch.fhir.ig.ch-core#6.0.0`, 200 validations by 1 client and 200 by 4 parallel clients, once the engines exist
+  (`profile_lookup.py`, `lookup.txt`): the cost of finding the IG of a profile.
+
 `postgres` uses the configuration of `with-preload` and a `postgres:18` container, `h2` the same configuration with the
 H2 datasource of the default configuration (file on a Docker volume). The first request per IG creates the engine of
-the IG; engine creation is synchronized, so the requests of the other threads wait for it. `engine_creation.py` reads
-the engine creation per IG from the server log (from `Creating new cached validate engine` to `Terminology server` in
-the same thread), the first validation per IG (including the waiting) and the validation time once the engines exist
-from the `.jtl`, and compares the issues of the OperationOutcomes with those of the first run given. Alternate the
+the IG; up to 4.1.19, engine creation is synchronized, so the requests of the other threads wait for it.
+`engine_creation.py` reads the engine creation per IG from the server log (from `Creating new cached validate engine`
+to `Terminology server` in the same thread), the first validation per IG (including the waiting), the R4 core
+validations of `probe.py` until the last engine exists ("R4 core meanwhile") and the validation time once the engines
+exist from the `.jtl`, prints the `profile_lookup.py` results per run, and compares the issues of the OperationOutcomes
+with those of the first run given. Alternate the
 images and databases between runs (a run takes about 4–5 minutes, most of it for the install).
 
 ## Reading the numbers
@@ -486,6 +506,72 @@ slower than usual here, the machine was busy):
 without / with the loader patch): 4.55–4.60 → 3.55–3.68 s once warm, 7.0 → 6.1 s for the first. The core loaders parse
 the classpath packages (R4 core, extensions 5.3.0, xver-r5.r4; 4,259 resources) in 1.37 instead of 2.24 s, here
 mostly because of Gson, as these packages have no narrative.
+
+### Engine lock and IG lookup (#616)
+
+`MatchboxEngineSupport.getMatchboxEngine()` was `synchronized`: every request that needed an engine waited while any
+engine was created, and the IG of a `profile` that isn't in the main engine was looked up in the database on every
+request, inside the lock. Approaches:
+
+- **Only cache the IG lookup, keep `synchronized`**: removes the database round trips, but a request for an existing
+  engine still waits up to the creation time of another IG's engine (8 s for ch-atc here).
+- **`ConcurrentHashMap.computeIfAbsent` on the engine cache**: holds the lock of the map bin for the whole creation
+  (also blocking other keys in the bin), can't be nested, and doesn't exclude uninstall and reload.
+- **Striped locks per engine key**: works, but still needs a lock against reload and uninstall.
+- **Chosen: a read/write lock plus one future per engine being created.** Requests hold the read lock; the requests for
+  an engine that is being created wait for its future, the others don't wait. The write lock is held to (re)create the
+  main engine (startup, `$load-all`, `reload`), to evict the engines of an uninstalled package, and in the
+  `onlyOneEngine` mode (IGs are loaded into the main engine per request). The IG of a canonical (also "not found") is
+  cached until a package version is installed or uninstalled: `JpaPackageCache` publishes an
+  `InstalledPackagesChangedEvent` after the transaction that adds or removes a package version, whatever the way the
+  package is installed (`$load-all`, ImplementationGuide create/update, `$install-npm-package`, dependencies); a lookup
+  that overlaps with it goes to the replaced map. Engines that are created at the same time load a shared package once
+  (`SharedPackageResourcesCache.loadingLock()`): 51 package loads in every run, as before.
+
+`preload_engines.sh` with `DB_TEMPLATE=1` (one install per database, 186–189 s), alternating, 2026-09-29, machine idle.
+`main` is image `issue614-full` (`0d0e8f854` has the same code), `#616` this change. 0 failures, no OOM, the same
+issues in all 14 runs. Results in `i616-<image>-<database>-r<n>` (git-ignored).
+
+| | main | #616 |
+|---|---|---|
+| **H2** (3 runs each) | | |
+| R4 core validation (main engine) while the IG engines are created, median / max (`probe.py`) | 103–226 ms / **8.0–8.2 s** | 36–40 / **224–278 ms** |
+| First validation per IG incl. waiting, median / max | 3.1–3.2 / 12.1–12.4 s | **1.6–2.2 / 8.4–8.9 s** |
+| Engine creation per IG, median / max ¹ | 0.6 / 7.3–7.5 s | 1.6–2.1 / 8.3–8.8 s |
+| Validation once the engines exist, median (server) | 21 ms (16) | 19–20 ms (14–15) |
+| ch-core practitioner, `profile`, 1 / 4 clients, median (p95) | 15.4–15.8 (18) / 16.6–17.4 (20–27) ms | 14.4–14.6 (17) / 16.4–16.7 (19–20) ms |
+| ch-core practitioner, `profile` and `ig`, 1 / 4 clients, median | 13.2–13.4 / 15.3–15.6 ms | 13.3–13.6 / 15.3–15.8 ms |
+| Live heap after startup / after the test ² | 395–398 MB / 1.23–1.24 GB | 396–399 MB / 1.27–1.31 GB |
+| **PostgreSQL, +2 ms latency** (2 runs each) | | |
+| R4 core validation while the IG engines are created, max | 8.6–8.8 s | **221–249 ms** |
+| First validation per IG incl. waiting, median / max | 3.5 / 13.1 s | **1.6–1.9 / 8.7–8.9 s** |
+| Validation once the engines exist (JMeter, `profile` only), median (server) | 50 ms (46) | **18–20 ms (14–15)** |
+| ch-core practitioner, `profile`, 1 / 4 clients, median (p95) | 28.8–29.3 (31–32) / **55.4–55.5 (66–67)** ms | 14.4–14.6 (17) / **16.4–17.1 (20–22)** ms |
+| ch-core practitioner, `profile` and `ig`, 1 / 4 clients, median | 13.3–13.5 / 15.1–15.3 ms | 13.3–13.5 / 15.1–16.1 ms |
+| **PostgreSQL** (1 run each) | | |
+| R4 core validation while the IG engines are created, max | 8.1 s | 249 ms |
+| First validation per IG incl. waiting, median / max | 4.9 / 12.3 s | 2.1 / 8.6 s |
+| ch-core practitioner, `profile`, 1 / 4 clients, median | 16.2 / 17.3 ms | 15.1 / 16.8 ms |
+
+¹ The engines are now created in parallel (4 JMeter threads), sharing the CPU and waiting for the packages that
+another engine is loading, so each creation takes longer, but they overlap: the sum (18–21 → 29–31 s) is no longer
+the wall-clock time. The last engine (ch-atc) is ready after its own creation time instead of after the creation of
+the engines before it.
+² After the test, #616 has −5 to +90 MB (on average +50 MB) of live heap (1.23–1.24 → 1.27–1.31 GB on H2, 1.20–1.23 →
+1.23–1.27 GB with latency), with the same package loads; not investigated further (heap dump).
+
+Requests for existing engines no longer wait for engine creation (max 8 s → 0.2–0.3 s, the rest is CPU contention
+with the engines being created). With the IG of a profile cached, a `$validate` with `profile` alone is as fast as
+with `ig`, also with 2 ms of latency to the database and 4 parallel clients (55 → 17 ms); without latency the lookup
+cost only 1–2 ms.
+
+**ch-elm 1.15.3** (commit `0071e49` on the #616 image, `matchbox-ch-elm:1153-i616`, fresh container each):
+`jmeter_fast.sh` (1 thread × 2,000) 0 errors, median 96 / p95 101 ms; `memory.jmx` (4 threads × 2,000) 0 errors,
+median 114 / p95 127 ms, 4.0 min, live heap after the test 675 MB (#614 image `1153-i614b-full`: 109 / 131 ms,
+3.9 min, 679–680 MB). All validations of both runs on the same engine (one session id), no errors in the server log.
+The ch-elm engine is created at startup, so these runs check concurrent requests on an existing engine; the parallel
+creation of engines is covered by the with-preload runs above (3–4 requests per run waited for an engine that another
+request was creating).
 
 ### Findings so far
 
