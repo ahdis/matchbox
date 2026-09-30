@@ -3,6 +3,7 @@ package ch.ahdis.matchbox.packages;
 import java.lang.ref.WeakReference;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Caches the conformance resources of the packages (id#version) that were loaded in a validation engine, so that the
@@ -24,6 +25,16 @@ public class SharedPackageResourcesCache {
 	private final Map<String, WeakReference<SharedPackageResources>> cache = new HashMap<>();
 
 	private final Map<Long, PackageMetadata> metadata = new HashMap<>();
+
+	private final Map<String, Object> loadingLocks = new ConcurrentHashMap<>();
+
+	/**
+	 * Returns the lock to hold while looking up the resources of a package and loading them if they aren't cached, so
+	 * that engines that are created at the same time load a package only once.
+	 */
+	public Object loadingLock(final String packageId) {
+		return this.loadingLocks.computeIfAbsent(packageId, id -> new Object());
+	}
 
 	/**
 	 * Returns the resources of a package, or null if no engine that loaded it is alive.

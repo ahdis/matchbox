@@ -4,12 +4,17 @@ import ca.uhn.fhir.context.BaseRuntimeChildDefinition;
 import ca.uhn.fhir.context.FhirContext;
 import ca.uhn.fhir.context.RuntimeResourceDefinition;
 import ca.uhn.fhir.jpa.dao.data.MbInstalledStructureDefinitionRepository;
+import ca.uhn.fhir.jpa.packages.IHapiPackageCacheManager;
 import ca.uhn.fhir.jpa.starter.Application;
+import ch.ahdis.matchbox.engine.MatchboxEngine;
 import ch.ahdis.matchbox.util.MatchboxEngineSupport;
 import ch.ahdis.matchbox.validation.gazelle.models.validation.Input;
 import ch.ahdis.matchbox.validation.gazelle.models.validation.ValidationReport;
 import ch.ahdis.matchbox.validation.gazelle.models.validation.ValidationRequest;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
+import org.apache.commons.compress.archivers.tar.TarArchiveOutputStream;
+import org.apache.commons.compress.compressors.gzip.GzipCompressorOutputStream;
 import org.apache.commons.io.FileUtils;
 import org.hl7.fhir.instance.model.api.*;
 import org.hl7.fhir.r4.model.*;
@@ -28,6 +33,8 @@ import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.ContextConfiguration;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.net.URI;
@@ -36,6 +43,10 @@ import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -58,6 +69,9 @@ class MatchboxApiR4Test {
 
 	@Autowired
 	private MatchboxEngineSupport matchboxEngineSupport;
+
+	@Autowired
+	private IHapiPackageCacheManager packageCacheManager;
 
 	@BeforeAll
 	void waitUntilStartup() throws Exception {
@@ -197,6 +211,146 @@ class MatchboxApiR4Test {
 		// assertEquals(0, getValidationFailures((OperationOutcome) operationOutcome));
 		// assertNotEquals(sessionIdCore, sessionId3CoreTxNa);
 		// assertEquals("n/a", getTxServer(operationOutcome));
+	}
+
+	/**
+	 * The creation of an engine doesn't block the requests for other engines, and the requests for the same engine
+	 * wait for its creation (#616).
+	 */
+	@Test
+	void engineCreationDoesNotBlockOtherEngines() throws Exception {
+		final String profileMatchbox = "http://matchbox.health/ig/test/r4/StructureDefinition/practitioner-identifier-required";
+		// the engine of the test IG is created again
+		this.matchboxEngineSupport.getSessionCache().evictEnginesWithPackage("matchbox.health.test.ig.r4", "0.3.0");
+
+		final ExecutorService executor = Executors.newFixedThreadPool(2);
+		try {
+			final Future<MatchboxEngine> first = executor.submit(
+				() -> this.matchboxEngineSupport.getMatchboxEngine(profileMatchbox, null, true, false));
+			final long deadline = System.nanoTime() + TimeUnit.SECONDS.toNanos(60);
+			while (this.matchboxEngineSupport.numberOfEnginesInCreation() == 0 && !first.isDone()
+				&& System.nanoTime() < deadline) {
+				Thread.sleep(1);
+			}
+			assertFalse(first.isDone(), "the engine of the test IG was created before the test could check it");
+			final Future<MatchboxEngine> second = executor.submit(
+				() -> this.matchboxEngineSupport.getMatchboxEngine(profileMatchbox, null, true, false));
+
+			// the main engine, while the engine of the test IG is being created
+			final MatchboxEngine core = this.matchboxEngineSupport.getMatchboxEngine(profileCore("Practitioner"), null,
+																											  true, false);
+			assertNotNull(core);
+			assertFalse(first.isDone(), "the request for the main engine waited for the creation of another engine");
+
+			final MatchboxEngine created = first.get(60, TimeUnit.SECONDS);
+			assertNotNull(created);
+			assertNotSame(core, created);
+			assertSame(created, second.get(60, TimeUnit.SECONDS));
+			assertEquals(0, this.matchboxEngineSupport.numberOfEnginesInCreation());
+		} finally {
+			executor.shutdownNow();
+		}
+
+		final IBaseOperationOutcome operationOutcome = this.validationClient.validate("""
+			<Practitioner xmlns="http://hl7.org/fhir">
+				<identifier>
+					<system value="urn:oid:2.51.1.3"/>
+					<value value="7610000050719"/>
+				</identifier>
+			</Practitioner>""", profileMatchbox);
+		assertEquals(0, getValidationFailures((OperationOutcome) operationOutcome));
+		assertEquals("matchbox.health.test.ig.r4#0.3.0", getIg(operationOutcome));
+	}
+
+	/**
+	 * The IG of a profile is cached, also when no package has the profile, until a package is installed or
+	 * uninstalled (#616).
+	 */
+	@Test
+	void igOfProfileIsLookedUpAgainAfterPackageChanges() throws Exception {
+		final String packageId = "matchbox.health.test.issue616";
+		final String profile = "http://matchbox.health/test/issue616/StructureDefinition/practitioner-name-required";
+		assertNull(this.matchboxEngineSupport.getMatchboxEngine(profile, null, true, false));
+		// the profile list of the Gazelle API isn't cached, its ETag follows the installed packages (#591)
+		final HttpResponse<String> profilesBefore = this.getGazelleProfiles();
+		assertFalse(profilesBefore.body().contains(profile));
+
+		this.packageCacheManager.addPackageToCache(packageId, "0.1.0", new ByteArrayInputStream(createIssue616Package()),
+																 "test");
+		try {
+			final MatchboxEngine engine = this.matchboxEngineSupport.getMatchboxEngine(profile, null, true, false);
+			assertNotNull(engine);
+			assertTrue(engine.getContext().getLoadedPackages().contains(packageId + "#0.1.0"));
+			final HttpResponse<String> profilesInstalled = this.getGazelleProfiles();
+			assertTrue(profilesInstalled.body().contains(profile));
+			assertNotEquals(getETag(profilesBefore), getETag(profilesInstalled));
+		} finally {
+			this.packageCacheManager.uninstallPackage(packageId, "0.1.0");
+		}
+		assertNull(this.matchboxEngineSupport.getMatchboxEngine(profile, null, true, false));
+		this.matchboxEngineSupport.onImplementationGuideUninstalled(packageId, "0.1.0");
+		final HttpResponse<String> profilesAfter = this.getGazelleProfiles();
+		assertFalse(profilesAfter.body().contains(profile));
+		assertEquals(getETag(profilesBefore), getETag(profilesAfter));
+	}
+
+	private HttpResponse<String> getGazelleProfiles() throws Exception {
+		final HttpRequest request = HttpRequest.newBuilder(new URI(TARGET_SERVER + "/gazelle/validation/v2/profiles"))
+			.GET().build();
+		final HttpResponse<String> response = this.httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+		assertEquals(200, response.statusCode());
+		return response;
+	}
+
+	private static String getETag(final HttpResponse<String> response) {
+		return response.headers().firstValue("ETag").orElseThrow();
+	}
+
+	private static byte[] createIssue616Package() throws IOException {
+		final var out = new ByteArrayOutputStream();
+		try (final var tar = new TarArchiveOutputStream(new GzipCompressorOutputStream(out))) {
+			addTarEntry(tar, "package/package.json", """
+				{
+				  "name": "matchbox.health.test.issue616",
+				  "version": "0.1.0",
+				  "fhirVersions": ["4.0.1"],
+				  "dependencies": { "hl7.fhir.r4.core": "4.0.1" }
+				}
+				""");
+			addTarEntry(tar, "package/StructureDefinition-practitioner-name-required.json", """
+				{
+				  "resourceType": "StructureDefinition",
+				  "id": "practitioner-name-required",
+				  "url": "http://matchbox.health/test/issue616/StructureDefinition/practitioner-name-required",
+				  "version": "0.1.0",
+				  "name": "PractitionerNameRequired",
+				  "status": "active",
+				  "fhirVersion": "4.0.1",
+				  "kind": "resource",
+				  "abstract": false,
+				  "type": "Practitioner",
+				  "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Practitioner",
+				  "derivation": "constraint",
+				  "differential": {
+				    "element": [
+				      { "id": "Practitioner", "path": "Practitioner" },
+				      { "id": "Practitioner.name", "path": "Practitioner.name", "min": 1 }
+				    ]
+				  }
+				}
+				""");
+		}
+		return out.toByteArray();
+	}
+
+	private static void addTarEntry(final TarArchiveOutputStream tar, final String name, final String content)
+		throws IOException {
+		final byte[] bytes = content.getBytes(StandardCharsets.UTF_8);
+		final TarArchiveEntry entry = new TarArchiveEntry(name);
+		entry.setSize(bytes.length);
+		tar.putArchiveEntry(entry);
+		tar.write(bytes);
+		tar.closeArchiveEntry();
 	}
 
 	@Test

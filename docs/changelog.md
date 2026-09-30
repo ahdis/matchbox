@@ -1,5 +1,17 @@
 2026/10/xx Release 4.1.19
 
+- Requests no longer wait for the creation of the engines of other IGs: `MatchboxEngineSupport.getMatchboxEngine()` was
+  `synchronized`, now the requests hold a read lock and only the requests for an engine that is being created wait
+  for it; the main engine (startup, `$load-all`, `reload`), the uninstall of a package and the `onlyOneEngine` mode
+  take the write lock. Engines that are created at the same time load a shared package only once. The IG of a
+  `profile` that isn't in the main engine (also "not found") is cached instead of being looked up in the database on
+  every request, until a package version is installed or uninstalled. `matchbox-server/with-preload` (12 IGs): an R4
+  core validation while the engines of the IGs are created takes at most 0.2–0.3 s instead of up to 8 s, first
+  validation per IG max 12 → 9 s; with 2 ms of latency to PostgreSQL, a `$validate` with `profile` alone by 4 parallel
+  clients 55 → 17 ms, as fast as with `ig`. New metric `matchbox.engines.creating.number`. JMeter: `preload_engines.sh`
+  can reuse the installed database (`DB_TEMPLATE=1`), add latency to PostgreSQL (`LATENCY=2ms`), and measures the
+  requests for an existing engine during engine creation (`probe.py`) and the IG lookup of a profile
+  (`profile_lookup.py`), see `jmeter/claude-jmeter-check.md` (#616)
 - The narrative of the package resources is no longer parsed, only to be dropped afterwards (#566): the server
   (`PackageResourceParser`) and the engine (matchbox patch of core's `BaseLoaderR5` and version loaders, option
   `skipNarrative`, to be contributed upstream) remove it from the JSON before parsing, and parse the JSON with Gson
