@@ -1,4 +1,4 @@
-2026/10/xx Release 4.1.19
+2026/09/30 Release 4.1.19
 
 - Frontend: update the transitive development dependencies `brace-expansion` 5.0.12
   ([GHSA-q2hr-2g5m-vwhr](https://github.com/advisories/GHSA-q2hr-2g5m-vwhr)), `ip-address` 10.7.2
