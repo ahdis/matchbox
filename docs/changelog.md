@@ -1,3 +1,10 @@
+2026/10/05 Release 4.1.20
+
+- Upgrade Jackson 2 (`com.fasterxml.jackson.core`) to 2.22.3 and Jackson 3 (`tools.jackson.core`) to 3.2.3 to fix
+  the `jackson-databind` vulnerabilities [GHSA-cxp5-3px4-pw24](https://github.com/advisories/GHSA-cxp5-3px4-pw24)
+  (quadratic forward-reference completion) and [GHSA-wv8q-qhhj-9h54](https://github.com/advisories/GHSA-wv8q-qhhj-9h54)
+  (retains every unknown raw type ID)
+
 2026/09/30 Release 4.1.19
 
 - Release: the frontend version in `package.json` is the release version again (was 4.1.8); the release procedure
