@@ -20,6 +20,7 @@ import org.hl7.fhir.instance.model.api.*;
 import org.hl7.fhir.r4.model.*;
 import org.hl7.fhir.r4.model.OperationOutcome.IssueSeverity;
 import org.hl7.fhir.r4.model.OperationOutcome.OperationOutcomeIssueComponent;
+import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
@@ -77,6 +78,14 @@ class MatchboxApiR4Test {
 	void waitUntilStartup() throws Exception {
 		ServerStartup.awaitServerReady(TARGET_SERVER, this.matchboxEngineSupport);
 		CompareUtil.logMemory();
+	}
+
+	@AfterAll
+	void releaseContext() {
+		// JUnit can keep the PER_CLASS test instance until the end of the run: don't let it retain the closed context
+		this.installedStructureDefinitionRepository = null;
+		this.matchboxEngineSupport = null;
+		this.packageCacheManager = null;
 	}
 
 	@Test
