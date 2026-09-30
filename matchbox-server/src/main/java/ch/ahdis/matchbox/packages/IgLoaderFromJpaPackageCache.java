@@ -272,7 +272,7 @@ public class IgLoaderFromJpaPackageCache extends IgLoader {
 			for (final String dependency : metadata.dependencies()) {
 				if (VersionUtilities.isCorePackage(dependency)) {
 					// The FHIR core package is loaded manually for the FHIR version of the engine, see
-					// MatchboxEngineSupport.getMatchboxEngineNotSynchronized(). Loading the core package of another FHIR
+					// MatchboxEngineSupport.getMatchboxEngineNotLocked(). Loading the core package of another FHIR
 					// version as a dependency would add a second set of type definitions to the context, which makes the
 					// validation fail with 'Ambiguous type id'. The official validator skips core packages in the
 					// dependencies too, see org.hl7.fhir.validation.IgLoader#loadIg(..).
@@ -308,68 +308,73 @@ public class IgLoaderFromJpaPackageCache extends IgLoader {
 				log.info("Finished loading internal dependency " + internalDep + " for " + src);
 			}
 			// The resources of a package that another engine has already loaded are shared, see
-			// SharedPackageResourcesCache
-			final SharedPackageResources cached = this.sharedPackageResources == null ? null
-				: this.sharedPackageResources.get(metadata.packageId());
-			if (cached != null) {
-				cached.registerIn(getContext());
-				log.info("Registered the {} conformance resources of package {} that another engine has loaded",
-							cached.size(), metadata.packageId());
-				return null;
-			}
-			int count = 0;
-			log.info("Loading package " + src);
+			// SharedPackageResourcesCache. Engines are created in parallel (#616): an engine that needs a package that
+			// another engine is loading waits for it, and then registers the shared resources.
+			final Object loadingLock = this.sharedPackageResources == null ? new Object()
+				: this.sharedPackageResources.loadingLock(metadata.packageId());
+			synchronized (loadingLock) {
+				final SharedPackageResources cached = this.sharedPackageResources == null ? null
+					: this.sharedPackageResources.get(metadata.packageId());
+				if (cached != null) {
+					cached.registerIn(getContext());
+					log.info("Registered the {} conformance resources of package {} that another engine has loaded",
+								cached.size(), metadata.packageId());
+					return null;
+				}
+				int count = 0;
+				log.info("Loading package " + src);
 
-			// this way we have 0.5 seconds per 100 resources (eg hl7.fhir.r4.core has 15 seconds for 3128 resources)
-			final NpmPackage pi = npm != null ? npm : this.loadPackage(packageVersion.get());
-			PackageInformation packageInfo = new PackageInformation(pi);
-			getContext().getLoadedPackages().add(pi.name() + "#" + pi.version());
-			final SharedPackageResources shared = new SharedPackageResources(pi.name() + "#" + pi.version(),
-																								  packageInfo);
-			getContext().retain(shared);
+				// this way we have 0.5 seconds per 100 resources (eg hl7.fhir.r4.core has 15 seconds for 3128 resources)
+				final NpmPackage pi = npm != null ? npm : this.loadPackage(packageVersion.get());
+				PackageInformation packageInfo = new PackageInformation(pi);
+				getContext().getLoadedPackages().add(pi.name() + "#" + pi.version());
+				final SharedPackageResources shared = new SharedPackageResources(pi.name() + "#" + pi.version(),
+																									  packageInfo);
+				getContext().retain(shared);
 
-			final String fhirVersion = pi.fhirVersion();
-			try {
-				// The terminology resources are registered with the metadata of the package index and parsed when
-				// they're first used (lazy loading), like the core validator does for packages on the filesystem. Most
-				// of them, e.g. of the several versions of hl7.terminology that the dependencies pull in, are never
-				// used for a validation.
-				for (final PackageResourceInformation pri : pi.listIndexedResources(LOADED_RESOURCE_TYPES)) {
-					final String s = LazyTerminologyLoader.getPackageFolderFilename(pri);
-					if (s == null) {
-						continue;
-					}
-					++count;
-					try {
-						final byte[] content = FileUtilities.streamToBytes(pi.load("package", s));
-						if (!LazyTerminologyLoader.canLoadLazily(pri)) {
-							final Resource r = parsePackageResource(fhirVersion, content);
-							if (cacheResource(r, packageInfo)) {
-								shared.addResource(r);
-							}
+				final String fhirVersion = pi.fhirVersion();
+				try {
+					// The terminology resources are registered with the metadata of the package index and parsed when
+					// they're first used (lazy loading), like the core validator does for packages on the filesystem. Most
+					// of them, e.g. of the several versions of hl7.terminology that the dependencies pull in, are never
+					// used for a validation.
+					for (final PackageResourceInformation pri : pi.listIndexedResources(LOADED_RESOURCE_TYPES)) {
+						final String s = LazyTerminologyLoader.getPackageFolderFilename(pri);
+						if (s == null) {
 							continue;
 						}
-						final CompressedPackageResourceProxy proxy = new CompressedPackageResourceProxy(
-							pri, pri.getUrl(), s, content, (bytes, filename) -> parsePackageResource(fhirVersion, bytes),
-							packageInfo);
-						final LazyTerminologyLoader.OidRegistration oids =
-							LazyTerminologyLoader.registerProxy(getContext(), proxy, pri, content, packageInfo);
-						shared.addProxy(proxy);
-						if (oids != null) {
-							shared.addOids(oids);
+						++count;
+						try {
+							final byte[] content = FileUtilities.streamToBytes(pi.load("package", s));
+							if (!LazyTerminologyLoader.canLoadLazily(pri)) {
+								final Resource r = parsePackageResource(fhirVersion, content);
+								if (cacheResource(r, packageInfo)) {
+									shared.addResource(r);
+								}
+								continue;
+							}
+							final CompressedPackageResourceProxy proxy = new CompressedPackageResourceProxy(
+								pri, pri.getUrl(), s, content, (bytes, filename) -> parsePackageResource(fhirVersion, bytes),
+								packageInfo);
+							final LazyTerminologyLoader.OidRegistration oids =
+								LazyTerminologyLoader.registerProxy(getContext(), proxy, pri, content, packageInfo);
+							shared.addProxy(proxy);
+							if (oids != null) {
+								shared.addOids(oids);
+							}
+						} catch (FHIRException | IOException e) {
+							log.error(s, e);
 						}
-					} catch (FHIRException | IOException e) {
-						log.error(s, e);
 					}
+				} catch (IOException e) {
+					log.error("Error reading package", e);
+					return null;
 				}
-			} catch (IOException e) {
-				log.error("Error reading package", e);
-				return null;
-			}
 
-			log.info("Finished loading " + count + " conformance resources for package " + pi.name() + "#" + pi.version());
-			if (this.sharedPackageResources != null) {
-				this.sharedPackageResources.put(shared);
+				log.info("Finished loading " + count + " conformance resources for package " + pi.name() + "#" + pi.version());
+				if (this.sharedPackageResources != null) {
+					this.sharedPackageResources.put(shared);
+				}
 			}
 
 			// with hsql or psql this slow around 7 seconds per 100 resources (oe dev)

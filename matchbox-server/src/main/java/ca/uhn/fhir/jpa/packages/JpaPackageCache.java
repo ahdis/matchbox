@@ -50,6 +50,7 @@ import ca.uhn.fhir.rest.server.exceptions.ResourceNotFoundException;
 import ca.uhn.fhir.util.BinaryUtil;
 import ca.uhn.fhir.util.ResourceUtil;
 import ca.uhn.fhir.util.StringUtil;
+import ch.ahdis.matchbox.events.InstalledPackagesChangedEvent;
 import ch.ahdis.matchbox.packages.MatchboxJpaPackageCache;
 import jakarta.annotation.Nonnull;
 import jakarta.annotation.Nullable;
@@ -77,11 +78,14 @@ import org.hl7.fhir.utilities.npm.PackageServer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Slice;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 import org.springframework.transaction.support.TransactionTemplate;
 
 import java.io.ByteArrayInputStream;
@@ -141,6 +145,10 @@ public class JpaPackageCache extends BasePackageCacheManager implements IHapiPac
 
   @Autowired
   private MatchboxJpaPackageCache matchboxJpaPackageCache;
+
+	// MODIFIED: matchbox caches the IG of the canonicals (#616)
+	@Autowired
+	private ApplicationEventPublisher myApplicationEventPublisher;
 
 	@Override
 	public void addPackageServer(@Nonnull PackageServer thePackageServer) {
@@ -293,6 +301,7 @@ public class JpaPackageCache extends BasePackageCacheManager implements IHapiPac
 		IBaseBinary binary = createPackageBinary(bytes);
 
 		return newTxTemplate().execute(tx -> {
+			publishInstalledPackagesChanged(); // MODIFIED (#616)
 			ResourceTable persistedPackage = createResourceBinary(binary);
 			NpmPackageEntity pkg = myPackageDao.findByPackageId(packageId).orElseGet(() -> createPackage(npmPackage));
 			NpmPackageVersionEntity packageVersion = myPackageVersionDao
@@ -488,6 +497,23 @@ public class JpaPackageCache extends BasePackageCacheManager implements IHapiPac
 		}
 
 		return retVal;
+	}
+
+	/**
+	 * MODIFIED: tells matchbox that the installed packages have changed, once the transaction has completed, so that it
+	 * looks up the IG of the canonicals again (#616).
+	 */
+	private void publishInstalledPackagesChanged() {
+		if (TransactionSynchronizationManager.isSynchronizationActive()) {
+			TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+				@Override
+				public void afterCompletion(final int status) {
+					myApplicationEventPublisher.publishEvent(new InstalledPackagesChangedEvent(JpaPackageCache.this));
+				}
+			});
+		} else {
+			myApplicationEventPublisher.publishEvent(new InstalledPackagesChangedEvent(this));
+		}
 	}
 
 	@Nonnull
@@ -737,6 +763,7 @@ public class JpaPackageCache extends BasePackageCacheManager implements IHapiPac
 		Optional<NpmPackageVersionEntity> packageVersion =
 				myPackageVersionDao.findByPackageIdAndVersion(thePackageId, theVersion);
 		if (packageVersion.isPresent()) {
+			publishInstalledPackagesChanged(); // MODIFIED (#616)
 
 			String msg = "Deleting package " + thePackageId + "#" + theVersion;
 			ourLog.info(msg);

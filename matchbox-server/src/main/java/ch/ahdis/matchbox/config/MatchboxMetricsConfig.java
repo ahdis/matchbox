@@ -32,6 +32,10 @@ public class MatchboxMetricsConfig {
 				.description("Number of cached immutable Matchbox engines in the server")
 				.baseUnit(ENGINE_UNIT)
 				.register(registry);
+			Gauge.builder("matchbox.engines.creating.number", engineSupport::numberOfEnginesInCreation)
+				.description("Number of Matchbox engines that are being created")
+				.baseUnit(ENGINE_UNIT)
+				.register(registry);
 		};
 	}
 

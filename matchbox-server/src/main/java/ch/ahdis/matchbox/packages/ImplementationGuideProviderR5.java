@@ -232,8 +232,7 @@ public class ImplementationGuideProviderR5 extends ImplementationGuideResourcePr
 
 		log.info("Creating cached engines during startup  " + VersionUtil.getMemory());
 		// The matchboxEngineSupport will set the 'initialized' flag after having reloaded
-		MatchboxEngine engine = matchboxEngineSupport.getMatchboxEngineNotSynchronized(null, this.cliContext, false,
-																												 true);
+		MatchboxEngine engine = matchboxEngineSupport.reloadEngines(this.cliContext);
 		if (this.matchboxContext.isOnlyOneEngine()) {
 			List<NpmPackageVersionEntity> packages = myPackageVersionDao
 					.findAll(org.springframework.data.domain.Sort.by(Direction.ASC, "myPackageId", "myVersionId"));

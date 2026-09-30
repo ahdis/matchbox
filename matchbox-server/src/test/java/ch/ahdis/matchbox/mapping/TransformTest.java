@@ -8,6 +8,7 @@ import ch.ahdis.matchbox.test.ServerStartup;
 import ch.ahdis.matchbox.test.ValidationClient;
 import ch.ahdis.matchbox.util.MatchboxEngineSupport;
 import org.apache.commons.io.FileUtils;
+import org.hl7.fhir.r4.model.OperationOutcome;
 import org.hl7.fhir.r4.model.Parameters;
 import org.hl7.fhir.r4.model.StringType;
 import org.junit.jupiter.api.BeforeAll;
@@ -28,6 +29,7 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -196,6 +198,66 @@ public class TransformTest {
 			.build();
 		final var readResponse = this.httpClient.send(readRequest, HttpResponse.BodyHandlers.ofString());
 		assertEquals(404, readResponse.statusCode(), "expected a 404: " + readResponse.body());
+	}
+
+	/**
+	 * In the 'onlyOneEngine' mode, a StructureDefinition that is created on the server is used by the next validation,
+	 * also when a validation before has looked up its canonical in the installed packages, without finding it: the
+	 * cached lookup of the IG of a profile (#616) must not hide it.
+	 */
+	@Test
+	void testValidateWithCreatedStructureDefinition() throws Exception {
+		final String profile = "http://matchbox.health/test/issue616/StructureDefinition/practitioner-name-required";
+		final String practitioner = """
+			{ "resourceType": "Practitioner", "active": true }""";
+
+		// not known yet: the canonical is looked up in the installed packages, and not found
+		final List<String> unknown = errors(this.validationClient.validate(practitioner, profile));
+		assertFalse(unknown.isEmpty(), "the profile should be unknown before its creation");
+		assertTrue(unknown.stream().noneMatch(e -> e.contains("Practitioner.name")), unknown.toString());
+
+		final var createRequest = HttpRequest.newBuilder(URI.create(TARGET_SERVER + "/fhir/StructureDefinition"))
+			.POST(HttpRequest.BodyPublishers.ofString("""
+				{
+				  "resourceType": "StructureDefinition",
+				  "url": "%s",
+				  "version": "0.1.0",
+				  "name": "PractitionerNameRequired",
+				  "status": "active",
+				  "fhirVersion": "4.0.1",
+				  "kind": "resource",
+				  "abstract": false,
+				  "type": "Practitioner",
+				  "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Practitioner",
+				  "derivation": "constraint",
+				  "differential": {
+				    "element": [
+				      { "id": "Practitioner", "path": "Practitioner" },
+				      { "id": "Practitioner.name", "path": "Practitioner.name", "min": 1 }
+				    ]
+				  }
+				}""".formatted(profile)))
+			.header("Content-Type", "application/fhir+json")
+			.header("Accept", "application/fhir+json")
+			.build();
+		final var createResponse = this.httpClient.send(createRequest, HttpResponse.BodyHandlers.ofString());
+		assertEquals(201, createResponse.statusCode(), createResponse.body());
+
+		// now the profile is used: the missing name is the only error
+		final List<String> missingName = errors(this.validationClient.validate(practitioner, profile));
+		assertEquals(1, missingName.size(), missingName.toString());
+		assertTrue(missingName.getFirst().contains("Practitioner.name"), missingName.toString());
+		assertEquals(List.of(), errors(this.validationClient.validate("""
+			{ "resourceType": "Practitioner", "active": true, "name": [ { "family": "Muster" } ] }""", profile)));
+	}
+
+	private static List<String> errors(final org.hl7.fhir.instance.model.api.IBaseOperationOutcome outcome) {
+		return ((OperationOutcome) outcome).getIssue().stream()
+			.filter(i -> i.getSeverity() == OperationOutcome.IssueSeverity.ERROR
+				|| i.getSeverity() == OperationOutcome.IssueSeverity.FATAL)
+			.map(i -> String.join(",", i.getExpression().stream().map(Object::toString).toList()) + ": "
+				+ (i.getDetails().hasText() ? i.getDetails().getText() : i.getDiagnostics()))
+			.toList();
 	}
 
 	private String getContent(final String resourceName) throws IOException {
