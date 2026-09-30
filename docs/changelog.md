@@ -1,5 +1,8 @@
 2026/09/30 Release 4.1.19
 
+- Release: the frontend version in `package.json` is the release version again (was 4.1.8); the release procedure
+  moved from the README and `CLAUDE.md` to the Claude Code skill `.claude/skills/release/SKILL.md`, which is now
+  tracked in git (`.gitignore`)
 - Frontend: update the transitive development dependencies `brace-expansion` 5.0.12
   ([GHSA-q2hr-2g5m-vwhr](https://github.com/advisories/GHSA-q2hr-2g5m-vwhr)), `ip-address` 10.7.2
   ([GHSA-j6r3-76f7-8jcv](https://github.com/advisories/GHSA-j6r3-76f7-8jcv)) and `fast-uri` 3.1.8
