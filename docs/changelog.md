@@ -1,5 +1,9 @@
 2026/10/xx Release 4.1.19
 
+- Frontend: update the transitive development dependencies `brace-expansion` 5.0.12
+  ([GHSA-q2hr-2g5m-vwhr](https://github.com/advisories/GHSA-q2hr-2g5m-vwhr)), `ip-address` 10.7.2
+  ([GHSA-j6r3-76f7-8jcv](https://github.com/advisories/GHSA-j6r3-76f7-8jcv)) and `fast-uri` 3.1.8
+  ([GHSA-hrr3-gc8f-f4qj](https://github.com/advisories/GHSA-hrr3-gc8f-f4qj)) in `package-lock.json`
 - FML parsing ([#618](https://github.com/ahdis/matchbox/issues/618)): `MatchboxEngine.parseMapR5()` parsed with a
   static R5 worker context that kept the R5 core package (R4 servers) or the context of the first R5 engine that parsed,
   with its IG, for the lifetime of the JVM. Parsing only uses the context to parse the FHIRPath expressions, which
