@@ -1,6 +1,7 @@
 """Compares the runs of preload_engines.sh: engine creation per IG (from the server log), the first validation per IG
-(including the engine creation and the waiting for other engines), the validation time once the engines exist, and
-whether the validation issues are the same in all runs.
+(including the engine creation and the waiting for other engines), the R4 core validations (main engine) while the
+engines of the IGs are created, the validation time once the engines exist, the validation of a profile with and
+without `ig` (profile_lookup.py, if the run has it), and whether the validation issues are the same in all runs.
 
 usage: python3 engine_creation.py <run folder> [<run folder> ...]
 """
@@ -22,11 +23,23 @@ def load_jtl(path):
     for r in rows:
         by[urllib.parse.parse_qs(urllib.parse.urlparse(r['URL']).query)['profile'][0]].append(r)
     # the first validation per IG profile (R4 core profiles are validated by the main engine)
-    first = sorted(int(v[0]['elapsed']) for k, v in by.items() if not k.startswith('http://hl7.org/fhir/StructureDefinition/'))
+    core = lambda k: k.startswith('http://hl7.org/fhir/StructureDefinition/')
+    first = sorted(int(v[0]['elapsed']) for k, v in by.items() if not core(k))
     steady = sorted(int(r['elapsed']) for v in by.values() for r in v[3:])
     server = [float(r['validationms']) for v in by.values() for r in v[3:] if r['validationms'] not in ('', 'null')]
+    # the R4 core validations (their engine exists) that started before the last engine of an IG was created
+    created = max(int(v[0]['timeStamp']) + int(v[0]['elapsed']) for k, v in by.items() if not core(k))
+    during = sorted(int(r['elapsed']) for k, v in by.items() if core(k) for r in v if int(r['timeStamp']) < created)
     return dict(n=len(rows), fails=sum(r['success'] != 'true' for r in rows), first=first, steady=steady,
-                server=server)
+                server=server, during=during, created=created)
+
+
+def probe(folder, created):
+    """The R4 core validations of probe.py that started before the last engine of an IG was created."""
+    path = os.path.join(folder, 'probe.csv')
+    if not os.path.exists(path):
+        return []
+    return sorted(int(r['elapsed']) for r in csv.DictReader(open(path)) if int(r['timeStamp']) < created)
 
 
 def engines(log):
@@ -59,22 +72,45 @@ def p95(values):
     return values[int(.95 * len(values))]
 
 
+def lookup(folder):
+    """The results of profile_lookup.py, or None."""
+    path = os.path.join(folder, 'lookup.txt')
+    if not os.path.exists(path):
+        return None
+    lines = [l for l in open(path) if l.startswith('json: ')]
+    return json.loads(lines[-1][6:]) if lines else None
+
+
 runs = [os.path.normpath(f) for f in sys.argv[1:]]
 all_engines = {}
 for run in runs:
     name = os.path.basename(run)
     d = load_jtl(os.path.join(run, 'test.jtl'))
     e = engines(os.path.join(run, 'server.log'))
+    probes = probe(run, d['created'])
+    if probes:
+        d['during'] = probes
     all_engines[name] = e
     v = sorted(e.values())
     print(f"{name:20} validations={d['n']} fails={d['fails']} | engine creation median {s.median(v):.1f} max "
           f"{v[-1]:.1f} total {sum(v):.0f} s ({len(v)} engines) | first validation per IG median "
-          f"{s.median(d['first']) / 1000:.1f} max {d['first'][-1] / 1000:.1f} s | then median {s.median(d['steady'])} "
+          f"{s.median(d['first']) / 1000:.1f} max {d['first'][-1] / 1000:.1f} s | R4 core meanwhile "
+          f"{len(d['during'])}x median {s.median(d['during']) if d['during'] else 0:.0f} max "
+          f"{d['during'][-1] if d['during'] else 0} ms | then median {s.median(d['steady'])} "
           f"p95 {p95(d['steady'])} ms, server {s.median(d['server']):.0f} ms")
 
 print('\nengine creation per IG (s)\n' + ' ' * 34 + ' '.join(f'{os.path.basename(r)[-10:]:>10}' for r in runs))
 for ig in sorted({k for e in all_engines.values() for k in e}):
     print(f'{ig:34}' + ' '.join(f"{all_engines[os.path.basename(r)].get(ig, 0):10.1f}" for r in runs))
+
+lookups = {os.path.basename(r): lookup(r) for r in runs}
+if any(lookups.values()):
+    cases = next(v for v in lookups.values() if v)
+    print('\nch-core practitioner, median / p95 ms (profile_lookup.py)\n' + ' ' * 28
+          + ' '.join(f'{os.path.basename(r)[-13:]:>13}' for r in runs))
+    for case in cases:
+        print(f'{case:28}' + ' '.join(f"{lookups[os.path.basename(r)][case]['median']:6.1f} /{lookups[os.path.basename(r)][case]['p95']:5.0f}"
+                                      if lookups[os.path.basename(r)] else f"{'-':>13}" for r in runs))
 
 reference = issues(runs[0])
 for run in runs[1:]:
