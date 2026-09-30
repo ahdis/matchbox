@@ -1,5 +1,15 @@
 2026/10/xx Release 4.1.19
 
+- FML parsing ([#618](https://github.com/ahdis/matchbox/issues/618)): `MatchboxEngine.parseMapR5()` parsed with a
+  static R5 worker context that kept the R5 core package (R4 servers) or the context of the first R5 engine that parsed,
+  with its IG, for the lifetime of the JVM. Parsing only uses the context to parse the FHIRPath expressions, which
+  doesn't need any definitions, so it now uses an empty R5 context. It and the `nullEngine` template use an in-memory
+  terminology cache instead of reading the core validator's default terminology cache folder
+  (`[tmp]/default-tx-cache`) into memory. Used memory after GC for the two static contexts: 391 MB (with an 87 MB
+  default terminology cache folder) → 11 MB (including the classes loaded by the static initializer). The default
+  terminology cache of a worker context is created when it's first used instead of in a field initializer: every
+  context, also each copy for an engine, read the whole folder into memory, and a copy then replaced it with the cache
+  of the original. Contexts keep the same cache as before; copying a context with an 87 MB default folder 250 → 30 ms
 - R5 server (`fhir_version: R5`): HAPI's R5 `DefaultProfileValidationSupport` is no longer created at startup. It
   loaded the complete R5 core, extensions and terminology packages (7027 resources, about 500 MB, 3–4 s) into a static
   map for the lifetime of the JVM, although matchbox validates with its own engine. `LazyDefaultProfileValidationSupport`

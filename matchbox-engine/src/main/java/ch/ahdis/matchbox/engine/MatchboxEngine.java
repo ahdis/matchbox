@@ -117,14 +117,25 @@ public class MatchboxEngine extends ValidationEngine {
 	protected Set<String> suppressedWarnInfoPatterns = new HashSet<>(11, 0.75f); // For 8 elements
 	protected PassiveExpiringSessionCache sessionCache = new PassiveExpiringSessionCache();
 
+	/**
+	 * The terminology cache path for a context that doesn't need cached terminology results: an in-memory cache,
+	 * instead of reading the content of the shared default cache folder ([tmp]/default-tx-cache) into memory (#618).
+	 */
+	private static final String NO_TX_CACHE_FOLDER = "n/a";
+
 	static protected ValidationEngine nullEngine;
 
-	static protected SimpleWorkerContext fmlParseContext = null;
+	/**
+	 * The context to parse FML with. Parsing uses the context only to parse the FHIRPath expressions, which doesn't
+	 * need any definitions, so it's an empty R5 context instead of one with the R5 core package (#618).
+	 */
+	static protected SimpleWorkerContext fmlParseContext;
 
 
 	static {
 			try {
-				nullEngine = new ValidationEngineBuilder().fromNothing();
+				nullEngine = new ValidationEngineBuilder().withTerminologyCachePath(NO_TX_CACHE_FOLDER).fromNothing();
+				fmlParseContext = new SimpleWorkerContextBuilder().withTerminologyCachePath(NO_TX_CACHE_FOLDER).fromNothing();
 		} catch (IOException e) {
 				log.error("problem with inizializin", e);
 		}
@@ -1012,13 +1023,6 @@ public class MatchboxEngine extends ValidationEngine {
 	 * @throws FHIRException FHIR Exception
 	 */
 	public org.hl7.fhir.r5.model.StructureMap parseMapR5(String content) throws IOException, FHIRException {
-		if (MatchboxEngine.fmlParseContext == null) {
-			if ("5.0.0".equals(this.getContext().getVersion())) {
-				MatchboxEngine.fmlParseContext = this.getContext();
-			} else {
-				MatchboxEngine.fmlParseContext = MatchboxEngine.createR5WorkerContext();
-			}
-		}
 		List<Base> outputs = new ArrayList<>();
 		StructureMapUtilities scu = new MatchboxStructureMapUtilities(fmlParseContext,
 				new TransformSupportServices(fmlParseContext, outputs), this);
