@@ -1,5 +1,13 @@
 2026/10/xx Release 4.1.19
 
+- R5 server (`fhir_version: R5`): HAPI's R5 `DefaultProfileValidationSupport` is no longer created at startup. It
+  loaded the complete R5 core, extensions and terminology packages (7027 resources, about 500 MB, 3–4 s) into a static
+  map for the lifetime of the JVM, although matchbox validates with its own engine. `LazyDefaultProfileValidationSupport`
+  replaces it in the JPA validation support chain, in the FHIRPath engine of the search parameter extractor and in the
+  cached R5 `FhirContext`, and only creates it when a StructureDefinition, ValueSet or CodeSystem is requested. For the
+  search parameter registry it reads only the SearchParameters of the core package, like HAPI (the same 1243
+  SearchParameters). `myInstanceValidator` is created with the validation support chain instead of the `FhirContext`.
+  `MatchboxApiR5Test`: used memory after GC 973 → 518 MB, 21 → 18 s
 - Requests no longer wait for the creation of the engines of other IGs: `MatchboxEngineSupport.getMatchboxEngine()` was
   `synchronized`, now the requests hold a read lock and only the requests for an engine that is being created wait
   for it; the main engine (startup, `$load-all`, `reload`), the uninstall of a package and the `onlyOneEngine` mode
