@@ -11,6 +11,14 @@
   the `jackson-databind` vulnerabilities [GHSA-cxp5-3px4-pw24](https://github.com/advisories/GHSA-cxp5-3px4-pw24)
   (quadratic forward-reference completion) and [GHSA-wv8q-qhhj-9h54](https://github.com/advisories/GHSA-wv8q-qhhj-9h54)
   (retains every unknown raw type ID)
+- Packages with a contained `Bundle`, `Parameters` or `Binary` that has an extension on a root-level primitive (e.g.
+  SDC `$extract` templates with `templateExtractValue` on `Bundle.timestamp`, as in the CH EKM Questionnaires) could
+  not be installed, and the server didn't start if the IG was configured
+  ([#625](https://github.com/ahdis/matchbox/issues/625)). matchbox carries the HAPI parser fixes
+  [hapifhir/hapi-fhir#8260](https://github.com/hapifhir/hapi-fhir/pull/8260) (NPE when encoding, not merged yet) and
+  [hapifhir/hapi-fhir#8371](https://github.com/hapifhir/hapi-fhir/pull/8371) (extensions on a repeating primitive
+  without a value, e.g. `_line` without `line`, were dropped when parsing JSON, HAPI 8.14.0) in patched copies of
+  `BaseParser` and `JsonParser`
 
 2026/09/30 Release 4.1.19
 
