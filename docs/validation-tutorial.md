@@ -66,6 +66,61 @@ The validation response always contains a FHIR OperationOutcome Resource, with a
 | information    | information     | No fatal or error issues detected, the validation has passed. |   |
 
 
+### Validating on the type level: `[base]/{Type}/$validate`
+
+Besides the system-level `[base]/$validate`, Matchbox offers the operation on the type level for every resource type
+of the FHIR version of the server, as defined by the FHIR specification (`POST [base]/{Type}/$validate`). This is for
+clients that validate against a FHIR server (e.g. [Smart Forms](https://github.com/aehrc/smart-forms) before writing
+extracted resources back), the system-level operation is unchanged.
+
+The type in the URL says which resource is expected, so the resource can be wrapped in a `Parameters`:
+
+| Request body | Validated resource |
+|---|---|
+| a resource of type `{Type}` | the body itself |
+| a `Parameters` with a `resource` parameter of type `{Type}` | the resource in the parameter |
+| a `Parameters` posted to `Parameters/$validate` | the `Parameters` itself, it's not read as an envelope |
+| anything else, e.g. a `Parameters` whose `resource` has another type | not validated, an `error` issue names the expected type |
+
+The `profile` is optional on the type level, the first match is used:
+
+1. the `profile` query parameter
+2. the `profile` parameter of the `Parameters` envelope
+3. `meta.profile` of the resource. With several profiles, the first one selects the validation engine (and the
+   implementation guide); an `information` issue lists the other ones, which are only validated if they're known in
+   that implementation guide
+4. the base definition `http://hl7.org/fhir/StructureDefinition/{Type}`
+
+The response is the same OperationOutcome as on the system level, the first issue tells which profile was used. All
+other validation parameters (`txServer`, `analyzeErrorsWithLlm`, ...) are query parameters, as on the system level.
+
+A JSON resource in a `Parameters` is validated exactly as it was sent (the line and column of an issue are relative to
+the resource, not to the `Parameters`). An XML resource in a `Parameters` is serialized again, because it inherits its
+namespaces from the envelope.
+
+```http
+POST {{host}}/DocumentReference/$validate HTTP/1.1
+Accept: application/fhir+json
+Content-Type: application/fhir+json
+
+{
+  "resourceType": "Parameters",
+  "parameter": [
+    {
+      "name": "resource",
+      "resource": {
+        "resourceType": "DocumentReference",
+        "meta": {
+          "profile": [ "http://fhir.ch/ig/ch-ekm/StructureDefinition/ch-ekm-documentreference" ]
+        },
+        "status": "current",
+        "content": [ { "attachment": { "contentType": "application/fhir+json", "url": "Bundle/1013" } } ]
+      }
+    }
+  ]
+}
+```
+
 ## Structure (Syntax) issues
 
 You have to provide your FHIR resource in the right structure and syntax (xml or json) and also in the right FHIR version. If the validator is not able to parse your message as a FHIR resource (or as FHIR logical model instance, e.g. a CDA instance), you will get issues with a type of severity error or fatal.

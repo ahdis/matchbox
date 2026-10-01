@@ -706,6 +706,218 @@ class MatchboxApiR4Test {
 		assertNotNull(response);
 	}
 
+	// Type-level $validate, https://github.com/ahdis/matchbox/issues/629
+
+	private static final String PROFILE_IDENTIFIER_REQUIRED =
+		"http://matchbox.health/ig/test/r4/StructureDefinition/practitioner-identifier-required";
+
+	private static final String DOCUMENT_REFERENCE = """
+		{
+		  "resourceType": "DocumentReference",
+		  "status": "current",
+		  "content": [ { "attachment": { "contentType": "application/fhir+json", "url": "Bundle/1013" } } ]
+		}""";
+
+	private static final String PRACTITIONER_WITHOUT_IDENTIFIER = """
+		{
+		  "resourceType": "Practitioner",
+		  "meta": { "profile": [ "%s" ] },
+		  "name": [ { "family": "Brachialis" } ]
+		}""".formatted(PROFILE_IDENTIFIER_REQUIRED);
+
+	private static String inParameters(final String resource) {
+		return """
+			{ "resourceType": "Parameters", "parameter": [ { "name": "resource", "resource": %s } ] }""".formatted(resource);
+	}
+
+	@Test
+	void validateTypeLevelFallsBackToBaseDefinition() throws Exception {
+		// DocumentReference has no resource provider in matchbox, the request was answered with HAPI-0302 (404)
+		for (final String body : List.of(DOCUMENT_REFERENCE, inParameters(DOCUMENT_REFERENCE))) {
+			final OperationOutcome outcome = this.validateTypeLevel("DocumentReference", "", body);
+			assertEquals(0, getValidationFailures(outcome), body);
+			assertEquals(profileCore("DocumentReference"), getProfile(outcome));
+			assertEquals("hl7.fhir.r4.core#4.0.1", getIg(outcome));
+		}
+
+		// A resource type with a resource provider in matchbox, and an invalid resource
+		final OperationOutcome outcome = this.validateTypeLevel("Bundle", "", "{ \"resourceType\": \"Bundle\" }");
+		assertEquals(profileCore("Bundle"), getProfile(outcome));
+		assertTrue(getValidationFailures(outcome) > 0);
+		assertTrue(outcome.getIssue().stream().anyMatch(issue -> issue.getDiagnostics().contains("Bundle.type")));
+	}
+
+	@Test
+	void validateTypeLevelUsesMetaProfile() throws Exception {
+		for (final String body : List.of(PRACTITIONER_WITHOUT_IDENTIFIER, inParameters(PRACTITIONER_WITHOUT_IDENTIFIER))) {
+			final OperationOutcome outcome = this.validateTypeLevel("Practitioner", "", body);
+			assertEquals(PROFILE_IDENTIFIER_REQUIRED, getProfile(outcome));
+			assertEquals("matchbox.health.test.ig.r4#0.3.0", getIg(outcome));
+			assertEquals(1, getValidationFailures(outcome), body);
+		}
+	}
+
+	@Test
+	void validateTypeLevelExplicitProfileWins() throws Exception {
+		// The query parameter wins over the profile parameter of the envelope and over meta.profile
+		final String envelope = """
+			{
+			  "resourceType": "Parameters",
+			  "parameter": [
+			    { "name": "profile", "valueUri": "http://example.org/unknown-profile" },
+			    { "name": "resource", "resource": %s }
+			  ]
+			}""".formatted(PRACTITIONER_WITHOUT_IDENTIFIER);
+		OperationOutcome outcome = this.validateTypeLevel("Practitioner", "?profile=" + profileCore("Practitioner"), envelope);
+		assertEquals(profileCore("Practitioner"), getProfile(outcome));
+		assertEquals("hl7.fhir.r4.core#4.0.1", getIg(outcome));
+
+		// The profile parameter of the envelope wins over meta.profile
+		outcome = this.validateTypeLevel("Practitioner", "", envelope.replace("http://example.org/unknown-profile",
+		                                                                      profileCore("Practitioner")));
+		assertEquals(profileCore("Practitioner"), getProfile(outcome));
+
+		// The other validation parameters are query parameters, as on the system level
+		outcome = this.validateTypeLevel("Practitioner", "?txServer=n/a", PRACTITIONER_WITHOUT_IDENTIFIER);
+		assertEquals(PROFILE_IDENTIFIER_REQUIRED, getProfile(outcome));
+		assertEquals("n/a", getTxServer(outcome));
+	}
+
+	@Test
+	void validateTypeLevelSeveralMetaProfiles() throws Exception {
+		final String practitioner = PRACTITIONER_WITHOUT_IDENTIFIER.replace(
+			"\"%s\"".formatted(PROFILE_IDENTIFIER_REQUIRED),
+			"\"%s\", \"%s\"".formatted(profileCore("Practitioner"), PROFILE_IDENTIFIER_REQUIRED));
+		final OperationOutcome outcome = this.validateTypeLevel("Practitioner", "", practitioner);
+		assertEquals(profileCore("Practitioner"), getProfile(outcome));
+		assertTrue(outcome.getIssue().stream().anyMatch(
+			issue -> issue.getSeverity() == IssueSeverity.INFORMATION
+				&& issue.getDiagnostics().contains("declares several profiles in meta.profile")
+				&& issue.getDiagnostics().contains(PROFILE_IDENTIFIER_REQUIRED)));
+	}
+
+	@Test
+	void validateTypeLevelXml() throws Exception {
+		final String practitioner = """
+			<Practitioner%s>
+			  <meta><profile value="%s"/></meta>
+			  <text>
+			    <status value="generated"/>
+			    <div xmlns="http://www.w3.org/1999/xhtml">42</div>
+			  </text>
+			  <name><family value="Brachialis"/></name>
+			</Practitioner>""";
+		final String raw = practitioner.formatted(" xmlns=\"http://hl7.org/fhir\"", PROFILE_IDENTIFIER_REQUIRED);
+		final String enveloped = """
+			<Parameters xmlns="http://hl7.org/fhir">
+			  <parameter>
+			    <name value="resource"/>
+			    <resource>
+			      %s
+			    </resource>
+			  </parameter>
+			</Parameters>""".formatted(practitioner.formatted("", PROFILE_IDENTIFIER_REQUIRED));
+		for (final String body : List.of(raw, enveloped)) {
+			final OperationOutcome outcome = this.validateTypeLevel("Practitioner", "", body);
+			assertEquals(PROFILE_IDENTIFIER_REQUIRED, getProfile(outcome));
+			assertEquals(1, getValidationFailures(outcome), body);
+		}
+	}
+
+	@Test
+	void validateTypeLevelParametersIsNotAnEnvelope() throws Exception {
+		final OperationOutcome outcome = this.validateTypeLevel("Parameters", "", inParameters(DOCUMENT_REFERENCE));
+		assertEquals(profileCore("Parameters"), getProfile(outcome));
+		assertEquals(0, getValidationFailures(outcome));
+	}
+
+	@Test
+	void validateTypeLevelRejectsOtherTypes() throws Exception {
+		for (final String body : List.of(DOCUMENT_REFERENCE, inParameters(DOCUMENT_REFERENCE))) {
+			final OperationOutcome outcome = this.validateTypeLevel("Practitioner", "", body);
+			assertEquals(1, outcome.getIssue().size());
+			assertEquals(IssueSeverity.ERROR, outcome.getIssueFirstRep().getSeverity());
+			assertTrue(outcome.getIssueFirstRep().getDiagnostics().contains("'Practitioner'"));
+			assertTrue(outcome.getIssueFirstRep().getDiagnostics().contains("'DocumentReference'"));
+		}
+
+		final OperationOutcome outcome = this.validateTypeLevel(
+			"Practitioner",
+			"",
+			"{ \"resourceType\": \"Parameters\", \"parameter\": [ { \"name\": \"mode\", \"valueCode\": \"create\" } ] }");
+		assertEquals(IssueSeverity.ERROR, outcome.getIssueFirstRep().getSeverity());
+		assertTrue(outcome.getIssueFirstRep().getDiagnostics().contains("no 'resource' parameter"));
+	}
+
+	@Test
+	void validateTypeLevelMalformedContentIsReportedByTheValidator() throws Exception {
+		final OperationOutcome outcome = this.validateTypeLevel("Practitioner", "", "{ \"resourceType\": \"Practitioner\", ");
+		assertEquals(profileCore("Practitioner"), getProfile(outcome));
+		assertTrue(getValidationFailures(outcome) > 0);
+	}
+
+	@Test
+	void validateTypeLevelUnknownTypeAndInstanceLevel() throws Exception {
+		assertEquals(404, this.postFhir("/fhir/NotAResourceType/$validate", DOCUMENT_REFERENCE).statusCode());
+		// The instance level is not supported
+		assertNotEquals(200, this.postFhir("/fhir/DocumentReference/1/$validate", DOCUMENT_REFERENCE).statusCode());
+	}
+
+	@Test
+	void validateSystemLevelIsUnchanged() throws Exception {
+		// The profile is required
+		HttpResponse<String> response = this.postFhir("/fhir/$validate", PRACTITIONER_WITHOUT_IDENTIFIER);
+		assertEquals(200, response.statusCode());
+		OperationOutcome outcome = FHIR_CONTEXT.newJsonParser().parseResource(OperationOutcome.class, response.body());
+		assertEquals(IssueSeverity.ERROR, outcome.getIssueFirstRep().getSeverity());
+		assertEquals("The 'profile' parameter must be provided", outcome.getIssueFirstRep().getDiagnostics());
+
+		// A Parameters is the resource to validate, not an envelope
+		response = this.postFhir("/fhir/$validate?profile=" + profileCore("DocumentReference"),
+		                         inParameters(DOCUMENT_REFERENCE));
+		outcome = FHIR_CONTEXT.newJsonParser().parseResource(OperationOutcome.class, response.body());
+		assertEquals(profileCore("DocumentReference"), getProfile(outcome));
+		assertTrue(getValidationFailures(outcome) > 0);
+	}
+
+	@Test
+	void validateOperationDefinitionIsOnTypeLevel() {
+		final OperationDefinition operationDefinition = this.validationClient.read()
+			.resource(OperationDefinition.class)
+			.withId("-s-validate")
+			.execute();
+		assertTrue(operationDefinition.getSystem());
+		assertTrue(operationDefinition.getType());
+		assertFalse(operationDefinition.getInstance());
+		assertEquals("Resource", operationDefinition.getResource().getFirst().getValue());
+	}
+
+	private OperationOutcome validateTypeLevel(final String type, final String query, final String body) throws Exception {
+		final HttpResponse<String> response = this.postFhir("/fhir/%s/$validate%s".formatted(type, query), body);
+		assertEquals(200, response.statusCode(), response.body());
+		return FHIR_CONTEXT.newJsonParser().parseResource(OperationOutcome.class, response.body());
+	}
+
+	private HttpResponse<String> postFhir(final String path, final String body) throws Exception {
+		final HttpRequest request = HttpRequest.newBuilder(new URI(TARGET_SERVER + path))
+			.POST(HttpRequest.BodyPublishers.ofString(body))
+			.header("Content-Type", body.startsWith("<") ? "application/fhir+xml" : "application/fhir+json")
+			.header("Accept", "application/fhir+json")
+			.build();
+		return this.httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+	}
+
+	private static String getProfile(final IBaseOperationOutcome outcome) {
+		IBaseExtension<?, ?> ext = getMatchboxValidationExtension(outcome);
+		List<IBaseExtension<?, ?>> extensions = (List<IBaseExtension<?, ?>>) ext.getExtension();
+		for (IBaseExtension<?, ?> next : extensions) {
+			if (next.getUrl().equals("profile")) {
+				return ((IPrimitiveType<?>) next.getValue()).getValueAsString();
+			}
+		}
+		return null;
+	}
+
 	private String getContent(String resourceName) throws IOException {
 		Resource resource = new ClassPathResource(resourceName);
 		File file = resource.getFile();
