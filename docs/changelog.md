@@ -1,5 +1,14 @@
 2026/10/05 Release 4.1.20
 
+- Type-level `$validate` for all resource types, e.g. `POST [base]/DocumentReference/$validate` or
+  `[base]/Bundle/$validate` ([#629](https://github.com/ahdis/matchbox/issues/629)), for clients that validate against
+  a FHIR server like Smart Forms. The body is the resource or a `Parameters` with a `resource` parameter of the type
+  in the URL (JSON and XML; a JSON resource is cut out of the envelope as it was sent, without a HAPI round trip). The
+  profile is optional: `profile` query parameter, `profile` parameter of the envelope, `meta.profile` (the first one,
+  an `information` issue lists the other ones), then the base definition of the type. It's the same operation for
+  every type and FHIR version (R4, R4B, R5): `MatchboxRestfulServer` routes the type level to the system-level
+  `$validate`, which is unchanged (the `profile` is required and a `Parameters` is validated as the resource). The
+  OperationDefinition of `$validate` states `type = true` for `Resource`
 - UCUM codes in a core value set were rejected with a terminology server since 4.1.18, e.g. `Timing.repeat.periodUnit`
   `h`: "The value provided ('h') was not found in the value set 'UnitsOfTime' (...) A definition for CodeSystem
   'http://unitsofmeasure.org' version '3.0.1' could not be found" ([#627](https://github.com/ahdis/matchbox/issues/627)).

@@ -35,6 +35,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @SpringBootTest(webEnvironment = WebEnvironment.DEFINED_PORT,
 	properties = {
@@ -136,6 +137,69 @@ public class MatchboxApiR4BTest {
 		List<IBaseExtension<?, ?>> extensions = (List<IBaseExtension<?, ?>>) ext.getExtension();
 		for (IBaseExtension<?, ?> next : extensions) {
 			if (next.getUrl().equals("txServer")) {
+				IPrimitiveType<?> value = (IPrimitiveType<?>) next.getValue();
+				return value.getValueAsString();
+			}
+		}
+		return null;
+	}
+
+	// Type-level $validate, https://github.com/ahdis/matchbox/issues/629
+	@Test
+	public void validateTypeLevel() throws Exception {
+		final String documentReference = """
+			{
+			  "resourceType": "DocumentReference",
+			  "status": "current",
+			  "content": [ { "attachment": { "contentType": "application/fhir+json", "url": "Bundle/1013" } } ]
+			}""";
+		final String enveloped = """
+			{ "resourceType": "Parameters", "parameter": [ { "name": "resource", "resource": %s } ] }""".formatted(documentReference);
+
+		// The resource itself or in a Parameters, validated against the base definition without a profile
+		for (final String body : List.of(documentReference, enveloped)) {
+			final OperationOutcome outcome = this.validateTypeLevel("DocumentReference", body);
+			assertEquals(0, getValidationFailures(outcome), body);
+			assertEquals("http://hl7.org/fhir/StructureDefinition/DocumentReference", getProfile(outcome));
+		}
+
+		// meta.profile is used if there's no profile parameter
+		OperationOutcome outcome = this.validateTypeLevel("DocumentReference", documentReference.replace(
+			"\"status\"",
+			"\"meta\": { \"profile\": [ \"http://example.org/unknown-profile\" ] }, \"status\""));
+		assertEquals(IssueSeverity.ERROR, outcome.getIssueFirstRep().getSeverity());
+		assertTrue(outcome.getIssueFirstRep().getDiagnostics().contains("http://example.org/unknown-profile"));
+
+		// A Parameters posted to Parameters/$validate is not an envelope
+		outcome = this.validateTypeLevel("Parameters", enveloped);
+		assertEquals(0, getValidationFailures(outcome));
+		assertEquals("http://hl7.org/fhir/StructureDefinition/Parameters", getProfile(outcome));
+
+		// The type of the URL is expected
+		for (final String body : List.of(documentReference, enveloped)) {
+			outcome = this.validateTypeLevel("Patient", body);
+			assertEquals(IssueSeverity.ERROR, outcome.getIssueFirstRep().getSeverity());
+			assertTrue(outcome.getIssueFirstRep().getDiagnostics().contains("'Patient'"));
+			assertTrue(outcome.getIssueFirstRep().getDiagnostics().contains("'DocumentReference'"));
+		}
+	}
+
+	private OperationOutcome validateTypeLevel(final String type, final String body) throws Exception {
+		final HttpRequest request = HttpRequest.newBuilder(new URI(this.targetServer + "/fhir/" + type + "/$validate"))
+			.POST(HttpRequest.BodyPublishers.ofString(body))
+			.header("Content-Type", "application/fhir+json")
+			.header("Accept", "application/fhir+json")
+			.build();
+		final HttpResponse<String> response = this.httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+		assertEquals(200, response.statusCode(), response.body());
+		return this.context.newJsonParser().parseResource(OperationOutcome.class, response.body());
+	}
+
+	private String getProfile(final IBaseOperationOutcome outcome) {
+		IBaseExtension<?, ?> ext = getMatchboxValidationExtension(this.context, outcome);
+		List<IBaseExtension<?, ?>> extensions = (List<IBaseExtension<?, ?>>) ext.getExtension();
+		for (IBaseExtension<?, ?> next : extensions) {
+			if (next.getUrl().equals("profile")) {
 				IPrimitiveType<?> value = (IPrimitiveType<?>) next.getValue();
 				return value.getValueAsString();
 			}
