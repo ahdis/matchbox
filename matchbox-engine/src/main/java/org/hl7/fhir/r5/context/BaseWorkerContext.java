@@ -526,11 +526,15 @@ public abstract class BaseWorkerContext extends I18nBase implements IWorkerConte
   // resolves to, without parsing it if it's a proxy (lazy loading); used to pin the versions of the core package when a
   // proxy is loaded. It doesn't acquire the lock of this context: it's called while a (shared) proxy is loaded, which
   // another thread may wait for while it holds the lock, and the indexes of the core package don't change anymore.
+  // CodeSystems and ValueSets are only resolved to the core package (https://github.com/ahdis/matchbox/issues/627):
+  // CoreVersionPinner pins them when the context contains only the core package, the proxies are loaded when it also
+  // contains the other packages (e.g. the not-present UCUM CodeSystem 3.0.1 of hl7.fhir.uv.xver-r5.r4).
+  // StructureDefinitions are pinned when the core package is loaded.
   public String getResourceVersion(Class<? extends CanonicalResource> type, String url) {
     if (type == CodeSystem.class) {
-      return codeSystems.getVersion(url);
+      return codeSystems.getMasterVersion(url);
     } else if (type == ValueSet.class) {
-      return valueSets.getVersion(url);
+      return valueSets.getMasterVersion(url);
     } else if (type == StructureDefinition.class) {
       return structures.getVersion(ProfileUtilities.sdNs(url, null));
     }

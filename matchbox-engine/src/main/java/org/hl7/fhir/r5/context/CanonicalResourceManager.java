@@ -741,6 +741,13 @@ public class CanonicalResourceManager<T extends CanonicalResource> {
     }
     return cr == null ? null : cr.getVersion();
   }
+
+  // matchbox patch https://github.com/ahdis/matchbox/issues/627: the version of the resource of the master (core) package
+  // with this URL, without parsing it if it's a proxy (lazy loading)
+  public String getMasterVersion(String url) {
+    CachedCanonicalResource<T> cr = masterDefinitions.get(url);
+    return cr == null ? null : cr.getVersion();
+  }
   // END matchbox patch
 
   public T get(String url) {
