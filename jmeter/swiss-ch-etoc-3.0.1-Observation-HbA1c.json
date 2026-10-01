@@ -1,0 +1,28 @@
+{
+  "resourceType": "Observation",
+  "id": "HbA1c",
+  "meta": {
+    "profile": [
+      "http://fhir.ch/ig/ch-etoc/StructureDefinition/ch-etoc-lab-observation",
+      "http://fhir.ch/ig/ch-etoc/StructureDefinition/ch-etoc-lab-observation"
+    ]
+  },
+  "text": {
+    "status": "generated",
+    "div": "<div xmlns=\"http://www.w3.org/1999/xhtml\"><p class=\"res-header-id\"><b>Generated Narrative: Observation HbA1c</b></p><a name=\"HbA1c\"> </a><a name=\"hcHbA1c\"> </a><div style=\"display: inline-block; background-color: #d9e0e7; padding: 6px; margin: 4px; border: 1px solid #8da1b4; border-radius: 5px; line-height: 60%\"><p style=\"margin-bottom: 0px\"/><p style=\"margin-bottom: 0px\">Profile: <a href=\"StructureDefinition-ch-etoc-lab-observation.html\">CH eTOC Lab Observation</a></p></div><p><b>status</b>: Final</p><p><b>code</b>: <span title=\"Codes:{http://loinc.org 26436-6}\">HHb-A1c: 5.4 %</span></p><p><b>subject</b>: <a href=\"Patient-SUfferer.html\">Susanna Ufferer (official) Female, DoB: 1970-03-14</a></p></div>"
+  },
+  "status": "final",
+  "code": {
+    "coding": [
+      {
+        "system": "http://loinc.org",
+        "code": "26436-6",
+        "display": "Laboratory studies (set)"
+      }
+    ],
+    "text": "HHb-A1c: 5.4 %"
+  },
+  "subject": {
+    "reference": "Patient/SUfferer"
+  }
+}

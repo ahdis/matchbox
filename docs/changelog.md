@@ -28,6 +28,8 @@
   [hapifhir/hapi-fhir#8371](https://github.com/hapifhir/hapi-fhir/pull/8371) (extensions on a repeating primitive
   without a value, e.g. `_line` without `line`, were dropped when parsing JSON, HAPI 8.14.0) in patched copies of
   `BaseParser` and `JsonParser`
+- Additional JMeter testing: release comparison for ch-elm and with-preload, and a test plan with all Swiss IGs
+  (`jmeter/ch-elm-release-comparison.md`, `jmeter/swiss-igs.md`)
 
 2026/09/30 Release 4.1.19
 

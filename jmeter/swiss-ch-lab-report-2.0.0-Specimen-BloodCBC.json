@@ -1,0 +1,24 @@
+{
+  "resourceType": "Specimen",
+  "id": "BloodCBC",
+  "meta": {
+    "profile": [
+      "http://fhir.ch/ig/ch-lab-report/StructureDefinition/ch-lab-specimen",
+      "http://fhir.ch/ig/ch-lab-report/StructureDefinition/ch-lab-specimen"
+    ]
+  },
+  "text": {
+    "status": "generated",
+    "div": "<div xmlns=\"http://www.w3.org/1999/xhtml\"><p class=\"res-header-id\"><b>Generated Narrative: Specimen BloodCBC</b></p><a name=\"BloodCBC\"> </a><a name=\"hcBloodCBC\"> </a><div style=\"display: inline-block; background-color: #d9e0e7; padding: 6px; margin: 4px; border: 1px solid #8da1b4; border-radius: 5px; line-height: 60%\"><p style=\"margin-bottom: 0px\"/><p style=\"margin-bottom: 0px\">Profile: <a href=\"StructureDefinition-ch-lab-specimen.html\">CH LAB-Report Specimen</a></p></div><p><b>status</b>: Available</p><p><b>type</b>: <span title=\"Codes:{http://snomed.info/sct 119297000}\">Blood specimen</span></p></div>"
+  },
+  "status": "available",
+  "type": {
+    "coding": [
+      {
+        "system": "http://snomed.info/sct",
+        "code": "119297000",
+        "display": "Blood specimen"
+      }
+    ]
+  }
+}

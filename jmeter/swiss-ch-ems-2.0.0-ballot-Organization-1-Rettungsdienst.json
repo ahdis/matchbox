@@ -1,0 +1,11 @@
+{
+  "resourceType": "Organization",
+  "id": "1-Rettungsdienst",
+  "identifier": [
+    {
+      "system": "urn:oid:2.51.1.3",
+      "value": "7601002156363"
+    }
+  ],
+  "name": "Rettungsdienst Schutz und Rettung Zürich"
+}

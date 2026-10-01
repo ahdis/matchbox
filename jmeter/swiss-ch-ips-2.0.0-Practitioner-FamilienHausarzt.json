@@ -1,0 +1,28 @@
+{
+  "resourceType": "Practitioner",
+  "id": "FamilienHausarzt",
+  "meta": {
+    "profile": [
+      "http://fhir.ch/ig/ch-ips/StructureDefinition/ch-ips-practitioner",
+      "http://fhir.ch/ig/ch-ips/StructureDefinition/ch-ips-practitioner"
+    ]
+  },
+  "text": {
+    "status": "generated",
+    "div": "<div xmlns=\"http://www.w3.org/1999/xhtml\"><p class=\"res-header-id\"><b>Generated Narrative: Practitioner FamilienHausarzt</b></p><a name=\"FamilienHausarzt\"> </a><a name=\"hcFamilienHausarzt\"> </a><div style=\"display: inline-block; background-color: #d9e0e7; padding: 6px; margin: 4px; border: 1px solid #8da1b4; border-radius: 5px; line-height: 60%\"><p style=\"margin-bottom: 0px\"/><p style=\"margin-bottom: 0px\">Profile: <a href=\"StructureDefinition-ch-ips-practitioner.html\">CH IPS Practitioner</a></p></div><p><b>identifier</b>: <a href=\"https://www.gs1.org/standards/id-keys/gln\" title=\"Global Location Number\">GLN</a>/7601000121219</p><p><b>name</b>: Familien Hausarzt </p></div>"
+  },
+  "identifier": [
+    {
+      "system": "urn:oid:2.51.1.3",
+      "value": "7601000121219"
+    }
+  ],
+  "name": [
+    {
+      "family": "Hausarzt",
+      "given": [
+        "Familien"
+      ]
+    }
+  ]
+}
