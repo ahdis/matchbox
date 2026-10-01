@@ -1,0 +1,7 @@
+{
+  "resourceType": "PractitionerRole",
+  "id": "1cPR-KsAbc",
+  "practitioner": {
+    "reference": "Practitioner/1cPract-KsAbc"
+  }
+}
