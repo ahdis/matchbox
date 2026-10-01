@@ -143,6 +143,23 @@ class ValidationContentTest {
 	}
 
 	@Test
+	void xmlWithDoctypeIsNotParsed() throws Exception {
+		// No external entity is resolved (XXE): the body is left to the validator, which rejects the DOCTYPE
+		final String body = """
+			<?xml version="1.0"?>
+			<!DOCTYPE Parameters [ <!ENTITY xxe SYSTEM "file:///etc/passwd"> ]>
+			<Parameters xmlns="http://hl7.org/fhir">
+			  <parameter>
+			    <name value="resource"/>
+			    <resource><Patient><id value="&xxe;"/></Patient></resource>
+			  </parameter>
+			</Parameters>""";
+		final var content = ValidationContent.resolve(body, EncodingEnum.XML, "Patient");
+		assertSame(body, content.content());
+		assertTrue(content.metaProfiles().isEmpty());
+	}
+
+	@Test
 	void xmlWrongTypes() {
 		final var notTheType = assertThrows(ValidationContentException.class, () -> ValidationContent.resolve(
 			"<Patient xmlns=\"http://hl7.org/fhir\"/>", EncodingEnum.XML, "Practitioner"));
