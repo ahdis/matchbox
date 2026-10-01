@@ -167,6 +167,8 @@ public record ValidationContent(String content,
 		final Element root;
 		try {
 			final var factory = XMLUtil.newXXEProtectedDocumentBuilderFactory();
+			// Already set by the core factory, stated here so that it doesn't depend on it: no DOCTYPE, no entities
+			factory.setFeature("http://apache.org/xml/features/disallow-doctype-decl", true);
 			factory.setNamespaceAware(true);
 			final var builder = factory.newDocumentBuilder();
 			builder.setErrorHandler(new DefaultHandler()); // don't print the parsing errors to stderr
