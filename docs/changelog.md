@@ -1,5 +1,12 @@
 2026/10/05 Release 4.1.20
 
+- UCUM codes in a core value set were rejected with a terminology server since 4.1.18, e.g. `Timing.repeat.periodUnit`
+  `h`: "The value provided ('h') was not found in the value set 'UnitsOfTime' (...) A definition for CodeSystem
+  'http://unitsofmeasure.org' version '3.0.1' could not be found" ([#627](https://github.com/ahdis/matchbox/issues/627)).
+  The lazily loaded CodeSystems and ValueSets of the core package (#599) are pinned to the core versions when they're
+  parsed, but were pinned to any loaded package: the `units-of-time` include to `http://unitsofmeasure.org|3.0.1`, the
+  not-present UCUM CodeSystem of `hl7.fhir.uv.xver-r5.r4` (and `hl7.terminology.r4` up to 6.x), which the terminology
+  server doesn't know (UCUM 2.2). They're now only pinned to the core package, like core's `CoreVersionPinner`
 - Upgrade Jackson 2 (`com.fasterxml.jackson.core`) to 2.22.3 and Jackson 3 (`tools.jackson.core`) to 3.2.3 to fix
   the `jackson-databind` vulnerabilities [GHSA-cxp5-3px4-pw24](https://github.com/advisories/GHSA-cxp5-3px4-pw24)
   (quadratic forward-reference completion) and [GHSA-wv8q-qhhj-9h54](https://github.com/advisories/GHSA-wv8q-qhhj-9h54)
