@@ -1,4 +1,4 @@
-2026/10/05 Release 4.1.20
+2026/10/02 Release 4.1.20
 
 - Type-level `$validate` for all resource types, e.g. `POST [base]/DocumentReference/$validate` or
   `[base]/Bundle/$validate` ([#629](https://github.com/ahdis/matchbox/issues/629)), for clients that validate against
