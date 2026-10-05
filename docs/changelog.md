@@ -1,3 +1,9 @@
+2026/10/xx Release 4.1.21
+
+- Upgrade `piscina` (used by `@angular/build` of the frontend build) to 5.3.2 with an npm override to fix
+  [GHSA-67c8-pqhq-4rmx](https://github.com/advisories/GHSA-67c8-pqhq-4rmx) (prototype pollution of the
+  `ThreadPool` options allows code execution via `execArgv`, `loadBalancer` or `env`), a build-time dependency only
+
 2026/10/02 Release 4.1.20
 
 - Type-level `$validate` for all resource types, e.g. `POST [base]/DocumentReference/$validate` or
