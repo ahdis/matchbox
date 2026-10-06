@@ -1,3 +1,13 @@
+2026/10/xx Release 4.1.22
+
+- Frontend: upgrade Angular to 22.2.1 to fix [GHSA-ff3f-86qr-9cv3](https://github.com/advisories/GHSA-ff3f-86qr-9cv3)
+  in `@angular/router` (denial of service via numeric URL matrix parameters, server-side rendering only, which the
+  frontend doesn't use). `@angular/cli` 22.2 no longer depends on `@modelcontextprotocol/sdk` 1.x
+  ([GHSA-6qxp-vccf-f47h](https://github.com/advisories/GHSA-6qxp-vccf-f47h)) and `express`, which removes `proxy-addr`
+  ([GHSA-jqcg-44mw-7w3h](https://github.com/advisories/GHSA-jqcg-44mw-7w3h)). Update `source-map-js` to 1.2.2
+  ([GHSA-68fv-2mgg-jv7q](https://github.com/advisories/GHSA-68fv-2mgg-jv7q)). Except the router, these are build-time
+  dependencies only
+
 2026/10/05 Release 4.1.21
 
 - Upgrade `piscina` (used by `@angular/build` of the frontend build) to 5.3.2 with an npm override to fix
