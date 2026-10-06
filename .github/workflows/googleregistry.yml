@@ -25,24 +25,24 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v5
+        uses: actions/checkout@v7
 
       - name: Build Java
-        uses: actions/setup-java@v5
+        uses: actions/setup-java@v6
         with:
           java-version: 21
-          distribution: adopt
+          distribution: temurin
           cache: maven
 
       - run: mvn --batch-mode --update-snapshots package -DskipTests -P release
 
       - name: Set up QEMU
-        uses: docker/setup-qemu-action@v3
+        uses: docker/setup-qemu-action@v4
         with:
           platforms: arm64
 
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
+        uses: docker/setup-buildx-action@v4
         with:
           version: latest
           platforms: linux/amd64,linux/arm64
@@ -74,7 +74,7 @@ jobs:
             matchbox-server
       
       - name: Send a stream message to Zulip
-        uses: zulip/github-actions-zulip/send-message@v1
+        uses: zulip/github-actions-zulip/send-message@v2
         with:
           api-key: ${{ secrets.ZULIPAPIKEY }}
           email: "ahdis-bot@chat.fhir.org"
@@ -90,7 +90,7 @@ jobs:
               docker pull ${{ env.GAR_LOCATION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.REPOSITORY }}/${{ env.IMAGE }}:${{ github.ref_name }}
 
       - name: Send a stream message to Zulip
-        uses: zulip/github-actions-zulip/send-message@v1
+        uses: zulip/github-actions-zulip/send-message@v2
         if: failure() 
         with:
           api-key: ${{ secrets.ZULIPAPIKEY }}
