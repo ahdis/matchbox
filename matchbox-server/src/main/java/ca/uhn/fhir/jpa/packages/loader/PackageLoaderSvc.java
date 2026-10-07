@@ -131,8 +131,10 @@ public class PackageLoaderSvc extends BasePackageCacheManager {
 		ourApplied = theSettings;
 
 		if (ourApplied.getPackageUrlAllowList().allowsAll()) {
-			ourLog.warn("Allowing all. This shouldn't ever be in production code.");
-			ManagedWebAccess.setSsrfProtectionEnabled(false);
+			// MATCHBOX PATCH: without an allow-list, the SSRF protection of the core library is left as it is. It's
+			// set by matchbox (matchbox.fhir.context.ssrfProtectionEnabled, MatchboxJpaConfig) and would otherwise be
+			// disabled for the whole JVM, depending on the order in which the beans are created.
+			ourLog.info("No package URL allow-list, all package URLs are allowed");
 			return;
 		}
 		ManagedWebAccess.setSsrfProtectionEnabled(true);
