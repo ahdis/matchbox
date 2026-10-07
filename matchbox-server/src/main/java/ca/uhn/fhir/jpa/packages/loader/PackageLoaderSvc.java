@@ -77,6 +77,13 @@ public class PackageLoaderSvc extends BasePackageCacheManager {
 		mySettings = theLoaderSettings;
 	}
 
+	/**
+	 * MATCHBOX PATCH: the constructor of HAPI FHIR < 8.14 (used e.g. by matchbox-int-tests), all package URLs are allowed.
+	 */
+	public PackageLoaderSvc() {
+		this(new PackageLoaderSettings(PackageUrlAllowList.allowAll()));
+	}
+
 	public static PackageLoaderSettings getAppliedSettings() {
 		return ourApplied;
 	}
