@@ -6,6 +6,7 @@ import ch.ahdis.matchbox.engine.exception.MatchboxEngineCreationException;
 import ch.ahdis.matchbox.util.MatchboxEngineSupport;
 import ch.ahdis.matchbox.validation.gazelle.models.validation.*;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.databind.json.JsonMapper;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -322,7 +323,7 @@ class GazelleValidationWsTest {
 												 new CliContext(new MockEnvironment()),
 												 Optional.empty(),
 												 mock(MbInstalledStructureDefinitionRepository.class),
-												 new ObjectMapper());
+												 new JsonMapper());
 	}
 
 	private static ValidationRequest patientRequest() {

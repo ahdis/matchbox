@@ -40,7 +40,9 @@
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
 
         <fhir.core.version>6.10.4</fhir.core.version>
-        <hapi.fhir.version>8.12.1</hapi.fhir.version>
+        <!-- TODO: build of https://github.com/hapifhir/hapi-fhir/pull/8189 (Spring Boot 4) at ab78b813154, published to
+             GitHub Packages (see the 'github' repository below), switch to the HAPI FHIR release containing it -->
+        <hapi.fhir.version>8.13.15-pr8189-1</hapi.fhir.version>
 
 
         <!-- The following section closely matches the one of HAPI-FHIR (for easier version comparison/upgrade).
@@ -50,18 +52,21 @@
         <commons_dbcp2_version>2.14.0</commons_dbcp2_version>
         <commons_io_version>2.22.0</commons_io_version>
         <commons_lang3_version>3.20.0</commons_lang3_version>
-        <junit_version>5.14.3</junit_version>
+        <junit_version>6.0.3</junit_version>
         <logback_version>1.6.3</logback_version>
         <jackson2_version>2.22.3</jackson2_version>
         <jackson3_version>3.2.3</jackson3_version>
         <jackson_annotations_version>2.22</jackson_annotations_version>
         <okhttp_version>5.4.0</okhttp_version>
         <log4j_to_slf4j_version>2.26.1</log4j_to_slf4j_version>
-        <spring_version>6.2.19</spring_version>
-        <spring_context_version>6.2.19</spring_context_version>
-        <spring_boot_version>3.5.16</spring_boot_version>
-        <spring_data_version>3.5.12</spring_data_version>
-        <thymeleaf.version>3.1.5.RELEASE</thymeleaf.version>
+        <spring_version>7.0.9</spring_version>
+        <spring_context_version>7.0.9</spring_context_version>
+        <spring_boot_version>4.0.8</spring_boot_version>
+        <!-- Hibernate ORM version of HAPI FHIR, spring-boot-hibernate would bring in a newer hibernate-core -->
+        <hibernate_version>7.2.19.Final</hibernate_version>
+        <!-- Tomcat version of Spring Boot, aligned for all embedded Tomcat modules -->
+        <tomcat_version>11.0.24</tomcat_version>
+                <thymeleaf.version>3.1.5.RELEASE</thymeleaf.version>
         <testcontainers_version>1.21.4</testcontainers_version>
         <ucum_version>1.0.10</ucum_version>
 
@@ -79,8 +84,6 @@
 
         <!-- Other dependencies we need -->
         <lombok_version>1.18.48</lombok_version>
-        <undertow_version>2.4.3.Final</undertow_version>
-        <undertow_ee_version>1.0.2.Final</undertow_ee_version>
         <postgresql_version>42.7.13</postgresql_version>
         <h2_version>2.5.250</h2_version>
         <jakarta_servlet_version>6.1.0</jakarta_servlet_version>
@@ -116,6 +119,20 @@
     </scm>
 
     <repositories>
+        <!-- TODO: remove with hapi.fhir.version, HAPI FHIR snapshot build of https://github.com/hapifhir/hapi-fhir/pull/8189
+             published to GitHub Packages. GitHub Packages requires authentication also for reading: the workflows use
+             .github/maven-settings.xml, locally add a server 'github' with a token with 'read:packages' to your
+             ~/.m2/settings.xml -->
+        <repository>
+            <id>github</id>
+            <url>https://maven.pkg.github.com/ahdis/matchbox</url>
+            <releases>
+                <enabled>true</enabled>
+            </releases>
+            <snapshots>
+                <enabled>false</enabled>
+            </snapshots>
+        </repository>
         <repository>
             <id>oss-snapshots</id>
             <snapshots>
@@ -127,6 +144,44 @@
 
     <dependencyManagement>
         <dependencies>
+            <!-- Align all Spring Framework modules, HAPI FHIR and Spring Boot bring in different versions -->
+            <dependency>
+                <groupId>org.springframework</groupId>
+                <artifactId>spring-framework-bom</artifactId>
+                <version>${spring_version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.hibernate.orm</groupId>
+                <artifactId>hibernate-core</artifactId>
+                <version>${hibernate_version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.hibernate.orm</groupId>
+                <artifactId>hibernate-envers</artifactId>
+                <version>${hibernate_version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.hibernate.orm</groupId>
+                <artifactId>hibernate-community-dialects</artifactId>
+                <version>${hibernate_version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.tomcat.embed</groupId>
+                <artifactId>tomcat-embed-core</artifactId>
+                <version>${tomcat_version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.tomcat.embed</groupId>
+                <artifactId>tomcat-embed-el</artifactId>
+                <version>${tomcat_version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.tomcat.embed</groupId>
+                <artifactId>tomcat-embed-websocket</artifactId>
+                <version>${tomcat_version}</version>
+            </dependency>
             <!-- Force opennlp-tools >= 2.5.9 to fix CVE-2026-40682, CVE-2026-42027, CVE-2026-42440 (transitive via langchain4j) -->
             <dependency>
                 <groupId>org.apache.opennlp</groupId>
@@ -493,6 +548,34 @@
                 <artifactId>spring-boot-autoconfigure</artifactId>
                 <version>${spring_boot_version}</version>
             </dependency>
+            <!-- Spring Boot 4 split the auto-configuration into modules: DataSource (spring-boot-jdbc), Hibernate/JPA
+                 (spring-boot-hibernate, spring-boot-jpa). Some modules are also pulled in by springdoc with an older
+                 version, they are aligned here. -->
+            <dependency>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-jdbc</artifactId>
+                <version>${spring_boot_version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-hibernate</artifactId>
+                <version>${spring_boot_version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-jpa</artifactId>
+                <version>${spring_boot_version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-web-server</artifactId>
+                <version>${spring_boot_version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-validation</artifactId>
+                <version>${spring_boot_version}</version>
+            </dependency>
             <dependency>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-starter-actuator</artifactId>
@@ -500,7 +583,7 @@
             </dependency>
             <dependency>
                 <groupId>org.springframework.boot</groupId>
-                <artifactId>spring-boot-starter-undertow</artifactId>
+                <artifactId>spring-boot-starter-tomcat</artifactId>
                 <version>${spring_boot_version}</version>
             </dependency>
             <dependency>
@@ -546,26 +629,6 @@
                 <groupId>javax.xml.bind</groupId>
                 <artifactId>jaxb-api</artifactId>
                 <version>${jaxb_api_version}</version>
-            </dependency>
-
-            <!-- Upgrading Undertow, the version we get from Spring Boot is older.
-                 Since Undertow 2.4.0, the servlet and websocket modules were extracted to
-                 io.undertow.ee (see UNDERTOW-2646). We use the 1.0.x line for Jakarta EE 10
-                 compatibility (Spring Framework 6.2 baseline). -->
-            <dependency>
-                <groupId>io.undertow</groupId>
-                <artifactId>undertow-core</artifactId>
-                <version>${undertow_version}</version>
-            </dependency>
-            <dependency>
-                <groupId>io.undertow.ee</groupId>
-                <artifactId>undertow-servlet</artifactId>
-                <version>${undertow_ee_version}</version>
-            </dependency>
-            <dependency>
-                <groupId>io.undertow.ee</groupId>
-                <artifactId>undertow-websockets</artifactId>
-                <version>${undertow_ee_version}</version>
             </dependency>
 
             <dependency>
