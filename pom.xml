@@ -699,11 +699,6 @@
                 <artifactId>opentelemetry-spring-boot-starter</artifactId>
                 <version>${spring_boot_telemetry_version}</version>
             </dependency>
-            <dependency>
-                <groupId>io.opentelemetry.instrumentation</groupId>
-                <artifactId>opentelemetry-spring-boot-starter</artifactId>
-                <version>${spring_boot_telemetry_version}</version>
-            </dependency>
 
             <dependency>
                 <!-- Upgraded to fix vulnerabilities -->

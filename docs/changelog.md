@@ -14,7 +14,9 @@
   `server.undertow.max-http-post-size` setting isn't needed anymore, Tomcat doesn't limit the size of FHIR request
   bodies
 - Loading packages from `http(s)` URLs follows redirects with the redirect handling of HAPI FHIR (#75), which also
-  supports a package URL allow-list (`IPackageUrlAllowListProvider`, all URLs are allowed by default)
+  supports a package URL allow-list (`IPackageUrlAllowListProvider`, all URLs are allowed by default). Without an
+  allow-list HAPI FHIR would disable the SSRF protection of the core library for the whole JVM: matchbox keeps it as
+  configured with `matchbox.fhir.context.ssrfProtectionEnabled`
 - The Gazelle validation API uses the Jackson 3 mapper of Spring Boot
 
 2026/10/05 Release 4.1.21
