@@ -252,12 +252,19 @@ All runs: 8,000 validations, 0 failures. Runs from 25 Sep 2026 on the same machi
 | `1152-pr596-xmx3g` | 1.15.2 on PR #596 ³ | 4.1.17 / 8.12.1 / 6.10.4 | 3 GB ⁴ | 4.0 min | 105 / 131 | 2.67 / 3.35 | 2026-09-25 |
 | `1152-pr596-xmx3g-dedup` | 1.15.2 on PR #596 ³ | 4.1.17 / 8.12.1 / 6.10.4 | 3 GB ⁵ | 4.0 min | 103 / 127 | 2.53 / 3.35 | 2026-09-25 |
 | `1152-fix1-xmx3g-dedup` | 1.15.2 on branch `jmeter-check-runbook` ³ | 4.1.17 + fix / 8.12.1 / 6.10.4 | 3 GB ⁵ | 4.0 min | 104 / 126 | 2.46 / 3.36 | 2026-09-25 |
+| `1156-main-cc1e929` | 1.15.6 on `main` ⁶ | 4.1.21 / 8.12.1 / 6.10.4 | 70% of the container memory | 3.8 min | 98 / 115 | 2.56 / 4.77 | 2026-10-07 |
+| `1156-pr636` | 1.15.6 on PR #636 ⁶ | 4.1.21 / 8.13.15-pr8189-1 / 6.10.4 (Spring Boot 4, Tomcat) | 70% of the container memory | 3.5 min | 98 / 115 | 2.64 / 4.93 | 2026-10-07 |
 
 ¹ Rebuilt from ch-elm commit `f3dd030` on `matchbox:v4.0.16`; the published 1.13.1 image is no longer in the registry.
 ² Machine was busy during this run.
 ³ Local build: ch-elm commit `3deaf40` with only the `FROM` line changed.
 ⁴ `-e JDK_JAVA_OPTIONS="-Xmx3g -XX:+ExitOnOutOfMemoryError"`; the JVM never ran out of memory.
 ⁵ As ⁴ plus `-XX:+UseStringDeduplication`.
+⁶ Local build: ch-elm commit `a07c806` with only the `FROM` line changed, on matchbox images built locally from
+`main` (`cc1e929`, Spring Boot 3.5, Undertow) and from PR #636 (Spring Boot 4, Spring Framework 7.0.9, Tomcat, HAPI
+FHIR build of hapifhir/hapi-fhir#8189). Server ready after 36 / 34 s, live heap after a full GC at the end 663 / 663 MiB.
+The `bytes` of `$validate` differ (34,594 / 33,235) only because of the chunked transfer encoding: Undertow sends the
+OperationOutcome in about 240 small chunks, Tomcat in chunks of 8 KB; the OperationOutcomes are the same.
 
 ### Startup, first and second validation (lazy loading)
 
