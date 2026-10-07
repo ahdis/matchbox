@@ -84,4 +84,11 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           gh workflow run googleregistry.yml --ref "v$VERSION"
-          gh workflow run central_repository.yml --ref "v$VERSION"
+          # matchbox-engine depends on HAPI FHIR: it's only published to Maven Central with a released HAPI FHIR
+          # version (X.Y.Z), not with a build that is only available from GitHub Packages (e.g. 8.13.15-pr8189-1)
+          HAPI_VERSION=$(mvn help:evaluate -Dexpression=hapi.fhir.version -q -DforceStdout --batch-mode --no-transfer-progress)
+          if [[ "$HAPI_VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            gh workflow run central_repository.yml --ref "v$VERSION"
+          else
+            echo "::warning::Not published to Maven Central: HAPI FHIR $HAPI_VERSION isn't a released version"
+          fi

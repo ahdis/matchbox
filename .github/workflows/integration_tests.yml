@@ -11,6 +11,10 @@ on:
 jobs:
   integration_test:
     runs-on: ubuntu-latest
+    env:
+      # Read the HAPI FHIR build from GitHub Packages, see the 'github' repository in pom.xml
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      MAVEN_ARGS: --global-settings ${{ github.workspace }}/matchbox/.github/maven-settings.xml
     steps:
       - name: Checkout matchbox
         uses: actions/checkout@v7

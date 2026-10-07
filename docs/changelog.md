@@ -1,3 +1,22 @@
+2026/10/xx Release 4.2.0
+
+- Upgrade to Spring Boot 4.0.8 and Spring Framework 7.0.9 to fix `spring-webmvc`
+  [CVE-2026-47884](https://github.com/ahdis/matchbox/security/dependabot/420), with Hibernate ORM 7.2, Jakarta EE 11
+  and JUnit 6. HAPI FHIR is a build of [hapifhir/hapi-fhir#8189](https://github.com/hapifhir/hapi-fhir/pull/8189)
+  (Spring Boot 4 support) until it is released, published as `8.13.15-pr8189-1` to the
+  [GitHub Packages](https://github.com/orgs/ahdis/packages?repo_name=matchbox) of matchbox: building matchbox needs a
+  GitHub token with `read:packages` in the Maven settings (server `github`). The overridden HAPI classes (`JpaConfig`,
+  `TermReadSvcImpl`, `JpaPackageCache`, `PackageLoaderSvc`) were updated to it, the `JsonParser` override was removed
+  (#625 is fixed in HAPI)
+- While HAPI FHIR is such a build, `matchbox-engine` isn't published to Maven Central (its users couldn't resolve
+  HAPI FHIR): the release workflow only starts the Maven Central workflow with a released HAPI FHIR version (`X.Y.Z`)
+- Matchbox runs on Tomcat instead of Undertow (Spring Boot 4 dropped the support for Undertow). The
+  `server.undertow.max-http-post-size` setting isn't needed anymore, Tomcat doesn't limit the size of FHIR request
+  bodies
+- Loading packages from `http(s)` URLs follows redirects with the redirect handling of HAPI FHIR (#75), which also
+  supports a package URL allow-list (`IPackageUrlAllowListProvider`, all URLs are allowed by default)
+- The Gazelle validation API uses the Jackson 3 mapper of Spring Boot
+
 2026/10/05 Release 4.1.21
 
 - Upgrade `piscina` (used by `@angular/build` of the frontend build) to 5.3.2 with an npm override to fix

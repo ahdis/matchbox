@@ -78,13 +78,10 @@ Some more configuration parameters used by validation are described in the
 
 ### Maximum request size
 
-Matchbox runs on Undertow, which rejects request bodies larger than 2 MiB by default with
-`RequestTooBigException: UT000020: Connection terminated as request was larger than 2097152`.
-Matchbox raises that limit to 100 MB; if you have to send larger resources, increase
-`server.undertow.max-http-post-size` (e.g. with the environment variable
-`SERVER_UNDERTOW_MAX_HTTP_POST_SIZE`). The value must be positive, Undertow cannot be configured for
-unlimited request bodies through Spring Boot. Note that a reverse proxy in front of Matchbox may
-enforce its own, smaller limit.
+Matchbox runs on the embedded Tomcat of Spring Boot (Spring Boot 4 dropped the support for Undertow), which does
+not limit the size of FHIR request bodies (`server.tomcat.max-http-form-post-size` only applies to form posts). The
+former `server.undertow.max-http-post-size` setting is not used anymore. Note that a reverse proxy in front of Matchbox
+may enforce its own limit.
 
 ## Read-only mode {: #read-only}
 
