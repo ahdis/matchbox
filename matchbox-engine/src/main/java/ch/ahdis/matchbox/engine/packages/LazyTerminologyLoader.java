@@ -1,6 +1,7 @@
 package ch.ahdis.matchbox.engine.packages;
 
 import java.io.ByteArrayInputStream;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.HashSet;
@@ -48,9 +49,12 @@ public final class LazyTerminologyLoader {
 	/**
 	 * Returns the filename of a resource in the 'package' folder of an in-memory package (the folder that
 	 * NpmPackage.listResources() lists), or null for a resource in another folder.
+	 * <p>
+	 * NpmPackage builds the path with Utilities.path(), i.e. with the file separator of the platform
+	 * ({@code @package\file.json} on Windows).
 	 */
 	public static String getPackageFolderFilename(final PackageResourceInformation pri) {
-		final String filename = pri.getFilename();
+		final String filename = pri.getFilename() == null ? null : pri.getFilename().replace(File.separatorChar, '/');
 		if (filename == null || !filename.startsWith(PACKAGE_FOLDER_PREFIX)
 			|| filename.indexOf('/', PACKAGE_FOLDER_PREFIX.length()) >= 0) {
 			return null;
