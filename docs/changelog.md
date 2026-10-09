@@ -1,4 +1,4 @@
-2026/10/xx Release 4.2.0
+2026/10/xx Release 5.0.0
 
 - Upgrade to Spring Boot 4.0.8 and Spring Framework 7.0.9 to fix `spring-webmvc`
   [CVE-2026-47884](https://github.com/ahdis/matchbox/security/dependabot/420), with Hibernate ORM 7.2, Jakarta EE 11

@@ -61,6 +61,8 @@ the background).
    started.
 3. Run the release workflow:
    `gh workflow run release.yml --repo ahdis/matchbox --ref main -f version=X.Y.Z`
+   A matchbox 5 release (Spring Boot 4) is made from the branch `matchbox_v5` instead of `main` (`--ref matchbox_v5`,
+   the release PR targets `matchbox_v5`). Its Docker image also gets the tag `latest`, like every release.
 4. Follow the release run and then the two runs it starts on the tag (`googleregistry.yml`, `central_repository.yml`)
    until they complete: `gh run list --repo ahdis/matchbox --limit 5`, `gh run watch <id> --repo ahdis/matchbox`.
    `central_repository.yml` is only started if `hapi.fhir.version` in `pom.xml` is a released HAPI FHIR version
