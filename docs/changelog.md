@@ -1,3 +1,9 @@
+2026/10/xx Release 4.1.22
+
+- Remove the duplicate `opentelemetry-spring-boot-starter` entry in the `dependencyManagement` of the root `pom.xml`,
+  which the Maven version of the GitHub runners rejects ("'dependencyManagement.dependencies.dependency' must be
+  unique")
+
 2026/10/05 Release 4.1.21
 
 - Upgrade `piscina` (used by `@angular/build` of the frontend build) to 5.3.2 with an npm override to fix
