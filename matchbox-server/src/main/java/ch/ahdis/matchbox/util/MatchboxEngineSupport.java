@@ -25,9 +25,9 @@ import org.apache.commons.codec.digest.DigestUtils;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hl7.fhir.instance.model.api.IBaseResource;
-import org.hl7.fhir.r5.conformance.R5ExtensionsLoader;
-import org.hl7.fhir.r5.terminologies.client.TerminologyClientContext;
-import org.hl7.fhir.r5.utils.validation.constants.ReferenceValidationPolicy;
+import org.hl7.fhir.services.conformance.R5ExtensionsLoader;
+import org.hl7.fhir.standalone.terminology.client.TerminologyClientContext;
+import org.hl7.fhir.services.validation.constants.ReferenceValidationPolicy;
 import org.hl7.fhir.utilities.FhirPublication;
 import org.hl7.fhir.utilities.validation.ValidationOptions.R5BundleRelativeReferencePolicy;
 import org.hl7.fhir.validation.service.DisabledValidationPolicyAdvisor;
@@ -807,7 +807,7 @@ public class MatchboxEngineSupport {
 			} else {
 				String rule = bundle[0];
 				String profile = bundle[1];
-				validator.getDefaultInstanceValidatorParameters().getBundleValidationRules().add(new org.hl7.fhir.r5.utils.validation.BundleValidationRule().setRule(rule).setProfile(profile));
+				validator.getDefaultInstanceValidatorParameters().getBundleValidationRules().add(new org.hl7.fhir.services.validation.BundleValidationRule().setRule(rule).setProfile(profile));
 			}
 		}
 		validator.getDefaultInstanceValidatorParameters().setR5BundleRelativeReferencePolicy(R5BundleRelativeReferencePolicy.fromCode(cli.getR5BundleRelativeReferencePolicy()));

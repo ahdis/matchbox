@@ -10,13 +10,13 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import org.hl7.fhir.r4.model.OperationOutcome;
-import org.hl7.fhir.r5.context.ContextUtilities;
-import org.hl7.fhir.r5.context.IWorkerContext;
-import org.hl7.fhir.r5.context.IWorkerContext.VersionResolutionRules;
-import org.hl7.fhir.r5.elementmodel.Manager.FhirFormat;
-import org.hl7.fhir.r5.model.CodeSystem;
-import org.hl7.fhir.r5.model.PackageInformation;
-import org.hl7.fhir.r5.model.ValueSet;
+import org.hl7.fhir.services.context.ContextUtilities;
+import org.hl7.fhir.services.context.IWorkerContext;
+import org.hl7.fhir.model.core.VersionResolutionRules;
+import org.hl7.fhir.model.utilities.formats.FhirFormat;
+import org.hl7.fhir.model.core.CodeSystem;
+import org.hl7.fhir.model.core.PackageInformation;
+import org.hl7.fhir.model.core.ValueSet;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 

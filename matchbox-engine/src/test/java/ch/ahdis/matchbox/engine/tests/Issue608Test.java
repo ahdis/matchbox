@@ -7,11 +7,11 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.InputStream;
 
-import org.hl7.fhir.r5.context.SimpleWorkerContext;
-import org.hl7.fhir.r5.model.CodeSystem;
-import org.hl7.fhir.r5.model.Enumerations;
-import org.hl7.fhir.r5.model.Resource;
-import org.hl7.fhir.r5.model.StructureDefinition;
+import org.hl7.fhir.standalone.context.SimpleWorkerContext;
+import org.hl7.fhir.model.core.CodeSystem;
+import org.hl7.fhir.model.core.Enumerations;
+import org.hl7.fhir.model.core.Resource;
+import org.hl7.fhir.model.core.StructureDefinition;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 

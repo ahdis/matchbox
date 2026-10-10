@@ -17,7 +17,7 @@ import ch.ahdis.matchbox.validation.gazelle.models.metadata.Service;
 import ch.ahdis.matchbox.validation.gazelle.models.validation.*;
 
 import org.apache.commons.codec.digest.DigestUtils;
-import org.hl7.fhir.r5.model.StructureDefinition;
+import org.hl7.fhir.model.core.StructureDefinition;
 import org.hl7.fhir.utilities.validation.ValidationMessage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

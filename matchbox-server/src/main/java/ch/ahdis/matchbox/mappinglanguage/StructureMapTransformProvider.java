@@ -29,14 +29,13 @@ import ca.uhn.fhir.context.FhirVersionEnum;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
-import org.hl7.fhir.convertors.factory.VersionConvertorFactory_40_50;
-import org.hl7.fhir.convertors.factory.VersionConvertorFactory_43_50;
+import org.hl7.fhir.convertors.factory.VersionConvertorFactory_40_N;
+import org.hl7.fhir.convertors.factory.VersionConvertorFactory_43_N;
 import org.hl7.fhir.instance.model.api.IBase;
 import org.hl7.fhir.instance.model.api.IBaseResource;
 import org.hl7.fhir.instance.model.api.IDomainResource;
 import org.hl7.fhir.instance.model.api.IIdType;
-import org.hl7.fhir.r5.context.IWorkerContext;
-import org.hl7.fhir.r5.utils.structuremap.StructureMapUtilities;
+import org.hl7.fhir.services.fml.StructureMapTools;
 import org.hl7.fhir.utilities.xhtml.NodeType;
 import org.hl7.fhir.utilities.xhtml.XhtmlNode;
 
@@ -59,7 +58,13 @@ import ch.ahdis.matchbox.engine.MatchboxEngine;
 import ch.ahdis.matchbox.engine.cli.VersionUtil;
 import ch.ahdis.matchbox.engine.exception.MatchboxUnsupportedFhirVersionException;
 import org.hl7.fhir.r4.model.Narrative.NarrativeStatus;
-import org.hl7.fhir.r5.model.*;
+import ch.ahdis.matchbox.engine.R6Model;
+import org.hl7.fhir.model.core.Bundle;
+import org.hl7.fhir.model.core.Parameters;
+import org.hl7.fhir.model.core.Resource;
+import org.hl7.fhir.model.core.StringType;
+import org.hl7.fhir.model.core.StructureDefinition;
+import org.hl7.fhir.model.fml.StructureMap;
 import org.springframework.beans.factory.annotation.Value;
 
 import javax.annotation.Nullable;
@@ -103,7 +108,7 @@ public class StructureMapTransformProvider extends StructureMapResourceProvider 
 	protected static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(StructureMapTransformProvider.class);
 
 
-	@Operation(name = "$transform", type = StructureMap.class, manualResponse = true, manualRequest = true)
+	@Operation(name = "$transform", type = org.hl7.fhir.r5.model.StructureMap.class, manualResponse = true, manualRequest = true)
 	public void manualInputAndOutput(final HttpServletRequest theServletRequest,
 												final HttpServletResponse theServletResponse) throws IOException {
 		this.matchboxMetrics.ifPresent(MatchboxMetrics::addTransformation);
@@ -165,7 +170,7 @@ public class StructureMapTransformProvider extends StructureMapResourceProvider 
 				if (model instanceof final StructureDefinition structureDefinition) {
 					models.add(structureDefinition);
 				} else if (model instanceof final Bundle bundle) {
-					for (final var entry : bundle.getEntry()) {
+					for (final var entry : bundle.getEntryList()) {
 						if (entry.getResource() instanceof final StructureDefinition structureDefinition) {
 							models.add(structureDefinition);
 						}
@@ -215,7 +220,7 @@ public class StructureMapTransformProvider extends StructureMapResourceProvider 
 		}
 
 		if (source != null) {
-			map = matchboxEngine.getContext().fetchResource(StructureMap.class, source, IWorkerContext.VersionResolutionRules.defaultRule());
+			map = matchboxEngine.getContext().fetchResource(StructureMap.class, source, org.hl7.fhir.model.core.VersionResolutionRules.defaultRule());
 			if (map == null) {
 				throw new UnprocessableEntityException("Map not available with canonical url " + source);
 			}
@@ -268,7 +273,7 @@ public class StructureMapTransformProvider extends StructureMapResourceProvider 
 				final var wrapper = new HttpRequestWrapper(theServletRequest,
 																		 theServletResponse,
 																		 this.fhirContext.getVersion().getVersion());
-				wrapper.writeResponse(resultParameters);
+				wrapper.writeResponse(R6Model.toR5(resultParameters));
 			}
 			else {
 				// Return the transformed resource directly. It's a string, no
@@ -286,7 +291,7 @@ public class StructureMapTransformProvider extends StructureMapResourceProvider 
 		}
 	}
 
-	@Operation(name = "$convert", type = StructureMap.class, idempotent = true, returnParameters = {
+	@Operation(name = "$convert", type = org.hl7.fhir.r5.model.StructureMap.class, idempotent = true, returnParameters = {
 		@OperationParam(name = "output", type = IBase.class, min = 1, max = 1)})
 	public IBaseResource convert(@OperationParam(name = "input", min = 1, max = 1) final IBaseResource content,
 										  @OperationParam(name = "ig", min = 0, max = 1) final String ig,
@@ -307,9 +312,9 @@ public class StructureMapTransformProvider extends StructureMapResourceProvider 
 			resource = this.fhirContext.newJsonParser().parseResource(content);
 		}
 		return switch (resource) {
-			case final org.hl7.fhir.r4.model.Resource r4 -> VersionConvertorFactory_40_50.convertResource(r4);
-			case final org.hl7.fhir.r4b.model.Resource r4b -> VersionConvertorFactory_43_50.convertResource(r4b);
-			case final Resource r5 -> r5;
+			case final org.hl7.fhir.r4.model.Resource r4 -> VersionConvertorFactory_40_N.convertResource(r4);
+			case final org.hl7.fhir.r4b.model.Resource r4b -> VersionConvertorFactory_43_N.convertResource(r4b);
+			case final org.hl7.fhir.r5.model.Resource r5 -> R6Model.fromR5(r5);
 			default -> throw new MatchboxUnsupportedFhirVersionException("StructureMapTransformProvider",
 			                                                             resource.getStructureFhirVersionEnum());
 		};
@@ -318,7 +323,7 @@ public class StructureMapTransformProvider extends StructureMapResourceProvider 
 	private void createNarrative(final IBaseResource theResource) {
 		final StructureMap map = (StructureMap) this.getCanonical(theResource);
 		if (!map.hasText()) {
-			final String render = StructureMapUtilities.render(map);
+			final String render = StructureMapTools.render(map);
 			switch (theResource) {
 				case final org.hl7.fhir.r4.model.StructureMap r4 -> {
 					r4.getText().setStatus(NarrativeStatus.GENERATED);
@@ -330,7 +335,7 @@ public class StructureMapTransformProvider extends StructureMapResourceProvider 
 					r4b.getText().setDiv(new XhtmlNode(NodeType.Element, "div"));
 					r4b.getText().getDiv().addTag("pre").addText(render);
 				}
-				case final StructureMap r5 -> {
+				case final org.hl7.fhir.r5.model.StructureMap r5 -> {
 					r5.getText().setStatus(org.hl7.fhir.r5.model.Narrative.NarrativeStatus.GENERATED);
 					r5.getText().setDiv(new XhtmlNode(NodeType.Element, "div"));
 					r5.getText().getDiv().addTag("pre").addText(render);

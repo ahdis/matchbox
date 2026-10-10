@@ -28,13 +28,14 @@ import ch.ahdis.matchbox.util.MatchboxServerUtils;
 import ch.ahdis.matchbox.util.http.MatchboxFhirFormat;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import org.hl7.fhir.convertors.factory.VersionConvertorFactory_40_50;
-import org.hl7.fhir.convertors.factory.VersionConvertorFactory_43_50;
+import ch.ahdis.matchbox.engine.R6Model;
+import org.hl7.fhir.convertors.factory.VersionConvertorFactory_40_N;
+import org.hl7.fhir.convertors.factory.VersionConvertorFactory_43_N;
 import org.hl7.fhir.instance.model.api.IBaseResource;
 import org.hl7.fhir.instance.model.api.IDomainResource;
 import org.hl7.fhir.instance.model.api.IIdType;
 import org.hl7.fhir.r4.model.MetadataResource;
-import org.hl7.fhir.r5.context.IWorkerContext;
+import org.hl7.fhir.model.core.VersionResolutionRules;
 import org.hl7.fhir.r5.model.BooleanType;
 import org.hl7.fhir.r5.model.CanonicalType;
 import org.hl7.fhir.r5.model.StringType;
@@ -153,27 +154,27 @@ public class ConformancePackageResourceProvider<R4 extends MetadataResource, R4B
 		}
 
 		if (this.matchboxContext.isOnlyOneEngine()) {
-			List<org.hl7.fhir.r5.model.Resource> resources = new ArrayList<>();
+			List<org.hl7.fhir.model.core.Resource> resources = new ArrayList<>();
 			MatchboxEngine matchboxEngine = matchboxEngineSupport.getMatchboxEngine(null, cliContext,
 																											false, false);
 			if (matchboxEngine != null) {
 
 				if (theUrl != null) {
 					String url = theUrl.getValuesAsQueryTokens().get(0).getValuesAsQueryTokens().get(0).getValue();
-					R5 r = matchboxEngine.getContext().fetchResource(classR5, url, IWorkerContext.VersionResolutionRules.defaultRule());
+					final org.hl7.fhir.model.core.Resource r = matchboxEngine.getContext().fetchResource(R6Model.classFor(classR5), url, VersionResolutionRules.defaultRule());
 					if (r != null)
 						resources.add(r);
 				} else {
-					resources.addAll(matchboxEngine.getContext().fetchResourcesByType(classR5));
+					resources.addAll(matchboxEngine.getContext().fetchResourcesByType(R6Model.classFor(classR5)));
 				}
 
 				final int offset = (theOffset == null ? 0 : theOffset);
 				final int count = (theCount == null ? 20 : theCount);
 				final int totalSize = resources.size();
 				final int toIndex = Math.min(offset + count, totalSize);
-				final var paged = (offset < totalSize) ? resources.subList(offset, toIndex) : List.<org.hl7.fhir.r5.model.Resource>of();
+				final var paged = (offset < totalSize) ? resources.subList(offset, toIndex) : List.<org.hl7.fhir.model.core.Resource>of();
 
-				final SimpleBundleProvider bundleProvider = httpWrapper.makeBundleProviderFromR5(paged);
+				final SimpleBundleProvider bundleProvider = httpWrapper.makeBundleProviderFromN(paged);
 				bundleProvider.setSize(totalSize);
 				bundleProvider.setCurrentPageOffset(offset);
 				bundleProvider.setCurrentPageSize(count);
@@ -416,18 +417,18 @@ public class ConformancePackageResourceProvider<R4 extends MetadataResource, R4B
 		return resource;
 	}
 
-	public org.hl7.fhir.r5.model.CanonicalResource getCanonical(final IBaseResource theResource) {
+	public org.hl7.fhir.model.core.CanonicalResource getCanonical(final IBaseResource theResource) {
 		if (classR4.isInstance(theResource)) {
 			R4 r4 = classR4.cast(theResource);
-			return (org.hl7.fhir.r5.model.CanonicalResource) VersionConvertorFactory_40_50.convertResource(r4);
+			return (org.hl7.fhir.model.core.CanonicalResource) VersionConvertorFactory_40_N.convertResource(r4);
 		}
 		if (classR4B.isInstance(theResource)) {
 			R4B r4b = classR4B.cast(theResource);
-			return (org.hl7.fhir.r5.model.CanonicalResource) VersionConvertorFactory_43_50.convertResource(r4b);
+			return (org.hl7.fhir.model.core.CanonicalResource) VersionConvertorFactory_43_N.convertResource(r4b);
 		}
 		if (classR5.isInstance(theResource)) {
 			R5 r5 = classR5.cast(theResource);
-			return r5;
+			return (org.hl7.fhir.model.core.CanonicalResource) R6Model.fromR5(r5);
 		}
 		log.error("FHIR version not supported for resource " + theResource.fhirType() + ": " + theResource.getIdElement().getIdPart() + " : " + theResource.getStructureFhirVersionEnum());
 		return null;

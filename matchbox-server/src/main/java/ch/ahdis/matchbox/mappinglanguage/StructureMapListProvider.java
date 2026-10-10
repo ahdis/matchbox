@@ -5,6 +5,7 @@ import ca.uhn.fhir.jpa.model.entity.NpmPackageVersionResourceEntity;
 import ca.uhn.fhir.rest.annotation.Operation;
 import ca.uhn.fhir.rest.api.server.RequestDetails;
 import ch.ahdis.matchbox.CliContext;
+import ch.ahdis.matchbox.engine.R6Model;
 import ch.ahdis.matchbox.config.MatchboxFhirVersion;
 import ch.ahdis.matchbox.config.property.MatchboxFhirContextProperties;
 import ch.ahdis.matchbox.providers.AbstractMatchboxResourceProvider;
@@ -73,7 +74,9 @@ public class StructureMapListProvider extends AbstractMatchboxResourceProvider {
 
 	private List<StructureMap> listStructureMapsFromMainEngine() {
 		final var mainEngine = this.matchboxEngineSupport.getMatchboxEngine("default", cliContext, true, false);
-		return mainEngine.getContext().fetchResourcesByType(StructureMap.class);
+		return mainEngine.getContext().fetchResourcesByType(org.hl7.fhir.model.fml.StructureMap.class).stream()
+			.map(map -> (StructureMap) R6Model.toR5(map))
+			.collect(Collectors.toList());
 	}
 
 	private StructureMap summarizeStructureMap(final NpmPackageVersionResourceEntity entity) {
