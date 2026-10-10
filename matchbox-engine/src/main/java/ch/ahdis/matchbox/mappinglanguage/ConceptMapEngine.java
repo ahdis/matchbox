@@ -32,13 +32,13 @@ package ch.ahdis.matchbox.mappinglanguage;
 
 
 import org.hl7.fhir.exceptions.FHIRException;
-import org.hl7.fhir.r5.context.IWorkerContext;
-import org.hl7.fhir.r5.model.Coding;
-import org.hl7.fhir.r5.model.ConceptMap;
-import org.hl7.fhir.r5.model.ConceptMap.ConceptMapGroupComponent;
-import org.hl7.fhir.r5.model.ConceptMap.SourceElementComponent;
-import org.hl7.fhir.r5.model.ConceptMap.TargetElementComponent;
-import org.hl7.fhir.r5.model.Enumerations.ConceptMapRelationship;
+import org.hl7.fhir.services.context.IWorkerContext;
+import org.hl7.fhir.model.core.Coding;
+import org.hl7.fhir.model.core.ConceptMap;
+import org.hl7.fhir.model.core.ConceptMap.ConceptMapGroupComponent;
+import org.hl7.fhir.model.core.ConceptMap.SourceElementComponent;
+import org.hl7.fhir.model.core.ConceptMap.TargetElementComponent;
+import org.hl7.fhir.model.core.Enumerations.ConceptMapRelationship;
 import org.hl7.fhir.utilities.CanonicalPair;
 
 public class ConceptMapEngine {
@@ -62,8 +62,8 @@ public class ConceptMapEngine {
   private Coding translateByJustCode(ConceptMap cm, String code) throws FHIRException {
     SourceElementComponent ct = null;
     ConceptMapGroupComponent cg = null;
-    for (ConceptMapGroupComponent g : cm.getGroup()) {
-      for (SourceElementComponent e : g.getElement()) {
+    for (ConceptMapGroupComponent g : cm.getGroupList()) {
+      for (SourceElementComponent e : g.getElementList()) {
         if (code.equals(e.getCode())) {
           if (e != null)
             throw new FHIRException("Unable to process translate "+code+" because multiple candidate matches were found in concept map "+cm.getUrl());
@@ -75,7 +75,7 @@ public class ConceptMapEngine {
     if (ct == null)
       return null;
     TargetElementComponent tt = null;
-    for (TargetElementComponent t : ct.getTarget()) {
+    for (TargetElementComponent t : ct.getTargetList()) {
       if (!t.hasDependsOn() && !t.hasProduct() && isOkRelationship(t.getRelationship())) {
         if (tt != null)
           throw new FHIRException("Unable to process translate "+code+" because multiple targets were found in concept map "+cm.getUrl());

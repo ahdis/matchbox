@@ -49,9 +49,9 @@ import org.hl7.fhir.instance.model.api.IBase;
 import org.hl7.fhir.instance.model.api.IBaseOperationOutcome;
 import org.hl7.fhir.instance.model.api.IBaseResource;
 import org.hl7.fhir.r5.model.*;
-import org.hl7.fhir.r5.elementmodel.Manager.FhirFormat;
-import org.hl7.fhir.r5.extensions.ExtensionDefinitions;
-import org.hl7.fhir.r5.utils.EOperationOutcome;
+import org.hl7.fhir.model.utilities.formats.FhirFormat;
+import org.hl7.fhir.model.extensions.ExtensionDefinitions;
+import org.hl7.fhir.model.utilities.EOperationOutcome;
 import org.hl7.fhir.r5.utils.OperationOutcomeUtilities;
 import org.hl7.fhir.utilities.validation.ValidationMessage;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -384,7 +384,7 @@ public class ValidationProvider {
 			issue.setSeverity(OperationOutcome.IssueSeverity.INFORMATION);
 			issue.setCode(OperationOutcome.IssueType.INFORMATIONAL);
 
-			final org.hl7.fhir.r5.model.StructureDefinition structDefR5 = engine.getStructureDefinitionR5(profile);
+			final org.hl7.fhir.model.core.StructureDefinition structDefR5 = engine.getStructureDefinitionR5(profile);
 
 			final var profileDate = (structDefR5.getDateElement() != null)
 				? " (%s)".formatted(structDefR5.getDateElement().asStringValue())
@@ -408,7 +408,9 @@ public class ValidationProvider {
 			var ext = issue.addExtension().setUrl("http://matchbox.health/validation");
 			addExtension(ext, "profile", new UriType(structDefR5.getUrl()));
 			addExtension(ext, "profileVersion", new UriType(structDefR5.getVersion()));
-			addExtension(ext, "profileDate", structDefR5.getDateElement());
+			addExtension(ext, "profileDate", structDefR5.hasDate()
+				? new org.hl7.fhir.r5.model.DateTimeType(structDefR5.getDateElement().getValueAsString())
+				: null);
 
 			ext.addExtension("total", new Duration().setUnit("ms").setValue(ms));
 			addExtension(ext, "validatorVersion", new StringType(VersionUtil.getPoweredBy()));

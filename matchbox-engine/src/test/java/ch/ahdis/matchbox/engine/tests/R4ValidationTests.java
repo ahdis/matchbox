@@ -1,11 +1,12 @@
 package ch.ahdis.matchbox.engine.tests;
 
+import org.hl7.fhir.model.utilities.formats.FhirFormat;
 import ch.ahdis.matchbox.engine.MatchboxEngine;
 
 import org.hl7.fhir.exceptions.FHIRException;
 import org.hl7.fhir.r4.model.OperationOutcome;
-import org.hl7.fhir.r5.elementmodel.Manager;
-import org.hl7.fhir.r5.utils.EOperationOutcome;
+import org.hl7.fhir.services.elementmodel.Manager;
+import org.hl7.fhir.model.utilities.EOperationOutcome;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
@@ -60,10 +61,10 @@ class R4ValidationTests {
 	@Test
 	void testValueSetWithSimpleInclude() throws Exception {
 		final String validCareplan = this.careplanRaw.replace("{{INTENT}}", "plan");
-		this.expectValid(validCareplan, Manager.FhirFormat.XML, "http://hl7.org/fhir/StructureDefinition/CarePlan");
+		this.expectValid(validCareplan, FhirFormat.XML, "http://hl7.org/fhir/StructureDefinition/CarePlan");
 
 		final String invalidCareplan = this.careplanRaw.replace("{{INTENT}}", "non-existent-code");
-		final var errors = this.expectInvalid(invalidCareplan, Manager.FhirFormat.XML, "http://hl7" +
+		final var errors = this.expectInvalid(invalidCareplan, FhirFormat.XML, "http://hl7" +
 			".org/fhir/StructureDefinition/CarePlan");
 		assertTrue(errors.get(0).getDetails().getText().startsWith("The value provided ('non-existent-code') was not " +
 																						  "found in the value set 'Care Plan Intent' (http://hl7.org/fhir/ValueSet/care-plan-intent|4.0.1)") || errors.get(1).getDetails().getText().startsWith("The value provided ('non-existent-code') was not " +
@@ -79,10 +80,10 @@ class R4ValidationTests {
 	@Test
 	void testValueSetWithAllFromCodeSystem() throws Exception {
 		final String validMeasure = this.measureRaw.replace("{{STATUS}}", "active");
-		this.expectValid(validMeasure, Manager.FhirFormat.XML, "http://hl7.org/fhir/StructureDefinition/Measure");
+		this.expectValid(validMeasure, FhirFormat.XML, "http://hl7.org/fhir/StructureDefinition/Measure");
 
 		final String invalidMeasure = this.measureRaw.replace("{{STATUS}}", "non-existent-code");
-		final var errors = this.expectInvalid(invalidMeasure, Manager.FhirFormat.XML, "http://hl7.org/fhir/StructureDefinition/Measure");
+		final var errors = this.expectInvalid(invalidMeasure, FhirFormat.XML, "http://hl7.org/fhir/StructureDefinition/Measure");
 		assertEquals(2, errors.size());
  		assertTrue(errors.get(0).getDetails().getText().startsWith("The value provided ('non-existent-code') was not " +
 																						  "found in the value set 'PublicationStatus'") || errors.get(1).getDetails().getText().startsWith("The value provided ('non-existent-code') was not " +
@@ -95,7 +96,7 @@ class R4ValidationTests {
 	 */
 	@Test
 	void testIgnoreErrors() throws Exception {
-		final var errors = this.expectInvalid(this.relatedPerson, Manager.FhirFormat.JSON, "http://hl7.org/fhir/StructureDefinition/RelatedPerson");
+		final var errors = this.expectInvalid(this.relatedPerson, FhirFormat.JSON, "http://hl7.org/fhir/StructureDefinition/RelatedPerson");
 		assertEquals(1, errors.size());
 		// patient-birthPlace has 'Patient' as its only context, so it is not allowed on a RelatedPerson. It replaced
 		// patient-citizenship in this test, whose context was widened to Patient|RelatedPerson|Person in
@@ -103,7 +104,7 @@ class R4ValidationTests {
 		// Since core 6.9.1, extensionUrlVersioned includes version, so message text includes "v4.0.1"
 		assertTrue(errors.get(0).getDetails().getText().startsWith("The extension http://hl7.org/fhir/StructureDefinition/patient-birthPlace"));
 		engine.addSuppressedError("Extension_EXTP_Context_Wrong", "RelatedPerson");
- 		expectValid(this.relatedPerson, Manager.FhirFormat.JSON, "http://hl7.org/fhir/StructureDefinition/RelatedPerson");
+ 		expectValid(this.relatedPerson, FhirFormat.JSON, "http://hl7.org/fhir/StructureDefinition/RelatedPerson");
 	}
 
 	/**
@@ -116,7 +117,7 @@ class R4ValidationTests {
 //	@Disabled(value = "No offline expansion yet")
 	void testCodeCorrect() throws Exception {
 		final String validBinary = this.loadSample("code-correct.xml");
-		this.expectValid(validBinary, Manager.FhirFormat.XML, "http://hl7.org/fhir/StructureDefinition/Basic");
+		this.expectValid(validBinary, FhirFormat.XML, "http://hl7.org/fhir/StructureDefinition/Basic");
 	}
 
 	/**
@@ -133,7 +134,7 @@ class R4ValidationTests {
 		final String binaryRaw = this.loadSample("binary.xml");
 
 		final String validBinary = binaryRaw.replace("{{CONTENTTYPE}}", "application/pdf");
-		this.expectValid(validBinary, Manager.FhirFormat.XML, "http://hl7.org/fhir/StructureDefinition/Binary");
+		this.expectValid(validBinary, FhirFormat.XML, "http://hl7.org/fhir/StructureDefinition/Binary");
 	}
 
 	/**
@@ -145,10 +146,10 @@ class R4ValidationTests {
 		final String observationRaw = this.loadSample("observation.xml");
 
 		final String validObservation = observationRaw.replace("{{UNIT}}", "min");
-		this.expectValid(validObservation, Manager.FhirFormat.XML, "http://hl7.org/fhir/StructureDefinition/Observation");
+		this.expectValid(validObservation, FhirFormat.XML, "http://hl7.org/fhir/StructureDefinition/Observation");
 
 		//final String invalidObservation = observationRaw.replace("{{UNIT}}", "non-existent-code");
-		//final var errors = this.expectInvalid(invalidObservation, Manager.FhirFormat.XML, "http://hl7.org/fhir/StructureDefinition/Observation");
+		//final var errors = this.expectInvalid(invalidObservation, FhirFormat.XML, "http://hl7.org/fhir/StructureDefinition/Observation");
 		//assertEquals(1, errors.size());
 	}
 
@@ -159,7 +160,7 @@ class R4ValidationTests {
 	@Test
 	void testUnknownExtensionIsRejectedByDefault() throws Exception {
 		final String resourceWithUnknownExtension = this.loadSample("patient-with-extension.json");
-		this.expectInvalid(resourceWithUnknownExtension, Manager.FhirFormat.JSON, "http://hl7" +
+		this.expectInvalid(resourceWithUnknownExtension, FhirFormat.JSON, "http://hl7" +
 			".org/fhir/StructureDefinition/Patient");
 	}
 
@@ -170,7 +171,7 @@ class R4ValidationTests {
 	void testUnknownExtensionCanBeAcceptedWithAny() throws Exception {
 		this.engine.setAnyExtensionsAllowed(true);
 		final String resourceWithUnknownExtension = this.loadSample("patient-with-extension.json");
-		this.expectValid(resourceWithUnknownExtension, Manager.FhirFormat.JSON, "http://hl7.org/fhir/StructureDefinition/Patient");
+		this.expectValid(resourceWithUnknownExtension, FhirFormat.JSON, "http://hl7.org/fhir/StructureDefinition/Patient");
 	}
 
 	@Test
@@ -284,14 +285,14 @@ class R4ValidationTests {
 	void testUnknownExtensionCanBeAcceptedWithDomain(final String allowedDomain) throws Exception {
 		this.engine.setExtensionDomains(List.of(allowedDomain));
 		final String resourceWithUnknownExtension = this.loadSample("patient-with-extension.json");
-		this.expectValid(resourceWithUnknownExtension, Manager.FhirFormat.JSON, "http://hl7.org/fhir/StructureDefinition/Patient");
+		this.expectValid(resourceWithUnknownExtension, FhirFormat.JSON, "http://hl7.org/fhir/StructureDefinition/Patient");
 	}
 
 	@Test
 	void testUnknownExtensionIsRejectedWithDifferentDomain() throws Exception {
 		this.engine.setExtensionDomains(List.of("http://aoihafs.com"));
 		final String resourceWithUnknownExtension = this.loadSample("patient-with-extension.json");
-		this.expectInvalid(resourceWithUnknownExtension, Manager.FhirFormat.JSON, "http://hl7.org/fhir/StructureDefinition" +
+		this.expectInvalid(resourceWithUnknownExtension, FhirFormat.JSON, "http://hl7.org/fhir/StructureDefinition" +
 			"/Patient");
 	}
 
@@ -318,7 +319,7 @@ class R4ValidationTests {
 	}
 
 	private void expectValid(final String resource,
-									 final Manager.FhirFormat format,
+									 final FhirFormat format,
 									 final String profile) throws EOperationOutcome, IOException {
 		final var response = this.engine.validate(new ByteArrayInputStream(resource.getBytes(StandardCharsets.UTF_8)),
 																format,
@@ -335,7 +336,7 @@ class R4ValidationTests {
 	}
 
 	private List<OperationOutcome.OperationOutcomeIssueComponent> expectInvalid(final String resource,
-																										 final Manager.FhirFormat format,
+																										 final FhirFormat format,
 																										 final String profile) throws EOperationOutcome, IOException {
 		final var response = this.engine.validate(new ByteArrayInputStream(resource.getBytes(StandardCharsets.UTF_8)),
 																format,

@@ -10,7 +10,7 @@ import java.util.stream.Collectors;
 
 import org.hl7.fhir.r4.model.OperationOutcome;
 import org.hl7.fhir.r4.model.StructureDefinition;
-import org.hl7.fhir.r5.elementmodel.Manager.FhirFormat;
+import org.hl7.fhir.model.utilities.formats.FhirFormat;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 

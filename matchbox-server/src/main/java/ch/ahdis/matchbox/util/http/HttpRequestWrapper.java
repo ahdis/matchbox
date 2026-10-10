@@ -10,6 +10,9 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.hl7.fhir.convertors.factory.VersionConvertorFactory_40_50;
 import org.hl7.fhir.convertors.factory.VersionConvertorFactory_43_50;
+import org.hl7.fhir.convertors.factory.VersionConvertorFactory_40_N;
+import org.hl7.fhir.convertors.factory.VersionConvertorFactory_43_N;
+import org.hl7.fhir.convertors.factory.VersionConvertorFactory_50_N;
 import org.hl7.fhir.instance.model.api.IBaseResource;
 import org.hl7.fhir.r5.model.Resource;
 import org.hl7.fhir.utilities.VersionUtilities;
@@ -115,6 +118,28 @@ public class HttpRequestWrapper {
 					.toList();
 			case R5 -> resources;
 			default -> throw new MatchboxUnsupportedFhirVersionException("HttpRequestWrapper.makeBundleProviderFromR5",
+																							 this.responseVersion);
+		};
+		return new SimpleBundleProvider(convertedResources);
+	}
+
+	// Initialize and return a BundleProvider, convert a list of resources of the versionless (R6) model of the engine
+	// to the requested FHIR version.
+	public SimpleBundleProvider makeBundleProviderFromN(final List<org.hl7.fhir.model.core.Resource> resources) {
+		final var convertedResources = switch (this.responseVersion) {
+			case R4 -> resources
+				.parallelStream()
+				.map(VersionConvertorFactory_40_N::convertResource)
+				.toList();
+			case R4B -> resources
+				.parallelStream()
+				.map(VersionConvertorFactory_43_N::convertResource)
+				.toList();
+			case R5 -> resources
+				.parallelStream()
+				.map(VersionConvertorFactory_50_N::convertResource)
+				.toList();
+			default -> throw new MatchboxUnsupportedFhirVersionException("HttpRequestWrapper.makeBundleProviderFromN",
 																							 this.responseVersion);
 		};
 		return new SimpleBundleProvider(convertedResources);

@@ -10,8 +10,9 @@ import ch.ahdis.matchbox.util.MatchboxEngineSupport;
 import jakarta.annotation.Nullable;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import org.hl7.fhir.r5.elementmodel.*;
-import org.hl7.fhir.r5.elementmodel.Element;
+import ch.ahdis.matchbox.engine.R6Model;
+import org.hl7.fhir.services.elementmodel.Element;
+import org.hl7.fhir.services.elementmodel.ObjectConverter;
 import org.hl7.fhir.r5.model.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -90,14 +91,14 @@ public class QuestionnaireResponseExtractProvider {
 		final String mapUrl = targetStructureMapExtension.getValue().primitiveValue();
 
 		if (parsedRequest.structureMap() != null) {
-			matchboxEngine.getContext().cacheResource(parsedRequest.structureMap());
+			matchboxEngine.getContext().cacheResource(R6Model.fromR5(parsedRequest.structureMap()));
 		}
 
 		final var objectConverter = new ObjectConverter(matchboxEngine.getContext());
-		final var questionnaireResponseElement = objectConverter.convert(parsedRequest.questionnaireResponse());
+		final var questionnaireResponseElement = objectConverter.convert(R6Model.fromR5(parsedRequest.questionnaireResponse()));
 		final Element result = matchboxEngine.transform(questionnaireResponseElement, mapUrl, null, null);
 
-		httpWrapper.writeResponse(objectConverter.convert(result));
+		httpWrapper.writeResponse(R6Model.toR5(objectConverter.convert(result)));
 	}
 
 	/**
@@ -158,7 +159,7 @@ public class QuestionnaireResponseExtractProvider {
 			final var cliContext = new CliContext(this.matchboxEngineSupport.getClientContext());
 			cliContext.setFhirVersion(FhirVersionEnum.R5.getFhirVersionString());
 			final var tempEngine = this.matchboxEngineSupport.getMatchboxEngine(null, cliContext, true, false);
-			return tempEngine.parseMapR5(fml);
+			return (StructureMap) R6Model.toR5(tempEngine.parseMapR5(fml));
 		} catch (final Exception e) {
 			throw new InvalidRequestException("Unable to parse the FML language", e);
 		}
