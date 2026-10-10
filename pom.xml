@@ -39,7 +39,7 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
 
-        <fhir.core.version>6.10.4</fhir.core.version>
+        <fhir.core.version>7.0.1</fhir.core.version>
         <!-- TODO: build of https://github.com/hapifhir/hapi-fhir/pull/8189 (Spring Boot 4) at ab78b813154, published to
              GitHub Packages (see the 'github' repository below), switch to the HAPI FHIR release containing it -->
         <hapi.fhir.version>8.13.15-pr8189-1</hapi.fhir.version>
@@ -222,6 +222,21 @@
             <dependency>
                 <groupId>ca.uhn.hapi.fhir</groupId>
                 <artifactId>org.hl7.fhir.convertors</artifactId>
+                <version>${fhir.core.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>ca.uhn.hapi.fhir</groupId>
+                <artifactId>org.hl7.fhir.model</artifactId>
+                <version>${fhir.core.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>ca.uhn.hapi.fhir</groupId>
+                <artifactId>org.hl7.fhir.services</artifactId>
+                <version>${fhir.core.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>ca.uhn.hapi.fhir</groupId>
+                <artifactId>org.hl7.fhir.standalone</artifactId>
                 <version>${fhir.core.version}</version>
             </dependency>
             <dependency>

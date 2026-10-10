@@ -9,15 +9,15 @@ import java.util.List;
 import java.util.Set;
 
 import org.hl7.fhir.exceptions.FHIRException;
-import org.hl7.fhir.r5.context.IContextResourceLoader;
-import org.hl7.fhir.r5.context.SimpleWorkerContext;
-import org.hl7.fhir.r5.context.SimpleWorkerContext.PackageResourceLoader;
-import org.hl7.fhir.r5.model.Bundle;
-import org.hl7.fhir.r5.model.CodeSystem;
-import org.hl7.fhir.r5.model.PackageInformation;
-import org.hl7.fhir.r5.model.Resource;
-import org.hl7.fhir.r5.model.ValueSet;
-import org.hl7.fhir.r5.terminologies.client.ITerminologyClientFactory;
+import org.hl7.fhir.services.context.IContextResourceLoaderN;
+import org.hl7.fhir.standalone.context.SimpleWorkerContext;
+import org.hl7.fhir.services.context.PackageResourceLoader;
+import org.hl7.fhir.model.core.Bundle;
+import org.hl7.fhir.model.core.CodeSystem;
+import org.hl7.fhir.model.core.PackageInformation;
+import org.hl7.fhir.model.core.Resource;
+import org.hl7.fhir.model.core.ValueSet;
+import org.hl7.fhir.services.client.ITerminologyClientFactoryN;
 import org.hl7.fhir.utilities.FileUtilities;
 import org.hl7.fhir.utilities.Utilities;
 import org.hl7.fhir.utilities.json.model.JsonObject;
@@ -100,7 +100,7 @@ public final class LazyTerminologyLoader {
 	/**
 	 * Registers the terminology resources of an in-memory package as proxies, the resources are parsed with the given
 	 * loader like SimpleWorkerContext does. The package must have been loaded without these resource types, see
-	 * {@link #withoutLazyLoadedTypes(IContextResourceLoader)}.
+	 * {@link #withoutLazyLoadedTypes(IContextResourceLoaderN)}.
 	 *
 	 * @param pinner a pinner for the resources of a core package (see CoreVersionPinner), or null
 	 * @return the number of registered proxies
@@ -108,7 +108,7 @@ public final class LazyTerminologyLoader {
 	public static int registerProxies(final SimpleWorkerContext context,
 												 final NpmPackage pi,
 												 final PackageInformation packageInfo,
-												 final IContextResourceLoader loader,
+												 final IContextResourceLoaderN loader,
 												 final MetadataCoreVersionPinner pinner) throws IOException {
 		final CompressedPackageResourceProxy.ResourceParser parser = (bytes, filename) -> {
 			final Resource resource = parse(loader, bytes);
@@ -147,9 +147,9 @@ public final class LazyTerminologyLoader {
 	/**
 	 * Parses a resource of a package like SimpleWorkerContext.loadFromFileJson() does.
 	 */
-	private static Resource parse(final IContextResourceLoader loader, final byte[] content) throws IOException {
+	private static Resource parse(final IContextResourceLoaderN loader, final byte[] content) throws IOException {
 		final Bundle bundle = loader.loadBundle(new ByteArrayInputStream(content), true);
-		if (bundle == null || bundle.getEntry().isEmpty()) {
+		if (bundle == null || bundle.getEntryList().isEmpty()) {
 			return null;
 		}
 		final Resource resource = bundle.getEntryFirstRep().getResource();
@@ -200,11 +200,11 @@ public final class LazyTerminologyLoader {
 	/**
 	 * Returns a loader that loads the same resource types as the given one, except the lazily loaded types.
 	 */
-	public static IContextResourceLoader withoutLazyLoadedTypes(final IContextResourceLoader loader) {
+	public static IContextResourceLoaderN withoutLazyLoadedTypes(final IContextResourceLoaderN loader) {
 		return new WithoutLazyLoadedTypes(loader);
 	}
 
-	private record WithoutLazyLoadedTypes(IContextResourceLoader delegate) implements IContextResourceLoader {
+	private record WithoutLazyLoadedTypes(IContextResourceLoaderN delegate) implements IContextResourceLoaderN {
 
 		private static Set<String> withoutLazyLoadedTypes(final Set<String> types) {
 			final Set<String> result = new HashSet<>(types);
@@ -238,7 +238,7 @@ public final class LazyTerminologyLoader {
 		}
 
 		@Override
-		public IContextResourceLoader getNewLoader(final NpmPackage npm) throws IOException {
+		public IContextResourceLoaderN getNewLoader(final NpmPackage npm) throws IOException {
 			return new WithoutLazyLoadedTypes(this.delegate.getNewLoader(npm));
 		}
 
@@ -258,13 +258,13 @@ public final class LazyTerminologyLoader {
 		}
 
 		@Override
-		public IContextResourceLoader setLoadProfiles(final boolean value) {
+		public IContextResourceLoaderN setLoadProfiles(final boolean value) {
 			this.delegate.setLoadProfiles(value);
 			return this;
 		}
 
 		@Override
-		public ITerminologyClientFactory txFactory() {
+		public ITerminologyClientFactoryN txFactory() {
 			return this.delegate.txFactory();
 		}
 

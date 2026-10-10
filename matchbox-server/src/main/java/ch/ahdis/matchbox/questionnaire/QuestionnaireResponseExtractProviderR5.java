@@ -5,9 +5,9 @@ import ch.ahdis.matchbox.engine.MatchboxEngine;
 import ch.ahdis.matchbox.util.MatchboxEngineSupport;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import org.hl7.fhir.r5.elementmodel.Element;
-import org.hl7.fhir.r5.elementmodel.Manager;
-import org.hl7.fhir.r5.elementmodel.Manager.FhirFormat;
+import org.hl7.fhir.services.elementmodel.Element;
+import org.hl7.fhir.services.elementmodel.Manager;
+import org.hl7.fhir.model.utilities.formats.FhirFormat;
 import org.hl7.fhir.r5.model.QuestionnaireResponse;
 
 import java.io.IOException;

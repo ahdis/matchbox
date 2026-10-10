@@ -20,8 +20,8 @@ package ch.ahdis.matchbox.engine;
  * #L%
  */
 import java.util.List;
-import org.hl7.fhir.r5.model.PackageInformation;
-import org.hl7.fhir.r5.context.IContextResourceLoader;
+import org.hl7.fhir.model.core.PackageInformation;
+import org.hl7.fhir.services.context.IContextResourceLoaderN;
 import ch.ahdis.matchbox.engine.packages.MetadataCoreVersionPinner;
 import ch.ahdis.matchbox.engine.packages.LazyTerminologyLoader;
 import java.io.ByteArrayInputStream;
@@ -38,39 +38,40 @@ import java.util.stream.Collectors;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.fhir.ucum.UcumEssenceService;
-import org.hl7.fhir.convertors.factory.VersionConvertorFactory_40_50;
-import org.hl7.fhir.convertors.factory.VersionConvertorFactory_43_50;
-import org.hl7.fhir.convertors.loaders.loaderR5.BaseLoaderR5;
+import org.hl7.fhir.convertors.factory.VersionConvertorFactory_40_N;
+import org.hl7.fhir.convertors.factory.VersionConvertorFactory_43_N;
+import org.hl7.fhir.convertors.factory.VersionConvertorFactory_50_N;
+import org.hl7.fhir.convertors.loaders.loaderRN.BaseLoaderRN;
 import org.hl7.fhir.exceptions.FHIRException;
 import org.hl7.fhir.instance.model.api.IBaseResource;
 import org.hl7.fhir.r4.model.OperationOutcome;
 import org.hl7.fhir.r4.model.Resource;
-import org.hl7.fhir.r5.context.ContextUtilities;
-import org.hl7.fhir.r5.context.IWorkerContext;
-import org.hl7.fhir.r5.context.SimpleWorkerContext;
-import org.hl7.fhir.r5.context.SimpleWorkerContext.SimpleWorkerContextBuilder;
-import org.hl7.fhir.r5.elementmodel.Element;
-import org.hl7.fhir.r5.elementmodel.Manager;
-import org.hl7.fhir.r5.elementmodel.Manager.FhirFormat;
-import org.hl7.fhir.r5.fhirpath.FHIRPathEngine;
-import org.hl7.fhir.r5.formats.IParser;
-import org.hl7.fhir.r5.formats.IParser.OutputStyle;
-import org.hl7.fhir.r5.model.Base;
-import org.hl7.fhir.r5.model.Narrative.NarrativeStatus;
-import org.hl7.fhir.r5.model.Parameters;
-import org.hl7.fhir.r5.model.StructureDefinition;
-import org.hl7.fhir.r5.model.StructureDefinition.StructureDefinitionKind;
-import org.hl7.fhir.r5.model.StructureMap;
-import org.hl7.fhir.r5.model.UriType;
-import org.hl7.fhir.r5.renderers.RendererFactory;
-import org.hl7.fhir.r5.renderers.utils.RenderingContext;
-import org.hl7.fhir.r5.renderers.utils.ResourceWrapper;
-import org.hl7.fhir.r5.utils.EOperationOutcome;
-import org.hl7.fhir.r5.utils.OperationOutcomeUtilities;
-import org.hl7.fhir.r5.utils.structuremap.StructureMapUtilities;
-import org.hl7.fhir.r5.utils.validation.IResourceValidator;
-import org.hl7.fhir.r5.utils.validation.IValidationPolicyAdvisor;
-import org.hl7.fhir.r5.utils.validation.constants.ReferenceValidationPolicy;
+import org.hl7.fhir.services.context.ContextUtilities;
+import org.hl7.fhir.services.context.IWorkerContext;
+import org.hl7.fhir.standalone.context.SimpleWorkerContext;
+import org.hl7.fhir.standalone.context.SimpleWorkerContext.SimpleWorkerContextBuilder;
+import org.hl7.fhir.services.elementmodel.Element;
+import org.hl7.fhir.services.elementmodel.Manager;
+import org.hl7.fhir.model.utilities.formats.FhirFormat;
+import org.hl7.fhir.services.fhirpath.FHIRPathEngine;
+import org.hl7.fhir.model.utilities.formats.IParser;
+import org.hl7.fhir.model.utilities.formats.OutputStyle;
+import org.hl7.fhir.model.Base;
+import org.hl7.fhir.model.core.Narrative.NarrativeStatus;
+import org.hl7.fhir.model.core.Parameters;
+import org.hl7.fhir.model.core.StructureDefinition;
+import org.hl7.fhir.model.core.StructureDefinition.StructureDefinitionKind;
+import org.hl7.fhir.model.fml.StructureMap;
+import org.hl7.fhir.model.core.UriType;
+import org.hl7.fhir.services.renderers.RendererFactory;
+import org.hl7.fhir.services.renderers.utils.RenderingContext;
+import org.hl7.fhir.services.renderers.utils.ResourceWrapper;
+import org.hl7.fhir.model.utilities.EOperationOutcome;
+import org.hl7.fhir.model.utilities.OperationOutcomeUtilities;
+import org.hl7.fhir.services.fml.StructureMapTools;
+import org.hl7.fhir.services.validation.IResourceValidator;
+import org.hl7.fhir.services.validation.IValidationPolicyAdvisor;
+import org.hl7.fhir.services.validation.constants.ReferenceValidationPolicy;
 import org.hl7.fhir.utilities.ByteProvider;
 import org.hl7.fhir.utilities.FhirPublication;
 import org.hl7.fhir.utilities.Utilities;
@@ -135,7 +136,7 @@ public class MatchboxEngine extends ValidationEngine {
 	static {
 			try {
 				nullEngine = new ValidationEngineBuilder().withTerminologyCachePath(NO_TX_CACHE_FOLDER).fromNothing();
-				fmlParseContext = new SimpleWorkerContextBuilder().withTerminologyCachePath(NO_TX_CACHE_FOLDER).fromNothing();
+				fmlParseContext = new SimpleWorkerContextBuilder(org.hl7.fhir.model.ModelContext.fullCoreContext()).withTerminologyCachePath(NO_TX_CACHE_FOLDER).fromNothing();
 		} catch (IOException e) {
 				log.error("problem with inizializin", e);
 		}
@@ -151,7 +152,7 @@ public class MatchboxEngine extends ValidationEngine {
 	public MatchboxEngine(SimpleWorkerContext context) throws FHIRException, IOException  {
 			super(nullEngine);
 			setContext(context);
-			this.setVersion(context.getVersion());
+			this.setVersion(context.getFHIRVersion());
 	    context.setCanNoTS(true);
 
 	    NpmPackage npmX = getPcm().loadPackage(CommonPackages.ID_XVER, CommonPackages.VER_XVER);
@@ -490,8 +491,8 @@ public class MatchboxEngine extends ValidationEngine {
 	 * The core loader of the resources of a package of a FHIR version, without parsing their narrative, which the
 	 * worker context doesn't need (#614).
 	 */
-	private static BaseLoaderR5 loaderForVersion(final String fhirVersion) {
-		final BaseLoaderR5 loader = ValidatorUtils.loaderForVersion(fhirVersion);
+	private static BaseLoaderRN loaderForVersion(final String fhirVersion) {
+		final BaseLoaderRN loader = ValidatorUtils.loaderForVersion(org.hl7.fhir.model.ModelContext.fullCoreContext(), fhirVersion);
 		if (loader != null) {
 			loader.setSkipNarrative(true);
 		}
@@ -510,8 +511,8 @@ public class MatchboxEngine extends ValidationEngine {
 	public static SimpleWorkerContext createCoreWorkerContext(final String packageResource,
 																				 final String fhirVersion) throws IOException {
 		final NpmPackage pi = NpmPackage.fromPackage(MatchboxEngine.class.getResourceAsStream(packageResource));
-		final IContextResourceLoader loader = loaderForVersion(fhirVersion);
-		final SimpleWorkerContext context = new SimpleWorkerContextBuilder()
+		final IContextResourceLoaderN loader = loaderForVersion(fhirVersion);
+		final SimpleWorkerContext context = new SimpleWorkerContextBuilder(org.hl7.fhir.model.ModelContext.fullCoreContext())
 			.fromPackage(pi, LazyTerminologyLoader.withoutLazyLoadedTypes(loader), false);
 		final MetadataCoreVersionPinner pinner = new MetadataCoreVersionPinner(context);
 		LazyTerminologyLoader.registerProxies(context, pi, new PackageInformation(pi, true), loader, pinner);
@@ -601,7 +602,7 @@ public class MatchboxEngine extends ValidationEngine {
 		log.info("Start transform: " + mapUri);
 
 		SimpleWorkerContext context = this.getContext();
-		StructureMap map = context.fetchResource(StructureMap.class, mapUri, IWorkerContext.VersionResolutionRules.defaultRule());
+		StructureMap map = context.fetchResource(StructureMap.class, mapUri, org.hl7.fhir.model.core.VersionResolutionRules.defaultRule());
 		if (map==null) {
 			log.error("map not found" + map);
 			return null;
@@ -617,12 +618,12 @@ public class MatchboxEngine extends ValidationEngine {
 												  mapUri, context, traceToParameter);
 		ByteArrayOutputStream boas = new ByteArrayOutputStream();
 		if (outputJson)
-			new org.hl7.fhir.r5.elementmodel.JsonParser(context).compose(transformed, boas,
-					IParser.OutputStyle.PRETTY,
+			new org.hl7.fhir.services.elementmodel.JsonParser(context).compose(transformed, boas,
+					OutputStyle.PRETTY,
 					null);
 		else
-			new org.hl7.fhir.r5.elementmodel.XmlParser(context).compose(transformed, boas,
-					IParser.OutputStyle.PRETTY,
+			new org.hl7.fhir.services.elementmodel.XmlParser(context).compose(transformed, boas,
+					OutputStyle.PRETTY,
 					null);
 		String result = new String(boas.toByteArray());
 		boas.close();
@@ -634,7 +635,7 @@ public class MatchboxEngine extends ValidationEngine {
 	 * Adapted transform operation from Validation Engine to use patched
 	 * MatchboxStructureMapUtilities
 	 */
-	public org.hl7.fhir.r5.elementmodel.Element transform(final ByteProvider source,
+	public org.hl7.fhir.services.elementmodel.Element transform(final ByteProvider source,
 																			final FhirFormat cntType,
 																			final String mapUri,
 																			final SimpleWorkerContext targetContext,
@@ -645,7 +646,7 @@ public class MatchboxEngine extends ValidationEngine {
 		// usual case is that source and target are in the same FHIR version as in the context, however it could be that either source or target are in a different FHIR version
 		// if this is the case we do lazy loading of the additional FHIR version into the context
 
-		StructureMap map = context.fetchResource(StructureMap.class, mapUri, IWorkerContext.VersionResolutionRules.defaultRule());
+		StructureMap map = context.fetchResource(StructureMap.class, mapUri, org.hl7.fhir.model.core.VersionResolutionRules.defaultRule());
 		String canonicalSource = getCanonicalFromStructureMap(map, StructureMap.StructureMapModelMode.SOURCE);
 
 		String fhirVersionSource = getFhirVersion(canonicalSource);
@@ -654,12 +655,12 @@ public class MatchboxEngine extends ValidationEngine {
 			context = getContextForFhirVersion(fhirVersionSource);
 		}
 
-		org.hl7.fhir.r5.elementmodel.ParserBase parser = Manager.makeParser(context, cntType);
-		StructureDefinition sd = context.fetchResource(StructureDefinition.class, canonicalSource, IWorkerContext.VersionResolutionRules.defaultRule());
+		org.hl7.fhir.services.elementmodel.ParserBase parser = Manager.makeParser(context, cntType);
+		StructureDefinition sd = context.fetchResource(StructureDefinition.class, canonicalSource, org.hl7.fhir.model.core.VersionResolutionRules.defaultRule());
 		if (sd.getKind() == StructureDefinitionKind.LOGICAL) {
 			parser.setLogical(sd);
 		}
-		org.hl7.fhir.r5.elementmodel.Element src = parser.parseSingle(new ByteArrayInputStream(source.getBytes()), null);
+		org.hl7.fhir.services.elementmodel.Element src = parser.parseSingle(new ByteArrayInputStream(source.getBytes()), null);
 		return transform(src, mapUri, targetContext, traceToParameter);
 	}
 
@@ -699,12 +700,12 @@ public class MatchboxEngine extends ValidationEngine {
 			// check first if they are not already defined
 			if (this.getContext().fetchResource(StructureDefinition.class,
 															"http://hl7.org/fhir/"+fhirVersion.substring(0,3)+"/StructureDefinition" +
-																"/StructureDefinition", IWorkerContext.VersionResolutionRules.defaultRule()) == null) {
+																"/StructureDefinition", org.hl7.fhir.model.core.VersionResolutionRules.defaultRule()) == null) {
 				int len = "http://hl7.org/fhir/".length();
 				for (StructureDefinition sd : contextForFhirVersion.listStructures()) {
 					if (sd.getUrl().startsWith("http://hl7.org/fhir/") && sd.getKind()!=null  && sd.getKind() != StructureDefinition.StructureDefinitionKind.LOGICAL && !"Extensions".equals(sd.getType())) {
 						if (!Character.isDigit(sd.getUrl().charAt(len))) {
-  						StructureDefinition sdn = sd.copy();
+  						StructureDefinition sdn = sd.copy(Base.COPY_NOTHING);
   						sdn.setUrl(sdn.getUrl().replace("http://hl7.org/fhir/", "http://hl7.org/fhir/"+fhirVersion.substring(0,3)+"/"));
   						sdn.addExtension().setUrl("http://hl7.org/fhir/StructureDefinition/elementdefinition-namespace")
   						  .setValue(new UriType("http://hl7.org/fhir"));
@@ -726,14 +727,14 @@ public class MatchboxEngine extends ValidationEngine {
 	 * @throws FHIRException
 	 * @throws IOException
 	 */
-	public org.hl7.fhir.r5.elementmodel.Element transform(org.hl7.fhir.r5.elementmodel.Element src,  String mapUri, SimpleWorkerContext targetContext, Parameters.ParametersParameterComponent traceToParameter)
+	public org.hl7.fhir.services.elementmodel.Element transform(org.hl7.fhir.services.elementmodel.Element src,  String mapUri, SimpleWorkerContext targetContext, Parameters.ParametersParameterComponent traceToParameter)
 			throws FHIRException, IOException {
 		SimpleWorkerContext context = this.getContext();
 		List<Base> outputs = new ArrayList<>();
 		TransformSupportServices tss = new TransformSupportServices(targetContext!=null ? targetContext : context, outputs);
 		tss.setTraceToParameter(traceToParameter);
-		StructureMapUtilities scu = new MatchboxStructureMapUtilities(context, tss, this);
-		StructureMap map = context.fetchResource(StructureMap.class, mapUri, IWorkerContext.VersionResolutionRules.defaultRule());
+		StructureMapTools scu = new MatchboxStructureMapUtilities(context, tss, this);
+		StructureMap map = context.fetchResource(StructureMap.class, mapUri, org.hl7.fhir.model.core.VersionResolutionRules.defaultRule());
 		if (map == null) {
 			log.error("Unable to find map " + mapUri + " (Known Maps = " + context.listMapUrls() + ")");
 			throw new Error("Unable to find map " + mapUri + " (Known Maps = " + context.listMapUrls() + ")");
@@ -741,7 +742,7 @@ public class MatchboxEngine extends ValidationEngine {
 		log.info("Using map " + map.getUrl() + (map.getVersion()!=null ? "|" + map.getVersion() + " " : "" )
 				+ (map.getDateElement() != null && !map.getDateElement().isEmpty()  ? "(" + map.getDateElement().asStringValue() + ")" : ""));
 
-		org.hl7.fhir.r5.elementmodel.Element resource = getTargetResourceFromStructureMap(map, targetContext);
+		org.hl7.fhir.services.elementmodel.Element resource = getTargetResourceFromStructureMap(map, targetContext);
 
 		this.getValidator(null).resolveReferencesInBundle(src);
 
@@ -769,7 +770,7 @@ public class MatchboxEngine extends ValidationEngine {
 	 */
 	private String getCanonicalFromStructureMap(StructureMap map, StructureMap.StructureMapModelMode mode) {
 		String targetTypeUrl = null;
-		for (StructureMap.StructureMapStructureComponent component : map.getStructure()) {
+		for (StructureMap.StructureMapStructureComponent component : map.getStructureList()) {
 			if (component.getMode() == mode) {
 				targetTypeUrl = component.getUrl();
 				break;
@@ -779,10 +780,10 @@ public class MatchboxEngine extends ValidationEngine {
 		return targetTypeUrl;
 	}
 
-	private org.hl7.fhir.r5.elementmodel.Element getTargetResourceFromStructureMap(StructureMap map, SimpleWorkerContext targetContext) {
+	private org.hl7.fhir.services.elementmodel.Element getTargetResourceFromStructureMap(StructureMap map, SimpleWorkerContext targetContext) {
 		String targetTypeUrl = null;
 		SimpleWorkerContext context = (targetContext!=null ? targetContext : this.getContext());
-		for (StructureMap.StructureMapStructureComponent component : map.getStructure()) {
+		for (StructureMap.StructureMapStructureComponent component : map.getStructureList()) {
 			if (component.getMode() == StructureMap.StructureMapModelMode.TARGET) {
 				targetTypeUrl = component.getUrl();
 				break;
@@ -797,7 +798,7 @@ public class MatchboxEngine extends ValidationEngine {
 		// We remove the FHIR version from the FHIR Core canonical if necessary
 		// E.g. http://hl7.org/fhir/3.0/StructureDefinition/CodeSystem
 		if (Utilities.isAbsoluteUrl(targetTypeUrl)) {
-			int index = targetTypeUrl.indexOf("/"+context.getVersion().substring(0,3)+"/");
+			int index = targetTypeUrl.indexOf("/"+context.getFHIRVersion().substring(0,3)+"/");
 			if (index >= 0) {
 				targetTypeUrl = targetTypeUrl.substring(0, index)+targetTypeUrl.substring(index+4);
 			}
@@ -851,7 +852,7 @@ public class MatchboxEngine extends ValidationEngine {
 	 * @throws FHIRException FHIR Exception
 	 */
 	public void addCanonicalResource(Resource resource) throws FHIRException {
-		org.hl7.fhir.r5.model.Resource r5 = VersionConvertorFactory_40_50.convertResource(resource);
+		org.hl7.fhir.model.core.Resource r5 = VersionConvertorFactory_40_N.convertResource(resource);
 		getContext().cacheResource(r5);
 	}
 
@@ -863,7 +864,7 @@ public class MatchboxEngine extends ValidationEngine {
 	 * @throws FHIRException FHIR Exception
 	 */
 	public void addCanonicalResource(org.hl7.fhir.r4b.model.CanonicalResource resource) throws FHIRException {
-		org.hl7.fhir.r5.model.Resource r5 = VersionConvertorFactory_43_50.convertResource(resource);
+		org.hl7.fhir.model.core.Resource r5 = VersionConvertorFactory_43_N.convertResource(resource);
 		getContext().cacheResource(r5);
 	}
 
@@ -874,8 +875,19 @@ public class MatchboxEngine extends ValidationEngine {
 	 * @param resource canonical resource to add
 	 * @throws FHIRException FHIR Exception
 	 */
-	public void addCanonicalResource(org.hl7.fhir.r5.model.CanonicalResource resource) throws FHIRException {
+	public void addCanonicalResource(org.hl7.fhir.model.core.CanonicalResource resource) throws FHIRException {
 		getContext().cacheResource(resource);
+	}
+
+	/**
+	 * adds a canonical resource to the loaded packages, please note that it will
+	 * replace a resource with the same canonical url  for FHIR R5 (HAPI R5 model)
+	 *
+	 * @param resource canonical resource to add
+	 * @throws FHIRException FHIR Exception
+	 */
+	public void addCanonicalResource(org.hl7.fhir.r5.model.CanonicalResource resource) throws FHIRException {
+		getContext().cacheResource(R6Model.fromR5(resource));
 	}
 
 	/**
@@ -938,7 +950,7 @@ public class MatchboxEngine extends ValidationEngine {
 	 * @return
 	 */
 	public StructureDefinition getStructureDefinitionR5(final String profile) {
-		return this.getContext().fetchResource(StructureDefinition.class, profile, IWorkerContext.VersionResolutionRules.defaultRule());
+		return this.getContext().fetchResource(StructureDefinition.class, profile, org.hl7.fhir.model.core.VersionResolutionRules.defaultRule());
 	}
 
     /**
@@ -949,18 +961,18 @@ public class MatchboxEngine extends ValidationEngine {
 	 * @return
 	 */
 	public IBaseResource getCanonicalResource(String canonical, String fhirVersion) {
-		org.hl7.fhir.r5.model.Resource fetched = this.getContext().fetchResource(null, canonical, IWorkerContext.VersionResolutionRules.defaultRule());
+		org.hl7.fhir.model.core.Resource fetched = this.getContext().fetchResource(null, canonical, org.hl7.fhir.model.core.VersionResolutionRules.defaultRule());
 		// allResourcesById is not package aware (???) so we need to fetch it again
 		if (fetched!=null) {
-			org.hl7.fhir.r5.model.Resource fetched2  = this.getContext().fetchResource(fetched.getClass(), canonical, IWorkerContext.VersionResolutionRules.defaultRule());
+			org.hl7.fhir.model.core.Resource fetched2  = this.getContext().fetchResource(fetched.getClass(), canonical, org.hl7.fhir.model.core.VersionResolutionRules.defaultRule());
 			if (fetched2 != null) {
 				switch(fhirVersion) {
 					case "4.0.1":
-						return VersionConvertorFactory_40_50.convertResource(fetched2);
+						return VersionConvertorFactory_40_N.convertResource(fetched2);
 					case "4.3.0":
-						return VersionConvertorFactory_43_50.convertResource(fetched2);
+						return VersionConvertorFactory_43_N.convertResource(fetched2);
 					case "5.0.0":
-						return fetched2;
+						return VersionConvertorFactory_50_N.convertResource(fetched2);
 				}
 			}
 		}
@@ -1000,15 +1012,15 @@ public class MatchboxEngine extends ValidationEngine {
 	 * @return
 	 */
 	public IBaseResource getCanonicalResourceById(final String type, final @NonNull String id) {
-		org.hl7.fhir.r5.model.Resource fetched = this.getContext().fetchResourceById(type, id);
+		org.hl7.fhir.model.core.Resource fetched = this.getContext().fetchResourceById(type, id);
 		if (fetched != null) {
 			if ("5.0.0".equals(this.getVersion())) {
-				return fetched;
+				return VersionConvertorFactory_50_N.convertResource(fetched);
 			}
 			if ("4.3.0".equals(this.getVersion())) {
-				return VersionConvertorFactory_43_50.convertResource(fetched);
+				return VersionConvertorFactory_43_N.convertResource(fetched);
 			}
-			return VersionConvertorFactory_40_50.convertResource(fetched);
+			return VersionConvertorFactory_40_N.convertResource(fetched);
 		}
 		return null;
 	}
@@ -1022,14 +1034,14 @@ public class MatchboxEngine extends ValidationEngine {
 	 * @return parsed StructureMap resource
 	 * @throws FHIRException FHIR Exception
 	 */
-	public org.hl7.fhir.r5.model.StructureMap parseMapR5(String content) throws IOException, FHIRException {
+	public org.hl7.fhir.model.fml.StructureMap parseMapR5(String content) throws IOException, FHIRException {
 		List<Base> outputs = new ArrayList<>();
-		StructureMapUtilities scu = new MatchboxStructureMapUtilities(fmlParseContext,
+		StructureMapTools scu = new MatchboxStructureMapUtilities(fmlParseContext,
 				new TransformSupportServices(fmlParseContext, outputs), this);
-		org.hl7.fhir.r5.model.StructureMap mapR5 = scu.parse(content, "map");
+		org.hl7.fhir.model.fml.StructureMap mapR5 = scu.parse(content, "map");
 		mapR5.getText().setStatus(NarrativeStatus.GENERATED);
 		mapR5.getText().setDiv(new XhtmlNode(NodeType.Element, "div"));
-		String render = StructureMapUtilities.render(mapR5);
+		String render = StructureMapTools.render(mapR5);
 		mapR5.getText().getDiv().addTag("pre").addText(render);
 		return mapR5;
 	}
@@ -1046,8 +1058,8 @@ public class MatchboxEngine extends ValidationEngine {
 	 * @throws FHIRException FHIR Exception
 	 */
 	public org.hl7.fhir.r4.model.StructureMap parseMap(String content) throws IOException, FHIRException {
-		org.hl7.fhir.r5.model.StructureMap mapR5 = parseMapR5(content);
-		return (org.hl7.fhir.r4.model.StructureMap) VersionConvertorFactory_40_50.convertResource(mapR5);
+		org.hl7.fhir.model.fml.StructureMap mapR5 = parseMapR5(content);
+		return (org.hl7.fhir.r4.model.StructureMap) VersionConvertorFactory_40_N.convertResource(mapR5);
 	}
 
 	/**
@@ -1061,7 +1073,7 @@ public class MatchboxEngine extends ValidationEngine {
 	 */
 	public org.hl7.fhir.r4.model.StructureDefinition createSnapshot(org.hl7.fhir.r4.model.StructureDefinition sd)
 			throws FHIRException, IOException {
-		StructureDefinition sdR5 = (StructureDefinition) VersionConvertorFactory_40_50.convertResource(sd);
+		StructureDefinition sdR5 = (StructureDefinition) VersionConvertorFactory_40_N.convertResource(sd);
 		try {
 			new ContextUtilities(this.getContext()).generateSnapshot(sdR5);
 		  } catch (Exception e) {
@@ -1069,7 +1081,7 @@ public class MatchboxEngine extends ValidationEngine {
 			log.error("Unable to generate snapshot for "+sd.getUrl(), e);
 			return null;
 		  }
-		return (org.hl7.fhir.r4.model.StructureDefinition) VersionConvertorFactory_40_50.convertResource(sdR5);
+		return (org.hl7.fhir.r4.model.StructureDefinition) VersionConvertorFactory_40_N.convertResource(sdR5);
 	}
 
 	/**
@@ -1081,7 +1093,7 @@ public class MatchboxEngine extends ValidationEngine {
 	 * @throws FHIRException FHIR Exception
 	 * @throws IOException   IO Exception
 	 */
-	public org.hl7.fhir.r5.model.StructureDefinition createSnapshot(org.hl7.fhir.r5.model.StructureDefinition sd)
+	public org.hl7.fhir.model.core.StructureDefinition createSnapshot(org.hl7.fhir.model.core.StructureDefinition sd)
 			throws FHIRException, IOException {
 		StructureDefinition sdR5 = sd;
 		try {
@@ -1092,6 +1104,21 @@ public class MatchboxEngine extends ValidationEngine {
 			return null;
 		  }
 		return sd;
+	}
+
+	/**
+	 * creates the snapshot for the provided StructureDefinition (HAPI R5 model)
+	 *
+	 * @param sd StructureDefinition with differential
+	 * @return StructureDefinition with snapshot (differential applied to base
+	 *         definition)
+	 * @throws FHIRException FHIR Exception
+	 * @throws IOException   IO Exception
+	 */
+	public org.hl7.fhir.r5.model.StructureDefinition createSnapshot(org.hl7.fhir.r5.model.StructureDefinition sd)
+			throws FHIRException, IOException {
+		final StructureDefinition snapshot = createSnapshot((StructureDefinition) R6Model.fromR5(sd));
+		return snapshot == null ? null : (org.hl7.fhir.r5.model.StructureDefinition) R6Model.toR5(snapshot);
 	}
 
 	/**
@@ -1142,7 +1169,7 @@ public class MatchboxEngine extends ValidationEngine {
 			return;
 		}
 		// Like IgLoader.loadPackage(npmPackage, true), but the terminology resources are loaded lazily
-		final IContextResourceLoader loader = loaderForVersion(npmPackage.fhirVersion());
+		final IContextResourceLoaderN loader = loaderForVersion(npmPackage.fhirVersion());
 		this.getContext().loadFromPackage(npmPackage, LazyTerminologyLoader.withoutLazyLoadedTypes(loader));
 		LazyTerminologyLoader.registerProxies(this.getContext(), npmPackage, new PackageInformation(npmPackage, false),
 														  loader, null);
@@ -1294,13 +1321,13 @@ public class MatchboxEngine extends ValidationEngine {
 	protected OperationOutcome messagesToOutcome(final @NonNull List<ValidationMessage> messages,
 																final @NonNull SimpleWorkerContext context)
 		throws IOException, FHIRException, EOperationOutcome {
-		final var op = new org.hl7.fhir.r5.model.OperationOutcome();
+		final var op = new org.hl7.fhir.model.core.OperationOutcome();
 		messages.stream().map(vm -> OperationOutcomeUtilities.convertToIssue(vm, op))
-			.forEach(op.getIssue()::add);
+			.forEach(op.getIssueList()::add);
 		final var rc = new RenderingContext(context, null, null, null, "http://hl7.org/fhir", "", null,
 											 RenderingContext.ResourceRendererMode.END_USER, RenderingContext.GenerationRules.VALID_RESOURCE);
  		new RendererFactory().factory(op, rc).renderResource(ResourceWrapper.forResource(rc.getContextUtilities(), op));
-		return (OperationOutcome) (VersionConvertorFactory_40_50.convertResource(op));
+		return (OperationOutcome) (VersionConvertorFactory_40_N.convertResource(op));
 	}
 
 	public enum FilesystemPackageCacheMode {

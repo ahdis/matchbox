@@ -10,7 +10,7 @@ import java.util.stream.Collectors;
 
 import org.apache.commons.beanutils.BeanUtils;
 import org.hl7.fhir.r5.model.*;
-import org.hl7.fhir.r5.terminologies.JurisdictionUtilities;
+import org.hl7.fhir.model.utilities.JurisdictionUtilities;
 import org.hl7.fhir.validation.service.model.HtmlInMarkdownCheck;
 import org.hl7.fhir.validation.service.utils.EngineMode;
 import org.hl7.fhir.validation.service.utils.QuestionnaireMode;

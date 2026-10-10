@@ -18,6 +18,16 @@
   allow-list HAPI FHIR would disable the SSRF protection of the core library for the whole JVM: matchbox keeps it as
   configured with `matchbox.fhir.context.ssrfProtectionEnabled`
 - The Gazelle validation API uses the Jackson 3 mapper of Spring Boot
+- Upgrade org.hl7.fhir.core from 6.10.4 to [7.0.1](https://github.com/hapifhir/org.hl7.fhir.core/releases/tag/7.0.1):
+  the validator, the FHIR mapping language and the worker context are based on the versionless R6 modules
+  (`org.hl7.fhir.model`, `org.hl7.fhir.services`, `org.hl7.fhir.standalone`) instead of `org.hl7.fhir.r5`. The
+  matchbox patches of the r5 classes are applied to their R6 counterparts (see `updatehapi.sh`), the ones fixed in
+  7.0.1 were dropped (#538 copy of the master definitions and packages, #609, #618 memory-only terminology cache, the
+  `name[x]` and xhtml handling of `Element.setProperty`). The API of `MatchboxEngine` uses the R6 model
+  (`org.hl7.fhir.model.core`, `StructureMap` is `org.hl7.fhir.model.fml.StructureMap`), with overloads for the HAPI R5
+  model (`addCanonicalResource`, `createSnapshot`) and `R6Model` to convert between them. HAPI FHIR is still built
+  with org.hl7.fhir.core 6: matchbox overrides `HapiWorkerContext` (DSTU3, R4, R4B, R5) and
+  `WorkerContextValidationSupportAdapter`, because `ILoggingService` moved to `org.hl7.fhir.utilities.logging`
 
 2026/10/05 Release 4.1.21
 

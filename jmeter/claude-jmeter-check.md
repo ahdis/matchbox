@@ -254,6 +254,10 @@ All runs: 8,000 validations, 0 failures. Runs from 25 Sep 2026 on the same machi
 | `1152-fix1-xmx3g-dedup` | 1.15.2 on branch `jmeter-check-runbook` ³ | 4.1.17 + fix / 8.12.1 / 6.10.4 | 3 GB ⁵ | 4.0 min | 104 / 126 | 2.46 / 3.36 | 2026-09-25 |
 | `1156-main-cc1e929` | 1.15.6 on `main` ⁶ | 4.1.21 / 8.12.1 / 6.10.4 | 70% of the container memory | 3.8 min | 98 / 115 | 2.56 / 4.77 | 2026-10-07 |
 | `1156-pr636` | 1.15.6 on PR #636 ⁶ | 4.1.21 / 8.13.15-pr8189-1 / 6.10.4 (Spring Boot 4, Tomcat) | 70% of the container memory | 3.5 min | 98 / 115 | 2.64 / 4.93 | 2026-10-07 |
+| `1156-pr636-rerun` | 1.15.6 on PR #636 ⁶ | 4.1.21 / 8.13.15-pr8189-1 / 6.10.4 | 70% of the container memory | 3.2 min | 88 / 96 | 2.56 / 4.83 | 2026-10-10 |
+| `1156-pr636-rerun2` | 1.15.6 on PR #636 ⁶ | 4.1.21 / 8.13.15-pr8189-1 / 6.10.4 | 70% of the container memory | 3.2 min | 87 / 97 | 2.56 / 4.80 | 2026-10-10 |
+| `1156-fhir-core-7` | 1.15.6 on branch `fhir-core-7` ⁷ | 4.1.21 / 8.13.15-pr8189-1 / 7.0.1 | 70% of the container memory | 3.5 min | 97 / 108 | 2.61 / 4.90 | 2026-10-10 |
+| `1156-fhir-core-7-r2` | 1.15.6 on branch `fhir-core-7` ⁷ | 4.1.21 / 8.13.15-pr8189-1 / 7.0.1 | 70% of the container memory | 3.5 min | 96 / 109 | 2.55 / 4.74 | 2026-10-10 |
 
 ¹ Rebuilt from ch-elm commit `f3dd030` on `matchbox:v4.0.16`; the published 1.13.1 image is no longer in the registry.
 ² Machine was busy during this run.
@@ -265,6 +269,12 @@ All runs: 8,000 validations, 0 failures. Runs from 25 Sep 2026 on the same machi
 FHIR build of hapifhir/hapi-fhir#8189). Server ready after 36 / 34 s, live heap after a full GC at the end 663 / 663 MiB.
 The `bytes` of `$validate` differ (34,594 / 33,235) only because of the chunked transfer encoding: Undertow sends the
 OperationOutcome in about 240 small chunks, Tomcat in chunks of 8 KB; the OperationOutcomes are the same.
+⁷ org.hl7.fhir.core 7.0.1 (versionless R6 model). Built without the registry (the Docker credential helper didn't
+answer): `matchbox:pr636` with `/matchbox.jar` replaced (`docker create`, `docker cp`, `docker commit`), then the
+ch-elm commit `a07c806` files copied in and the packages installed in a container that was committed, so the OS and
+JDK layers are the same as for `pr636` (without the ch-elm `apt upgrade`). Runs alternated with the `pr636` reruns on
+the same day: 7.0.1 validates about 10% slower (median 96–97 vs 87–88 ms) with the same OperationOutcome (same 6
+issues); live heap after a full GC at the end 684–686 / 663 MiB, server ready after 37 / 31 s.
 
 ### Startup, first and second validation (lazy loading)
 
