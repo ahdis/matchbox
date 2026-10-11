@@ -29,10 +29,11 @@ matchbox/
 **Purpose**: Reusable Java library for FHIR validation and transformation
 
 **Technology Stack**:
-- Java 21
-- Spring Framework 6.1
-- HAPI FHIR 8.0.0
-- HL7 FHIR Core 6.7.10 (official FHIR validator)
+- Java 17 (compiled for release 17, as org.hl7.fhir.core 7)
+- Spring Framework 7.0.9
+- HAPI FHIR 8.13.15-pr8189-1 (a build of hapifhir/hapi-fhir#8189, see Branches)
+- HL7 FHIR Core 7.0.1 (official FHIR validator), based on the versionless R6 modules (`org.hl7.fhir.model`,
+  `org.hl7.fhir.services`, `org.hl7.fhir.standalone`) instead of `org.hl7.fhir.r5`
 
 **Key Capabilities**:
 - FHIR resource validation (R4, R5, R4B)
@@ -44,8 +45,13 @@ matchbox/
 **Key Classes**:
 ```
 ch.ahdis.matchbox.engine/
-└── MatchboxEngine             # Core engine class
+├── MatchboxEngine             # Core engine class
+└── R6Model                    # Converts between the HAPI R5 model and the R6 model of core 7
+org.hl7.fhir.*                 # Patched org.hl7.fhir.core classes (marked "matchbox patch"), copied by updatehapi.sh
 ```
+
+The engine API uses the HAPI R4 model (`org.hl7.fhir.r4.model`) and, where it exposes the validator's model, the R6 model
+(`org.hl7.fhir.model.core`, `org.hl7.fhir.model.fml.StructureMap`), with overloads for the HAPI R5 model.
 
 **Testing**:
 - JUnit 5 for unit tests
@@ -64,9 +70,10 @@ mvn clean install
 
 **Technology Stack**:
 - Java 21
-- Spring Boot 3.3.11
-- HAPI FHIR JPA Server 8.0.0
-- Embedded Tomcat 10.1.48
+- Spring Boot 4.0.8
+- HAPI FHIR JPA Server 8.13.15-pr8189-1
+- Embedded Tomcat 11.0.24
+- Hibernate ORM 7.2
 - H2 (default) / PostgreSQL (production)
 
 **Key Features**:
@@ -173,13 +180,13 @@ docker-compose up
 **Purpose**: Modern web interface for FHIR validation and transformation
 
 **Technology Stack**:
-- Angular 19.0.0
-- TypeScript 5.6.3
-- Angular Material 19.0.0
-- fhir-kit-client 1.9.2
-- FHIRPath.js 3.15.2
-- Ace Editor 1.36.5 (code editing)
-- NGX-Translate 16.0.3 (i18n)
+- Angular 22
+- TypeScript 6.0
+- Angular Material 22
+- fhir-kit-client 2.0
+- FHIRPath.js 5.2
+- Ace Editor 1.43 (code editing)
+- NGX-Translate 18 (i18n)
 
 **Key Features**:
 - Interactive FHIR validation with real-time feedback
@@ -474,8 +481,8 @@ GitHub Actions workflows (`.github/workflows/`):
 
 The `upstream` remote points to `hapifhir/hapi-fhir-jpaserver-starter`, which is the upstream HAPI FHIR starter project. The `origin` remote points to `ahdis/matchbox`. **Always create PRs against `ahdis/matchbox`** — use `gh pr create --repo ahdis/matchbox` to ensure the PR targets the correct repository.
 
-**Branches**: `main` is matchbox 4.x (Spring Boot 3, HAPI FHIR releases from Maven Central). `matchbox_v5` is
-matchbox 5 (Spring Boot 4, Spring Framework 7, Tomcat) on a HAPI FHIR build of
+**Branches**: `main` is matchbox 4.x (Spring Boot 3, org.hl7.fhir.core 6, HAPI FHIR releases from Maven Central).
+`matchbox_v5` is matchbox 5 (Spring Boot 4, Spring Framework 7, Tomcat, org.hl7.fhir.core 7) on a HAPI FHIR build of
 [hapifhir/hapi-fhir#8189](https://github.com/hapifhir/hapi-fhir/pull/8189) from the GitHub Packages of `ahdis/matchbox`
 (needs a GitHub token with `read:packages` in `~/.m2/settings.xml`, server id `github`). Spring Boot 4 work targets
 `matchbox_v5` (`gh pr create --base matchbox_v5`), everything else `main`; merge `main` into `matchbox_v5` to keep it
@@ -492,19 +499,19 @@ Use the `release` skill (`.claude/skills/release/SKILL.md`).
 ### Major Dependencies
 
 **Backend**:
-- HAPI FHIR 8.0.0 - FHIR server framework
-- HL7 FHIR Core 6.7.10 - Official validator
-- Spring Boot 3.3.11 - Application framework
-- Jackson 2.17.1 - JSON processing
-- Hibernate - JPA/ORM
-- LangChain4j 1.0.0-beta1 - AI/LLM integration
+- HAPI FHIR 8.13.15-pr8189-1 - FHIR server framework (build of hapifhir/hapi-fhir#8189)
+- HL7 FHIR Core 7.0.1 - Official validator
+- Spring Boot 4.0.8 - Application framework
+- Jackson 2.22.3 and 3.2.3 - JSON processing (Jackson 3 for Spring Boot 4)
+- Hibernate ORM 7.2 - JPA/ORM
+- LangChain4j 1.19.0 - AI/LLM integration
 
 **Frontend**:
-- Angular 19.0.0 - Web framework
-- Angular Material 19.0.0 - UI components
-- fhir-kit-client 1.9.2 - FHIR client
-- FHIRPath.js 3.15.2 - FHIRPath evaluation
-- Ace Editor 1.36.5 - Code editor
+- Angular 22 - Web framework
+- Angular Material 22 - UI components
+- fhir-kit-client 2.0 - FHIR client
+- FHIRPath.js 5.2 - FHIRPath evaluation
+- Ace Editor 1.43 - Code editor
 
 ### Update Dependencies
 
