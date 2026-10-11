@@ -52,6 +52,7 @@ import org.hl7.fhir.standalone.context.SimpleWorkerContext;
 import org.hl7.fhir.standalone.context.SimpleWorkerContext.SimpleWorkerContextBuilder;
 import org.hl7.fhir.services.elementmodel.Element;
 import org.hl7.fhir.services.elementmodel.Manager;
+import org.hl7.fhir.services.elementmodel.ObjectConverter;
 import org.hl7.fhir.model.utilities.formats.FhirFormat;
 import org.hl7.fhir.services.fhirpath.FHIRPathEngine;
 import org.hl7.fhir.model.utilities.formats.IParser;
@@ -117,6 +118,20 @@ public class MatchboxEngine extends ValidationEngine {
 
 	protected Set<String> suppressedWarnInfoPatterns = new HashSet<>(11, 0.75f); // For 8 elements
 	protected PassiveExpiringSessionCache sessionCache = new PassiveExpiringSessionCache();
+
+	/**
+	 * The suppressed warning/information-level patterns, compiled, and the patterns they were compiled from.
+	 */
+	private record CompiledPatterns(Set<String> source, List<Pattern> patterns) {}
+
+	private volatile CompiledPatterns compiledSuppressedWarnInfoPatterns = new CompiledPatterns(Set.of(), List.of());
+
+	/**
+	 * The resources of the context that {@link #fetch} converted to the element model, by resource instance (a
+	 * resource that is reloaded is a new instance and converted again).
+	 */
+	private final Map<org.hl7.fhir.model.core.Resource, Element> fetchedElements =
+		Collections.synchronizedMap(new WeakHashMap<>());
 
 	/**
 	 * The terminology cache path for a context that doesn't need cached terminology results: an in-memory cache,
@@ -1190,7 +1205,7 @@ public class MatchboxEngine extends ValidationEngine {
 					return true;
 				}
 				// We keep the warning only if it matches no
-				return ignoredPatterns.parallelStream().noneMatch(pattern -> pattern.matcher(message.getMessage()).find());
+				return ignoredPatterns.stream().noneMatch(pattern -> pattern.matcher(message.getMessage()).find());
 			})
 			.collect(Collectors.toList());
 	}
@@ -1224,7 +1239,7 @@ public class MatchboxEngine extends ValidationEngine {
 		final List<Pattern> ignoredPatterns = this.compileSuppressedWarnInfoPatterns();
 		return liElements.stream()
 			.filter(message -> {
-				return ignoredPatterns.parallelStream().noneMatch(pattern -> pattern.matcher(message).find());
+				return ignoredPatterns.stream().noneMatch(pattern -> pattern.matcher(message).find());
 			})
 			.collect(Collectors.toList());
 	}
@@ -1297,10 +1312,52 @@ public class MatchboxEngine extends ValidationEngine {
 	}
 
 	/**
+	 * Resolves a URL that the validator couldn't resolve in the validated resource, e.g. a canonical URL in a FHIRPath
+	 * expression ({@code 'http://…/ConceptMap/x'.resolve()}).
+	 * <p>
+	 * {@link ValidationEngine#fetch} converts the resource of the context to the element model on every call (it
+	 * composes the resource to JSON and parses it). With ch-elm, whose invariants resolve ConceptMaps of up to 220 KB,
+	 * that is 14 conversions and about 45% of the CPU time of a validation. The converted resource is kept per engine;
+	 * each call gets a copy, so the validator can decorate it (parents, slices, messages).
+	 * <p>
+	 * The kept element is never handed out, it is only copied, under its lock: the element model isn't thread-safe
+	 * (e.g. {@code NamedItemList} builds its name map lazily), so concurrent validations must not navigate a shared
+	 * element. The copies share no mutable state with it (the narrative is copied too, see {@code Element.copyValues}).
+	 */
+	@Override
+	public Element fetch(final IResourceValidator validator, final Object appContext, final String url)
+			throws FHIRException, IOException {
+		final var resource = this.getContext().fetchResource(org.hl7.fhir.model.core.Resource.class, url,
+			org.hl7.fhir.model.core.VersionResolutionRules.defaultRule());
+		if (resource == null) {
+			return super.fetch(validator, appContext, url);
+		}
+		Element element = this.fetchedElements.get(resource);
+		if (element == null) {
+			element = new ObjectConverter(this.getContext()).convert(resource);
+			this.fetchedElements.putIfAbsent(resource, element);
+		}
+		final Element copy;
+		synchronized (element) {
+			copy = element.copy(EnumSet.allOf(Base.CopyObjectOptions.class));
+		}
+		copy.numberChildren(); // the indexes aren't copied
+		return copy;
+	}
+
+	/**
 	 * Compiles the list of suppressed validation warning/information-level issues into a list of {@link Pattern}.
+	 * The compiled patterns are kept until the set of patterns changes.
 	 */
 	protected List<Pattern> compileSuppressedWarnInfoPatterns() {
-		return this.suppressedWarnInfoPatterns.stream().map(Pattern::compile).collect(Collectors.toList());
+		final var compiled = this.compiledSuppressedWarnInfoPatterns;
+		if (compiled.source().equals(this.suppressedWarnInfoPatterns)) {
+			return compiled.patterns();
+		}
+		final Set<String> source = Set.copyOf(this.suppressedWarnInfoPatterns);
+		final List<Pattern> patterns = source.stream().map(Pattern::compile).toList();
+		this.compiledSuppressedWarnInfoPatterns = new CompiledPatterns(source, patterns);
+		return patterns;
 	}
 
 	@Nullable
