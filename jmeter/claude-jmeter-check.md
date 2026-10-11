@@ -258,6 +258,10 @@ All runs: 8,000 validations, 0 failures. Runs from 25 Sep 2026 on the same machi
 | `1156-pr636-rerun2` | 1.15.6 on PR #636 ⁶ | 4.1.21 / 8.13.15-pr8189-1 / 6.10.4 | 70% of the container memory | 3.2 min | 87 / 97 | 2.56 / 4.80 | 2026-10-10 |
 | `1156-fhir-core-7` | 1.15.6 on branch `fhir-core-7` ⁷ | 4.1.21 / 8.13.15-pr8189-1 / 7.0.1 | 70% of the container memory | 3.5 min | 97 / 108 | 2.61 / 4.90 | 2026-10-10 |
 | `1156-fhir-core-7-r2` | 1.15.6 on branch `fhir-core-7` ⁷ | 4.1.21 / 8.13.15-pr8189-1 / 7.0.1 | 70% of the container memory | 3.5 min | 96 / 109 | 2.55 / 4.74 | 2026-10-10 |
+| `cpu-base7-r1` | 1.15.6 on branch `fhir-core-7` ⁷ | 4.1.21 / 8.13.15-pr8189-1 / 7.0.1 | 70% of the container memory | 3.6 min | 102 / 113 | 2.42 / 4.99 | 2026-10-10 |
+| `cpu-base7-r2` | 1.15.6 on branch `fhir-core-7` ⁷ | 4.1.21 / 8.13.15-pr8189-1 / 7.0.1 | 70% of the container memory | 3.4 min | 95 / 102 | 2.35 / 3.77 | 2026-10-10 |
+| `cpu-fix7-r1` | 1.15.6 on branch `fhir-core-7` with the fixes ⁸ | 4.1.21 / 8.13.15-pr8189-1 / 7.0.1 | 70% of the container memory | 1.6 min | 41 / 44 | 2.17 / 3.35 | 2026-10-10 |
+| `cpu-fix7-r2` | 1.15.6 on branch `fhir-core-7` with the fixes ⁸ | 4.1.21 / 8.13.15-pr8189-1 / 7.0.1 | 70% of the container memory | 1.8 min | 46 / 50 | 2.19 / 3.36 | 2026-10-10 |
 
 ¹ Rebuilt from ch-elm commit `f3dd030` on `matchbox:v4.0.16`; the published 1.13.1 image is no longer in the registry.
 ² Machine was busy during this run.
@@ -275,6 +279,12 @@ ch-elm commit `a07c806` files copied in and the packages installed in a containe
 JDK layers are the same as for `pr636` (without the ch-elm `apt upgrade`). Runs alternated with the `pr636` reruns on
 the same day: 7.0.1 validates about 10% slower (median 96–97 vs 87–88 ms) with the same OperationOutcome (same 6
 issues); live heap after a full GC at the end 684–686 / 663 MiB, server ready after 37 / 31 s.
+⁸ The fixes of the profile analysis (`profile-analysis-plan.md`, "Results"): `MatchboxEngine.fetch()` keeps the
+resources it converted to the element model (ch-elm's invariants resolve ConceptMaps 14 times per validation), the
+suppressed warning patterns are compiled once and matched without `parallelStream()`, the OID registry is loaded once.
+Image `1156-fhir-core-7` with `/matchbox.jar` replaced, runs alternated with `cpu-base7-*` (the image without the
+fixes), only `*.jtl` and the thread dumps saved (`cpu_run.sh`, `thread_cpu.py`). The same OperationOutcome; CPU per
+request 41–47 instead of 99–101 ms (all threads).
 
 ### Startup, first and second validation (lazy loading)
 
