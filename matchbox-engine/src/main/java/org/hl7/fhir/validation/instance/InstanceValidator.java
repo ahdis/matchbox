@@ -586,6 +586,10 @@ public class InstanceValidator extends BaseValidator implements IResourceValidat
   private String cacheFolder;
   private MatchetypeStatus matchetypeStatus = MatchetypeStatus.Disallowed;
   private OIDUtilities oids;
+  // matchbox patch start: the OID registry is loaded once (OIDUtilities parses oidregistry.csv from the jar in its
+  // constructor, 3-4 ms for each InstanceValidator, and matchbox creates one for each validation); it is read-only
+  private static final OIDUtilities OIDS = new OIDUtilities();
+  // matchbox patch end
 
   public InstanceValidator(@Nonnull IWorkerContext theContext, @Nonnull IHostApplicationServices hostServices, @Nonnull XVerExtensionManager xverManager, ValidatorSession session, @Nonnull ValidatorSettings settings) {
     super(theContext, settings, xverManager, session);
@@ -602,7 +606,7 @@ public class InstanceValidator extends BaseValidator implements IResourceValidat
     fpe.setDoNotEnforceAsSingletonRule(!VersionUtilities.isR5Plus(theContext.getFHIRVersion()));
     fpe.setAllowDoubleQuotes(allowDoubleQuotesInFHIRPath);
     codingObserver = new CodingsObserver(theContext, settings, xverManager, session);
-    oids = new OIDUtilities();
+    oids = OIDS; // matchbox patch: was new OIDUtilities()
   }
 
   public void initializeFromParameters(InstanceValidatorParameters parameters) {

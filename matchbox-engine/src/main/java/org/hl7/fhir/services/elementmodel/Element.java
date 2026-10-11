@@ -1584,7 +1584,9 @@ public class Element extends Base implements NamedItem {
     }    
     dest.line = line;
     dest.col = col;
-    dest.xhtml = xhtml;
+    // matchbox patch: copy the narrative, the copy must not share a mutable XhtmlNode with the original
+    // (MatchboxEngine.fetch hands out copies of a kept element to concurrent validations)
+    dest.xhtml = xhtml == null ? null : xhtml.copy();
     dest.xhtmlSource = xhtmlSource;
     dest.xhtmlOutputHash = xhtmlOutputHash;
     dest.explicitType = explicitType;
