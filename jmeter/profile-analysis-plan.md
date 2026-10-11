@@ -286,7 +286,7 @@ Load test, the image without and with the fixes alternating, 2 runs each (`cpu_r
 | server time median / p95 (ms) | 102 / 113 | 95 / 102 | 41 / 44 | 46 / 50 |
 | duration of the 8,000 requests (s) | 220 | 209 | 100 | 111 |
 
-Upstream (hapifhir/org.hl7.fhir.core, branch `validator-perf-fetch-cache`): the same cache in
+Upstream ([hapifhir/org.hl7.fhir.core#2711](https://github.com/hapifhir/org.hl7.fhir.core/pull/2711)): the same cache in
 `ValidationEngine.fetch()`, `OIDUtilities` loads the registry once, and the serialisers check the model context of
 the root only (`Base.checkModelContext`) instead of walking the tree on every compose (`assertModelContext`).
 
