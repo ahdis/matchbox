@@ -296,3 +296,52 @@ The 3 throwables per request of `jdk.ExceptionStatistics` aren't exceptions: log
 line for the caller's line number (`%L` in the pattern), and a validation logs 3 lines at INFO
 (`MatchboxEngineSupport` "Using cached validate engine", `MatchboxEngine` "Using profile for validation" and
 "finished validation"). The `Throwable`s cost 0.03 ms, all logging 0.35 ms per request: not worth changing.
+
+## Follow-up: review of hapifhir/org.hl7.fhir.core#2711 (2026-10-12)
+
+Grahame's [review](https://github.com/hapifhir/org.hl7.fhir.core/pull/2711#issuecomment-6114581356): route
+`ValidatorHostServices.resolveReference` through the fetch cache of the validation (`InstanceValidator.fetchCache`,
+cleared for each validation) instead of calling `fetcher.fetch()` directly, limit the `fetch()` cache of the engine
+(memory) and document the staleness assumption, make the shared OID registry unmodifiable, and keep the deep model
+context check as an `assert` next to the root check. He also pointed to
+[#2714](https://github.com/hapifhir/org.hl7.fhir.core/pull/2714) (visitor pattern: `Base.forEachChild()` walks the
+fields of the generated classes instead of `listChildren()` and a `Property` per element).
+
+Variants, images `matchbox-ch-elm:1156-var{A,B,C,D}` (`1156-fhir-core-7` with `/matchbox.jar` replaced),
+`cpu_heap_run.sh` (as `cpu_run.sh`, plus the live heap after a full GC and the class histogram), alternating
+A B C D, twice:
+
+- **A**: branch `fhir-core-7` as before (`33a24561d`): `MatchboxEngine.fetch()` keeps every converted resource, by
+  resource instance (`WeakHashMap`), and `resolveReference` fetches on every `resolve()` (14 per validation)
+- **B**: C with `MATCHBOX_FHIR_CONTEXT_FETCHCACHESIZE=0`: only the fetch cache of the validation
+- **C**: `resolveReference` through the fetch cache of the validation, and the engine keeps the last 100 converted
+  resources by URL (a different resource instance for the URL is converted again),
+  `matchbox.fhir.context.fetchCacheSize`
+- **D**: C on org.hl7.fhir.core 7.0.1 with #2714 and the serialisers' root check + `assert` (utilities, model and
+  services built as `7.0.1-d2714`, worktree branch `matchbox-d-7.0.1-visitor` of the core repository), and
+  `visitChildren()` in the patched `Element`
+
+| run | server median / p95 ms | client median / p95 ms | CPU per request, all threads ms | live heap after GC MiB | element model `Element`s after GC |
+|---|---:|---:|---:|---:|---:|
+| A r1 | 48 / 53 | 51 / 55 | 49.1 | 690 | 4,174 (0.6 MiB) |
+| B r1 | 50 / 56 | 53 / 59 | 49.8 | 689 | – |
+| C r1 | 45 / 49 | 47 / 51 | 45.6 | 692 | 4,174 (0.6 MiB) |
+| D r1 | 49 / 57 | 52 / 60 | 50.3 | 691 | 4,174 (0.6 MiB) |
+| A r2 | 50 / 58 | 52 / 61 | 50.8 | 692 | 4,174 (0.6 MiB) |
+| B r2 | 57 / 71 | 60 / 74 | 58.4 | 690 | – |
+| C r2 | 45 / 49 | 48 / 52 | 45.4 | 692 | 4,174 (0.6 MiB) |
+| D r2 | 46 / 50 | 49 / 53 | 46.7 | 691 | 4,174 (0.6 MiB) |
+
+All 8,000 validations succeeded in every run, and the four variants return the same OperationOutcome (7 issues).
+
+- The fetch cache of the validation does most of the work: without the engine's cache (B) a validation is only
+  2–7 ms slower than A, because each URL is converted once per validation instead of 14 times.
+- C is the fastest and the most stable variant (45 ms, both runs): it converts nothing and copies each URL once per
+  validation (A copied 14 times).
+- The engine's cache holds 4,174 element nodes (0.6 MiB) for ch-elm: the ConceptMaps that this instance resolves are
+  small. The live heap is the same for all variants (689–692 MiB). The limit of 100 resources per engine is about
+  memory in the worst case (many large resolved resources and many engines), not about ch-elm.
+- #2714 (D) doesn't change the validation time measurably (r2 +1.3 ms CPU, r1 noisy): after the fetch cache, composing
+  typed resources and `assertModelContext` aren't on the validation path anymore. In the 7.0.1 profile, the tree walks
+  outside `fetch()` (`listChildren`, `Property.<init>`) were ~0.5% of the CPU; `FHIRPathEngine.getChildrenByName` on
+  the element model (2.2%) goes through `Element.getNamedValue`, which #2714 doesn't change.
