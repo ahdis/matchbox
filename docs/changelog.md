@@ -5,7 +5,9 @@
   to the element model for `resolve()` instead of converting them on every call (ch-elm: 14 times per validation,
   45% of the CPU time), the suppressed warning patterns are compiled once and matched without a parallel stream, and
   the OID registry is loaded once instead of for every validation. The ch-elm load test (`jmeter/memory.jmx`) takes
-  41–46 instead of 95–102 ms per validation (median)
+  45 instead of 95–102 ms per validation (median). A validation fetches each URL that FHIRPath expressions resolve
+  once (through the fetch cache of the validation, as references already were); each engine keeps the last 100
+  converted resources (`matchbox.fhir.context.fetchCacheSize`, `0` to keep none)
 - Upgrade to Spring Boot 4.0.8 and Spring Framework 7.0.9 to fix `spring-webmvc`
   [CVE-2026-47884](https://github.com/ahdis/matchbox/security/dependabot/420), with Hibernate ORM 7.2, Jakarta EE 11
   and JUnit 6. HAPI FHIR is a build of [hapifhir/hapi-fhir#8189](https://github.com/hapifhir/hapi-fhir/pull/8189)

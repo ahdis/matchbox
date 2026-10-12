@@ -239,6 +239,7 @@ public class MatchboxEngineSupport {
 		final MatchboxEngine validator;
 		try { validator = new MatchboxEngine(engine); }
 		catch (final Exception e) { throw new MatchboxEngineCreationException(e); }
+		validator.setFetchCacheSize(this.matchboxFhirProperties.getContext().getFetchCacheSize());
 		validator.setIgLoader(new IgLoaderFromJpaPackageCache(validator.getPcm(),
 																				validator.getContext(),
 																				validator.getVersion(),
@@ -444,6 +445,7 @@ public class MatchboxEngineSupport {
 			log.info("Cached default engine forever {} with parameters {}",
 						(cliContextMain.getIg() != null ? "for " + cliContextMain.getIg() : ""),
 						cliContextMain.sessionId());
+			mainEngine.setFetchCacheSize(this.matchboxFhirProperties.getContext().getFetchCacheSize());
 			this.engineCache.cachePermanentEngine(cliContextMain, mainEngine);
 			this.cliContext.setIg(null); // otherwise we get for reloads the pacakge name instead a new one later  set ahdis/matchbox #144
 

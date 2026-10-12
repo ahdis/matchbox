@@ -127,11 +127,30 @@ public class MatchboxEngine extends ValidationEngine {
 	private volatile CompiledPatterns compiledSuppressedWarnInfoPatterns = new CompiledPatterns(Set.of(), List.of());
 
 	/**
-	 * The resources of the context that {@link #fetch} converted to the element model, by resource instance (a
-	 * resource that is reloaded is a new instance and converted again).
+	 * The default number of resources that {@link #fetch} keeps converted to the element model, per engine.
 	 */
-	private final Map<org.hl7.fhir.model.core.Resource, Element> fetchedElements =
-		Collections.synchronizedMap(new WeakHashMap<>());
+	public static final int DEFAULT_FETCH_CACHE_SIZE = 100;
+
+	/**
+	 * A resource of the context that {@link #fetch} converted to the element model, and the resource instance it was
+	 * converted from (a resource that is replaced in the context is a new instance, and is converted again).
+	 */
+	private record FetchedElement(org.hl7.fhir.model.core.Resource resource, Element element) {}
+
+	/**
+	 * The number of resources that {@link #fetch} keeps converted, 0 to keep none.
+	 */
+	private volatile int fetchCacheSize = DEFAULT_FETCH_CACHE_SIZE;
+
+	/**
+	 * The resources that {@link #fetch} converted, by URL, least recently used first. Guarded by itself.
+	 */
+	private final LinkedHashMap<String, FetchedElement> fetchedElements = new LinkedHashMap<>(16, 0.75f, true) {
+		@Override
+		protected boolean removeEldestEntry(final Map.Entry<String, FetchedElement> eldest) {
+			return this.size() > fetchCacheSize;
+		}
+	};
 
 	/**
 	 * The terminology cache path for a context that doesn't need cached terminology results: an in-memory cache,
@@ -201,6 +220,7 @@ public class MatchboxEngine extends ValidationEngine {
 				MatchboxEngine otherMatchboxEngine = (MatchboxEngine) other;
 				this.sessionCache = otherMatchboxEngine.sessionCache;
 				this.suppressedWarnInfoPatterns = otherMatchboxEngine.suppressedWarnInfoPatterns;
+				this.fetchCacheSize = otherMatchboxEngine.fetchCacheSize; // the converted resources aren't shared
 		}
 		// Create a new IgLoader, otherwise the context is desynchronized between the loader and the engine
 		this.setIgLoader(new IgLoader(this.getPcm(), this.getContext(), this.getVersion(), this.isDebug()));
@@ -1317,12 +1337,17 @@ public class MatchboxEngine extends ValidationEngine {
 	 * <p>
 	 * {@link ValidationEngine#fetch} converts the resource of the context to the element model on every call (it
 	 * composes the resource to JSON and parses it). With ch-elm, whose invariants resolve ConceptMaps of up to 220 KB,
-	 * that is 14 conversions and about 45% of the CPU time of a validation. The converted resource is kept per engine;
-	 * each call gets a copy, so the validator can decorate it (parents, slices, messages).
+	 * that is 14 conversions and about 45% of the CPU time of a validation. The patched InstanceValidator calls fetch()
+	 * once per URL and validation; the {@link #setFetchCacheSize(int) last used} converted resources are also kept
+	 * per engine, across validations. Each call gets a copy, so the validator can decorate it (parents, slices,
+	 * messages).
 	 * <p>
 	 * The kept element is never handed out, it is only copied, under its lock: the element model isn't thread-safe
 	 * (e.g. {@code NamedItemList} builds its name map lazily), so concurrent validations must not navigate a shared
 	 * element. The copies share no mutable state with it (the narrative is copied too, see {@code Element.copyValues}).
+	 * <p>
+	 * This assumes that the content of a resource of the context doesn't change after {@code fetchResource()}
+	 * returned it; a resource that is replaced is a new instance and is converted again.
 	 */
 	@Override
 	public Element fetch(final IResourceValidator validator, final Object appContext, final String url)
@@ -1332,10 +1357,24 @@ public class MatchboxEngine extends ValidationEngine {
 		if (resource == null) {
 			return super.fetch(validator, appContext, url);
 		}
-		Element element = this.fetchedElements.get(resource);
+		if (this.fetchCacheSize <= 0) {
+			return new ObjectConverter(this.getContext()).convert(resource);
+		}
+		Element element;
+		synchronized (this.fetchedElements) {
+			final FetchedElement fetched = this.fetchedElements.get(url);
+			element = (fetched != null && fetched.resource() == resource) ? fetched.element() : null;
+		}
 		if (element == null) {
 			element = new ObjectConverter(this.getContext()).convert(resource);
-			this.fetchedElements.putIfAbsent(resource, element);
+			synchronized (this.fetchedElements) {
+				final FetchedElement fetched = this.fetchedElements.get(url);
+				if (fetched != null && fetched.resource() == resource) {
+					element = fetched.element(); // converted by another thread in the meantime
+				} else {
+					this.fetchedElements.put(url, new FetchedElement(resource, element));
+				}
+			}
 		}
 		final Element copy;
 		synchronized (element) {
@@ -1343,6 +1382,43 @@ public class MatchboxEngine extends ValidationEngine {
 		}
 		copy.numberChildren(); // the indexes aren't copied
 		return copy;
+	}
+
+	/**
+	 * Sets the number of resources that {@link #fetch} keeps converted to the element model (least recently used
+	 * are dropped first), 0 to keep none. The default is {@link #DEFAULT_FETCH_CACHE_SIZE}.
+	 */
+	public void setFetchCacheSize(final int fetchCacheSize) {
+		synchronized (this.fetchedElements) {
+			this.fetchCacheSize = Math.max(0, fetchCacheSize);
+			final var iterator = this.fetchedElements.entrySet().iterator();
+			while (this.fetchedElements.size() > this.fetchCacheSize && iterator.hasNext()) {
+				iterator.next();
+				iterator.remove();
+			}
+		}
+	}
+
+	public int getFetchCacheSize() {
+		return this.fetchCacheSize;
+	}
+
+	/**
+	 * Returns the URLs of the resources that {@link #fetch} keeps converted, least recently used first.
+	 */
+	public List<String> getFetchCacheUrls() {
+		synchronized (this.fetchedElements) {
+			return List.copyOf(this.fetchedElements.keySet());
+		}
+	}
+
+	/**
+	 * Drops the resources that {@link #fetch} keeps converted to the element model.
+	 */
+	public void clearFetchCache() {
+		synchronized (this.fetchedElements) {
+			this.fetchedElements.clear();
+		}
 	}
 
 	/**
