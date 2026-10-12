@@ -416,11 +416,19 @@ public class InstanceValidator extends BaseValidator implements IResourceValidat
       if (externalHostServices != null) {
         return setParentsBase(externalHostServices.resolveReference(engine, c.getAppContext(), url, identifier, refContext));
       } else if (fetcher != null) {
+        // matchbox patch start: through the fetch cache of the validation, like resolve(): ch-elm's invariants
+        // resolve the same ConceptMaps up to 14 times per validation ('http://…/ConceptMap/x'.resolve())
+        if (fetchCache.containsKey(url)) {
+          return fetchCache.get(url);
+        }
         try {
-          return setParents(fetcher.fetch(InstanceValidator.this, c.getAppContext(), url));
+          Element fetched = setParents(fetcher.fetch(InstanceValidator.this, c.getAppContext(), url));
+          fetchCache.put(url, fetched);
+          return fetched;
         } catch (IOException e) {
           throw new FHIRException(e);
         }
+        // matchbox patch end
       } else {
         throw new Error(context.formatMessage(I18nConstants.NOT_DONE_YET__RESOLVE__LOCALLY_2, url));
       }

@@ -23,6 +23,12 @@ public class MatchboxFhirContextProperties {
 
 	private boolean onlyOneEngine = false;
 
+	/**
+	 * The number of resources of the context that each engine keeps converted to the element model for resolve() in
+	 * FHIRPath expressions (e.g. ConceptMaps in invariants), least recently used are dropped first; 0 to keep none.
+	 */
+	private int fetchCacheSize = ch.ahdis.matchbox.engine.MatchboxEngine.DEFAULT_FETCH_CACHE_SIZE;
+
 	private boolean httpReadOnly = false;
 
 	private boolean ssrfProtectionEnabled = true;
@@ -59,6 +65,14 @@ public class MatchboxFhirContextProperties {
 
 	public boolean isOnlyOneEngine() {
 		return this.onlyOneEngine;
+	}
+
+	public int getFetchCacheSize() {
+		return this.fetchCacheSize;
+	}
+
+	public void setFetchCacheSize(final int fetchCacheSize) {
+		this.fetchCacheSize = fetchCacheSize;
 	}
 
 	public void setHttpReadOnly(final boolean httpReadOnly) {

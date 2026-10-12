@@ -7,6 +7,9 @@ import org.hl7.fhir.model.core.VersionResolutionRules;
 import org.hl7.fhir.model.core.formats.JsonParser;
 import org.hl7.fhir.model.utilities.formats.FhirFormat;
 import org.hl7.fhir.model.utilities.formats.OutputStyle;
+import org.hl7.fhir.r4.model.OperationOutcome;
+import org.hl7.fhir.r4.model.StructureDefinition;
+import org.hl7.fhir.services.validation.IResourceValidator;
 import org.hl7.fhir.services.elementmodel.Element;
 import org.hl7.fhir.services.elementmodel.Manager;
 import org.hl7.fhir.services.elementmodel.ObjectConverter;
@@ -27,6 +30,7 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -173,6 +177,104 @@ class FetchCacheTest {
 		return codeSystem.getChildrenByName("concept").stream()
 			.map(concept -> concept.getChildrenByName("code").get(0).primitiveValue())
 			.toList();
+	}
+
+	/**
+	 * Only the last used resources are kept, and none with a size of 0.
+	 */
+	@Test
+	void testTheCacheIsLimited() throws Exception {
+		final MatchboxEngine limited = new MatchboxEngine(this.engine);
+		assertEquals(MatchboxEngine.DEFAULT_FETCH_CACHE_SIZE, limited.getFetchCacheSize());
+		assertTrue(limited.getFetchCacheUrls().isEmpty(), "a copy of an engine doesn't share the converted resources");
+
+		final String third = "http://example.org/fhir/CodeSystem/fetch-test-third";
+		limited.addCanonicalResource(this.codeSystem(third, 2));
+		limited.setFetchCacheSize(2);
+		final String expected = this.compose(limited.fetch(null, null, URL));
+		limited.fetch(null, null, TEST_URL);
+		limited.fetch(null, null, URL);
+		assertEquals(List.of(TEST_URL, URL), limited.getFetchCacheUrls());
+		limited.fetch(null, null, third);
+		assertEquals(List.of(URL, third), limited.getFetchCacheUrls());
+
+		limited.setFetchCacheSize(1);
+		assertEquals(List.of(third), limited.getFetchCacheUrls());
+
+		limited.setFetchCacheSize(0);
+		assertTrue(limited.getFetchCacheUrls().isEmpty());
+		assertEquals(expected, this.compose(limited.fetch(null, null, URL)));
+		assertTrue(limited.getFetchCacheUrls().isEmpty());
+
+		limited.setFetchCacheSize(2);
+		limited.fetch(null, null, URL);
+		limited.clearFetchCache();
+		assertTrue(limited.getFetchCacheUrls().isEmpty());
+	}
+
+	/**
+	 * A resource that is replaced in the context is a new instance, and is converted again.
+	 */
+	@Test
+	void testAReplacedResourceIsConvertedAgain() throws Exception {
+		final MatchboxEngine replacing = new MatchboxEngine(this.engine);
+		final String url = "http://example.org/fhir/CodeSystem/fetch-test-replaced";
+		replacing.addCanonicalResource(this.codeSystem(url, 3));
+		assertEquals(3, replacing.fetch(null, null, url).getChildrenByName("concept").size());
+
+		replacing.addCanonicalResource(this.codeSystem(url, 5));
+		assertEquals(5, replacing.fetch(null, null, url).getChildrenByName("concept").size());
+	}
+
+	/**
+	 * A FHIRPath expression that resolves the same URL several times fetches it once per validation (the patched
+	 * InstanceValidator.ValidatorHostServices.resolveReference uses the fetch cache of the validation).
+	 */
+	@Test
+	void testAValidationFetchesAUrlOnce() throws Exception {
+		final AtomicInteger fetches = new AtomicInteger();
+		final MatchboxEngine counting = new MatchboxEngine(this.engine) {
+			@Override
+			public Element fetch(final IResourceValidator validator, final Object appContext, final String url)
+					throws IOException {
+				if (TEST_URL.equals(url)) {
+					fetches.incrementAndGet();
+				}
+				return super.fetch(validator, appContext, url);
+			}
+		};
+		final String resolve = "'%s'.resolve()".formatted(TEST_URL);
+		final String profile = """
+			{"resourceType":"StructureDefinition","url":"http://example.org/fhir/StructureDefinition/fetch-test-patient",
+			 "name":"FetchTestPatient","status":"active","fhirVersion":"4.0.1","kind":"resource","abstract":false,
+			 "type":"Patient","baseDefinition":"http://hl7.org/fhir/StructureDefinition/Patient","derivation":"constraint",
+			 "differential":{"element":[{"id":"Patient","path":"Patient","constraint":[
+			   {"key":"fct-1","severity":"error","human":"resolves","expression":"%1$s.concept.count() = %2$d and %1$s.concept.where(code = 'c3').exists()"},
+			   {"key":"fct-2","severity":"error","human":"fails","expression":"%1$s.concept.count() = 99"}]}]}}
+			""".formatted(resolve, TEST_CONCEPTS);
+		final var sd = (StructureDefinition) new org.hl7.fhir.r4.formats.JsonParser().parse(profile);
+		counting.addCanonicalResource(counting.createSnapshot(sd));
+
+		for (int validation = 1; validation <= 2; validation++) {
+			final OperationOutcome outcome = counting.validate(
+				new ByteArrayInputStream("{\"resourceType\":\"Patient\"}".getBytes(StandardCharsets.UTF_8)),
+				FhirFormat.JSON, sd.getUrl());
+			final List<String> errors = outcome.getIssue().stream()
+				.filter(issue -> issue.getSeverity() == OperationOutcome.IssueSeverity.ERROR)
+				.map(issue -> issue.getDetails().getText())
+				.toList();
+			assertEquals(1, errors.size(), () -> "errors: " + errors);
+			assertTrue(errors.get(0).contains("fct-2"), errors.get(0));
+			assertEquals(validation, fetches.get(), "three resolve() of the same URL, one fetch per validation");
+		}
+	}
+
+	private org.hl7.fhir.model.core.CodeSystem codeSystem(final String url, final int concepts) throws IOException {
+		final String json = ("{\"resourceType\":\"CodeSystem\",\"url\":\"%s\",\"status\":\"active\","
+			+ "\"content\":\"complete\",\"concept\":[%s]}").formatted(url, IntStream.range(0, concepts)
+			.mapToObj(i -> "{\"code\":\"c%d\"}".formatted(i)).collect(Collectors.joining(",")));
+		return (CodeSystem) new JsonParser(this.engine.getContext().getModelContext())
+			.parse(new ByteArrayInputStream(json.getBytes(StandardCharsets.UTF_8)));
 	}
 
 	@Test
