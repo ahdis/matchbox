@@ -172,7 +172,7 @@ public class MatchboxEngine extends ValidationEngine {
 				nullEngine = new ValidationEngineBuilder().withTerminologyCachePath(NO_TX_CACHE_FOLDER).fromNothing();
 				fmlParseContext = new SimpleWorkerContextBuilder(org.hl7.fhir.model.ModelContext.fullCoreContext()).withTerminologyCachePath(NO_TX_CACHE_FOLDER).fromNothing();
 		} catch (IOException e) {
-				log.error("problem with inizializin", e);
+				log.error("problem with initializing", e);
 		}
 	};
 
@@ -219,7 +219,7 @@ public class MatchboxEngine extends ValidationEngine {
 		if (other instanceof MatchboxEngine) {
 				MatchboxEngine otherMatchboxEngine = (MatchboxEngine) other;
 				this.sessionCache = otherMatchboxEngine.sessionCache;
-				this.suppressedWarnInfoPatterns = otherMatchboxEngine.suppressedWarnInfoPatterns;
+				this.suppressedWarnInfoPatterns = new HashSet<>(otherMatchboxEngine.suppressedWarnInfoPatterns);
 				this.fetchCacheSize = otherMatchboxEngine.fetchCacheSize; // the converted resources aren't shared
 		}
 		// Create a new IgLoader, otherwise the context is desynchronized between the loader and the engine
@@ -966,7 +966,7 @@ public class MatchboxEngine extends ValidationEngine {
 			throws FHIRException, IOException, EOperationOutcome {
 		StructureDefinition sd = null;
 		if (profileUrl != null) {
-			sd = this.getStructureDefinitionR5(profileUrl);
+			sd = this.getStructureDefinitionR6(profileUrl);
 			log.info("Using profile for validation " + sd.getUrl() + "|" + sd.getVersion() + " "
 						+ (sd.getDateElement() != null ? "(" + sd.getDateElement().asStringValue() + ")" : ""));
 		}
@@ -979,13 +979,25 @@ public class MatchboxEngine extends ValidationEngine {
 	}
 
 	/**
-	 * Get the corresponding StructureDefinition (R5)
+	 * Get the corresponding StructureDefinition (versionless R6 model of the validator)
 	 *
 	 * @param profile
 	 * @return
 	 */
-	public StructureDefinition getStructureDefinitionR5(final String profile) {
+	public StructureDefinition getStructureDefinitionR6(final String profile) {
 		return this.getContext().fetchResource(StructureDefinition.class, profile, org.hl7.fhir.model.core.VersionResolutionRules.defaultRule());
+	}
+
+	/**
+	 * Get the corresponding StructureDefinition (HAPI R5 model), a conversion of
+	 * {@link #getStructureDefinitionR6(String)}
+	 *
+	 * @param profile
+	 * @return
+	 */
+	public org.hl7.fhir.r5.model.StructureDefinition getStructureDefinitionR5(final String profile) {
+		final StructureDefinition sd = getStructureDefinitionR6(profile);
+		return sd == null ? null : (org.hl7.fhir.r5.model.StructureDefinition) R6Model.toR5(sd);
 	}
 
     /**
@@ -1063,22 +1075,35 @@ public class MatchboxEngine extends ValidationEngine {
     /**
 	 * Parses a FHIR Structure Map from the textual representation according to the
 	 * FHIR Mapping Language grammar (see
-	 * http://build.fhir.org/mapping-language.html#grammar) for FHIR release 5
+	 * http://build.fhir.org/mapping-language.html#grammar), in the versionless R6 model of the validator
 	 *
 	 * @param content FHIR Mapping Language text
 	 * @return parsed StructureMap resource
 	 * @throws FHIRException FHIR Exception
 	 */
-	public org.hl7.fhir.model.fml.StructureMap parseMapR5(String content) throws IOException, FHIRException {
+	public StructureMap parseMapR6(String content) throws IOException, FHIRException {
 		List<Base> outputs = new ArrayList<>();
 		StructureMapTools scu = new MatchboxStructureMapUtilities(fmlParseContext,
 				new TransformSupportServices(fmlParseContext, outputs), this);
-		org.hl7.fhir.model.fml.StructureMap mapR5 = scu.parse(content, "map");
-		mapR5.getText().setStatus(NarrativeStatus.GENERATED);
-		mapR5.getText().setDiv(new XhtmlNode(NodeType.Element, "div"));
-		String render = StructureMapTools.render(mapR5);
-		mapR5.getText().getDiv().addTag("pre").addText(render);
-		return mapR5;
+		StructureMap map = scu.parse(content, "map");
+		map.getText().setStatus(NarrativeStatus.GENERATED);
+		map.getText().setDiv(new XhtmlNode(NodeType.Element, "div"));
+		String render = StructureMapTools.render(map);
+		map.getText().getDiv().addTag("pre").addText(render);
+		return map;
+	}
+
+	/**
+	 * Parses a FHIR Structure Map from the textual representation according to the
+	 * FHIR Mapping Language grammar (see
+	 * http://build.fhir.org/mapping-language.html#grammar), in the HAPI R5 model
+	 *
+	 * @param content FHIR Mapping Language text
+	 * @return parsed StructureMap resource
+	 * @throws FHIRException FHIR Exception
+	 */
+	public org.hl7.fhir.r5.model.StructureMap parseMapR5(String content) throws IOException, FHIRException {
+		return (org.hl7.fhir.r5.model.StructureMap) R6Model.toR5(parseMapR6(content));
 	}
 
 
@@ -1093,46 +1118,41 @@ public class MatchboxEngine extends ValidationEngine {
 	 * @throws FHIRException FHIR Exception
 	 */
 	public org.hl7.fhir.r4.model.StructureMap parseMap(String content) throws IOException, FHIRException {
-		org.hl7.fhir.model.fml.StructureMap mapR5 = parseMapR5(content);
-		return (org.hl7.fhir.r4.model.StructureMap) VersionConvertorFactory_40_N.convertResource(mapR5);
+		return (org.hl7.fhir.r4.model.StructureMap) VersionConvertorFactory_40_N.convertResource(parseMapR6(content));
 	}
 
 	/**
-	 * creates the snapshot for the provided StructureDefinition
+	 * creates the snapshot for the provided StructureDefinition, in place
 	 *
 	 * @param sd StructureDefinition with differential
-	 * @return StructureDefinition with snapshot (differential applied to base
-	 *         definition)
+	 * @return the StructureDefinition sd with snapshot (differential applied to base
+	 *         definition), null if the snapshot couldn't be generated
 	 * @throws FHIRException FHIR Exception
 	 * @throws IOException   IO Exception
 	 */
 	public org.hl7.fhir.r4.model.StructureDefinition createSnapshot(org.hl7.fhir.r4.model.StructureDefinition sd)
 			throws FHIRException, IOException {
-		StructureDefinition sdR5 = (StructureDefinition) VersionConvertorFactory_40_N.convertResource(sd);
-		try {
-			new ContextUtilities(this.getContext()).generateSnapshot(sdR5);
-		  } catch (Exception e) {
-			// not sure what to do in this case?
-			log.error("Unable to generate snapshot for "+sd.getUrl(), e);
+		final StructureDefinition snapshot = createSnapshot((StructureDefinition) VersionConvertorFactory_40_N.convertResource(sd));
+		if (snapshot == null) {
 			return null;
-		  }
-		return (org.hl7.fhir.r4.model.StructureDefinition) VersionConvertorFactory_40_N.convertResource(sdR5);
+		}
+		((org.hl7.fhir.r4.model.StructureDefinition) VersionConvertorFactory_40_N.convertResource(snapshot)).copyValues(sd);
+		return sd;
 	}
 
 	/**
-	 * creates the snapshot for the provided StructureDefinition
+	 * creates the snapshot for the provided StructureDefinition, in place
 	 *
 	 * @param sd StructureDefinition with differential
-	 * @return StructureDefinition with snapshot (differential applied to base
-	 *         definition)
+	 * @return the StructureDefinition sd with snapshot (differential applied to base
+	 *         definition), null if the snapshot couldn't be generated
 	 * @throws FHIRException FHIR Exception
 	 * @throws IOException   IO Exception
 	 */
-	public org.hl7.fhir.model.core.StructureDefinition createSnapshot(org.hl7.fhir.model.core.StructureDefinition sd)
+	public StructureDefinition createSnapshot(StructureDefinition sd)
 			throws FHIRException, IOException {
-		StructureDefinition sdR5 = sd;
 		try {
-			new ContextUtilities(this.getContext()).generateSnapshot(sdR5);
+			new ContextUtilities(this.getContext()).generateSnapshot(sd);
 		  } catch (Exception e) {
 			// not sure what to do in this case?
 			log.error("Unable to generate snapshot for "+sd.getUrl(), e);
@@ -1142,18 +1162,22 @@ public class MatchboxEngine extends ValidationEngine {
 	}
 
 	/**
-	 * creates the snapshot for the provided StructureDefinition (HAPI R5 model)
+	 * creates the snapshot for the provided StructureDefinition (HAPI R5 model), in place
 	 *
 	 * @param sd StructureDefinition with differential
-	 * @return StructureDefinition with snapshot (differential applied to base
-	 *         definition)
+	 * @return the StructureDefinition sd with snapshot (differential applied to base
+	 *         definition), null if the snapshot couldn't be generated
 	 * @throws FHIRException FHIR Exception
 	 * @throws IOException   IO Exception
 	 */
 	public org.hl7.fhir.r5.model.StructureDefinition createSnapshot(org.hl7.fhir.r5.model.StructureDefinition sd)
 			throws FHIRException, IOException {
 		final StructureDefinition snapshot = createSnapshot((StructureDefinition) R6Model.fromR5(sd));
-		return snapshot == null ? null : (org.hl7.fhir.r5.model.StructureDefinition) R6Model.toR5(snapshot);
+		if (snapshot == null) {
+			return null;
+		}
+		((org.hl7.fhir.r5.model.StructureDefinition) R6Model.toR5(snapshot)).copyValues(sd);
+		return sd;
 	}
 
 	/**
@@ -1355,7 +1379,8 @@ public class MatchboxEngine extends ValidationEngine {
 		final var resource = this.getContext().fetchResource(org.hl7.fhir.model.core.Resource.class, url,
 			org.hl7.fhir.model.core.VersionResolutionRules.defaultRule());
 		if (resource == null) {
-			return super.fetch(validator, appContext, url);
+			// not super.fetch(), it would look the URL up in the context again
+			return (this.getFetcher() != null) ? this.getFetcher().fetch(validator, appContext, url) : null;
 		}
 		if (this.fetchCacheSize <= 0) {
 			return new ObjectConverter(this.getContext()).convert(resource);
@@ -1469,18 +1494,39 @@ public class MatchboxEngine extends ValidationEngine {
 
 
 	/**
-	 * Initializes the terminology cache
-	 * @param cacheDir
+	 * Stores the terminology cache in a folder: the cached results are read from it, and the new ones written to it.
+	 * Without it, the terminology cache of the context is in memory only.
+	 *
+	 * @param cacheDir the folder of the terminology cache
 	 * @throws FileNotFoundException
 	 * @throws FHIRException
 	 * @throws IOException
 	 */
-    public void initTxCache(String cacheDir) throws FileNotFoundException, FHIRException, IOException {
-		if (cacheDir !=null) {
-			getContext().initTxCache(cacheDir);
-			getContext().setCachingAllowed(true);
+	public void useTxCacheFolder(final @NonNull String cacheDir) throws FileNotFoundException, FHIRException, IOException {
+		getContext().initTxCache(Objects.requireNonNull(cacheDir));
+		getContext().setCachingAllowed(true);
+	}
+
+	/**
+	 * Disables the terminology cache: the results of the terminology server aren't cached, neither in memory nor in a
+	 * folder.
+	 */
+	public void disableTxCache() {
+		getContext().setCachingAllowed(false);
+	}
+
+	/**
+	 * Stores the terminology cache in a folder, or disables it if the folder is null.
+	 *
+	 * @param cacheDir the folder of the terminology cache, null to disable it
+	 * @deprecated use {@link #useTxCacheFolder(String)} or {@link #disableTxCache()}
+	 */
+	@Deprecated
+	public void initTxCache(String cacheDir) throws FileNotFoundException, FHIRException, IOException {
+		if (cacheDir != null) {
+			useTxCacheFolder(cacheDir);
 		} else {
-			getContext().setCachingAllowed(false);
+			disableTxCache();
 		}
 	}
 

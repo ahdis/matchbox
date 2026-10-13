@@ -195,7 +195,7 @@ public class StructureMapTransformProvider extends StructureMapResourceProvider 
 						(StructureMap) this.parseResource(inputParameters.getParameter("map").getValueStringType().getValueNotNull());
 				} catch (final Exception e) {
 					final var tempEngine = this.matchboxEngineSupport.getMatchboxEngine(null, cliContext, true, false);
-					map = tempEngine.parseMapR5(inputParameters.getParameter("map").getValueStringType().getValueNotNull());
+					map = tempEngine.parseMapR6(inputParameters.getParameter("map").getValueStringType().getValueNotNull());
 				}
 				if (map == null) {
 					throw new InvalidRequestException("The parameter 'map' must be a StructureMap resource");

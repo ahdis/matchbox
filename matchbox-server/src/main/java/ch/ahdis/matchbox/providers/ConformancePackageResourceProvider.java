@@ -174,7 +174,7 @@ public class ConformancePackageResourceProvider<R4 extends MetadataResource, R4B
 				final int toIndex = Math.min(offset + count, totalSize);
 				final var paged = (offset < totalSize) ? resources.subList(offset, toIndex) : List.<org.hl7.fhir.model.core.Resource>of();
 
-				final SimpleBundleProvider bundleProvider = httpWrapper.makeBundleProviderFromN(paged);
+				final SimpleBundleProvider bundleProvider = httpWrapper.makeBundleProviderFromR6(paged);
 				bundleProvider.setSize(totalSize);
 				bundleProvider.setCurrentPageOffset(offset);
 				bundleProvider.setCurrentPageSize(count);

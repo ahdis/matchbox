@@ -330,7 +330,7 @@ public class GazelleValidationWs {
 			report.addValidationSubReport(unexpectedError(exception.getMessage()));
 			return ValidationOutcome.ok(updateReportFields(report));
 		}
-		final StructureDefinition structDef = engine.getStructureDefinitionR5(profileCanonical);
+		final StructureDefinition structDef = engine.getStructureDefinitionR6(profileCanonical);
 
 		// Response: update the validation method
 		method.setValidationProfileVersion(structDef.getVersion());
@@ -433,7 +433,7 @@ public class GazelleValidationWs {
 			log.error("Error while initializing the validation engine", e);
 			throw new MatchboxEngineCreationException("Error while initializing the validation engine: %s".formatted(e.getMessage()), e);
 		}
-		if (engine == null || engine.getStructureDefinitionR5(canonical) == null) {
+		if (engine == null || engine.getStructureDefinitionR6(canonical) == null) {
 			// A reload may have been started in the meantime: the profile is then not unknown, the engine is only not
 			// ready yet, and the same request may succeed later.
 			this.requireInitializedEngine();

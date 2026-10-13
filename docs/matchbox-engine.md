@@ -89,10 +89,13 @@ The engine API accepts and returns resources of the HAPI FHIR R4 model (`org.hl7
 uses the model of the validator, it is the versionless R6 model of org.hl7.fhir.core 7 (`org.hl7.fhir.model.core`,
 `org.hl7.fhir.model.fml` for `StructureMap`) since matchbox 5, instead of `org.hl7.fhir.r5.model`:
 
-- `getStructureDefinitionR5()` returns a `org.hl7.fhir.model.core.StructureDefinition` and `parseMapR5()` a
-  `org.hl7.fhir.model.fml.StructureMap` (the names are kept for compatibility)
-- `createSnapshot` and `addCanonicalResource` have overloads for the R6 model, the HAPI R4 model and the HAPI R5 model
-  (`org.hl7.fhir.r5.model`)
+- `getStructureDefinitionR6()` returns a `org.hl7.fhir.model.core.StructureDefinition` and `parseMapR6()` a
+  `org.hl7.fhir.model.fml.StructureMap`; `getStructureDefinitionR5()` and `parseMapR5()` still return the HAPI R5
+  model (`org.hl7.fhir.r5.model`)
+- `createSnapshot` and `addCanonicalResource` have overloads for the R6 model, the HAPI R4 model and the HAPI R5 model;
+  `createSnapshot` adds the snapshot to the StructureDefinition it is given, in all three models
+- `useTxCacheFolder(folder)` stores the terminology cache in a folder, `disableTxCache()` disables it (instead of
+  `initTxCache(folder)` and `initTxCache(null)`, which are deprecated)
 - `transform(...)` with the element model works with `org.hl7.fhir.services.elementmodel.Element`
 - `validate(FhirFormat, InputStream, String)` returns the `ValidationMessage`s of the validator
 

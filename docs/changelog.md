@@ -33,9 +33,18 @@
   7.0.1 were dropped (#538 copy of the master definitions and packages, #609, #618 memory-only terminology cache, the
   `name[x]` and xhtml handling of `Element.setProperty`). The API of `MatchboxEngine` uses the R6 model
   (`org.hl7.fhir.model.core`, `StructureMap` is `org.hl7.fhir.model.fml.StructureMap`), with overloads for the HAPI R5
-  model (`addCanonicalResource`, `createSnapshot`) and `R6Model` to convert between them. HAPI FHIR is still built
+  model (`addCanonicalResource`, `createSnapshot`) and `R6Model` to convert between them. `parseMapR6` and
+  `getStructureDefinitionR6` return the R6 model, `parseMapR5` and `getStructureDefinitionR5` still the HAPI R5
+  model. `createSnapshot` adds the snapshot to the StructureDefinition it is given for the HAPI R4 and R5 models too
+  (it returned a new instance). `useTxCacheFolder(folder)` and `disableTxCache()` replace `initTxCache(folder)`,
+  which is deprecated: the terminology cache of a context is in memory before. HAPI FHIR is still built
   with org.hl7.fhir.core 6: matchbox overrides `HapiWorkerContext` (DSTU3, R4, R4B, R5) and
   `WorkerContextValidationSupportAdapter`, because `ILoggingService` moved to `org.hl7.fhir.utilities.logging`
+- A `MatchboxEngine` created from another one shared its suppressed warning/information patterns with it: the engine
+  for an IG cleared and replaced the suppressed warnings of all engines (`matchbox.fhir.context.suppressWarnInfo`), it
+  now has its own copy. Creating the engine for an IG also cleared the suppressed errors of the main engine
+  (`matchbox.fhir.context.suppressError`)
+- `HttpRequestWrapper` converts the resources of a search result without a parallel stream (ForkJoinPool overhead)
 
 2026/10/05 Release 4.1.21
 
