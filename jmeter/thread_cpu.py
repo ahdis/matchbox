@@ -24,12 +24,12 @@ def dump(path):
 
 
 def group(name):
-    name = re.sub(r'\d+', 'N', name)
+    # match the prefixes before the digits are removed, 'G1 ' would be 'GN ' afterwards
     if name.startswith('GC Thread') or name.startswith('G1 '):
         return 'GC (G1 workers, conc, refine)'
     if name.startswith('C2 CompilerThread') or name.startswith('C1 CompilerThread'):
         return 'JIT compiler'
-    return name
+    return re.sub(r'\d+', 'N', name)
 
 
 def main():

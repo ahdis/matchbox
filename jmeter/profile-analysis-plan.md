@@ -160,7 +160,7 @@ In the order we'd look at them; each with what would show it.
 7. **Allocation and GC**: a higher allocation rate (e.g. `BaseList`, immutable child lists, `ValidationInformation`)
    shows as more GC time with the same heap, without a single hot method. Compare allocation by class and GC
    totals. Live heap is 3% higher after the test (684 vs 663 MiB).
-8. **matchbox's own changes on the branch**: `R6Model` conversions, `makeBundleProviderFromN` and the ported
+8. **matchbox's own changes on the branch**: `R6Model` conversions, `makeBundleProviderFromR6` and the ported
    providers aren't on the `$validate` path, but `MatchboxEngineSupport.getMatchboxEngine` is (step 1, part 2). Hot
    `ch.ahdis` frames that don't exist in the pr636 profile point here.
 

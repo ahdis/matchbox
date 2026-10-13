@@ -264,14 +264,12 @@ public class MatchboxEngineSupport {
 		}
 		log.debug("Package Summary: {}", validator.getContext().loadedPackageSummary());
 
-		// The new validation engine inherits the `suppressedWarnInfoPatterns`/`suppressedErrorPatterns` from the main
-		// engine, which could be everything from the application.yaml (if all packages were loaded).
-		// We clear them here, they'll be set again in the configureValidationEngine method.
+		// The new validation engine inherits a copy of the `suppressedWarnInfoPatterns` from the main engine, which
+		// could be everything from the application.yaml (if all packages were loaded).
+		// We clear them here, they'll be set again in the configureValidationEngine method. The suppressed errors are
+		// in the policy advisor, which the new engine shares with the main engine until configureValidationEngine
+		// replaces it: they must not be cleared here.
 		validator.getSuppressedWarnInfoPatterns().clear();
-		final var advisor = validator.getMatchboxValidationPolicyAdvisor();
-		if (advisor != null) {
-			advisor.clearErrorMessagesToIgnore();
-		}
 
 		this.configureValidationEngine(validator, cliContext);
 		log.debug("Finished creating new validate engine for {} with parameters {}", forIg, cliContext.sessionId());
@@ -748,7 +746,11 @@ public class MatchboxEngineSupport {
 				throw new TerminologyServerException("Error while setting the terminology server: " + e.getMessage(), e);
 			}
 			try {
-				validator.initTxCache(cli.getTxServerCache() ? getTxCachePath(cli.getTxServer()) : null);
+				if (cli.getTxServerCache()) {
+					validator.useTxCacheFolder(getTxCachePath(cli.getTxServer()));
+				} else {
+					validator.disableTxCache();
+				}
 			} catch (final Exception e) {
 				throw new TerminologyServerException("Error while setting the terminology server cache: " + getTxCachePath(cli.getTxServer()), e);
 			}

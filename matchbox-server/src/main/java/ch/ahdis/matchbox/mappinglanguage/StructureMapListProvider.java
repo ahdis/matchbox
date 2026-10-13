@@ -5,14 +5,14 @@ import ca.uhn.fhir.jpa.model.entity.NpmPackageVersionResourceEntity;
 import ca.uhn.fhir.rest.annotation.Operation;
 import ca.uhn.fhir.rest.api.server.RequestDetails;
 import ch.ahdis.matchbox.CliContext;
-import ch.ahdis.matchbox.engine.R6Model;
 import ch.ahdis.matchbox.config.MatchboxFhirVersion;
 import ch.ahdis.matchbox.config.property.MatchboxFhirContextProperties;
 import ch.ahdis.matchbox.providers.AbstractMatchboxResourceProvider;
 import ch.ahdis.matchbox.util.MatchboxEngineSupport;
 import org.hl7.fhir.instance.model.api.IBaseResource;
-import org.hl7.fhir.r5.model.Bundle;
-import org.hl7.fhir.r5.model.StructureMap;
+import org.hl7.fhir.model.Base;
+import org.hl7.fhir.model.core.Bundle;
+import org.hl7.fhir.model.fml.StructureMap;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.support.TransactionTemplate;
 
@@ -40,7 +40,7 @@ public class StructureMapListProvider extends AbstractMatchboxResourceProvider {
 											  final MatchboxFhirVersion matchboxFhirVersion,
 											  final CliContext cliContext,
 											  final MatchboxFhirContextProperties matchboxContext) {
-		super(matchboxFhirVersion, org.hl7.fhir.r4.model.StructureMap.class, org.hl7.fhir.r4b.model.StructureMap.class, StructureMap.class);
+		super(matchboxFhirVersion, org.hl7.fhir.r4.model.StructureMap.class, org.hl7.fhir.r4b.model.StructureMap.class, org.hl7.fhir.r5.model.StructureMap.class);
 		this.npmPackageVersionResourceDao = matchboxEngineSupport.getMyPackageVersionResourceDao();
 		this.myTxManager = matchboxEngineSupport.getMyTxManager();
 		this.cliContext = cliContext;
@@ -74,8 +74,9 @@ public class StructureMapListProvider extends AbstractMatchboxResourceProvider {
 
 	private List<StructureMap> listStructureMapsFromMainEngine() {
 		final var mainEngine = this.matchboxEngineSupport.getMatchboxEngine("default", cliContext, true, false);
-		return mainEngine.getContext().fetchResourcesByType(org.hl7.fhir.model.fml.StructureMap.class).stream()
-			.map(map -> (StructureMap) R6Model.toR5(map))
+		// copies: the bundle entry sets its model context on the resource, the ones of the context must not change
+		return mainEngine.getContext().fetchResourcesByType(StructureMap.class).stream()
+			.map(map -> map.copy(Base.COPY_NOTHING))
 			.collect(Collectors.toList());
 	}
 

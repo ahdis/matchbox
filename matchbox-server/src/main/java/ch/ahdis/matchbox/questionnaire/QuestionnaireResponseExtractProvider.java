@@ -159,7 +159,7 @@ public class QuestionnaireResponseExtractProvider {
 			final var cliContext = new CliContext(this.matchboxEngineSupport.getClientContext());
 			cliContext.setFhirVersion(FhirVersionEnum.R5.getFhirVersionString());
 			final var tempEngine = this.matchboxEngineSupport.getMatchboxEngine(null, cliContext, true, false);
-			return (StructureMap) R6Model.toR5(tempEngine.parseMapR5(fml));
+			return tempEngine.parseMapR5(fml);
 		} catch (final Exception e) {
 			throw new InvalidRequestException("Unable to parse the FML language", e);
 		}
