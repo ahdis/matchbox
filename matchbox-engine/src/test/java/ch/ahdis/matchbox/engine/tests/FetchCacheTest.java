@@ -185,12 +185,12 @@ class FetchCacheTest {
 	@Test
 	void testTheCacheIsLimited() throws Exception {
 		final MatchboxEngine limited = new MatchboxEngine(this.engine);
-		assertEquals(MatchboxEngine.DEFAULT_FETCH_CACHE_SIZE, limited.getFetchCacheSize());
+		assertEquals(MatchboxEngine.DEFAULT_FETCH_CACHE_SIZE, limited.getFetchCacheMaxSize());
 		assertTrue(limited.getFetchCacheUrls().isEmpty(), "a copy of an engine doesn't share the converted resources");
 
 		final String third = "http://example.org/fhir/CodeSystem/fetch-test-third";
 		limited.addCanonicalResource(this.codeSystem(third, 2));
-		limited.setFetchCacheSize(2);
+		limited.setFetchCacheMaxSize(2);
 		final String expected = this.compose(limited.fetch(null, null, URL));
 		limited.fetch(null, null, TEST_URL);
 		limited.fetch(null, null, URL);
@@ -198,15 +198,15 @@ class FetchCacheTest {
 		limited.fetch(null, null, third);
 		assertEquals(List.of(URL, third), limited.getFetchCacheUrls());
 
-		limited.setFetchCacheSize(1);
+		limited.setFetchCacheMaxSize(1);
 		assertEquals(List.of(third), limited.getFetchCacheUrls());
 
-		limited.setFetchCacheSize(0);
+		limited.setFetchCacheMaxSize(0);
 		assertTrue(limited.getFetchCacheUrls().isEmpty());
 		assertEquals(expected, this.compose(limited.fetch(null, null, URL)));
 		assertTrue(limited.getFetchCacheUrls().isEmpty());
 
-		limited.setFetchCacheSize(2);
+		limited.setFetchCacheMaxSize(2);
 		limited.fetch(null, null, URL);
 		limited.clearFetchCache();
 		assertTrue(limited.getFetchCacheUrls().isEmpty());
