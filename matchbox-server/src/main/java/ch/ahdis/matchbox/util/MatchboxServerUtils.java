@@ -11,7 +11,6 @@ import ca.uhn.fhir.util.BinaryUtil;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hl7.fhir.instance.model.api.IBaseBinary;
 import org.hl7.fhir.r5.model.Element;
-import org.hl7.fhir.r5.model.Extension;
 import org.hl7.fhir.r5.model.PrimitiveType;
 
 import java.io.IOException;
