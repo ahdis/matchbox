@@ -7,6 +7,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.util.Collection;
 import java.util.List;
 
 /**
@@ -28,13 +29,13 @@ public interface MbInstalledStructureDefinitionRepository
   @Query("SELECT e FROM MbInstalledStructureDefinitionEntity e WHERE e.docCompTypeCode = ca.uhn.fhir.jpa.model.entity.MbInstalledStructureDefinitionEntity.DOC_BUNDLE_NEEDS_PROCESSING")
   List<MbInstalledStructureDefinitionEntity> findAllForDocumentBundleProcessing();
   
-  @Query("SELECT e FROM MbInstalledStructureDefinitionEntity e WHERE e.docCompTypeCode = :typeCode AND (" +
+  @Query("SELECT e FROM MbInstalledStructureDefinitionEntity e WHERE e.docCompTypeCode IN (:typeCodes) AND (" +
     "e.docCompCatCode = :categoryCode OR e.docCompCatCode IS NULL)")
-  List<MbInstalledStructureDefinitionEntity> findAllByDocumentTypeAndCategory(@Param("typeCode") String typeCode,
-                                                                              @Param("categoryCode") String categoryCode);
-  
-  @Query("SELECT e FROM MbInstalledStructureDefinitionEntity e WHERE e.docCompTypeCode = :typeCode AND e.docCompCatCode IS NULL")
-  List<MbInstalledStructureDefinitionEntity> findAllByDocumentTypeWithoutCategory(@Param("typeCode") String typeCode);
+  List<MbInstalledStructureDefinitionEntity> findAllByDocumentTypesAndCategory(@Param("typeCodes") Collection<String> typeCodes,
+                                                                               @Param("categoryCode") String categoryCode);
+
+  @Query("SELECT e FROM MbInstalledStructureDefinitionEntity e WHERE e.docCompTypeCode IN (:typeCodes) AND e.docCompCatCode IS NULL")
+  List<MbInstalledStructureDefinitionEntity> findAllByDocumentTypesWithoutCategory(@Param("typeCodes") Collection<String> typeCodes);
   
   @Query("SELECT e FROM MbInstalledStructureDefinitionEntity e WHERE e.docCompTypeCode IS NOT NULL OR e.docCompCatCode IS NOT NULL")
   List<MbInstalledStructureDefinitionEntity> findAllRecognizableDocuments();

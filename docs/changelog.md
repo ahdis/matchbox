@@ -45,6 +45,8 @@
   now has its own copy. Creating the engine for an IG also cleared the suppressed errors of the main engine
   (`matchbox.fhir.context.suppressError`)
 - `HttpRequestWrapper` converts the resources of a search result without a parallel stream (ForkJoinPool overhead)
+- `Bundle/$get-profiles` (and the MCP tool `get-profiles-for-document-bundle`) matches the profiles of a document
+  with any of the type codings of its Composition, not only the first one
 
 2026/10/05 Release 4.1.21
 

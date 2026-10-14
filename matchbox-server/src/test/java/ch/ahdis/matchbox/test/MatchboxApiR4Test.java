@@ -694,6 +694,25 @@ class MatchboxApiR4Test {
 	}
 
 	@Test
+	void testBundleGetProfilesMatchesAnyTypeCoding() throws Exception {
+		final var documentJson = getContent("ch-vacd-document-immunization-administration.json");
+		final var document = FHIR_CONTEXT.newJsonParser().parseResource(Bundle.class, documentJson);
+		// The type coding fixed by the profile (SNOMED CT 41000179103) isn't the first one anymore
+		final var composition = (Composition) document.getEntryFirstRep().getResource();
+		composition.getType().getCoding().addFirst(new Coding("http://loinc.org", "11369-6", "History of Immunization"));
+		final var response = this.validationClient.operation()
+			.onType("Bundle")
+			.named("$get-profiles")
+			.withParameter(Parameters.class, "resource", document)
+			.returnResourceType(Parameters.class)
+			.execute();
+		assertTrue(response.getParameter().stream()
+			           .filter(parameter -> "profile".equals(parameter.getName()))
+			           .anyMatch(parameter -> "http://matchbox.health/ig/test/r4/StructureDefinition/document-bundle"
+				           .equals(parameter.getValue().primitiveValue())));
+	}
+
+	@Test
 	void testBundleGetProfilesDoesntMatch() throws Exception {
 		final var documentXml = getContent("Bundle-51Doc-Gelbfieber.xml");
 		final var document = FHIR_CONTEXT.newXmlParser().parseResource(Bundle.class, documentXml);
