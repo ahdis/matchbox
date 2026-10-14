@@ -35,7 +35,7 @@ import ch.ahdis.matchbox.engine.MatchboxEngine;
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class Issue608Test {
 
-	private static final String TEST_IG = "/matchbox.health.test.ig.r4-0.3.0.tgz";
+	private static final String TEST_IG = "/matchbox.health.test.ig.r4-0.3.1.tgz";
 	private static final String IG_PROFILE_ID = "practitioner-identifier-required";
 	private static final String IG_PROFILE_URL = "http://matchbox.health/ig/test/r4/StructureDefinition/" + IG_PROFILE_ID;
 	// The OID of http://hl7.org/fhir/administrative-gender, known by the main engine

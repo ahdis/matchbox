@@ -323,7 +323,7 @@ a real IG, so they don't depend on the content of external packages:
 - **Source**: https://github.com/ahdis/matchbox-test-ig (usually checked out next to this repository, as
   `../matchbox-test-ig`), FSH/SUSHI + IG Publisher, canonical `http://matchbox.health/ig/test/r4`, FHIR 4.0.1,
   depends on `hl7.fhir.uv.xver-r5.r4#0.1.0`
-- **Package**: `matchbox.health.test.ig.r4-0.3.0.tgz` (the `output/package.tgz` of the IG Publisher build), copied to
+- **Package**: `matchbox.health.test.ig.r4-0.3.1.tgz` (the `output/package.tgz` of the IG Publisher build), copied to
   - `matchbox-server/src/test/resources/`: loaded in `application-test-r4.yaml` (`classpath:/…`), used by
     `MatchboxApiR4Test`, `GazelleApiR4Test`, `MbInstalledStructureDefinitionIsCurrentTest`
   - `matchbox-engine/src/test/resources/`: loaded with `MatchboxEngine.loadPackage(InputStream)`, see `Issue608Test`

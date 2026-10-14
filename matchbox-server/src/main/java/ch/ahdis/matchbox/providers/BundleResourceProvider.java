@@ -22,8 +22,6 @@ import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.*;
 
-import static ch.ahdis.matchbox.packages.documents.DocumentCompositionCodesExtractor.serializeCoding;
-
 public class BundleResourceProvider extends AbstractMatchboxResourceProvider {
 
 	private final MbInstalledStructureDefinitionRepository installedStructureDefinitionRepository;
@@ -134,13 +132,19 @@ public class BundleResourceProvider extends AbstractMatchboxResourceProvider {
 		if (typeCodes.isEmpty()) {
 			return null;
 		}
-		final var categoryCoding = composition.getCategoryFirstRep().getCodingFirstRep();
-		final var categoryCode = serializeCoding(categoryCoding);
+		// A profile fixes at most one category coding: without one, it matches any categories (or none), otherwise the
+		// Composition matches it if any of the codings of its categories is that one
+		final var categoryCodes = composition.getCategory().stream()
+			.flatMap(category -> category.getCoding().stream())
+			.map(DocumentCompositionCodesExtractor::serializeCoding)
+			.filter(Objects::nonNull)
+			.collect(Collectors.toUnmodifiableSet());
 		final List<MbInstalledStructureDefinitionEntity> entities;
-		if (categoryCode != null) {
-			entities = this.installedStructureDefinitionRepository.findAllByDocumentTypesAndCategory(typeCodes, categoryCode);
-		} else {
+		if (categoryCodes.isEmpty()) {
 			entities = this.installedStructureDefinitionRepository.findAllByDocumentTypesWithoutCategory(typeCodes);
+		} else {
+			entities = this.installedStructureDefinitionRepository.findAllByDocumentTypesAndCategories(typeCodes,
+			                                                                                           categoryCodes);
 		}
 
 		return new BundleAnalysis(

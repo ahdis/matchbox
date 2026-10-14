@@ -25,14 +25,17 @@ public interface MbInstalledStructureDefinitionRepository
   
   @Query("SELECT e FROM MbInstalledStructureDefinitionEntity e WHERE e.canonicalUrl = :canonical")
   List<MbInstalledStructureDefinitionEntity> findAllByCanonical(@Param("canonical") String canonical);
+
+  @Query("SELECT e FROM MbInstalledStructureDefinitionEntity e WHERE e.canonicalUrl IN (:canonicals)")
+  List<MbInstalledStructureDefinitionEntity> findAllByCanonicals(@Param("canonicals") Collection<String> canonicals);
   
   @Query("SELECT e FROM MbInstalledStructureDefinitionEntity e WHERE e.docCompTypeCode = ca.uhn.fhir.jpa.model.entity.MbInstalledStructureDefinitionEntity.DOC_BUNDLE_NEEDS_PROCESSING")
   List<MbInstalledStructureDefinitionEntity> findAllForDocumentBundleProcessing();
   
   @Query("SELECT e FROM MbInstalledStructureDefinitionEntity e WHERE e.docCompTypeCode IN (:typeCodes) AND (" +
-    "e.docCompCatCode = :categoryCode OR e.docCompCatCode IS NULL)")
-  List<MbInstalledStructureDefinitionEntity> findAllByDocumentTypesAndCategory(@Param("typeCodes") Collection<String> typeCodes,
-                                                                               @Param("categoryCode") String categoryCode);
+    "e.docCompCatCode IN (:categoryCodes) OR e.docCompCatCode IS NULL)")
+  List<MbInstalledStructureDefinitionEntity> findAllByDocumentTypesAndCategories(@Param("typeCodes") Collection<String> typeCodes,
+                                                                                 @Param("categoryCodes") Collection<String> categoryCodes);
 
   @Query("SELECT e FROM MbInstalledStructureDefinitionEntity e WHERE e.docCompTypeCode IN (:typeCodes) AND e.docCompCatCode IS NULL")
   List<MbInstalledStructureDefinitionEntity> findAllByDocumentTypesWithoutCategory(@Param("typeCodes") Collection<String> typeCodes);

@@ -46,7 +46,10 @@
   (`matchbox.fhir.context.suppressError`)
 - `HttpRequestWrapper` converts the resources of a search result without a parallel stream (ForkJoinPool overhead)
 - `Bundle/$get-profiles` (and the MCP tool `get-profiles-for-document-bundle`) matches the profiles of a document
-  with any of the type codings of its Composition, not only the first one
+  with any of the type codings of its Composition, not only the first one, and with any of the codings of its
+  categories (a profile without a fixed category matches any categories, or none). A fixed category is only used
+  if it's mandatory (`Composition.category` and, for a fixed Coding, `Composition.category.coding` with a minimum
+  of 1): a profile with an optional fixed category also matches documents without a category
 
 2026/10/05 Release 4.1.21
 
