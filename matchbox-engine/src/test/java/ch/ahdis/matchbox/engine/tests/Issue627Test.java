@@ -29,7 +29,7 @@ import ch.ahdis.matchbox.engine.MatchboxEngine;
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class Issue627Test {
 
-	private static final String TEST_IG = "/matchbox.health.test.ig.r4-0.3.0.tgz";
+	private static final String TEST_IG = "/matchbox.health.test.ig.r4-0.3.1.tgz";
 	private static final String UCUM = "http://unitsofmeasure.org";
 
 	private final MatchboxEngine main;
