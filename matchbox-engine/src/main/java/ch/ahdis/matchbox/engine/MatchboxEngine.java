@@ -47,7 +47,6 @@ import org.hl7.fhir.instance.model.api.IBaseResource;
 import org.hl7.fhir.r4.model.OperationOutcome;
 import org.hl7.fhir.r4.model.Resource;
 import org.hl7.fhir.services.context.ContextUtilities;
-import org.hl7.fhir.services.context.IWorkerContext;
 import org.hl7.fhir.standalone.context.SimpleWorkerContext;
 import org.hl7.fhir.standalone.context.SimpleWorkerContext.SimpleWorkerContextBuilder;
 import org.hl7.fhir.services.elementmodel.Element;
@@ -55,7 +54,6 @@ import org.hl7.fhir.services.elementmodel.Manager;
 import org.hl7.fhir.services.elementmodel.ObjectConverter;
 import org.hl7.fhir.model.utilities.formats.FhirFormat;
 import org.hl7.fhir.services.fhirpath.FHIRPathEngine;
-import org.hl7.fhir.model.utilities.formats.IParser;
 import org.hl7.fhir.model.utilities.formats.OutputStyle;
 import org.hl7.fhir.model.Base;
 import org.hl7.fhir.model.core.Narrative.NarrativeStatus;
@@ -140,7 +138,7 @@ public class MatchboxEngine extends ValidationEngine {
 	/**
 	 * The number of resources that {@link #fetch} keeps converted, 0 to keep none.
 	 */
-	private volatile int fetchCacheSize = DEFAULT_FETCH_CACHE_SIZE;
+	private volatile int fetchCacheMaxSize = DEFAULT_FETCH_CACHE_SIZE;
 
 	/**
 	 * The resources that {@link #fetch} converted, by URL, least recently used first. Guarded by itself.
@@ -148,7 +146,7 @@ public class MatchboxEngine extends ValidationEngine {
 	private final LinkedHashMap<String, FetchedElement> fetchedElements = new LinkedHashMap<>(16, 0.75f, true) {
 		@Override
 		protected boolean removeEldestEntry(final Map.Entry<String, FetchedElement> eldest) {
-			return this.size() > fetchCacheSize;
+			return this.size() > fetchCacheMaxSize;
 		}
 	};
 
@@ -220,7 +218,7 @@ public class MatchboxEngine extends ValidationEngine {
 				MatchboxEngine otherMatchboxEngine = (MatchboxEngine) other;
 				this.sessionCache = otherMatchboxEngine.sessionCache;
 				this.suppressedWarnInfoPatterns = new HashSet<>(otherMatchboxEngine.suppressedWarnInfoPatterns);
-				this.fetchCacheSize = otherMatchboxEngine.fetchCacheSize; // the converted resources aren't shared
+				this.fetchCacheMaxSize = otherMatchboxEngine.fetchCacheMaxSize; // the converted resources aren't shared
 		}
 		// Create a new IgLoader, otherwise the context is desynchronized between the loader and the engine
 		this.setIgLoader(new IgLoader(this.getPcm(), this.getContext(), this.getVersion(), this.isDebug()));
@@ -1362,7 +1360,7 @@ public class MatchboxEngine extends ValidationEngine {
 	 * {@link ValidationEngine#fetch} converts the resource of the context to the element model on every call (it
 	 * composes the resource to JSON and parses it). With ch-elm, whose invariants resolve ConceptMaps of up to 220 KB,
 	 * that is 14 conversions and about 45% of the CPU time of a validation. The patched InstanceValidator calls fetch()
-	 * once per URL and validation; the {@link #setFetchCacheSize(int) last used} converted resources are also kept
+	 * once per URL and validation; the {@link #setFetchCacheMaxSize(int) last used} converted resources are also kept
 	 * per engine, across validations. Each call gets a copy, so the validator can decorate it (parents, slices,
 	 * messages).
 	 * <p>
@@ -1382,7 +1380,7 @@ public class MatchboxEngine extends ValidationEngine {
 			// not super.fetch(), it would look the URL up in the context again
 			return (this.getFetcher() != null) ? this.getFetcher().fetch(validator, appContext, url) : null;
 		}
-		if (this.fetchCacheSize <= 0) {
+		if (this.fetchCacheMaxSize <= 0) {
 			return new ObjectConverter(this.getContext()).convert(resource);
 		}
 		Element element;
@@ -1413,19 +1411,19 @@ public class MatchboxEngine extends ValidationEngine {
 	 * Sets the number of resources that {@link #fetch} keeps converted to the element model (least recently used
 	 * are dropped first), 0 to keep none. The default is {@link #DEFAULT_FETCH_CACHE_SIZE}.
 	 */
-	public void setFetchCacheSize(final int fetchCacheSize) {
+	public void setFetchCacheMaxSize(final int fetchCacheSize) {
 		synchronized (this.fetchedElements) {
-			this.fetchCacheSize = Math.max(0, fetchCacheSize);
+			this.fetchCacheMaxSize = Math.max(0, fetchCacheSize);
 			final var iterator = this.fetchedElements.entrySet().iterator();
-			while (this.fetchedElements.size() > this.fetchCacheSize && iterator.hasNext()) {
+			while (this.fetchedElements.size() > this.fetchCacheMaxSize && iterator.hasNext()) {
 				iterator.next();
 				iterator.remove();
 			}
 		}
 	}
 
-	public int getFetchCacheSize() {
-		return this.fetchCacheSize;
+	public int getFetchCacheMaxSize() {
+		return this.fetchCacheMaxSize;
 	}
 
 	/**
@@ -1434,6 +1432,12 @@ public class MatchboxEngine extends ValidationEngine {
 	public List<String> getFetchCacheUrls() {
 		synchronized (this.fetchedElements) {
 			return List.copyOf(this.fetchedElements.keySet());
+		}
+	}
+
+	public int getFetchCacheSize() {
+		synchronized (this.fetchedElements) {
+			return this.fetchedElements.size();
 		}
 	}
 
