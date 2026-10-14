@@ -119,7 +119,7 @@ public class ValidationProvider {
 	/**
 	 * The langchain4j {@link ChatModelListener} beans (e.g. Micrometer/Observation listeners registered in
 	 * {@link ch.ahdis.matchbox.config.MatchboxMetricsConfig}) to attach to the AI chat model built by
-	 * {@link LLMConnector}, so that gen_ai.* metrics are actually recorded.
+	 * {@link LlmConnector}, so that gen_ai.* metrics are actually recorded.
 	 */
 	@Autowired(required = false)
 	private List<ChatModelListener> chatModelListeners = List.of();

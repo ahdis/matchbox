@@ -67,7 +67,7 @@ import org.hl7.fhir.model.core.StructureDefinition;
 import org.hl7.fhir.model.fml.StructureMap;
 import org.springframework.beans.factory.annotation.Value;
 
-import javax.annotation.Nullable;
+import jakarta.annotation.Nullable;
 
 /**
  * StructureMapTransformProvider
@@ -76,14 +76,14 @@ public class StructureMapTransformProvider extends StructureMapResourceProvider 
 
 	protected final MatchboxEngineSupport matchboxEngineSupport;
 	private final FhirContext fhirContext;
-	private final Optional<MatchboxMetrics> matchboxMetrics;
+	private final @Nullable MatchboxMetrics matchboxMetrics;
 
 	public StructureMapTransformProvider(@Value("${hapi.fhir.fhir_version}") final FhirVersionEnum serverFhirVersion,
 													 final MatchboxEngineSupport matchboxEngineSupport,
 													 final Optional<MatchboxMetrics> matchboxMetrics) {
 		this.matchboxEngineSupport = matchboxEngineSupport;
 		this.fhirContext = FhirContext.forCached(serverFhirVersion);
-		this.matchboxMetrics = matchboxMetrics;
+		this.matchboxMetrics = matchboxMetrics.orElse(null);
 	}
 
 	@Override
@@ -111,7 +111,9 @@ public class StructureMapTransformProvider extends StructureMapResourceProvider 
 	@Operation(name = "$transform", type = org.hl7.fhir.r5.model.StructureMap.class, manualResponse = true, manualRequest = true)
 	public void manualInputAndOutput(final HttpServletRequest theServletRequest,
 												final HttpServletResponse theServletResponse) throws IOException {
-		this.matchboxMetrics.ifPresent(MatchboxMetrics::addTransformation);
+		if (this.matchboxMetrics != null) {
+			this.matchboxMetrics.addTransformation();
+		}
 		// Parse the request body, it is either a Parameters resource, or any resource
 		final String body = new String(theServletRequest.getInputStream().readAllBytes()).trim();
 		@Nullable String resource = null;
