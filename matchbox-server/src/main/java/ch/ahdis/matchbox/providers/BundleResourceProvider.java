@@ -6,6 +6,7 @@ import ca.uhn.fhir.jpa.model.entity.MbInstalledStructureDefinitionEntity;
 import ca.uhn.fhir.rest.annotation.Operation;
 import ca.uhn.fhir.rest.server.exceptions.InvalidRequestException;
 import ch.ahdis.matchbox.config.MatchboxFhirVersion;
+import ch.ahdis.matchbox.packages.documents.DocumentCompositionCodesExtractor;
 import ch.ahdis.matchbox.util.http.HttpRequestWrapper;
 import jakarta.annotation.Nullable;
 import jakarta.servlet.http.HttpServletRequest;
@@ -16,8 +17,10 @@ import org.springframework.beans.factory.annotation.Value;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.stream.*;
 
 import static ch.ahdis.matchbox.packages.documents.DocumentCompositionCodesExtractor.serializeCoding;
 
@@ -123,18 +126,21 @@ public class BundleResourceProvider extends AbstractMatchboxResourceProvider {
 		if (composition == null) {
 			return null;
 		}
-		final var typeCoding = composition.getType().getCodingFirstRep();
-		final var categoryCoding = composition.getCategoryFirstRep().getCodingFirstRep();
-		final var typeCode = serializeCoding(typeCoding);
-		if (typeCode == null) {
+		// A profile fixes one type coding, the Composition matches it if any of its type codings is that one
+		final var typeCodes = composition.getType().getCoding().stream()
+			.map(DocumentCompositionCodesExtractor::serializeCoding)
+			.filter(Objects::nonNull)
+			.collect(Collectors.toUnmodifiableSet());
+		if (typeCodes.isEmpty()) {
 			return null;
 		}
+		final var categoryCoding = composition.getCategoryFirstRep().getCodingFirstRep();
 		final var categoryCode = serializeCoding(categoryCoding);
 		final List<MbInstalledStructureDefinitionEntity> entities;
 		if (categoryCode != null) {
-			entities = this.installedStructureDefinitionRepository.findAllByDocumentTypeAndCategory(typeCode, categoryCode);
+			entities = this.installedStructureDefinitionRepository.findAllByDocumentTypesAndCategory(typeCodes, categoryCode);
 		} else {
-			entities = this.installedStructureDefinitionRepository.findAllByDocumentTypeWithoutCategory(typeCode);
+			entities = this.installedStructureDefinitionRepository.findAllByDocumentTypesWithoutCategory(typeCodes);
 		}
 
 		return new BundleAnalysis(
