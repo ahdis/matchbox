@@ -73,8 +73,58 @@ hapi:
         url: https://build.fhir.org/ig/ahdis/ch-elm/package.tgz
 ```
 
+See [_Providing implementation guides_](#implementationguides) below for where the packages can come from, e.g. from
+a local file.
+
 Some more configuration parameters used by validation are described in the
 [Validation](validation.md#configuration-parameters) page.
+
+### Providing implementation guides {: #implementationguides}
+
+The implementation guides listed in `hapi.fhir.implementationguides` are installed into the database when the server
+starts. The `url` of each entry says where the package (the `package.tgz` of an IG) comes from:
+
+| `url`                   | Example                                             | Package is loaded from                                         |
+|-------------------------|-----------------------------------------------------|----------------------------------------------------------------|
+| _(none)_                |                                                     | the FHIR package servers (packages.fhir.org), by name/version  |
+| `https://` or `http://` | `https://build.fhir.org/ig/ahdis/ch-elm/package.tgz` | the given address                                              |
+| `file:`                 | `file:/packages/ch.fhir.ig.ch-elm.tgz`              | the filesystem of the server (or of the container)             |
+| `classpath:`            | `classpath:/hl7.fhir.r4.core.tgz`                   | the classpath of Matchbox (packages built into `matchbox.jar`) |
+
+Use a `file:` URL for a package that isn't published (e.g. the `output/package.tgz` of your own IG Publisher build), or
+when the server has no internet access:
+
+```yaml
+hapi:
+  fhir:
+    implementationguides:
+      my-ig:
+        name: example.fhir.ig.my-ig
+        version: 0.1.0
+        url: file:/Users/me/github/my-ig/output/package.tgz
+```
+
+- The path must be **absolute** (`file:/path/package.tgz` or `file:///path/package.tgz`), a relative path isn't
+  supported.
+- `name` and `version` must be the `name` and `version` of the `package.json` in the package.
+- The file must exist and be readable when the server starts. When running in Docker, the path is the path inside the
+  container, so mount the directory with the packages as a volume, see
+  [Docker](docker.md#packages-from-files).
+- A package is installed only once: if the database already contains a package with the same name and version, the
+  file isn't read again, even if its content has changed. When you rebuild your IG without changing its version,
+  delete the database (by default the H2 database in `./database`) or raise the version, so that the new content is
+  installed. (Packages with an `http` URL on `localhost` or `build.fhir.org` are the exception, they are installed
+  again at every start.)
+- The **dependencies** of the package (from its `package.json`) are installed too. Matchbox takes them from the
+  database if they are already installed there, otherwise it downloads them from the FHIR package servers. To start
+  without internet access, also list the dependencies in `hapi.fhir.implementationguides` (e.g. as `file:` URLs),
+  before the IG that depends on them. `hl7.fhir.r4.core` and the versions of `hl7.terminology`,
+  `hl7.fhir.uv.extensions` and the cross-version extension packages bundled with Matchbox (see `MatchboxEngine`) are not
+  downloaded.
+
+To install the packages without a server restart, see
+[_Installing an NPM package through the operation $install-npm-package_](#install-npm-package). To ship them in a
+docker image, see [_Configure an own docker image with preinstalled packages_](docker.md#own-image).
 
 ### Maximum request size
 

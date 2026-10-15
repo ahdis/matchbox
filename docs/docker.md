@@ -140,19 +140,56 @@ Reimport the DB data:
 docker-compose exec -T matchbox-db pg_restore -c -U matchbox -d matchbox < mydump
 ```
 
-## Configure an own docker image with preinstalled packages
+## Provide packages from files {: #packages-from-files}
 
-During a regular container startup all implementation guides will be deployed to the database. This packages can be provided by the
+During a regular container startup all implementation guides configured in `hapi.fhir.implementationguides` are
+installed into the database. They can be loaded from the FHIR package servers, from an http address, from the classpath
+or from the filesystem, see [_Providing implementation guides_](matchbox-server.md#implementationguides).
 
-1. FHIR package servers
-2. absolute http address to package
-3. classpath
-4. filesystem
+To use packages from files (e.g. a package of an IG that isn't published, or because the container has no internet
+access), mount the directory with the packages as a volume and reference them with a `file:` URL. The path is the path
+inside the container:
 
-If you want to prepare a container which does not need internet access during the startup (required by 1 and 2) you can
-build a new container image will do the download and installation packages already during the startup process (adding this line
-into the Dockerfile):
-
+```bash
+docker run -d --name matchbox -p 8080:8080 -m 4g \
+  -v ${PWD}/config:/config \
+  -v ${PWD}/packages:/packages \
+  europe-west6-docker.pkg.dev/ahdis-ch/ahdis/matchbox:latest
 ```
+
+with `config/application.yaml`:
+
+```yaml
+hapi:
+  fhir:
+    implementationguides:
+      my-ig:
+        name: example.fhir.ig.my-ig
+        version: 0.1.0
+        url: file:/packages/example.fhir.ig.my-ig-0.1.0.tgz
+```
+
+The packages need to be in the `packages` directory when the container starts. Dependencies that aren't listed are
+downloaded from the FHIR package servers, list them as well if the container has no internet access.
+
+## Configure an own docker image with preinstalled packages {: #own-image}
+
+Instead of installing the packages at every container startup, you can build your own image that already contains them.
+Copy the packages and the `application.yaml` into the image and install the packages during the build with
+`--hapi.fhir.only_install_packages=true` (Matchbox installs the packages into the database and stops):
+
+```dockerfile
+FROM europe-west6-docker.pkg.dev/ahdis-ch/ahdis/matchbox:v4.1.21
+
+COPY ./application.yaml /config/
+COPY ./packages/*.tgz /packages/
+
 RUN java -Xmx1G -Xms1G -jar /matchbox.jar --hapi.fhir.only_install_packages=true
 ```
+
+With the default H2 database, the installed packages are then part of the image and the container starts without
+access to the package servers or to the files. Use the same `application.yaml` (with the `file:/packages/...` URLs)
+for the build and at runtime.
+
+[matchbox-ch-elm](https://github.com/ahdis/matchbox-ch-elm) is an example of such an image, configured for the
+validation of the ch-elm implementation guide.
