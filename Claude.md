@@ -32,7 +32,7 @@ matchbox/
 - Java 17 (compiled for release 17, as org.hl7.fhir.core 7)
 - Spring Framework 7.0.9
 - HAPI FHIR 8.13.15-pr8189-1 (a build of hapifhir/hapi-fhir#8189, see Branches)
-- HL7 FHIR Core 7.0.1 (official FHIR validator), based on the versionless R6 modules (`org.hl7.fhir.model`,
+- HL7 FHIR Core 7.0.2 (official FHIR validator), based on the versionless R6 modules (`org.hl7.fhir.model`,
   `org.hl7.fhir.services`, `org.hl7.fhir.standalone`) instead of `org.hl7.fhir.r5`
 
 **Key Capabilities**:
@@ -500,7 +500,7 @@ Use the `release` skill (`.claude/skills/release/SKILL.md`).
 
 **Backend**:
 - HAPI FHIR 8.13.15-pr8189-1 - FHIR server framework (build of hapifhir/hapi-fhir#8189)
-- HL7 FHIR Core 7.0.1 - Official validator
+- HL7 FHIR Core 7.0.2 - Official validator
 - Spring Boot 4.0.8 - Application framework
 - Jackson 2.22.3 and 3.2.3 - JSON processing (Jackson 3 for Spring Boot 4)
 - Hibernate ORM 7.2 - JPA/ORM

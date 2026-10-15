@@ -955,7 +955,7 @@ public class TermReadSvcImpl implements ITermReadSvc {
 
 				try {
 					ConversionContext40_50.INSTANCE.init(
-							new VersionConvertor_40_50(new BaseAdvisor_40_50()), "ValueSet");
+							new VersionConvertor_40_50(new BaseAdvisor_40_50())); // matchbox: core 7.0.2 no longer tracks the conversion path
 					org.hl7.fhir.r5.model.ValueSet.ConceptSetComponent includeOrExclude =
 							ValueSet40_50.convertConceptSetComponent(theIncludeOrExclude);
 					myInMemoryTerminologyServerValidationSupport.expandValueSetIncludeOrExclude(
@@ -970,7 +970,7 @@ public class TermReadSvcImpl implements ITermReadSvc {
 					}
 					throw new InternalErrorException(Msg.code(888) + e);
 				} finally {
-					ConversionContext40_50.INSTANCE.close("ValueSet");
+					ConversionContext40_50.INSTANCE.close();
 				}
 			}
 

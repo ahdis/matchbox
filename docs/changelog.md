@@ -40,6 +40,12 @@
   which is deprecated: the terminology cache of a context is in memory before. HAPI FHIR is still built
   with org.hl7.fhir.core 6: matchbox overrides `HapiWorkerContext` (DSTU3, R4, R4B, R5) and
   `WorkerContextValidationSupportAdapter`, because `ILoggingService` moved to `org.hl7.fhir.utilities.logging`
+- Upgrade org.hl7.fhir.core to [7.0.2](https://github.com/hapifhir/org.hl7.fhir.core/releases/tag/7.0.2)
+  (performance improvements, snapshot generation and FHIRPath fixes, the Bundle and ConceptMap renderer fixes
+  contributed by matchbox). The matchbox patches were merged with the changes of 7.0.2, the copy of the resource
+  indexes per type of a worker context (#608) was dropped: 7.0.2 copies `allResourcesById` and `allResourcesByUrl`
+  itself. The `TermReadSvcImpl` override is adapted to the version convertors, which no longer track the conversion
+  path. A scan of the HAPI FHIR jars found no references to classes or members that 7.0.2 removed
 - A `MatchboxEngine` created from another one shared its suppressed warning/information patterns with it: the engine
   for an IG cleared and replaced the suppressed warnings of all engines (`matchbox.fhir.context.suppressWarnInfo`), it
   now has its own copy. Creating the engine for an IG also cleared the suppressed errors of the main engine
