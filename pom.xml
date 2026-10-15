@@ -39,7 +39,7 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
 
-        <fhir.core.version>7.0.1</fhir.core.version>
+        <fhir.core.version>7.0.2</fhir.core.version>
         <!-- TODO: build of https://github.com/hapifhir/hapi-fhir/pull/8189 (Spring Boot 4) at ab78b813154, published to
              GitHub Packages (see the 'github' repository below), switch to the HAPI FHIR release containing it -->
         <hapi.fhir.version>8.13.15-pr8189-1</hapi.fhir.version>
