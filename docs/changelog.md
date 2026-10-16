@@ -57,6 +57,15 @@
   if it's mandatory (`Composition.category` and, for a fixed Coding, `Composition.category.coding` with a minimum
   of 1): a profile with an optional fixed category also matches documents without a category
 
+2026/10/xx Release 4.1.22
+
+- Remove the duplicate `opentelemetry-spring-boot-starter` entry in the `dependencyManagement` of the root `pom.xml`,
+  which the Maven version of the GitHub runners rejects ("'dependencyManagement.dependencies.dependency' must be
+  unique")
+- Documentation: how to provide implementation guides from files (`file:` URLs in `hapi.fhir.implementationguides`, in
+  Docker with a volume, dependencies, reinstalling a package with the same version) and how to build an own docker
+  image with preinstalled packages ([#643](https://github.com/ahdis/matchbox/issues/643))
+
 2026/10/05 Release 4.1.21
 
 - Upgrade `piscina` (used by `@angular/build` of the frontend build) to 5.3.2 with an npm override to fix
