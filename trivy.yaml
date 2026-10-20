@@ -7,10 +7,10 @@ scan:
     - misconfig
   skip-dirs:
     - /matchbox-frontend/node_modules
+  # Only the SBOM attestations of the image in its registry: Rekor (sigstore) is searched for each artifact of the
+  # image, which took the image scan over its timeout (262 searches of ~8 s, the matchbox jars have none)
   sbom-sources:
     - oci
-    - rekor
-  rekor-url: https://rekor.sigstore.dev
 vulnerability:
   ignore-unfixed: false
 pkg:
