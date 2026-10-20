@@ -670,6 +670,93 @@ class MatchboxApiR4Test {
 		assertEquals(200, response.statusCode());
 	}
 
+	/**
+	 * $validate-code against a ValueSet that includes another ValueSet (compose.include.valueSet), sent the way the
+	 * validator sends it: the ValueSet itself as 'valueSet', the included one as 'tx-resource'
+	 * (BaseWorkerContext.addDependentResources).
+	 *
+	 * ValueSetProvider ignores 'tx-resource' and expands with a DummyValidationSupport, so the included ValueSet is
+	 * dropped from the expansion ("expansion contains 1 codes") and its codes are reported as not in the value set.
+	 * A required binding to such a ValueSet then fails for every code that comes from the included ValueSet.
+	 *
+	 * Expected behaviour after fix: 'result' is true for 'unknown' as well.
+	 */
+	@Test
+	void validateCodeInValueSetIncludedFromTxResource() throws Exception {
+		// 'male' is listed in the ValueSet itself, 'unknown' only in the included ValueSet
+		assertTrue(validateCodeWithNestedValueSet("male"), "code listed in the ValueSet itself");
+		assertTrue(validateCodeWithNestedValueSet("unknown"), "code from the included ValueSet (tx-resource)");
+	}
+
+	private boolean validateCodeWithNestedValueSet(final String code) throws Exception {
+		final String parametersJson = """
+			{
+			  "resourceType": "Parameters",
+			  "parameter": [
+			    {
+			      "name": "coding",
+			      "valueCoding": {
+			        "system": "http://hl7.org/fhir/administrative-gender",
+			        "code": "%s"
+			      }
+			    },
+			    {
+			      "name": "valueSet",
+			      "resource": {
+			        "resourceType": "ValueSet",
+			        "url": "http://example.org/fhir/ValueSet/outer",
+			        "status": "active",
+			        "compose": {
+			          "include": [
+			            {
+			              "valueSet": [ "http://example.org/fhir/ValueSet/inner" ]
+			            },
+			            {
+			              "system": "http://hl7.org/fhir/administrative-gender",
+			              "concept": [ { "code": "male" } ]
+			            }
+			          ]
+			        }
+			      }
+			    },
+			    {
+			      "name": "tx-resource",
+			      "resource": {
+			        "resourceType": "ValueSet",
+			        "url": "http://example.org/fhir/ValueSet/inner",
+			        "status": "active",
+			        "compose": {
+			          "include": [
+			            {
+			              "system": "http://hl7.org/fhir/administrative-gender",
+			              "concept": [ { "code": "unknown" } ]
+			            }
+			          ]
+			        }
+			      }
+			    }
+			  ]
+			}
+			""".formatted(code);
+
+		final HttpRequest request = HttpRequest.newBuilder(
+				new URI(TARGET_SERVER + "/tx/ValueSet/$validate-code"))
+			.POST(HttpRequest.BodyPublishers.ofString(parametersJson))
+			.header("Content-Type", "application/fhir+json")
+			.header("Accept", "application/fhir+json")
+			.build();
+
+		final var response = this.httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+		log.debug("$validate-code '{}' response body: {}", code, response.body());
+		assertEquals(200, response.statusCode());
+
+		final var result = FHIR_CONTEXT.newJsonParser().parseResource(Parameters.class, response.body());
+		final var message = result.getParameter("message");
+		log.info("$validate-code '{}': result={}, message={}", code, result.getParameterBool("result"),
+					message == null ? null : message.getValue());
+		return result.getParameterBool("result");
+	}
+
 	@Test
 	void testDocumentCodeExtraction() throws Exception {
 		final var entities = this.installedStructureDefinitionRepository
