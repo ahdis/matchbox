@@ -67,3 +67,18 @@ the background).
 
 Report the release URL and the outcome of the Docker and Maven Central workflows. Creating the tag and release by hand
 in GitHub also starts these two workflows, if the release workflow can't be used.
+
+## Release candidates
+
+A release candidate `X.Y.Z-rcN` (e.g. `5.0.0-rc1`) is made like a release, with `NEW=X.Y.Z-rcN`:
+
+- The POMs and `package.json` get the version `X.Y.Z-rcN`, which the GUI, the CapabilityStatement and the log show.
+  Maven sorts it before `X.Y.Z`.
+- The top changelog section `YYYY/MM/xx Release X.Y.Z` becomes the section of the release candidate:
+  `sed -i '' "1s#^[0-9x/]* Release ${NEW%-rc*}\$#$(date +%Y/%m/%d) Release $NEW#" docs/changelog.md`
+- The release workflow accepts `X.Y.Z-rcN` and creates the GitHub release as a pre-release (not shown as the latest
+  release). The Docker image only gets the tag `vX.Y.Z-rcN`, not `latest`.
+- After the release candidate, a new top section `YYYY/MM/xx Release X.Y.Z` collects the changes. It stays short: the
+  changes since the last release candidate, and a pointer to the release candidate sections for the other changes of
+  `X.Y.Z` (e.g. "Includes the changes of 5.0.0-rc1, see below"). The `Full Changelog` link of the release compares
+  with the previous tag, i.e. the last release candidate.

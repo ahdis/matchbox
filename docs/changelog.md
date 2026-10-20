@@ -13,6 +13,9 @@
   [#419](https://github.com/ahdis/matchbox/security/dependabot/419) source-map-js,
   [#421](https://github.com/ahdis/matchbox/security/dependabot/421) @modelcontextprotocol/sdk, all development
   dependencies)
+- Release workflow: release candidates `X.Y.Z-rcN` (e.g. `5.0.0-rc1`) are published as GitHub pre-releases and their
+  Docker image doesn't get the tag `latest`. The release notes end before the next release section, also one that
+  isn't dated yet
 
 2026/10/05 Release 4.1.21
 
