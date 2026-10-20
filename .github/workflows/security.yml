@@ -88,6 +88,7 @@ jobs:
           limit-severities-for-sarif: true
           severity: 'CRITICAL,HIGH'
           version: 'latest'
+          timeout: '35m'
         env:
           TRIVY_DB_REPOSITORY: ghcr.io/aquasecurity/trivy-db:2,public.ecr.aws/aquasecurity/trivy-db:2
           TRIVY_JAVA_DB_REPOSITORY: ghcr.io/aquasecurity/trivy-java-db:1,public.ecr.aws/aquasecurity/trivy-db:1
