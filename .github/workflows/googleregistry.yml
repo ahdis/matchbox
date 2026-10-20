@@ -1,4 +1,7 @@
-name: Build and Upload to Google Artifact registry
+name: Build and publish the Docker image
+
+# Publishes the image to the GitHub container registry (ghcr.io/ahdis/matchbox) and, during the transition to it, to
+# the Google Artifact Registry (europe-west6-docker.pkg.dev/ahdis-ch/ahdis/matchbox)
 
 on:
   workflow_dispatch:
@@ -11,6 +14,7 @@ env:
   GAR_LOCATION: europe-west6
   REPOSITORY: ahdis
   IMAGE: matchbox
+  GHCR_IMAGE: ghcr.io/ahdis/matchbox
 
 jobs:
   setup-build-publish-deploy:
@@ -20,6 +24,7 @@ jobs:
 
     permissions:
       contents: write # upload the SBOM to the GitHub release
+      packages: write # push the image to ghcr.io
       id-token: write
       security-events: write
 
@@ -74,19 +79,32 @@ jobs:
         run: |-
           echo ${{steps.auth.outputs.access_token}} | docker login -u oauth2accesstoken --password-stdin https://$GAR_LOCATION-docker.pkg.dev
 
+      - name: Log in to the GitHub container registry
+        uses: docker/login-action@v4
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
       # Build the Docker image for arm and amd
       - name: Build
         run: |-
-          IMAGE_NAME="$GAR_LOCATION-docker.pkg.dev/$PROJECT_ID/$REPOSITORY/$IMAGE"
-          TAGS=(--tag "$IMAGE_NAME:$GITHUB_REF_NAME")
-          # A release candidate (e.g. v5.0.0-rc1) doesn't become the 'latest' image
-          if [[ "$GITHUB_REF_NAME" != *-rc* ]]; then
-            TAGS+=(--tag "$IMAGE_NAME:latest")
-          fi
+          TAGS=()
+          for IMAGE_NAME in "$GHCR_IMAGE" "$GAR_LOCATION-docker.pkg.dev/$PROJECT_ID/$REPOSITORY/$IMAGE"; do
+            TAGS+=(--tag "$IMAGE_NAME:$GITHUB_REF_NAME")
+            # A release candidate (e.g. v5.0.0-rc1) doesn't become the 'latest' image
+            if [[ "$GITHUB_REF_NAME" != *-rc* ]]; then
+              TAGS+=(--tag "$IMAGE_NAME:latest")
+            fi
+          done
           # --sbom=true: SBOM attestation (SPDX, of the OS packages and the jars) in the image index of each platform
+          # The 'source' annotation links the ghcr.io package to the repository (its page, access and visibility)
           docker buildx build \
             "${TAGS[@]}" \
             --sbom=true \
+            --annotation "index:org.opencontainers.image.source=https://github.com/ahdis/matchbox" \
+            --annotation "index:org.opencontainers.image.description=Matchbox: FHIR validation and mapping" \
+            --annotation "index:org.opencontainers.image.licenses=Apache-2.0" \
             --build-arg GITHUB_SHA="$GITHUB_SHA" \
             --build-arg GITHUB_REF="$GITHUB_REF" \
             --push \
@@ -108,7 +126,9 @@ jobs:
               
               see also https://github.com/ahdis/matchbox/releases/tag/${{ github.ref_name }}
               
-              docker pull ${{ env.GAR_LOCATION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.REPOSITORY }}/${{ env.IMAGE }}:${{ github.ref_name }}
+              docker pull ${{ env.GHCR_IMAGE }}:${{ github.ref_name }}
+
+              also available as ${{ env.GAR_LOCATION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.REPOSITORY }}/${{ env.IMAGE }}:${{ github.ref_name }}
 
       - name: Send a stream message to Zulip
         uses: zulip/github-actions-zulip/send-message@v2

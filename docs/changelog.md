@@ -10,6 +10,9 @@
   as `/actuator/sbom/application` and uploaded to the GitHub release (`matchbox-server-<version>.cdx.json`), the
   Docker images have an SBOM attestation, `matchbox-engine` is published with its SBOM
   (`matchbox-engine-<version>-cyclonedx.json`)
+- The Docker images are also published to the GitHub container registry, `ghcr.io/ahdis/matchbox`
+  ([#659](https://github.com/ahdis/matchbox/issues/659)), the documentation uses it. The Google Artifact Registry
+  (`europe-west6-docker.pkg.dev/ahdis-ch/ahdis/matchbox`) still gets the images during the transition
 - Frontend: update Angular to 22.2.3 and angular-eslint to 22.6.0. The Angular CLI uses
   `@modelcontextprotocol/server` instead of `@modelcontextprotocol/sdk` 1.30.0 (and with it express and proxy-addr),
   `source-map-js` is updated to 1.2.2 (Dependabot alerts

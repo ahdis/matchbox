@@ -68,8 +68,9 @@ the background).
 Report the release URL and the outcome of the Docker and Maven Central workflows. Creating the tag and release by hand
 in GitHub also starts these two workflows, if the release workflow can't be used.
 
-The Docker workflow uploads the SBOM of the server to the release (asset `matchbox-server-X.Y.Z.cdx.json`, check it with
-`gh release view`) and builds the image with an SBOM attestation.
+The Docker workflow publishes the image to `ghcr.io/ahdis/matchbox` and to the Google Artifact Registry
+(`europe-west6-docker.pkg.dev/ahdis-ch/ahdis/matchbox`), uploads the SBOM of the server to the release (asset
+`matchbox-server-X.Y.Z.cdx.json`, check it with `gh release view`) and builds the image with an SBOM attestation.
 
 ## Release candidates
 
