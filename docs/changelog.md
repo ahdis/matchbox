@@ -16,6 +16,8 @@
 - Release workflow: release candidates `X.Y.Z-rcN` (e.g. `5.0.0-rc1`) are published as GitHub pre-releases and their
   Docker image doesn't get the tag `latest`. The release notes end before the next release section, also one that
   isn't dated yet
+- Security checks: Trivy no longer searches Rekor (sigstore) for SBOM attestations of the Docker image, these searches
+  took the image scan over its 35 min timeout
 
 2026/10/05 Release 4.1.21
 
