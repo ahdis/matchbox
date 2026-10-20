@@ -65,7 +65,7 @@
         <!-- Hibernate ORM version of HAPI FHIR, spring-boot-hibernate would bring in a newer hibernate-core -->
         <hibernate_version>7.2.19.Final</hibernate_version>
         <!-- Tomcat version of Spring Boot, aligned for all embedded Tomcat modules -->
-        <tomcat_version>11.0.24</tomcat_version>
+        <tomcat_version>11.0.27</tomcat_version>
                 <thymeleaf.version>3.1.5.RELEASE</thymeleaf.version>
         <testcontainers_version>1.21.4</testcontainers_version>
         <ucum_version>1.0.10</ucum_version>

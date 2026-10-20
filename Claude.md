@@ -72,7 +72,7 @@ mvn clean install
 - Java 21
 - Spring Boot 4.0.8
 - HAPI FHIR JPA Server 8.13.15-pr8189-1
-- Embedded Tomcat 11.0.24
+- Embedded Tomcat 11.0.27
 - Hibernate ORM 7.2
 - H2 (default) / PostgreSQL (production)
 
