@@ -78,18 +78,24 @@ jobs:
         with:
           scan-type: 'fs'
           ignore-unfixed: true
-          format: 'sarif'
-          output: 'trivy-results.sarif'
+          format: 'json'
+          output: 'trivy-results.json'
+          limit-severities-for-sarif: true
           severity: 'CRITICAL,HIGH'
+          version: 'latest'
         env:
           TRIVY_DB_REPOSITORY: ghcr.io/aquasecurity/trivy-db:2,public.ecr.aws/aquasecurity/trivy-db:2
           TRIVY_JAVA_DB_REPOSITORY: ghcr.io/aquasecurity/trivy-java-db:1,public.ecr.aws/aquasecurity/trivy-db:1
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           ACTIONS_RUNTIME_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Print Trivy results and convert them to SARIF
+        run: |
+          trivy convert --format table trivy-results.json
+          trivy convert --format sarif --output trivy-results.sarif trivy-results.json
+
       - name: Upload Trivy scan results to GitHub Security tab
         uses: github/codeql-action/upload-sarif@v4
-        if: always()
         with:
           sarif_file: 'trivy-results.sarif'
           category: 'trivy-fs'
@@ -128,9 +134,11 @@ jobs:
           scan-type: 'image'
           image-ref: 'matchbox:scan'
           ignore-unfixed: true
-          format: 'sarif'
-          output: 'trivy-image-results.sarif'
+          format: 'json'
+          output: 'trivy-image-results.json'
+          limit-severities-for-sarif: true
           severity: 'CRITICAL,HIGH'
+          version: 'latest'
           timeout: '35m'
         env:
           TRIVY_DB_REPOSITORY: ghcr.io/aquasecurity/trivy-db:2,public.ecr.aws/aquasecurity/trivy-db:2
@@ -138,9 +146,13 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           ACTIONS_RUNTIME_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Print Trivy results and convert them to SARIF
+        run: |
+          trivy convert --format table trivy-image-results.json
+          trivy convert --format sarif --output trivy-image-results.sarif trivy-image-results.json
+
       - name: Upload Trivy Docker image scan results to GitHub Security tab
         uses: github/codeql-action/upload-sarif@v4
-        if: always()
         with:
           sarif_file: 'trivy-image-results.sarif'
           category: 'trivy-image'
