@@ -1,9 +1,12 @@
 # Running Matchbox in docker
 
-You can run Matchbox directly in docker.
+You can run Matchbox directly in docker. The images are published to the GitHub container registry
+(`ghcr.io/ahdis/matchbox`, from the releases after 4.1.21 and 5.0.0-rc1 on) and to the Google Artifact Registry
+(`europe-west6-docker.pkg.dev/ahdis-ch/ahdis/matchbox`, all releases), with the tags `vX.Y.Z` (a release) and
+`latest` (the last release).
 
 ```bash
-docker run -d --name matchbox -p 8080:8080 -e matchbox.fhir.context.onlyOneEngine=true -v ${PWD}/config/:/config/ europe-west6-docker.pkg.dev/ahdis-ch/ahdis/matchbox:latest
+docker run -d --name matchbox -p 8080:8080 -e matchbox.fhir.context.onlyOneEngine=true -v ${PWD}/config/:/config/ ghcr.io/ahdis/matchbox:latest
 docker logs --follow matchbox
 ```
 If you see A 'FHIR has been lit on this server' you can point your browser to http://localhost:8080/matchboxv3/fhir/metadata.
@@ -38,13 +41,13 @@ versions, contain many identical strings, so this reduces the memory needed by t
 the ch-elm implementation guide).
 
 ```bash
-docker run -d --name matchbox -p 8080:8080 -m 4g europe-west6-docker.pkg.dev/ahdis-ch/ahdis/matchbox:latest
+docker run -d --name matchbox -p 8080:8080 -m 4g ghcr.io/ahdis/matchbox:latest
 ```
 
 You can override the options, e.g. to set a fixed heap size:
 
 ```bash
-docker run -d --name matchbox -p 8080:8080 -m 4g -e JDK_JAVA_OPTIONS="-Xmx2g -XX:+ExitOnOutOfMemoryError -XX:+UseStringDeduplication" europe-west6-docker.pkg.dev/ahdis-ch/ahdis/matchbox:latest
+docker run -d --name matchbox -p 8080:8080 -m 4g -e JDK_JAVA_OPTIONS="-Xmx2g -XX:+ExitOnOutOfMemoryError -XX:+UseStringDeduplication" ghcr.io/ahdis/matchbox:latest
 ```
 
 Setting `JDK_JAVA_OPTIONS` replaces the default, so include a heap setting (`-XX:MaxRAMPercentage` or `-Xmx`),
@@ -96,7 +99,7 @@ The Docker images have an SBOM attestation (SPDX, the operating system packages 
 platform:
 
 ```bash
-docker buildx imagetools inspect europe-west6-docker.pkg.dev/ahdis-ch/ahdis/matchbox:<tag> --format '{{ json .SBOM }}'
+docker buildx imagetools inspect ghcr.io/ahdis/matchbox:<tag> --format '{{ json .SBOM }}'
 ```
 
 The SBOM of `matchbox-engine` is published to Maven Central with the library (`matchbox-engine-<version>-cyclonedx.json`).
@@ -170,7 +173,7 @@ inside the container:
 docker run -d --name matchbox -p 8080:8080 -m 4g \
   -v ${PWD}/config:/config \
   -v ${PWD}/packages:/packages \
-  europe-west6-docker.pkg.dev/ahdis-ch/ahdis/matchbox:latest
+  ghcr.io/ahdis/matchbox:latest
 ```
 
 with `config/application.yaml`:
@@ -192,10 +195,11 @@ downloaded from the FHIR package servers, list them as well if the container has
 
 Instead of installing the packages at every container startup, you can build your own image that already contains them.
 Copy the packages and the `application.yaml` into the image and install the packages during the build with
-`--hapi.fhir.only_install_packages=true` (Matchbox installs the packages into the database and stops):
+`--hapi.fhir.only_install_packages=true` (Matchbox installs the packages into the database and stops), `vX.Y.Z` is
+the Matchbox release:
 
 ```dockerfile
-FROM europe-west6-docker.pkg.dev/ahdis-ch/ahdis/matchbox:v4.1.21
+FROM ghcr.io/ahdis/matchbox:vX.Y.Z
 
 COPY ./application.yaml /config/
 COPY ./packages/*.tgz /packages/
