@@ -63,9 +63,14 @@ jobs:
       # Build the Docker image for arm and amd
       - name: Build
         run: |-
+          IMAGE_NAME="$GAR_LOCATION-docker.pkg.dev/$PROJECT_ID/$REPOSITORY/$IMAGE"
+          TAGS=(--tag "$IMAGE_NAME:$GITHUB_REF_NAME")
+          # A release candidate (e.g. v5.0.0-rc1) doesn't become the 'latest' image
+          if [[ "$GITHUB_REF_NAME" != *-rc* ]]; then
+            TAGS+=(--tag "$IMAGE_NAME:latest")
+          fi
           docker buildx build \
-            --tag "$GAR_LOCATION-docker.pkg.dev/$PROJECT_ID/$REPOSITORY/$IMAGE:$GITHUB_REF_NAME" \
-            --tag "$GAR_LOCATION-docker.pkg.dev/$PROJECT_ID/$REPOSITORY/$IMAGE:latest" \
+            "${TAGS[@]}" \
             --build-arg GITHUB_SHA="$GITHUB_SHA" \
             --build-arg GITHUB_REF="$GITHUB_REF" \
             --push \
