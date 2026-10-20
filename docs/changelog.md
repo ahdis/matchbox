@@ -21,6 +21,10 @@
 - Matchbox runs on Tomcat instead of Undertow (Spring Boot 4 dropped the support for Undertow). The
   `server.undertow.max-http-post-size` setting isn't needed anymore, Tomcat doesn't limit the size of FHIR request
   bodies
+- Upgrade Tomcat from 11.0.24 to 11.0.27 to fix the authentication and security constraint bypasses
+  [CVE-2026-65182](https://github.com/ahdis/matchbox/security/code-scanning/529),
+  [CVE-2026-65905](https://github.com/ahdis/matchbox/security/code-scanning/530) and
+  [CVE-2026-68525](https://github.com/ahdis/matchbox/security/code-scanning/531)
 - Loading packages from `http(s)` URLs follows redirects with the redirect handling of HAPI FHIR (#75), which also
   supports a package URL allow-list (`IPackageUrlAllowListProvider`, all URLs are allowed by default). Without an
   allow-list HAPI FHIR would disable the SSRF protection of the core library for the whole JVM: matchbox keeps it as
