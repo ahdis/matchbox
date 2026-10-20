@@ -1,4 +1,4 @@
-2026/10/xx Release 5.0.0
+2026/10/20 Release 5.0.0-rc1
 
 - Validation is about twice as fast for profiles whose invariants resolve canonical resources, e.g. the ConceptMaps
   of ch-elm (`'http://fhir.ch/ig/ch-elm/ConceptMap/…'.resolve()`): `MatchboxEngine` keeps the resources it converted
