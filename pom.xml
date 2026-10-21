@@ -800,6 +800,12 @@
                     <artifactId>spring-boot-maven-plugin</artifactId>
                     <version>${spring_boot_version}</version>
                 </plugin>
+                <!-- Software Bill of Materials (SBOM), the version of spring-boot-dependencies -->
+                <plugin>
+                    <groupId>org.cyclonedx</groupId>
+                    <artifactId>cyclonedx-maven-plugin</artifactId>
+                    <version>2.9.3</version>
+                </plugin>
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-surefire-plugin</artifactId>

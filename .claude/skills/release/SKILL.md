@@ -68,6 +68,9 @@ the background).
 Report the release URL and the outcome of the Docker and Maven Central workflows. Creating the tag and release by hand
 in GitHub also starts these two workflows, if the release workflow can't be used.
 
+The Docker workflow uploads the SBOM of the server to the release (asset `matchbox-server-X.Y.Z.cdx.json`, check it with
+`gh release view`) and builds the image with an SBOM attestation.
+
 ## Release candidates
 
 A release candidate `X.Y.Z-rcN` (e.g. `5.0.0-rc1`) is made like a release, with `NEW=X.Y.Z-rcN`:

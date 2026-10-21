@@ -85,6 +85,22 @@ You can also use actuator/health/liveness or actuator/health/readiness.
 
 To check the amount of memory used by the jvm use: /actuator/metrics/jvm.memory.used
 
+## Software Bill of Materials (SBOM)
+
+matchbox provides the SBOM of the server (CycloneDX, the Java libraries in `matchbox.jar`):
+
+- from a running server: `/matchboxv3/actuator/sbom/application`
+- for a release: the asset `matchbox-server-<version>.cdx.json` of the [GitHub release](https://github.com/ahdis/matchbox/releases)
+
+The Docker images have an SBOM attestation (SPDX, the operating system packages and the Java libraries) for each
+platform:
+
+```bash
+docker buildx imagetools inspect europe-west6-docker.pkg.dev/ahdis-ch/ahdis/matchbox:<tag> --format '{{ json .SBOM }}'
+```
+
+The SBOM of `matchbox-engine` is published to Maven Central with the library (`matchbox-engine-<version>-cyclonedx.json`).
+
 ## Using docker-compose with a persistent postgreSQL database
 
 To use docker-compose with Matchbox you need to check out Matchbox from [github](https://github.com/ahdis/matchbox).
