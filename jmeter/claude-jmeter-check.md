@@ -40,6 +40,11 @@ docker run --rm alpine df -h / | tail -1  # Docker VM disk: an image + container
 gcloud auth print-access-token >/dev/null # registry auth; if expired the user must run `! gcloud auth login`
 ```
 
+The `matchbox` images in `europe-west6-docker.pkg.dev/ahdis-ch/ahdis` can be pulled without credentials. If the gcloud
+token has expired or the Docker Desktop credential helper doesn't answer, use a Docker config without credential
+helpers: `mkdir -p $D && echo '{}' > $D/config.json && ln -s ~/.docker/cli-plugins ~/.docker/contexts $D/ &&
+export DOCKER_CONFIG=$D`.
+
 Keep the machine otherwise idle. A busy machine alone made the same 1.15.0 image run 2× slower
 (30.3 vs 14.7 min).
 
@@ -262,6 +267,10 @@ All runs: 8,000 validations, 0 failures. Runs from 25 Sep 2026 on the same machi
 | `cpu-base7-r2` | 1.15.6 on branch `fhir-core-7` ⁷ | 4.1.21 / 8.13.15-pr8189-1 / 7.0.1 | 70% of the container memory | 3.4 min | 95 / 102 | 2.35 / 3.77 | 2026-10-10 |
 | `cpu-fix7-r1` | 1.15.6 on branch `fhir-core-7` with the fixes ⁸ | 4.1.21 / 8.13.15-pr8189-1 / 7.0.1 | 70% of the container memory | 1.6 min | 41 / 44 | 2.17 / 3.35 | 2026-10-10 |
 | `cpu-fix7-r2` | 1.15.6 on branch `fhir-core-7` with the fixes ⁸ | 4.1.21 / 8.13.15-pr8189-1 / 7.0.1 | 70% of the container memory | 1.8 min | 46 / 50 | 2.19 / 3.36 | 2026-10-10 |
+| `1156-mb4121` | 1.15.6 on `matchbox:v4.1.21` ⁹ | 4.1.21 / 8.12.1 / 6.10.4 | 70% of the container memory | 3.6 min | 90 / 100 | 2.46 / 4.71 | 2026-10-20 |
+| `1156-mb500rc1` | 1.15.6 on `matchbox:v5.0.0-rc1` ⁹ | 5.0.0-rc1 / 8.13.15-pr8189-1 / 7.0.2 | 70% of the container memory | 1.7 min | 43 / 48 | 2.68 / 4.80 | 2026-10-20 |
+| `1156-mb4121-r2` | 1.15.6 on `matchbox:v4.1.21` ⁹ | 4.1.21 / 8.12.1 / 6.10.4 | 70% of the container memory | 3.6 min | 91 / 103 | 2.47 / 4.75 | 2026-10-20 |
+| `1156-mb500rc1-r2` | 1.15.6 on `matchbox:v5.0.0-rc1` ⁹ | 5.0.0-rc1 / 8.13.15-pr8189-1 / 7.0.2 | 70% of the container memory | 1.8 min | 44 / 49 | 2.77 / 5.01 | 2026-10-20 |
 
 ¹ Rebuilt from ch-elm commit `f3dd030` on `matchbox:v4.0.16`; the published 1.13.1 image is no longer in the registry.
 ² Machine was busy during this run.
@@ -285,6 +294,11 @@ suppressed warning patterns are compiled once and matched without `parallelStrea
 Image `1156-fhir-core-7` with `/matchbox.jar` replaced, runs alternated with `cpu-base7-*` (the image without the
 fixes), only `*.jtl` and the thread dumps saved (`cpu_run.sh`, `thread_cpu.py`). The same OperationOutcome; CPU per
 request 41–47 instead of 99–101 ms (all threads).
+⁹ The published base images (pulled anonymously), ch-elm commit `a07c806` with only the `FROM` line changed, runs
+alternated. 5.0.0-rc1 validates 2.1× faster (median 43–44 vs 90–91 ms, client 46–47 vs 100 ms), as `cpu-fix7-*`;
+the same OperationOutcome (same 6 issues, `ch.fhir.ig.ch-elm#1.15.1`), response 33,240 / 34,593 bytes (Tomcat /
+Undertow chunks, see ⁶). Server ready after 28–31 / 30–37 s, live heap after a full GC at the end 708–710 / 677–678 MiB
+(+31 MiB), container memory 3.25 / 3.13–3.21 GiB, no errors in the server logs.
 
 ### Startup, first and second validation (lazy loading)
 
