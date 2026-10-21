@@ -134,10 +134,9 @@ jobs:
           ignore-unfixed: true
           format: 'json'
           output: 'trivy-results.json'
-          limit-severities-for-sarif: true
           severity: 'CRITICAL,HIGH'
           version: 'latest'
-          timeout: '35m'
+          timeout: '15m'
         env:
           TRIVY_DB_REPOSITORY: mirror.gcr.io/aquasec/trivy-db:2,public.ecr.aws/aquasecurity/trivy-db:2
           TRIVY_JAVA_DB_REPOSITORY: mirror.gcr.io/aquasec/trivy-java-db:1,public.ecr.aws/aquasecurity/trivy-java-db:1
@@ -191,10 +190,9 @@ jobs:
           ignore-unfixed: true
           format: 'json'
           output: 'trivy-image-results.json'
-          limit-severities-for-sarif: true
           severity: 'CRITICAL,HIGH'
           version: 'latest'
-          timeout: '35m'
+          timeout: '15m'
         env:
           TRIVY_DB_REPOSITORY: mirror.gcr.io/aquasec/trivy-db:2,public.ecr.aws/aquasecurity/trivy-db:2
           TRIVY_JAVA_DB_REPOSITORY: mirror.gcr.io/aquasec/trivy-java-db:1,public.ecr.aws/aquasecurity/trivy-java-db:1
