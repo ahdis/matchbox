@@ -1,3 +1,11 @@
+2026/10/xx Release 5.0.0
+
+Includes the changes of 5.0.0-rc1, see below.
+
+- JMeter runbook: ch-elm 1.15.6 on the published `matchbox:v4.1.21` and `v5.0.0-rc1` images, 5.0.0-rc1 validates 2.1×
+  faster (median 43–44 vs 90–91 ms) with the same OperationOutcome; how to pull the images without credentials, see
+  `jmeter/claude-jmeter-check.md`
+
 2026/10/20 Release 5.0.0-rc1
 
 - Validation is about twice as fast for profiles whose invariants resolve canonical resources, e.g. the ConceptMaps
