@@ -1,6 +1,6 @@
 package ch.ahdis.matchbox;
 
-import org.hl7.fhir.r5.context.ILoggingService;
+import org.hl7.fhir.utilities.logging.ILoggingService;
 
 import lombok.RequiredArgsConstructor;
 

@@ -25,7 +25,7 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.*;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.context.SpringBootTest.WebEnvironment;
 import org.springframework.core.io.ClassPathResource;
@@ -64,6 +64,9 @@ class MatchboxApiR4Test {
 	private final ValidationClient validationClient = new ValidationClient(FHIR_CONTEXT, TARGET_SERVER + "/fhir");
 	private final HttpClient httpClient = HttpClient.newHttpClient();
 	private final ObjectMapper objectMapper = new ObjectMapper();
+
+	@Value("${hapi.fhir.implementationguides.matchbox_health_test_ig_r4.version}")
+	private String matchboxTestIgVersion;
 
 	@Autowired
 	protected MbInstalledStructureDefinitionRepository installedStructureDefinitionRepository;
@@ -184,7 +187,7 @@ class MatchboxApiR4Test {
 		String profileMatchbox = "http://matchbox.health/ig/test/r4/StructureDefinition/practitioner-identifier-required";
 		operationOutcome = validationClient.validate(resource, profileMatchbox);
 		assertEquals(0, getValidationFailures((OperationOutcome) operationOutcome));
-		assertEquals("matchbox.health.test.ig.r4#0.3.0", getIg(operationOutcome));
+		assertEquals("matchbox.health.test.ig.r4#" + this.matchboxTestIgVersion, getIg(operationOutcome));
 		String sessionIdMatchbox = getSessionId(operationOutcome);
 
 		// verify that we have have different validation engine
@@ -211,7 +214,7 @@ class MatchboxApiR4Test {
 		// assertEquals(0, getValidationFailures((OperationOutcome) operationOutcome));
 		// String sessionId2MatchboxTxNa = getSessionId(operationOutcome);
 		// assertNotEquals(sessionIdMatchbox, sessionId2MatchboxTxNa);
-		// assertEquals("matchbox.health.test.ig.r4#0.3.0", getIg(operationOutcome));
+		// assertEquals("matchbox.health.test.ig.r4#" + this.matchboxTestIgVersion, getIg(operationOutcome));
 		// assertEquals("n/a", getTxServer(operationOutcome));
 
 		// // add new parameters should create a new validation engine for default validation
@@ -230,7 +233,7 @@ class MatchboxApiR4Test {
 	void engineCreationDoesNotBlockOtherEngines() throws Exception {
 		final String profileMatchbox = "http://matchbox.health/ig/test/r4/StructureDefinition/practitioner-identifier-required";
 		// the engine of the test IG is created again
-		this.matchboxEngineSupport.getSessionCache().evictEnginesWithPackage("matchbox.health.test.ig.r4", "0.3.0");
+		this.matchboxEngineSupport.getSessionCache().evictEnginesWithPackage("matchbox.health.test.ig.r4", this.matchboxTestIgVersion);
 
 		final ExecutorService executor = Executors.newFixedThreadPool(2);
 		try {
@@ -268,7 +271,7 @@ class MatchboxApiR4Test {
 				</identifier>
 			</Practitioner>""", profileMatchbox);
 		assertEquals(0, getValidationFailures((OperationOutcome) operationOutcome));
-		assertEquals("matchbox.health.test.ig.r4#0.3.0", getIg(operationOutcome));
+		assertEquals("matchbox.health.test.ig.r4#" + this.matchboxTestIgVersion, getIg(operationOutcome));
 	}
 
 	/**
@@ -379,21 +382,21 @@ class MatchboxApiR4Test {
 		String sessionIdFirst = getSessionId(operationOutcome);
 
 		assertEquals(0, getValidationFailures((OperationOutcome) operationOutcome));
-		assertEquals("matchbox.health.test.ig.r4#0.3.0", getIg(operationOutcome));
+		assertEquals("matchbox.health.test.ig.r4#" + this.matchboxTestIgVersion, getIg(operationOutcome));
 
 		// validate with the profile and the ig
 		Parameters parameters = new Parameters();
-		parameters.addParameter("ig", "matchbox.health.test.ig.r4#0.3.0");
+		parameters.addParameter("ig", "matchbox.health.test.ig.r4#" + this.matchboxTestIgVersion);
 		operationOutcome = validationClient.validate(resource, profileMatchbox, parameters);
 		String sessionIdSecond = getSessionId(operationOutcome);
 		assertEquals(0, getValidationFailures((OperationOutcome) operationOutcome));
-		assertEquals("matchbox.health.test.ig.r4#0.3.0", getIg(operationOutcome));
+		assertEquals("matchbox.health.test.ig.r4#" + this.matchboxTestIgVersion, getIg(operationOutcome));
 		assertEquals(sessionIdFirst, sessionIdSecond);
 
-		operationOutcome = validationClient.validate(resource, profileMatchbox + "|0.3.0");
+		operationOutcome = validationClient.validate(resource, profileMatchbox + "|" + this.matchboxTestIgVersion);
 		String sessionIdThird = getSessionId(operationOutcome);
 		assertEquals(0, getValidationFailures((OperationOutcome) operationOutcome));
-		assertEquals("matchbox.health.test.ig.r4#0.3.0", getIg(operationOutcome));
+		assertEquals("matchbox.health.test.ig.r4#" + this.matchboxTestIgVersion, getIg(operationOutcome));
 		assertEquals(sessionIdFirst, sessionIdThird);
 
 		// validate with the profile and the ig version, has an internal business version 9.9.9
@@ -401,13 +404,13 @@ class MatchboxApiR4Test {
 		operationOutcome = validationClient.validate(resource, profileMatchbox);
 		String sessionIdForth = getSessionId(operationOutcome);
 		assertEquals(0, getValidationFailures((OperationOutcome) operationOutcome));
-		assertEquals("matchbox.health.test.ig.r4#0.3.0", getIg(operationOutcome));
+		assertEquals("matchbox.health.test.ig.r4#" + this.matchboxTestIgVersion, getIg(operationOutcome));
 		assertEquals(sessionIdFirst, sessionIdForth);
 
-		operationOutcome = validationClient.validate(resource, profileMatchbox + "|0.3.0");
+		operationOutcome = validationClient.validate(resource, profileMatchbox + "|" + this.matchboxTestIgVersion);
 		String sessionIdFifth = getSessionId(operationOutcome);
 		assertEquals(0, getValidationFailures((OperationOutcome) operationOutcome));
-		assertEquals("matchbox.health.test.ig.r4#0.3.0", getIg(operationOutcome));
+		assertEquals("matchbox.health.test.ig.r4#" + this.matchboxTestIgVersion, getIg(operationOutcome));
 		assertEquals(sessionIdFirst, sessionIdFifth);
 	}
 
@@ -428,12 +431,12 @@ class MatchboxApiR4Test {
 		String sessionIdFirst = getSessionId(report);
 
 		assertEquals(0, getValidationFailures(report));
-		assertEquals("matchbox.health.test.ig.r4#0.3.0", getIg(report));
+		assertEquals("matchbox.health.test.ig.r4#" + this.matchboxTestIgVersion, getIg(report));
 
-		report = this.validateWithGazelle(resource, profileMatchbox + "|0.3.0");
+		report = this.validateWithGazelle(resource, profileMatchbox + "|" + this.matchboxTestIgVersion);
 		String sessionIdThird = getSessionId(report);
 		assertEquals(0, getValidationFailures(report));
-		assertEquals("matchbox.health.test.ig.r4#0.3.0", getIg(report));
+		assertEquals("matchbox.health.test.ig.r4#" + this.matchboxTestIgVersion, getIg(report));
 		assertEquals(sessionIdFirst, sessionIdThird);
 
 		// validate with the profile and the ig version, has an internal business version 9.9.9
@@ -441,13 +444,13 @@ class MatchboxApiR4Test {
 		report = this.validateWithGazelle(resource, profileMatchbox);
 		String sessionIdForth = getSessionId(report);
 		assertEquals(0, getValidationFailures(report));
-		assertEquals("matchbox.health.test.ig.r4#0.3.0", getIg(report));
+		assertEquals("matchbox.health.test.ig.r4#" + this.matchboxTestIgVersion, getIg(report));
 		assertEquals(sessionIdFirst, sessionIdForth);
 
-		report = this.validateWithGazelle(resource, profileMatchbox + "|0.3.0");
+		report = this.validateWithGazelle(resource, profileMatchbox + "|" + this.matchboxTestIgVersion);
 		String sessionIdFifth = getSessionId(report);
 		assertEquals(0, getValidationFailures(report));
-		assertEquals("matchbox.health.test.ig.r4#0.3.0", getIg(report));
+		assertEquals("matchbox.health.test.ig.r4#" + this.matchboxTestIgVersion, getIg(report));
 		assertEquals(sessionIdFirst, sessionIdFifth);
 	}
 
@@ -670,14 +673,26 @@ class MatchboxApiR4Test {
 		assertEquals(200, response.statusCode());
 	}
 
+	private static final String PROFILE_DOCUMENT_BUNDLE_A =
+		"http://matchbox.health/ig/test/r4/StructureDefinition/document-bundleA";
+	private static final String PROFILE_DOCUMENT_BUNDLE_B =
+		"http://matchbox.health/ig/test/r4/StructureDefinition/document-bundleB";
+	private static final String PROFILE_DOCUMENT_BUNDLE_C =
+		"http://matchbox.health/ig/test/r4/StructureDefinition/document-bundleC";
+
 	@Test
 	void testDocumentCodeExtraction() throws Exception {
-		final var entities = this.installedStructureDefinitionRepository
-			.findAllByCanonical("http://matchbox.health/ig/test/r4/StructureDefinition/document-bundle");
-		assertEquals(1, entities.size());
-		final var entity = entities.getFirst();
+		final var entities = this.installedStructureDefinitionRepository.findAllByCanonicals(List.of(PROFILE_DOCUMENT_BUNDLE_A, PROFILE_DOCUMENT_BUNDLE_B, PROFILE_DOCUMENT_BUNDLE_C));
+		assertEquals(3, entities.size());
+		var entity = entities.getFirst();
 		assertEquals("http://snomed.info/sct#41000179103", entity.getDocCompTypeCode());
 		assertEquals("urn:oid:2.16.756.5.30.1.127.3.10.10#urn:che:epr:ch-vacd:immunization-administration:2022", entity.getDocCompCatCode());
+		entity = entities.get(1);
+		assertEquals("http://snomed.info/sct#761938008", entity.getDocCompTypeCode());
+		assertNull(entity.getDocCompCatCode());
+		entity = entities.get(2);
+		assertEquals("http://snomed.info/sct#761931002", entity.getDocCompTypeCode());
+		assertNull(entity.getDocCompCatCode());
 	}
 
 	@Test
@@ -691,6 +706,104 @@ class MatchboxApiR4Test {
 			.returnResourceType(Parameters.class)
 			.execute();
 		assertNotNull(response);
+	}
+
+	@Test
+	void testBundleGetProfilesMatchesAnyTypeCoding() throws Exception {
+		final var document = getVacdDocument();
+		// The type coding fixed by the profile (SNOMED CT 41000179103) isn't the first one anymore
+		final var composition = (Composition) document.getEntryFirstRep().getResource();
+		composition.getType().getCoding().addFirst(new Coding("http://loinc.org", "11369-6", "History of Immunization"));
+		assertTrue(getProfilesOfDocument(document).contains(PROFILE_DOCUMENT_BUNDLE_A));
+	}
+
+	@Test
+	void testBundleGetProfilesMatchesAnyCategoryCoding() throws Exception {
+		final var document = getVacdDocument();
+		// The category coding fixed by the profile isn't the first one of its category, which isn't the first one
+		final var composition = (Composition) document.getEntryFirstRep().getResource();
+		composition.getCategoryFirstRep().getCoding().addFirst(new Coding("http://example.org/category", "other", null));
+		composition.getCategory().addFirst(new CodeableConcept(new Coding("http://example.org/category", "another", null)));
+		assertTrue(getProfilesOfDocument(document).contains(PROFILE_DOCUMENT_BUNDLE_A));
+	}
+
+	@Test
+	void testBundleGetProfilesRequiresTheFixedCategory() throws Exception {
+		// The profile fixes a category coding, a document without it doesn't match
+		final var withoutCategory = getVacdDocument();
+		((Composition) withoutCategory.getEntryFirstRep().getResource()).getCategory().clear();
+		assertFalse(getProfilesOfDocument(withoutCategory).contains(PROFILE_DOCUMENT_BUNDLE_A));
+
+		final var withOtherCategory = getVacdDocument();
+		((Composition) withOtherCategory.getEntryFirstRep().getResource()).getCategoryFirstRep().getCoding()
+			.getFirst().setCode("other");
+		assertFalse(getProfilesOfDocument(withOtherCategory).contains(PROFILE_DOCUMENT_BUNDLE_A));
+	}
+
+	@Test
+	void testBundleGetProfilesWithoutFixedCategoryMatchesNoCategory() throws Exception {
+		// Profile B doesn't fix a category
+		final var document = getVacdDocument(new Coding("http://snomed.info/sct", "761938008", null));
+		assertTrue(getProfilesOfDocument(document).contains(PROFILE_DOCUMENT_BUNDLE_B));
+	}
+
+	@Test
+	void testBundleGetProfilesWithoutFixedCategoryMatchesAnyCategory() throws Exception {
+		// Profile B doesn't fix a category
+		final var document = getVacdDocument(new Coding("http://snomed.info/sct", "761938008", null),
+		                                     new Coding("http://example.org/category", "random", null));
+		assertTrue(getProfilesOfDocument(document).contains(PROFILE_DOCUMENT_BUNDLE_B));
+	}
+
+	@Test
+	void testBundleGetProfilesMatchesOptionalFixedCategory() throws Exception {
+		// Profile C fixes a category coding, but the category is optional
+		final var document = getVacdDocument(
+			new Coding("http://snomed.info/sct", "761931002", null),
+			new Coding("urn:oid:2.16.756.5.30.1.127.3.10.10", "urn:che:epr:ch-vacd:vaccination-record:2022", null));
+		assertTrue(getProfilesOfDocument(document).contains(PROFILE_DOCUMENT_BUNDLE_C));
+	}
+
+	@Test
+	void testBundleGetProfilesWithOptionalFixedCategoryMatchesNoCategory() throws Exception {
+		// Profile C fixes a category coding, but the category is optional
+		final var document = getVacdDocument(new Coding("http://snomed.info/sct", "761931002", null));
+		assertTrue(getProfilesOfDocument(document).contains(PROFILE_DOCUMENT_BUNDLE_C));
+	}
+
+	private Bundle getVacdDocument() throws IOException {
+		final var documentJson = getContent("ch-vacd-document-immunization-administration.json");
+		return FHIR_CONTEXT.newJsonParser().parseResource(Bundle.class, documentJson);
+	}
+
+	/**
+	 * Returns the ch-vacd document, with the type and the categories of its Composition replaced by the given codings.
+	 */
+	private Bundle getVacdDocument(final Coding type, final Coding... categories) throws IOException {
+		final var document = getVacdDocument();
+		final var composition = (Composition) document.getEntryFirstRep().getResource();
+		composition.setType(new CodeableConcept(type));
+		composition.getCategory().clear();
+		for (final var category : categories) {
+			composition.addCategory(new CodeableConcept(category));
+		}
+		return document;
+	}
+
+	/**
+	 * Returns the canonicals of the profiles that {@code Bundle/$get-profiles} returns for the document.
+	 */
+	private List<String> getProfilesOfDocument(final Bundle document) {
+		final var response = this.validationClient.operation()
+			.onType("Bundle")
+			.named("$get-profiles")
+			.withParameter(Parameters.class, "resource", document)
+			.returnResourceType(Parameters.class)
+			.execute();
+		return response.getParameter().stream()
+			.filter(parameter -> "profile".equals(parameter.getName()))
+			.map(parameter -> parameter.getValue().primitiveValue())
+			.toList();
 	}
 
 	@Test
@@ -752,7 +865,7 @@ class MatchboxApiR4Test {
 		for (final String body : List.of(PRACTITIONER_WITHOUT_IDENTIFIER, inParameters(PRACTITIONER_WITHOUT_IDENTIFIER))) {
 			final OperationOutcome outcome = this.validateTypeLevel("Practitioner", "", body);
 			assertEquals(PROFILE_IDENTIFIER_REQUIRED, getProfile(outcome));
-			assertEquals("matchbox.health.test.ig.r4#0.3.0", getIg(outcome));
+			assertEquals("matchbox.health.test.ig.r4#" + this.matchboxTestIgVersion, getIg(outcome));
 			assertEquals(1, getValidationFailures(outcome), body);
 		}
 	}

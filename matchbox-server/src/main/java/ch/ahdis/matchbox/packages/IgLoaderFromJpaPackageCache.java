@@ -37,18 +37,18 @@ import ch.ahdis.matchbox.engine.packages.CompressedPackageResourceProxy;
 import ch.ahdis.matchbox.engine.packages.LazyTerminologyLoader;
 import ch.ahdis.matchbox.engine.packages.PackageResourceParser;
 import ch.ahdis.matchbox.util.MatchboxServerUtils;
-import org.hl7.fhir.convertors.factory.VersionConvertorFactory_30_50;
-import org.hl7.fhir.convertors.factory.VersionConvertorFactory_40_50;
-import org.hl7.fhir.convertors.factory.VersionConvertorFactory_43_50;
+import org.hl7.fhir.convertors.factory.VersionConvertorFactory_30_N;
+import org.hl7.fhir.convertors.factory.VersionConvertorFactory_40_N;
+import org.hl7.fhir.convertors.factory.VersionConvertorFactory_43_N;
 import org.hl7.fhir.r4.model.ConceptMap.ConceptMapGroupComponent;
-import org.hl7.fhir.r5.context.CanonicalResourceManager.CanonicalResourceProxy;
+import org.hl7.fhir.services.context.CanonicalResourceProxy;
 import org.hl7.fhir.exceptions.FHIRException;
-import org.hl7.fhir.r5.context.BaseWorkerContext.ResourceProxy;
-import org.hl7.fhir.r5.context.SimpleWorkerContext;
-import org.hl7.fhir.r5.model.CanonicalResource;
-import org.hl7.fhir.r5.model.ImplementationGuide;
-import org.hl7.fhir.r5.model.PackageInformation;
-import org.hl7.fhir.r5.model.Resource;
+import org.hl7.fhir.standalone.context.BaseWorkerContext.ResourceProxy;
+import org.hl7.fhir.standalone.context.SimpleWorkerContext;
+import org.hl7.fhir.model.core.CanonicalResource;
+import org.hl7.fhir.model.core.ImplementationGuide;
+import org.hl7.fhir.model.core.PackageInformation;
+import org.hl7.fhir.model.core.Resource;
 import org.hl7.fhir.utilities.ByteProvider;
 import org.hl7.fhir.utilities.FileUtilities;
 import org.hl7.fhir.utilities.Utilities;
@@ -127,20 +127,20 @@ public class IgLoaderFromJpaPackageCache extends IgLoader {
 		return myVersionToContext.computeIfAbsent(theFhirVersion, FhirContext::forCached);
 	}
 
-	private void cleanModifierExtensions(org.hl7.fhir.r5.model.ConceptMap r) {
-		for ( org.hl7.fhir.r5.model.ConceptMap.ConceptMapGroupComponent  group :r.getGroup()) {
-			group.getElement().forEach(element -> {
-				element.getTarget().forEach(target -> {
+	private void cleanModifierExtensions(org.hl7.fhir.model.core.ConceptMap r) {
+		for ( org.hl7.fhir.model.core.ConceptMap.ConceptMapGroupComponent  group :r.getGroupList()) {
+			group.getElementList().forEach(element -> {
+				element.getTargetList().forEach(target -> {
 					target.getModifierExtension().clear();
 				});
 			});
 		}
 	}
 
-	private void cleanModifierExtensions(org.hl7.fhir.r5.model.StructureMap r) {
+	private void cleanModifierExtensions(org.hl7.fhir.model.fml.StructureMap r) {
 		r.getContained().forEach(c -> {
-			if (c instanceof org.hl7.fhir.r5.model.ConceptMap) {
-				cleanModifierExtensions((org.hl7.fhir.r5.model.ConceptMap) c);
+			if (c instanceof org.hl7.fhir.model.core.ConceptMap) {
+				cleanModifierExtensions((org.hl7.fhir.model.core.ConceptMap) c);
 			}
 		});
 	}
@@ -163,7 +163,7 @@ public class IgLoaderFromJpaPackageCache extends IgLoader {
 		});
 	}
 
-	private org.hl7.fhir.r5.model.Resource loadPackageEntity(NpmPackageVersionResourceEntity contents) {
+	private org.hl7.fhir.model.core.Resource loadPackageEntity(NpmPackageVersionResourceEntity contents) {
 		try {
 			final var binary = MatchboxServerUtils.getBinaryFromId(contents.getResourceBinary().getId(), myDaoRegistry);
 			final byte[] resourceContentsBytes = MatchboxServerUtils.fetchBlobFromBinary(binary, myBinaryStorageSvc,
@@ -171,20 +171,20 @@ public class IgLoaderFromJpaPackageCache extends IgLoader {
 			final String resourceContents = new String(resourceContentsBytes, StandardCharsets.UTF_8);
 			switch (contents.getFhirVersion()) {
 			case DSTU3:
-				return VersionConvertorFactory_30_50
+				return VersionConvertorFactory_30_N
 						.convertResource(new org.hl7.fhir.dstu3.formats.JsonParser().parse(resourceContents));
 			case R4:
 				org.hl7.fhir.r4.model.Resource r = new org.hl7.fhir.r4.formats.JsonParser().parse(resourceContents);
 				if (r instanceof org.hl7.fhir.r4.model.StructureMap ) {
 					cleanModifierExtensions((org.hl7.fhir.r4.model.StructureMap) r);
 				}
-				return VersionConvertorFactory_40_50
+				return VersionConvertorFactory_40_N
 						.convertResource(r);
 			case R4B:
-				return VersionConvertorFactory_43_50
+				return VersionConvertorFactory_43_N
 						.convertResource(new org.hl7.fhir.r4b.formats.JsonParser().parse(resourceContents));
 			case R5:
-				return new org.hl7.fhir.r5.formats.JsonParser().parse(resourceContents);
+				return new org.hl7.fhir.model.core.formats.JsonParser(org.hl7.fhir.model.ModelContext.fullCoreContext()).parse(resourceContents);
 			default:
 				log.error("FHIR version not support for loading from matchbox case ");
 				throw new RuntimeException(Msg.code(1305) + "Failed to load package resource " + contents);
@@ -414,10 +414,10 @@ public class IgLoaderFromJpaPackageCache extends IgLoader {
 		// Not IgLoader.loadResourceByVersion(), it rejects file names ending with template.json (#610)
 		final Resource r = PackageResourceParser.parseJson(fhirVersion, content);
 		// https://github.com/ahdis/matchbox/issues/227
-		if (r instanceof final org.hl7.fhir.r5.model.StructureMap sm) {
+		if (r instanceof final org.hl7.fhir.model.fml.StructureMap sm) {
 			cleanModifierExtensions(sm);
 		}
-		if (r instanceof final org.hl7.fhir.r5.model.ConceptMap cm) {
+		if (r instanceof final org.hl7.fhir.model.core.ConceptMap cm) {
 			cleanModifierExtensions(cm);
 		}
 		return r;

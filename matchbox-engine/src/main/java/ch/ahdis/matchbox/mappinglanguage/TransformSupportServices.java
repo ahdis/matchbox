@@ -23,15 +23,15 @@ package ch.ahdis.matchbox.mappinglanguage;
 import java.util.List;
 
 import org.hl7.fhir.exceptions.FHIRException;
-import org.hl7.fhir.r5.conformance.profile.ProfileUtilities;
-import org.hl7.fhir.r5.context.IWorkerContext;
-import org.hl7.fhir.r5.elementmodel.Manager;
-import org.hl7.fhir.r5.model.Base;
-import org.hl7.fhir.r5.model.Coding;
-import org.hl7.fhir.r5.model.Parameters;
-import org.hl7.fhir.r5.model.StringType;
-import org.hl7.fhir.r5.model.StructureDefinition;
-import org.hl7.fhir.r5.utils.structuremap.ITransformerServices;
+import org.hl7.fhir.services.conformance.profile.ProfileUtilities;
+import org.hl7.fhir.services.context.IWorkerContext;
+import org.hl7.fhir.services.elementmodel.Manager;
+import org.hl7.fhir.model.Base;
+import org.hl7.fhir.model.core.Coding;
+import org.hl7.fhir.model.core.Parameters;
+import org.hl7.fhir.model.core.StringType;
+import org.hl7.fhir.model.core.StructureDefinition;
+import org.hl7.fhir.services.fml.ITransformerServices;
 import org.hl7.fhir.utilities.Utilities;
 
 public class TransformSupportServices implements ITransformerServices {
@@ -51,7 +51,7 @@ public class TransformSupportServices implements ITransformerServices {
   // matchbox patch https://github.com/ahdis/matchbox/issues/264
   @Override
   public Base createType(Object appInfo, String name, ProfileUtilities profileUtilities) throws FHIRException {
-    StructureDefinition sd = context.fetchResource(StructureDefinition.class, name, IWorkerContext.VersionResolutionRules.defaultRule());
+    StructureDefinition sd = context.fetchResource(StructureDefinition.class, name, org.hl7.fhir.model.core.VersionResolutionRules.defaultRule());
     if (sd == null) {
       if (Utilities.existsInList(name, "http://hl7.org/fhirpath/System.String")) {
         sd = context.fetchTypeDefinition("string"); 
@@ -82,7 +82,7 @@ public class TransformSupportServices implements ITransformerServices {
 
   @Override
   public Base resolveReference(Object appContext, String url) throws FHIRException {	
-   	org.hl7.fhir.r5.model.Resource resource = context.fetchResource(org.hl7.fhir.r5.model.Resource.class, url, IWorkerContext.VersionResolutionRules.defaultRule());
+   	org.hl7.fhir.model.core.Resource resource = context.fetchResource(org.hl7.fhir.model.core.Resource.class, url, org.hl7.fhir.model.core.VersionResolutionRules.defaultRule());
    	return resource;
 //    if (resource != null) {
 //      String inStr = FhirContext.forR4Cached().newJsonParser().encodeResourceToString(resource);

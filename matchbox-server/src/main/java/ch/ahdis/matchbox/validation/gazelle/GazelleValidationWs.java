@@ -16,13 +16,13 @@ import ch.ahdis.matchbox.validation.gazelle.models.metadata.RestBinding;
 import ch.ahdis.matchbox.validation.gazelle.models.metadata.Service;
 import ch.ahdis.matchbox.validation.gazelle.models.validation.*;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.commons.codec.digest.DigestUtils;
-import org.hl7.fhir.r5.model.StructureDefinition;
+import org.hl7.fhir.model.core.StructureDefinition;
 import org.hl7.fhir.utilities.validation.ValidationMessage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import tools.jackson.core.JacksonException;
+import tools.jackson.databind.json.JsonMapper;
 import org.springframework.http.CacheControl;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -88,13 +88,13 @@ public class GazelleValidationWs {
 	private final GazelleApiV1Mapper v1Mapper;
 
 	// The mapper used by Spring for the v2 responses, to serialize the profile list exactly as it is sent
-	private final ObjectMapper objectMapper;
+	private final JsonMapper objectMapper;
 
 	public GazelleValidationWs(final MatchboxEngineSupport matchboxEngineSupport,
 										final CliContext baseCliContext,
 										final Optional<MatchboxMetrics> matchboxMetrics,
 										final MbInstalledStructureDefinitionRepository installedStructureDefinitionRepository,
-										final ObjectMapper objectMapper) {
+										final JsonMapper objectMapper) {
 		this.matchboxEngineSupport = Objects.requireNonNull(matchboxEngineSupport);
 		this.baseCliContext = Objects.requireNonNull(baseCliContext);
 		this.matchboxMetrics = Objects.requireNonNull(matchboxMetrics);
@@ -107,7 +107,7 @@ public class GazelleValidationWs {
 	 * Returns the metadata of the validation service.
 	 */
 	@GetMapping(path = METADATA_PATH, produces = MediaType.APPLICATION_JSON_VALUE)
-	public ResponseEntity<String> getMetadata(final HttpServletRequest request) throws JsonProcessingException {
+	public ResponseEntity<String> getMetadata(final HttpServletRequest request) {
 		final var service = new Service();
 		service.setName("Matchbox");
 		service.setVersion(VersionUtil.getVersion());
@@ -148,7 +148,7 @@ public class GazelleValidationWs {
 	 * Returns the list of profiles supported by this server (v1).
 	 */
 	@GetMapping(path = V1_PROFILES_PATH, produces = MediaType.APPLICATION_JSON_VALUE)
-	public ResponseEntity<String> getProfilesV1(final WebRequest webRequest) throws JsonProcessingException {
+	public ResponseEntity<String> getProfilesV1(final WebRequest webRequest) {
 		return profileListResponse(this.v1Mapper.write(this.getProfiles()), webRequest);
 	}
 
@@ -157,11 +157,11 @@ public class GazelleValidationWs {
 	 */
 	@PostMapping(path = V1_VALIDATE_PATH, consumes = MediaType.APPLICATION_JSON_VALUE, produces =
 		MediaType.APPLICATION_JSON_VALUE)
-	public ResponseEntity<String> postValidateV1(@RequestBody final String body) throws JsonProcessingException {
+	public ResponseEntity<String> postValidateV1(@RequestBody final String body) {
 		final ValidationRequest validationRequest;
 		try {
 			validationRequest = this.v1Mapper.readRequest(body);
-		} catch (final JsonProcessingException exception) {
+		} catch (final JacksonException exception) {
 			return jsonResponse(HttpStatus.BAD_REQUEST, "{\"error\":\"Invalid validation request\"}");
 		}
 		final String requestError = checkRequest(validationRequest, "validationItems");
@@ -200,7 +200,7 @@ public class GazelleValidationWs {
 	 * Returns the list of profiles supported by this server (v2).
 	 */
 	@GetMapping(path = V2_PROFILES_PATH, produces = MediaType.APPLICATION_JSON_VALUE)
-	public ResponseEntity<String> getProfilesV2(final WebRequest webRequest) throws JsonProcessingException {
+	public ResponseEntity<String> getProfilesV2(final WebRequest webRequest) {
 		return profileListResponse(this.objectMapper.writeValueAsString(this.getProfiles()), webRequest);
 	}
 
@@ -330,7 +330,7 @@ public class GazelleValidationWs {
 			report.addValidationSubReport(unexpectedError(exception.getMessage()));
 			return ValidationOutcome.ok(updateReportFields(report));
 		}
-		final StructureDefinition structDef = engine.getStructureDefinitionR5(profileCanonical);
+		final StructureDefinition structDef = engine.getStructureDefinitionR6(profileCanonical);
 
 		// Response: update the validation method
 		method.setValidationProfileVersion(structDef.getVersion());
@@ -433,7 +433,7 @@ public class GazelleValidationWs {
 			log.error("Error while initializing the validation engine", e);
 			throw new MatchboxEngineCreationException("Error while initializing the validation engine: %s".formatted(e.getMessage()), e);
 		}
-		if (engine == null || engine.getStructureDefinitionR5(canonical) == null) {
+		if (engine == null || engine.getStructureDefinitionR6(canonical) == null) {
 			// A reload may have been started in the meantime: the profile is then not unknown, the engine is only not
 			// ready yet, and the same request may succeed later.
 			this.requireInitializedEngine();

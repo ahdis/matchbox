@@ -41,9 +41,9 @@ import org.hl7.fhir.r4.model.Patient;
 import org.hl7.fhir.r4.model.Questionnaire;
 import org.hl7.fhir.r4.model.Resource;
 import org.hl7.fhir.r4.model.StructureMap;
-import org.hl7.fhir.r5.context.IWorkerContext;
-import org.hl7.fhir.r5.formats.JsonParser;
-import org.hl7.fhir.r5.model.Composition;
+import org.hl7.fhir.services.context.IWorkerContext;
+import org.hl7.fhir.model.core.formats.JsonParser;
+import org.hl7.fhir.model.core.Composition;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
@@ -159,7 +159,7 @@ class FhirMappingLanguageTests {
 		assertTrue(sm != null);
 		engine.addCanonicalResource(sm);
 		assertTrue(engine.getCanonicalResource(sm.getUrl(), "4.0.1") != null);
-		assertTrue(engine.getContext().fetchResource(org.hl7.fhir.r5.model.StructureMap.class, sm.getUrl(), IWorkerContext.VersionResolutionRules.defaultRule()) != null);
+		assertTrue(engine.getContext().fetchResource(org.hl7.fhir.model.fml.StructureMap.class, sm.getUrl(), org.hl7.fhir.model.core.VersionResolutionRules.defaultRule()) != null);
 
 		String qr = getFileAsStringFromResources("/questionnairepatient.xml");
 
@@ -168,8 +168,8 @@ class FhirMappingLanguageTests {
 
 		engine.addCanonicalResource(questionnaire);
 		assertTrue(engine.getCanonicalResource(questionnaire.getUrl(), "4.0.1") != null);
-		assertTrue(engine.getContext().fetchResource(org.hl7.fhir.r5.model.Questionnaire.class,
-				questionnaire.getUrl(), IWorkerContext.VersionResolutionRules.defaultRule()) != null);
+		assertTrue(engine.getContext().fetchResource(org.hl7.fhir.model.core.Questionnaire.class,
+				questionnaire.getUrl(), org.hl7.fhir.model.core.VersionResolutionRules.defaultRule()) != null);
 		assertTrue(engine.getCanonicalResourceById("Questionnaire", questionnaire.getId()) != null);
 	}
 
@@ -315,10 +315,10 @@ class FhirMappingLanguageTests {
 		assertEquals("2023-09-20T13:19:13.502Z", patient.getDeceasedDateTimeType().getValueAsString());
 	}
 
-	private org.hl7.fhir.r5.model.CanonicalResource getCanonicalResourceFromJson(String file)
+	private org.hl7.fhir.model.core.CanonicalResource getCanonicalResourceFromJson(String file)
 			throws FHIRFormatError, IOException {
-		JsonParser json = new JsonParser();
-		return (org.hl7.fhir.r5.model.CanonicalResource) json.parse(getFileAsInputStream(file));
+		JsonParser json = new JsonParser(org.hl7.fhir.model.ModelContext.fullCoreContext());
+		return (org.hl7.fhir.model.core.CanonicalResource) json.parse(getFileAsInputStream(file));
 	}
 
 	@Test
@@ -1349,9 +1349,9 @@ class FhirMappingLanguageTests {
 		String result = engine.transform(getFileAsStringFromResources("/bundle-resolve.src.json"), true, "http://example.org/StructureMap/Bundle2Composition", true);
 		assertTrue(result != null);
 		//System.out.println(result);
-		Composition comp = (Composition) new JsonParser().parse(result);
-		assertEquals(2,  comp.getSection().get(0).getSection().size());
-		assertEquals(1,  comp.getSection().get(1).getSection().size());
+		Composition comp = (Composition) new JsonParser(org.hl7.fhir.model.ModelContext.fullCoreContext()).parse(result);
+		assertEquals(2,  comp.getSectionList().get(0).getSectionList().size());
+		assertEquals(1,  comp.getSectionList().get(1).getSectionList().size());
 	}
 
 	@Test

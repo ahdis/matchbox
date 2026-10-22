@@ -61,8 +61,14 @@ the background).
    started.
 3. Run the release workflow:
    `gh workflow run release.yml --repo ahdis/matchbox --ref main -f version=X.Y.Z`
+   A matchbox 5 release (Spring Boot 4) is made from the branch `matchbox_v5` instead of `main` (`--ref matchbox_v5`,
+   the release PR targets `matchbox_v5`). Its Docker image also gets the tag `latest`, like every release.
 4. Follow the release run and then the two runs it starts on the tag (`googleregistry.yml`, `central_repository.yml`)
    until they complete: `gh run list --repo ahdis/matchbox --limit 5`, `gh run watch <id> --repo ahdis/matchbox`.
+   `central_repository.yml` is only started if `hapi.fhir.version` in `pom.xml` is a released HAPI FHIR version
+   (`X.Y.Z`): with a HAPI FHIR build from GitHub Packages (e.g. `8.13.15-pr8189-1`) the release run has the warning
+   "Not published to Maven Central" and only the Docker image is published (`central_repository.yml` itself fails
+   with this version, e.g. when started by a tag created by hand).
 5. Check the release: `gh release view vX.Y.Z --repo ahdis/matchbox`.
 
 Report the release URL and the outcome of the Docker and Maven Central workflows. Creating the tag and release by hand

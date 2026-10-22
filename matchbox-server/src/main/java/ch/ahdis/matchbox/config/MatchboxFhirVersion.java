@@ -4,6 +4,9 @@ import ca.uhn.fhir.context.FhirVersionEnum;
 import ch.ahdis.matchbox.engine.exception.MatchboxUnsupportedFhirVersionException;
 import org.hl7.fhir.convertors.factory.VersionConvertorFactory_40_50;
 import org.hl7.fhir.convertors.factory.VersionConvertorFactory_43_50;
+import org.hl7.fhir.convertors.factory.VersionConvertorFactory_40_N;
+import org.hl7.fhir.convertors.factory.VersionConvertorFactory_43_N;
+import org.hl7.fhir.convertors.factory.VersionConvertorFactory_50_N;
 import org.hl7.fhir.instance.model.api.IBaseResource;
 
 import java.io.IOException;
@@ -64,6 +67,19 @@ public class MatchboxFhirVersion {
 			case R4 -> convertToR4(resource);
 			case R4B -> convertToR4B(resource);
 			case R5 -> resource;
+		};
+	}
+
+	/**
+	 * Convert a resource of the versionless (R6) model of the engine to the server FHIR version.
+	 */
+	public IBaseResource convertForResponse(
+		final org.hl7.fhir.model.core.Resource resource
+	) {
+		return switch (this.fhirVersion) {
+			case R4 -> VersionConvertorFactory_40_N.convertResource(resource);
+			case R4B -> VersionConvertorFactory_43_N.convertResource(resource);
+			case R5 -> VersionConvertorFactory_50_N.convertResource(resource);
 		};
 	}
 

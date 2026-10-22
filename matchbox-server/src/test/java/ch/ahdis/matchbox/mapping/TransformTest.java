@@ -8,9 +8,11 @@ import ch.ahdis.matchbox.test.ServerStartup;
 import ch.ahdis.matchbox.test.ValidationClient;
 import ch.ahdis.matchbox.util.MatchboxEngineSupport;
 import org.apache.commons.io.FileUtils;
+import org.hl7.fhir.r4.model.Bundle;
 import org.hl7.fhir.r4.model.OperationOutcome;
 import org.hl7.fhir.r4.model.Parameters;
 import org.hl7.fhir.r4.model.StringType;
+import org.hl7.fhir.r4.model.StructureMap;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -104,6 +106,34 @@ public class TransformTest {
 		assertInstanceOf(StringType.class, result);
 		assertTrue(((StringType) result).getValue().contains("<Patient xmlns=\"http://hl7.org/fhir\">"));
 
+	}
+
+	@Test
+	void testList() throws Exception {
+		// With onlyOneEngine, $list includes the StructureMaps of the main engine
+		final var createMapRequest = HttpRequest.newBuilder(URI.create(TARGET_SERVER + "/fhir/StructureMap"))
+			.POST(HttpRequest.BodyPublishers.ofString(this.getContent("qr2patgender.map")))
+			.header("Content-Type", "text/fhir-mapping")
+			.header("Accept", "application/fhir+xml")
+			.build();
+		this.httpClient.send(createMapRequest, HttpResponse.BodyHandlers.discarding());
+
+		final var listRequest = HttpRequest.newBuilder(URI.create(TARGET_SERVER + "/fhir/StructureMap/$list"))
+			.GET()
+			.header("Accept", "application/fhir+json")
+			.build();
+		final var response = this.httpClient.send(listRequest, HttpResponse.BodyHandlers.ofString());
+		assertEquals(200, response.statusCode(), response.body());
+		final var bundle = FHIR_CONTEXT.newJsonParser().parseResource(Bundle.class, response.body());
+		assertEquals(Bundle.BundleType.SEARCHSET, bundle.getType());
+		assertEquals(bundle.getEntry().size(), bundle.getTotal());
+		final var map = bundle.getEntry().stream()
+			.map(Bundle.BundleEntryComponent::getResource)
+			.map(StructureMap.class::cast)
+			.filter(sm -> "http://ahdis.ch/matchbox/fml/qr2patgender".equals(sm.getUrl()))
+			.findFirst()
+			.orElseThrow();
+		assertEquals("qr2patgender", map.getName());
 	}
 
 	@Test

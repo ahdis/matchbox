@@ -1,3 +1,74 @@
+2026/10/xx Release 5.0.0
+
+Includes the changes of 5.0.0-rc1, see below.
+
+- JMeter runbook: ch-elm 1.15.6 on the published `matchbox:v4.1.21` and `v5.0.0-rc1` images, 5.0.0-rc1 validates 2.1×
+  faster (median 43–44 vs 90–91 ms) with the same OperationOutcome; how to pull the images without credentials, see
+  `jmeter/claude-jmeter-check.md`
+
+2026/10/20 Release 5.0.0-rc1
+
+- Validation is about twice as fast for profiles whose invariants resolve canonical resources, e.g. the ConceptMaps
+  of ch-elm (`'http://fhir.ch/ig/ch-elm/ConceptMap/…'.resolve()`): `MatchboxEngine` keeps the resources it converted
+  to the element model for `resolve()` instead of converting them on every call (ch-elm: 14 times per validation,
+  45% of the CPU time), the suppressed warning patterns are compiled once and matched without a parallel stream, and
+  the OID registry is loaded once instead of for every validation. The ch-elm load test (`jmeter/memory.jmx`) takes
+  45 instead of 95–102 ms per validation (median). A validation fetches each URL that FHIRPath expressions resolve
+  once (through the fetch cache of the validation, as references already were); each engine keeps the last 100
+  converted resources (`matchbox.fhir.context.fetchCacheSize`, `0` to keep none)
+- Upgrade to Spring Boot 4.0.8 and Spring Framework 7.0.9 to fix `spring-webmvc`
+  [CVE-2026-47884](https://github.com/ahdis/matchbox/security/dependabot/420), with Hibernate ORM 7.2, Jakarta EE 11
+  and JUnit 6. HAPI FHIR is a build of [hapifhir/hapi-fhir#8189](https://github.com/hapifhir/hapi-fhir/pull/8189)
+  (Spring Boot 4 support) until it is released, published as `8.13.15-pr8189-1` to the
+  [GitHub Packages](https://github.com/orgs/ahdis/packages?repo_name=matchbox) of matchbox: building matchbox needs a
+  GitHub token with `read:packages` in the Maven settings (server `github`). The overridden HAPI classes (`JpaConfig`,
+  `TermReadSvcImpl`, `JpaPackageCache`, `PackageLoaderSvc`) were updated to it, the `JsonParser` override was removed
+  (#625 is fixed in HAPI)
+- While HAPI FHIR is such a build, `matchbox-engine` isn't published to Maven Central (its users couldn't resolve
+  HAPI FHIR): the release workflow only starts the Maven Central workflow with a released HAPI FHIR version (`X.Y.Z`)
+- Matchbox runs on Tomcat instead of Undertow (Spring Boot 4 dropped the support for Undertow). The
+  `server.undertow.max-http-post-size` setting isn't needed anymore, Tomcat doesn't limit the size of FHIR request
+  bodies
+- Upgrade Tomcat from 11.0.24 to 11.0.27 to fix the authentication and security constraint bypasses
+  [CVE-2026-65182](https://github.com/ahdis/matchbox/security/code-scanning/529),
+  [CVE-2026-65905](https://github.com/ahdis/matchbox/security/code-scanning/530) and
+  [CVE-2026-68525](https://github.com/ahdis/matchbox/security/code-scanning/531)
+- Loading packages from `http(s)` URLs follows redirects with the redirect handling of HAPI FHIR (#75), which also
+  supports a package URL allow-list (`IPackageUrlAllowListProvider`, all URLs are allowed by default). Without an
+  allow-list HAPI FHIR would disable the SSRF protection of the core library for the whole JVM: matchbox keeps it as
+  configured with `matchbox.fhir.context.ssrfProtectionEnabled`
+- The Gazelle validation API uses the Jackson 3 mapper of Spring Boot
+- Upgrade org.hl7.fhir.core from 6.10.4 to [7.0.1](https://github.com/hapifhir/org.hl7.fhir.core/releases/tag/7.0.1):
+  the validator, the FHIR mapping language and the worker context are based on the versionless R6 modules
+  (`org.hl7.fhir.model`, `org.hl7.fhir.services`, `org.hl7.fhir.standalone`) instead of `org.hl7.fhir.r5`. The
+  matchbox patches of the r5 classes are applied to their R6 counterparts (see `updatehapi.sh`), the ones fixed in
+  7.0.1 were dropped (#538 copy of the master definitions and packages, #609, #618 memory-only terminology cache, the
+  `name[x]` and xhtml handling of `Element.setProperty`). The API of `MatchboxEngine` uses the R6 model
+  (`org.hl7.fhir.model.core`, `StructureMap` is `org.hl7.fhir.model.fml.StructureMap`), with overloads for the HAPI R5
+  model (`addCanonicalResource`, `createSnapshot`) and `R6Model` to convert between them. `parseMapR6` and
+  `getStructureDefinitionR6` return the R6 model, `parseMapR5` and `getStructureDefinitionR5` still the HAPI R5
+  model. `createSnapshot` adds the snapshot to the StructureDefinition it is given for the HAPI R4 and R5 models too
+  (it returned a new instance). `useTxCacheFolder(folder)` and `disableTxCache()` replace `initTxCache(folder)`,
+  which is deprecated: the terminology cache of a context is in memory before. HAPI FHIR is still built
+  with org.hl7.fhir.core 6: matchbox overrides `HapiWorkerContext` (DSTU3, R4, R4B, R5) and
+  `WorkerContextValidationSupportAdapter`, because `ILoggingService` moved to `org.hl7.fhir.utilities.logging`
+- Upgrade org.hl7.fhir.core to [7.0.2](https://github.com/hapifhir/org.hl7.fhir.core/releases/tag/7.0.2)
+  (performance improvements, snapshot generation and FHIRPath fixes, the Bundle and ConceptMap renderer fixes
+  contributed by matchbox). The matchbox patches were merged with the changes of 7.0.2, the copy of the resource
+  indexes per type of a worker context (#608) was dropped: 7.0.2 copies `allResourcesById` and `allResourcesByUrl`
+  itself. The `TermReadSvcImpl` override is adapted to the version convertors, which no longer track the conversion
+  path. A scan of the HAPI FHIR jars found no references to classes or members that 7.0.2 removed
+- A `MatchboxEngine` created from another one shared its suppressed warning/information patterns with it: the engine
+  for an IG cleared and replaced the suppressed warnings of all engines (`matchbox.fhir.context.suppressWarnInfo`), it
+  now has its own copy. Creating the engine for an IG also cleared the suppressed errors of the main engine
+  (`matchbox.fhir.context.suppressError`)
+- `HttpRequestWrapper` converts the resources of a search result without a parallel stream (ForkJoinPool overhead)
+- `Bundle/$get-profiles` (and the MCP tool `get-profiles-for-document-bundle`) matches the profiles of a document
+  with any of the type codings of its Composition, not only the first one, and with any of the codings of its
+  categories (a profile without a fixed category matches any categories, or none). A fixed category is only used
+  if it's mandatory (`Composition.category` and, for a fixed Coding, `Composition.category.coding` with a minimum
+  of 1): a profile with an optional fixed category also matches documents without a category
+
 2026/10/xx Release 4.1.22
 
 - Remove the duplicate `opentelemetry-spring-boot-starter` entry in the `dependencyManagement` of the root `pom.xml`,
