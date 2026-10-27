@@ -13,6 +13,7 @@ import org.hl7.fhir.r4.model.OperationOutcome;
 import org.hl7.fhir.r4.model.Parameters;
 import org.hl7.fhir.r4.model.StringType;
 import org.hl7.fhir.r4.model.StructureMap;
+import org.hl7.fhir.r4.model.ValueSet;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -286,6 +287,44 @@ public class TransformTest {
 		assertTrue(missingName.getFirst().contains("Practitioner.name"), missingName.toString());
 		assertEquals(List.of(), errors(this.validationClient.validate("""
 			{ "resourceType": "Practitioner", "active": true, "name": [ { "family": "Muster" } ] }""", profile)));
+	}
+
+	/**
+	 * In the 'onlyOneEngine' mode, the ValueSets are searched in the main engine, which doesn't allow to iterate all
+	 * its ValueSets: only the ValueSets of the requested page are loaded, see
+	 * <a href="https://github.com/ahdis/matchbox/issues/663">issue 663</a>.
+	 */
+	@Test
+	void testSearchValueSets() throws Exception {
+		final Bundle firstPage = this.search("ValueSet?_count=5");
+		assertTrue(firstPage.getTotal() > 10, "the main engine should have the ValueSets of the core package");
+		final List<String> firstUrls = valueSetUrls(firstPage);
+		assertEquals(5, firstUrls.size(), firstUrls.toString());
+
+		final Bundle secondPage = this.search("ValueSet?_count=5&_offset=5");
+		assertEquals(firstPage.getTotal(), secondPage.getTotal());
+		final List<String> secondUrls = valueSetUrls(secondPage);
+		assertEquals(5, secondUrls.size(), secondUrls.toString());
+		assertTrue(secondUrls.stream().noneMatch(firstUrls::contains), firstUrls + " " + secondUrls);
+
+		final Bundle byUrl = this.search("ValueSet?url=http://hl7.org/fhir/ValueSet/administrative-gender");
+		assertEquals(List.of("http://hl7.org/fhir/ValueSet/administrative-gender"), valueSetUrls(byUrl));
+	}
+
+	private Bundle search(final String query) throws Exception {
+		final var request = HttpRequest.newBuilder(URI.create(TARGET_SERVER + "/fhir/" + query))
+			.GET()
+			.header("Accept", "application/fhir+json")
+			.build();
+		final var response = this.httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+		assertEquals(200, response.statusCode(), "the search " + query + " failed: " + response.body());
+		return FHIR_CONTEXT.newJsonParser().parseResource(Bundle.class, response.body());
+	}
+
+	private static List<String> valueSetUrls(final Bundle bundle) {
+		return bundle.getEntry().stream()
+			.map(e -> assertInstanceOf(ValueSet.class, e.getResource()).getUrl())
+			.toList();
 	}
 
 	private static List<String> errors(final org.hl7.fhir.instance.model.api.IBaseOperationOutcome outcome) {

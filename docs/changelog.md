@@ -87,6 +87,10 @@ Includes the changes of 5.0.0-rc1, see below.
 - Release workflow: release candidates `X.Y.Z-rcN` (e.g. `5.0.0-rc1`) are published as GitHub pre-releases and their
   Docker image doesn't get the tag `latest`. The release notes end before the next release section, also one that
   isn't dated yet
+- Searching ValueSets (`GET [base]/ValueSet`) in the `onlyOneEngine` mode failed with "This context is configured to
+  not allow Iterating ValueSet resources due to performance concerns"
+  ([#663](https://github.com/ahdis/matchbox/issues/663)). The search of conformance resources in this mode now loads
+  only the resources of the requested page (sorted by URL and version) instead of all resources of the type
 
 2026/10/05 Release 4.1.21
 
