@@ -18,6 +18,10 @@
   isn't dated yet
 - Security checks: Trivy no longer searches Rekor (sigstore) for SBOM attestations of the Docker image, these searches
   took the image scan over its 35 min timeout
+- Searching ValueSets (`GET [base]/ValueSet`) in the `onlyOneEngine` mode failed with "This context is configured to
+  not allow Iterating ValueSet resources due to performance concerns"
+  ([#663](https://github.com/ahdis/matchbox/issues/663)). The search of conformance resources in this mode now loads
+  only the resources of the requested page (sorted by URL and version) instead of all resources of the type
 
 2026/10/05 Release 4.1.21
 
