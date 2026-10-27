@@ -3234,6 +3234,70 @@ public abstract class BaseWorkerContext extends I18nBase implements IWorkerConte
     return res;
   }
 
+  // matchbox patch https://github.com/ahdis/matchbox/issues/663: a page of the resources of a type, sorted by URL and
+  // version. Unlike fetchResourcesByType(), only the resources of the page are loaded through the lazy loading, so this
+  // also pages through the ValueSets, which fetchResourcesByType() doesn't allow to iterate (see
+  // isAllowedToIterateTerminologyResources())
+  public record ResourcePage<T extends Resource>(List<T> resources, int total) {
+  }
+
+  @SuppressWarnings("unchecked")
+  public <T extends Resource> ResourcePage<T> fetchResourcesByType(Class<T> class_, int offset, int count) {
+    CanonicalResourceManager<?> manager = canonicalResourceManagerFor(class_);
+    if (manager == null) {
+      throw new FHIRException("Paging through the resources of type " + class_.getSimpleName() + " is not supported");
+    }
+    synchronized (lock) {
+      List<? extends CanonicalResourceManager<?>.CachedCanonicalResource<?>> all = manager.getCachedList().stream()
+        .sorted(Comparator.comparing((CanonicalResourceManager<?>.CachedCanonicalResource<?> cr) -> cr.getUrl(), Comparator.nullsFirst(Comparator.<String>naturalOrder()))
+          .thenComparing(cr -> cr.getVersion(), Comparator.nullsFirst(Comparator.<String>naturalOrder())))
+        .toList();
+      List<T> res = new ArrayList<>();
+      for (int i = Math.max(offset, 0); i < Math.min((long) offset + count, all.size()); i++) {
+        res.add((T) all.get(i).getResource());
+      }
+      return new ResourcePage<>(res, all.size());
+    }
+  }
+
+  private CanonicalResourceManager<?> canonicalResourceManagerFor(Class<? extends Resource> class_) {
+    if (class_ == ImplementationGuide.class) {
+      return guides;
+    } else if (class_ == CapabilityStatement.class) {
+      return capstmts;
+    } else if (class_ == Measure.class) {
+      return measures;
+    } else if (class_ == Library.class) {
+      return libraries;
+    } else if (class_ == StructureDefinition.class) {
+      return structures;
+    } else if (class_ == StructureMap.class) {
+      return transforms;
+    } else if (class_ == ValueSet.class) {
+      return valueSets;
+    } else if (class_ == CodeSystem.class) {
+      return codeSystems;
+    } else if (class_ == NamingSystem.class) {
+      return systems;
+    } else if (class_ == ActorDefinition.class) {
+      return actors;
+    } else if (class_ == Requirements.class) {
+      return requirements;
+    } else if (class_ == ConceptMap.class) {
+      return maps;
+    } else if (class_ == PlanDefinition.class) {
+      return plans;
+    } else if (class_ == OperationDefinition.class) {
+      return operations;
+    } else if (class_ == Questionnaire.class) {
+      return questionnaires;
+    } else if (class_ == SearchParameter.class) {
+      return searchParameters;
+    }
+    return null;
+  }
+  // END matchbox patch
+
   @SuppressWarnings("unchecked")
   public <T extends Resource> List<T> fetchResourceVersionsByTypeAndUrl(Class<T> class_, String url) {
 

@@ -159,20 +159,24 @@ public class ConformancePackageResourceProvider<R4 extends MetadataResource, R4B
 																											false, false);
 			if (matchboxEngine != null) {
 
+				final int offset = (theOffset == null ? 0 : theOffset);
+				final int count = (theCount == null ? 20 : theCount);
+				final int totalSize;
+				final List<org.hl7.fhir.model.core.Resource> paged;
 				if (theUrl != null) {
 					String url = theUrl.getValuesAsQueryTokens().get(0).getValuesAsQueryTokens().get(0).getValue();
 					final org.hl7.fhir.model.core.Resource r = matchboxEngine.getContext().fetchResource(R6Model.classFor(classR5), url, VersionResolutionRules.defaultRule());
 					if (r != null)
 						resources.add(r);
+					totalSize = resources.size();
+					final int toIndex = Math.min(offset + count, totalSize);
+					paged = (offset < totalSize) ? resources.subList(offset, toIndex) : List.of();
 				} else {
-					resources.addAll(matchboxEngine.getContext().fetchResourcesByType(R6Model.classFor(classR5)));
+					// only the resources of the page are loaded: iterating all ValueSets isn't allowed (#663)
+					final var page = matchboxEngine.getContext().fetchResourcesByType(R6Model.classFor(classR5), offset, count);
+					totalSize = page.total();
+					paged = List.copyOf(page.resources());
 				}
-
-				final int offset = (theOffset == null ? 0 : theOffset);
-				final int count = (theCount == null ? 20 : theCount);
-				final int totalSize = resources.size();
-				final int toIndex = Math.min(offset + count, totalSize);
-				final var paged = (offset < totalSize) ? resources.subList(offset, toIndex) : List.<org.hl7.fhir.model.core.Resource>of();
 
 				final SimpleBundleProvider bundleProvider = httpWrapper.makeBundleProviderFromR6(paged);
 				bundleProvider.setSize(totalSize);
