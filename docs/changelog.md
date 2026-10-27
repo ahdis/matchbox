@@ -22,6 +22,9 @@
   not allow Iterating ValueSet resources due to performance concerns"
   ([#663](https://github.com/ahdis/matchbox/issues/663)). The search of conformance resources in this mode now loads
   only the resources of the requested page (sorted by URL and version) instead of all resources of the type
+- The `onlyOneEngine` mode exposes the NamingSystems of the main engine (`GET [base]/NamingSystem`), e.g. to debug the
+  OID to URI mapping of `http://hl7.org/fhir/ConceptMap/special-oid2uri` in transformations
+  ([#664](https://github.com/ahdis/matchbox/issues/664))
 
 2026/10/05 Release 4.1.21
 
