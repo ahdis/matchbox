@@ -5,6 +5,13 @@ Includes the changes of 5.0.0-rc1, see below.
 - JMeter runbook: ch-elm 1.15.6 on the published `matchbox:v4.1.21` and `v5.0.0-rc1` images, 5.0.0-rc1 validates 2.1×
   faster (median 43–44 vs 90–91 ms) with the same OperationOutcome; how to pull the images without credentials, see
   `jmeter/claude-jmeter-check.md`
+- Searching ValueSets (`GET [base]/ValueSet`) in the `onlyOneEngine` mode failed with "This context is configured to
+  not allow Iterating ValueSet resources due to performance concerns"
+  ([#663](https://github.com/ahdis/matchbox/issues/663)). The search of conformance resources in this mode now loads
+  only the resources of the requested page (sorted by URL and version) instead of all resources of the type
+- The `onlyOneEngine` mode exposes the NamingSystems of the main engine (`GET [base]/NamingSystem`), e.g. to debug the
+  OID to URI mapping of `http://hl7.org/fhir/ConceptMap/special-oid2uri` in transformations
+  ([#664](https://github.com/ahdis/matchbox/issues/664))
 
 2026/10/20 Release 5.0.0-rc1
 
