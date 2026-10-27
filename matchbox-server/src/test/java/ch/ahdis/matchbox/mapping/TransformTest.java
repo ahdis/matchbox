@@ -9,6 +9,7 @@ import ch.ahdis.matchbox.test.ValidationClient;
 import ch.ahdis.matchbox.util.MatchboxEngineSupport;
 import org.apache.commons.io.FileUtils;
 import org.hl7.fhir.r4.model.Bundle;
+import org.hl7.fhir.r4.model.NamingSystem;
 import org.hl7.fhir.r4.model.OperationOutcome;
 import org.hl7.fhir.r4.model.Parameters;
 import org.hl7.fhir.r4.model.StringType;
@@ -280,6 +281,22 @@ public class TransformTest {
 
 		final Bundle byUrl = this.search("ValueSet?url=http://hl7.org/fhir/ValueSet/administrative-gender");
 		assertEquals(List.of("http://hl7.org/fhir/ValueSet/administrative-gender"), valueSetUrls(byUrl));
+	}
+
+	/**
+	 * In the 'onlyOneEngine' mode, the NamingSystems of the main engine are exposed, e.g. to debug the OID to URI
+	 * mapping of http://hl7.org/fhir/ConceptMap/special-oid2uri, see
+	 * <a href="https://github.com/ahdis/matchbox/issues/664">issue 664</a>.
+	 */
+	@Test
+	void testSearchNamingSystems() throws Exception {
+		final Bundle namingSystems = this.search("NamingSystem?_count=5");
+		assertTrue(namingSystems.getTotal() > 0, "the main engine should have NamingSystems");
+		assertFalse(namingSystems.getEntry().isEmpty());
+		for (final var entry : namingSystems.getEntry()) {
+			final var namingSystem = assertInstanceOf(NamingSystem.class, entry.getResource());
+			assertTrue(namingSystem.hasUniqueId(), namingSystem.getName());
+		}
 	}
 
 	private Bundle search(final String query) throws Exception {
