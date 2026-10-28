@@ -13,7 +13,8 @@ Includes the changes of 5.0.0-rc1, see below.
   OID to URI mapping of `http://hl7.org/fhir/ConceptMap/special-oid2uri` in transformations
   ([#664](https://github.com/ahdis/matchbox/issues/664))
 - Upgrade Guava to 33.7.2 to fix CVE-2026-102554 (HAPI FHIR brought 33.2.1 into `matchbox-server`, FHIR Core 32.0.1
-  into `matchbox-engine`), the version is now set in the root `pom.xml`
+  into `matchbox-engine`), the version is now set in the root `pom.xml`. `graphql-java` is excluded, it shades Guava
+  32.1.2 and GraphQL isn't enabled in matchbox
 
 2026/10/20 Release 5.0.0-rc1
 

@@ -65,6 +65,11 @@
             <groupId>org.commonmark</groupId>
             <artifactId>commonmark-ext-gfm-tables</artifactId>
         </dependency>
+        <!-- Nullness annotations, Guava doesn't bring them in anymore since 33.4.5 -->
+        <dependency>
+            <groupId>org.checkerframework</groupId>
+            <artifactId>checker-qual</artifactId>
+        </dependency>
 
         <!-- Manual upgrade of Jackson -->
         <dependency>
