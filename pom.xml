@@ -52,6 +52,7 @@
         <commons_dbcp2_version>2.14.0</commons_dbcp2_version>
         <commons_io_version>2.22.0</commons_io_version>
         <commons_lang3_version>3.20.0</commons_lang3_version>
+        <guava_version>33.7.2-jre</guava_version>
         <junit_version>6.0.3</junit_version>
         <logback_version>1.6.3</logback_version>
         <jackson2_version>2.22.3</jackson2_version>
@@ -187,6 +188,12 @@
                 <groupId>org.apache.opennlp</groupId>
                 <artifactId>opennlp-tools</artifactId>
                 <version>2.5.10</version>
+            </dependency>
+            <!-- Force guava >= 33.7.2 to fix CVE-2026-102554 (transitive via HAPI FHIR and FHIR Core) -->
+            <dependency>
+                <groupId>com.google.guava</groupId>
+                <artifactId>guava</artifactId>
+                <version>${guava_version}</version>
             </dependency>
             <dependency>
                 <groupId>org.thymeleaf</groupId>
