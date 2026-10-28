@@ -43,8 +43,8 @@ import ch.ahdis.matchbox.packages.MatchboxImplementationGuideProvider;
 import dev.langchain4j.model.chat.listener.ChatModelListener;
 import org.apache.commons.beanutils.BeanUtils;
 import org.apache.commons.codec.digest.DigestUtils;
-import org.checkerframework.checker.nullness.qual.NonNull;
-import org.checkerframework.checker.nullness.qual.Nullable;
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
 import org.hl7.fhir.instance.model.api.IBase;
 import org.hl7.fhir.instance.model.api.IBaseOperationOutcome;
 import org.hl7.fhir.instance.model.api.IBaseResource;
@@ -479,7 +479,7 @@ public class ValidationProvider {
 		return oo;
 	}
 
-	private OperationOutcome getOoForError(final @NonNull String message) {
+	private OperationOutcome getOoForError(final @Nonnull String message) {
 		final var oo = new OperationOutcome();
 		final var issue = oo.addIssue();
 		issue.setSeverity(OperationOutcome.IssueSeverity.ERROR);
