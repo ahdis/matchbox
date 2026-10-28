@@ -8,7 +8,7 @@ import ca.uhn.fhir.jpa.binary.svc.NullBinaryStorageSvcImpl;
 import ca.uhn.fhir.jpa.model.dao.JpaPid;
 import ca.uhn.fhir.rest.server.exceptions.InternalErrorException;
 import ca.uhn.fhir.util.BinaryUtil;
-import org.checkerframework.checker.nullness.qual.Nullable;
+import jakarta.annotation.Nullable;
 import org.hl7.fhir.instance.model.api.IBaseBinary;
 import org.hl7.fhir.r5.model.Element;
 import org.hl7.fhir.r5.model.PrimitiveType;

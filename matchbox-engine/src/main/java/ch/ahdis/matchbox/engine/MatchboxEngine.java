@@ -35,8 +35,8 @@ import java.util.*;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
-import org.checkerframework.checker.nullness.qual.NonNull;
-import org.checkerframework.checker.nullness.qual.Nullable;
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
 import org.fhir.ucum.UcumEssenceService;
 import org.hl7.fhir.convertors.factory.VersionConvertorFactory_40_N;
 import org.hl7.fhir.convertors.factory.VersionConvertorFactory_43_N;
@@ -212,7 +212,7 @@ public class MatchboxEngine extends ValidationEngine {
   		}
 	}
 
-	public MatchboxEngine(final @NonNull ValidationEngine other) throws FHIRException, IOException {
+	public MatchboxEngine(final @Nonnull ValidationEngine other) throws FHIRException, IOException {
 		super(other);
 		if (other instanceof MatchboxEngine) {
 				MatchboxEngine otherMatchboxEngine = (MatchboxEngine) other;
@@ -502,7 +502,7 @@ public class MatchboxEngine extends ValidationEngine {
 			}
 		}
 
-		@NonNull
+		@Nonnull
 		private InputStream getNpmPackageStream(final String packageName) {
 			log.info("loaded "+packageName+" from classpath");
 			return Objects.requireNonNull(getClass().getResourceAsStream("/%s.tgz".formatted(packageName)));
@@ -934,8 +934,8 @@ public class MatchboxEngine extends ValidationEngine {
 	 * @throws IOException       IO Exception
 	 * @throws EOperationOutcome Exception OperationOutcome
 	 */
-	public OperationOutcome validate(final @NonNull InputStream stream,
-												final @NonNull FhirFormat format,
+	public OperationOutcome validate(final @Nonnull InputStream stream,
+												final @Nonnull FhirFormat format,
 												final @Nullable String profileUrl)
 			throws FHIRException, IOException, EOperationOutcome {
 		return this.messagesToOutcome(this.validate(format, stream, profileUrl), this.getContext());
@@ -951,15 +951,15 @@ public class MatchboxEngine extends ValidationEngine {
 	 * @throws FHIRException     FHIR Exception
 	 * @throws IOException       IO Exception
 	 */
-	public OperationOutcome validate(final @NonNull Resource resource, final @Nullable String profileUrl)
+	public OperationOutcome validate(final @Nonnull Resource resource, final @Nullable String profileUrl)
 			throws FHIRException, IOException, EOperationOutcome {
 		final var result = new org.hl7.fhir.r4.formats.JsonParser().composeBytes(resource);
 		return this.validate(new ByteArrayInputStream(result), FhirFormat.JSON, profileUrl);
 	}
 
 	// testing entry point
-	public List<ValidationMessage> validate(final @NonNull FhirFormat format,
-														 final @NonNull InputStream stream,
+	public List<ValidationMessage> validate(final @Nonnull FhirFormat format,
+														 final @Nonnull InputStream stream,
 														 final @Nullable String profileUrl)
 			throws FHIRException, IOException, EOperationOutcome {
 		StructureDefinition sd = null;
@@ -1056,7 +1056,7 @@ public class MatchboxEngine extends ValidationEngine {
 	 * @param id   resource id
 	 * @return
 	 */
-	public IBaseResource getCanonicalResourceById(final String type, final @NonNull String id) {
+	public IBaseResource getCanonicalResourceById(final String type, final @Nonnull String id) {
 		org.hl7.fhir.model.core.Resource fetched = this.getContext().fetchResourceById(type, id);
 		if (fetched != null) {
 			if ("5.0.0".equals(this.getVersion())) {
@@ -1186,9 +1186,9 @@ public class MatchboxEngine extends ValidationEngine {
 	 * @throws FHIRException FHIR Exception
 	 * @throws IOException   IO Exception
 	 */
-	public String evaluateFhirPath(final @NonNull String input,
+	public String evaluateFhirPath(final @Nonnull String input,
 											 final boolean inputJson,
-											 final @NonNull String expression)
+											 final @Nonnull String expression)
 			throws FHIRException, IOException {
 		FHIRPathEngine fpe = this.getValidator(null).getFHIRPathEngine();
 		Element e = Manager.parseSingle(this.getContext(), new ByteArrayInputStream(input.getBytes(StandardCharsets.UTF_8)),
@@ -1199,7 +1199,7 @@ public class MatchboxEngine extends ValidationEngine {
 	}
 
 
-	public String convert(final @NonNull String input, final boolean inputJson ) throws FHIRException, IOException {
+	public String convert(final @Nonnull String input, final boolean inputJson ) throws FHIRException, IOException {
 	    Element e = Manager.parseSingle(this.getContext(), new ByteArrayInputStream(input.getBytes(StandardCharsets.UTF_8)),
 	            (inputJson ? FhirFormat.JSON : FhirFormat.XML));
 	    ByteArrayOutputStream bs = new ByteArrayOutputStream();
@@ -1217,7 +1217,7 @@ public class MatchboxEngine extends ValidationEngine {
 	 *
 	 * @param inputStream The NPM package input stream. It will be closed.
 	 */
-	public void loadPackage(final @NonNull InputStream inputStream) throws IOException {
+	public void loadPackage(final @Nonnull InputStream inputStream) throws IOException {
 		final NpmPackage npmPackage = NpmPackage.fromPackage(Objects.requireNonNull(inputStream));
 
 		// Remove the dependencies to disable recursive loading
@@ -1238,7 +1238,7 @@ public class MatchboxEngine extends ValidationEngine {
 	 * @param messages The original list of validation messages.
 	 * @return A copy of the message list, without issues that have to be filtered.
 	 */
-	public List<ValidationMessage> filterValidationMessages(final @NonNull List<ValidationMessage> messages) {
+	public List<ValidationMessage> filterValidationMessages(final @Nonnull List<ValidationMessage> messages) {
 		final List<Pattern> ignoredPatterns = this.compileSuppressedWarnInfoPatterns();
 		return messages.stream()
 			.filter(message -> {
@@ -1295,7 +1295,7 @@ public class MatchboxEngine extends ValidationEngine {
 	 * @param messageId The messageId to check.
 	 * @param regexPath The regexPath to check.
 	 */
-	public void addSuppressedError(final @NonNull String messageId, final @NonNull String regexPath) {
+	public void addSuppressedError(final @Nonnull String messageId, final @Nonnull String regexPath) {
 		final var advisor = getMatchboxValidationPolicyAdvisor();
 		if (advisor != null) {
 			advisor.addSuppressedError(messageId, regexPath);
@@ -1311,7 +1311,7 @@ public class MatchboxEngine extends ValidationEngine {
 	 *
 	 * @param text The text to add.
 	 */
-	public void addSuppressedWarnInfo(final @NonNull String text) {
+	public void addSuppressedWarnInfo(final @Nonnull String text) {
 		this.suppressedWarnInfoPatterns.add(Pattern.quote(Objects.requireNonNull(text)));
 	}
 
@@ -1320,7 +1320,7 @@ public class MatchboxEngine extends ValidationEngine {
 	 *
 	 * @param pattern The Regex pattern to add.
 	 */
-	public void addSuppressedWarnInfoPattern(final @NonNull String pattern) {
+	public void addSuppressedWarnInfoPattern(final @Nonnull String pattern) {
 		this.suppressedWarnInfoPatterns.add(Objects.requireNonNull(pattern));
 	}
 
@@ -1480,8 +1480,8 @@ public class MatchboxEngine extends ValidationEngine {
 	/**
 	 * Maps a list of {@link ValidationMessage} to an R4 {@link OperationOutcome}.
 	 */
-	protected OperationOutcome messagesToOutcome(final @NonNull List<ValidationMessage> messages,
-																final @NonNull SimpleWorkerContext context)
+	protected OperationOutcome messagesToOutcome(final @Nonnull List<ValidationMessage> messages,
+																final @Nonnull SimpleWorkerContext context)
 		throws IOException, FHIRException, EOperationOutcome {
 		final var op = new org.hl7.fhir.model.core.OperationOutcome();
 		messages.stream().map(vm -> OperationOutcomeUtilities.convertToIssue(vm, op))
@@ -1506,7 +1506,7 @@ public class MatchboxEngine extends ValidationEngine {
 	 * @throws FHIRException
 	 * @throws IOException
 	 */
-	public void useTxCacheFolder(final @NonNull String cacheDir) throws FileNotFoundException, FHIRException, IOException {
+	public void useTxCacheFolder(final @Nonnull String cacheDir) throws FileNotFoundException, FHIRException, IOException {
 		getContext().initTxCache(Objects.requireNonNull(cacheDir));
 		getContext().setCachingAllowed(true);
 	}

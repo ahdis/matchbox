@@ -22,8 +22,8 @@ import ch.ahdis.matchbox.util.http.HttpRequestWrapper;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.apache.commons.codec.digest.DigestUtils;
-import org.checkerframework.checker.nullness.qual.NonNull;
-import org.checkerframework.checker.nullness.qual.Nullable;
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
 import org.hl7.fhir.instance.model.api.IBaseResource;
 import org.hl7.fhir.services.conformance.R5ExtensionsLoader;
 import org.hl7.fhir.standalone.terminology.client.TerminologyClientContext;
@@ -219,7 +219,7 @@ public class MatchboxEngineSupport {
 	 * @param id
 	 * @return
 	 */
-	public IBaseResource getCachedResource(final String resource, final @NonNull String id) {
+	public IBaseResource getCachedResource(final String resource, final @Nonnull String id) {
 		for (final String sessionId : this.engineCache.getSessionIds()) {
 			final MatchboxEngine engine = this.engineCache.fetchEngine(sessionId);
 			final IBaseResource res = engine.getCanonicalResourceById(resource, id);
@@ -230,9 +230,9 @@ public class MatchboxEngineSupport {
 		return null;
 	}
 
-	private MatchboxEngine createMatchboxEngine(final @NonNull MatchboxEngine engine,
+	private MatchboxEngine createMatchboxEngine(final @Nonnull MatchboxEngine engine,
 															  final @Nullable String ig,
-															  final @NonNull CliContext cliContext) throws MatchboxEngineCreationException {
+															  final @Nonnull CliContext cliContext) throws MatchboxEngineCreationException {
 		final String forIg = (ig != null) ? "for " + ig : "";
 		log.info("Creating new validate engine {} with parameters {}", forIg, cliContext.sessionId());
 
@@ -281,7 +281,7 @@ public class MatchboxEngineSupport {
 	 * Returns the FHIR core package for the specified FHIR version in the cliContext, or {@code null} if the FHIR
 	 * version is not supported.
 	 */
-	public @Nullable String getFhirCorePackage(final @NonNull CliContext cliContext) {
+	public @Nullable String getFhirCorePackage(final @Nonnull CliContext cliContext) {
 		if (cliContext.getFhirVersion().startsWith("4.0")) {
 			return "hl7.fhir.r4.core#4.0.1";
 		}
@@ -909,8 +909,8 @@ public class MatchboxEngineSupport {
 		}
 	}
 
-	private void addSuppressedWarnInfoToEngine(final @NonNull String pattern,
-															 final @NonNull MatchboxEngine engine) {
+	private void addSuppressedWarnInfoToEngine(final @Nonnull String pattern,
+															 final @Nonnull MatchboxEngine engine) {
 		if (pattern.startsWith("regex:")) {
 			// If it starts with "regex:", then remove the prefix and add it as a regex pattern
 			engine.addSuppressedWarnInfoPattern(pattern.substring(6));
@@ -926,8 +926,8 @@ public class MatchboxEngineSupport {
 	 * @param pattern messageId@^regexPath
 	 * @param engine  The engine to add the pattern to.
 	 */
-	private void addSuppressedErrorToEngine(final @NonNull String pattern,
-															 final @NonNull MatchboxEngine engine) {
+	private void addSuppressedErrorToEngine(final @Nonnull String pattern,
+															 final @Nonnull MatchboxEngine engine) {
 		if (pattern.contains("@")) {
 			String id = pattern.substring(0, pattern.indexOf("@"));
 			String path = pattern.substring(pattern.indexOf("@")+1);

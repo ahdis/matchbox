@@ -53,6 +53,7 @@
         <commons_io_version>2.22.0</commons_io_version>
         <commons_lang3_version>3.20.0</commons_lang3_version>
         <guava_version>33.7.2-jre</guava_version>
+        <jakarta_annotation_version>3.0.0</jakarta_annotation_version>
         <junit_version>6.0.3</junit_version>
         <logback_version>1.6.3</logback_version>
         <jackson2_version>2.22.3</jackson2_version>
@@ -85,7 +86,6 @@
 
         <!-- Other dependencies we need -->
         <lombok_version>1.18.48</lombok_version>
-        <checker_qual_version>3.55.1</checker_qual_version>
         <postgresql_version>42.7.13</postgresql_version>
         <h2_version>2.5.250</h2_version>
         <jakarta_servlet_version>6.1.0</jakarta_servlet_version>
@@ -507,11 +507,6 @@
                 <version>${lombok_version}</version>
                 <scope>provided</scope>
             </dependency>
-            <dependency>
-                <groupId>org.checkerframework</groupId>
-                <artifactId>checker-qual</artifactId>
-                <version>${checker_qual_version}</version>
-            </dependency>
             <!-- dependencies for test -->
             <dependency>
                 <groupId>org.junit.jupiter</groupId>
@@ -656,6 +651,11 @@
                 <artifactId>jakarta.servlet-api</artifactId>
                 <version>${jakarta_servlet_version}</version>
                 <scope>provided</scope>
+            </dependency>
+            <dependency>
+                <groupId>jakarta.annotation</groupId>
+                <artifactId>jakarta.annotation-api</artifactId>
+                <version>${jakarta_annotation_version}</version>
             </dependency>
             <dependency>
                 <!-- Still needed by Jackson -->
