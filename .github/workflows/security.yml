@@ -16,11 +16,7 @@ jobs:
   maven-dependencies:
     name: Download the Maven dependencies
     runs-on: ubuntu-latest
-    env:
-      # Read the HAPI FHIR build from GitHub Packages, see the 'github' repository in pom.xml
-      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     permissions:
-      packages: read # HAPI FHIR from GitHub Packages
       contents: read
 
     steps:
@@ -37,9 +33,10 @@ jobs:
 
       # The local Maven repository is shared with the jobs below: Trivy resolves the dependencies of the pom.xml files
       # from it instead of fetching them from Maven Central, which answers '429 Too Many Requests' to the GitHub runners
-      - name: Cache the local Maven repository
+      # 'actions/cache/restore' (not 'actions/cache') outputs the 'cache-primary-key' that the jobs below restore
+      - name: Restore the local Maven repository
         id: cache
-        uses: actions/cache@v6
+        uses: actions/cache/restore@v6
         with:
           path: ~/.m2/repository
           key: maven-${{ runner.os }}-${{ hashFiles('**/pom.xml') }}
@@ -50,6 +47,15 @@ jobs:
       - name: Download the Maven dependencies
         if: steps.cache.outputs.cache-hit != 'true'
         run: mvn --batch-mode test-compile
+
+      - name: Save the local Maven repository
+        if: steps.cache.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v6
+        with:
+          path: ~/.m2/repository
+          key: ${{ steps.cache.outputs.cache-primary-key }}
+    outputs:
+      cache-key: ${{ steps.cache.outputs.cache-primary-key }}
 
   test-codeql:
     name: Analyze the Java code with CodeQL
@@ -81,7 +87,8 @@ jobs:
         uses: actions/cache/restore@v6
         with:
           path: ~/.m2/repository
-          key: maven-${{ runner.os }}-${{ hashFiles('**/pom.xml') }}
+          key: ${{ needs.maven-dependencies.outputs.cache-key }}
+          restore-keys: maven-${{ runner.os }}-
           fail-on-cache-miss: true
 
       # Initializes the CodeQL tools for scanning.
@@ -123,19 +130,19 @@ jobs:
         uses: actions/cache/restore@v6
         with:
           path: ~/.m2/repository
-          key: maven-${{ runner.os }}-${{ hashFiles('**/pom.xml') }}
+          key: ${{ needs.maven-dependencies.outputs.cache-key }}
+          restore-keys: maven-${{ runner.os }}-
           fail-on-cache-miss: true
 
       - name: Run Trivy vulnerability scanner in repo mode
-        uses: aquasecurity/trivy-action@v0.36.0
+        uses: aquasecurity/trivy-action@8f28faec26515256b6d22074d1d2a8986f4cbd87
         with:
           scan-type: 'fs'
           ignore-unfixed: true
           format: 'json'
           output: 'trivy-results.json'
-          severity: 'CRITICAL,HIGH'
-          version: 'latest'
-          timeout: '15m'
+          version: 'v0.76.1'
+          cache: false
         env:
           TRIVY_DB_REPOSITORY: mirror.gcr.io/aquasec/trivy-db:2,public.ecr.aws/aquasecurity/trivy-db:2
           TRIVY_JAVA_DB_REPOSITORY: mirror.gcr.io/aquasec/trivy-java-db:1,public.ecr.aws/aquasecurity/trivy-java-db:1
@@ -182,16 +189,15 @@ jobs:
         run: docker build -t matchbox:scan -f matchbox-server/Dockerfile matchbox-server
 
       - name: Run Trivy vulnerability scanner on Docker image
-        uses: aquasecurity/trivy-action@v0.36.0
+        uses: aquasecurity/trivy-action@8f28faec26515256b6d22074d1d2a8986f4cbd87
         with:
           scan-type: 'image'
           image-ref: 'matchbox:scan'
           ignore-unfixed: true
           format: 'json'
           output: 'trivy-image-results.json'
-          severity: 'CRITICAL,HIGH'
-          version: 'latest'
-          timeout: '15m'
+          version: 'v0.76.1'
+          cache: false
         env:
           TRIVY_DB_REPOSITORY: mirror.gcr.io/aquasec/trivy-db:2,public.ecr.aws/aquasecurity/trivy-db:2
           TRIVY_JAVA_DB_REPOSITORY: mirror.gcr.io/aquasec/trivy-java-db:1,public.ecr.aws/aquasecurity/trivy-java-db:1
