@@ -85,6 +85,7 @@
 
         <!-- Other dependencies we need -->
         <lombok_version>1.18.48</lombok_version>
+        <checker_qual_version>3.55.1</checker_qual_version>
         <postgresql_version>42.7.13</postgresql_version>
         <h2_version>2.5.250</h2_version>
         <jakarta_servlet_version>6.1.0</jakarta_servlet_version>
@@ -368,6 +369,11 @@
                         <groupId>org.apache.lucene</groupId>
                         <artifactId>lucene-analysis-phonetic</artifactId>
                     </exclusion>
+                    <!-- graphql-java shades a Guava version with CVE-2026-102554, GraphQL isn't enabled in matchbox -->
+                    <exclusion>
+                        <groupId>com.graphql-java</groupId>
+                        <artifactId>graphql-java</artifactId>
+                    </exclusion>
                 </exclusions>
             </dependency>
             <dependency>
@@ -500,6 +506,11 @@
                 <artifactId>lombok</artifactId>
                 <version>${lombok_version}</version>
                 <scope>provided</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.checkerframework</groupId>
+                <artifactId>checker-qual</artifactId>
+                <version>${checker_qual_version}</version>
             </dependency>
             <!-- dependencies for test -->
             <dependency>
