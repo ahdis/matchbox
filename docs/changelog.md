@@ -12,6 +12,8 @@ Includes the changes of 5.0.0-rc1, see below.
 - The `onlyOneEngine` mode exposes the NamingSystems of the main engine (`GET [base]/NamingSystem`), e.g. to debug the
   OID to URI mapping of `http://hl7.org/fhir/ConceptMap/special-oid2uri` in transformations
   ([#664](https://github.com/ahdis/matchbox/issues/664))
+- Upgrade Guava to 33.7.2 to fix CVE-2026-102554 (HAPI FHIR brought 33.2.1 into `matchbox-server`, FHIR Core 32.0.1
+  into `matchbox-engine`), the version is now set in the root `pom.xml`
 
 2026/10/20 Release 5.0.0-rc1
 
