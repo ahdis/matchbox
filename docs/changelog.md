@@ -1,4 +1,4 @@
-2026/10/xx Release 5.0.0
+2026/10/29 Release 5.0.0-rc2
 
 Includes the changes of 5.0.0-rc1, see below.
 
