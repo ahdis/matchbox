@@ -6,8 +6,8 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 
 import java.io.InputStream;
 
-import org.hl7.fhir.r5.model.CodeSystem;
-import org.hl7.fhir.r5.model.ValueSet;
+import org.hl7.fhir.model.core.CodeSystem;
+import org.hl7.fhir.model.core.ValueSet;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 
@@ -29,7 +29,7 @@ import ch.ahdis.matchbox.engine.MatchboxEngine;
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class Issue627Test {
 
-	private static final String TEST_IG = "/matchbox.health.test.ig.r4-0.3.0.tgz";
+	private static final String TEST_IG = "/matchbox.health.test.ig.r4-0.3.1.tgz";
 	private static final String UCUM = "http://unitsofmeasure.org";
 
 	private final MatchboxEngine main;
@@ -67,7 +67,7 @@ class Issue627Test {
 	private String includedVersion(final MatchboxEngine engine, final String valueSetUrl, final String system) {
 		final ValueSet vs = engine.getContext().fetchResource(ValueSet.class, valueSetUrl);
 		assertNotNull(vs, valueSetUrl);
-		return vs.getCompose().getInclude().stream()
+		return vs.getCompose().getIncludeList().stream()
 			.filter(include -> system.equals(include.getSystem()))
 			.findFirst()
 			.orElseThrow()

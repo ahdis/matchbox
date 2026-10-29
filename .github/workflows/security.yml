@@ -6,9 +6,9 @@ name: Security checks
 on:
   workflow_dispatch:
   push:
-    branches: [ "main" ]
+    branches: [ "main", "matchbox_v5" ]
   pull_request:
-    branches: [ "main" ]
+    branches: [ "main", "matchbox_v5" ]
   schedule:
     - cron: '0 8 * * *' # Every day at 8h00
 
@@ -16,7 +16,12 @@ jobs:
   maven-dependencies:
     name: Download the Maven dependencies
     runs-on: ubuntu-latest
+    env:
+      # Read the HAPI FHIR build from GitHub Packages, see the 'github' repository in pom.xml
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      MAVEN_ARGS: --global-settings ${{ github.workspace }}/.github/maven-settings.xml
     permissions:
+      packages: read # HAPI FHIR from GitHub Packages
       contents: read
 
     steps:
@@ -61,7 +66,12 @@ jobs:
     name: Analyze the Java code with CodeQL
     needs: maven-dependencies
     runs-on: ubuntu-latest
+    env:
+      # Read the HAPI FHIR build from GitHub Packages, see the 'github' repository in pom.xml
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      MAVEN_ARGS: --global-settings ${{ github.workspace }}/.github/maven-settings.xml
     permissions:
+      packages: read # HAPI FHIR from GitHub Packages
       actions: read
       contents: read
       security-events: write
@@ -163,7 +173,12 @@ jobs:
   test-trivy-docker-image:
     name: Build Docker image and scan with Trivy
     runs-on: ubuntu-latest
+    env:
+      # Read the HAPI FHIR build from GitHub Packages, see the 'github' repository in pom.xml
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      MAVEN_ARGS: --global-settings ${{ github.workspace }}/.github/maven-settings.xml
     permissions:
+      packages: read # HAPI FHIR from GitHub Packages
       actions: read
       contents: read
       security-events: write

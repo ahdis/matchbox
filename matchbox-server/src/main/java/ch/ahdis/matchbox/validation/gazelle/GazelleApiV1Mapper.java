@@ -3,9 +3,8 @@ package ch.ahdis.matchbox.validation.gazelle;
 import ch.ahdis.matchbox.validation.gazelle.models.validation.*;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.DeserializationFeature;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.databind.DeserializationFeature;
+import tools.jackson.databind.json.JsonMapper;
 
 import java.util.List;
 
@@ -28,13 +27,13 @@ public class GazelleApiV1Mapper {
 
 	public static final String MODEL_VERSION = "0.1";
 
-	private final ObjectMapper objectMapper;
+	private final JsonMapper objectMapper;
 
 	/**
 	 * @param baseObjectMapper the mapper used for v2, copied to keep the same date and inclusion settings.
 	 */
-	public GazelleApiV1Mapper(final ObjectMapper baseObjectMapper) {
-		this.objectMapper = baseObjectMapper.copy()
+	public GazelleApiV1Mapper(final JsonMapper baseObjectMapper) {
+		this.objectMapper = baseObjectMapper.rebuild()
 			// v1 requests carry apiVersion and validationServiceName, which matchbox does not need
 			.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
 			.addMixIn(ValidationRequest.class, ValidationRequestV1.class)
@@ -43,14 +42,15 @@ public class GazelleApiV1Mapper {
 			.addMixIn(ValidationProfile.class, ValidationProfileV1.class)
 			.addMixIn(ValidationMethod.class, ValidationMethodV1.class)
 			.addMixIn(ValidationCounters.class, ValidationCountersV1.class)
-			.addMixIn(AssertionReport.class, AssertionReportV1.class);
+			.addMixIn(AssertionReport.class, AssertionReportV1.class)
+			.build();
 	}
 
-	public ValidationRequest readRequest(final String json) throws JsonProcessingException {
+	public ValidationRequest readRequest(final String json) {
 		return this.objectMapper.readValue(json, ValidationRequest.class);
 	}
 
-	public String write(final Object value) throws JsonProcessingException {
+	public String write(final Object value) {
 		if (value instanceof final ValidationReport report) {
 			report.setModelVersion(MODEL_VERSION);
 		}

@@ -1,6 +1,6 @@
 {
   "name": "matchbox",
-  "version": "4.1.21",
+  "version": "5.0.0-rc2",
   "license": "MIT",
   "scripts": {
     "ng": "ng",

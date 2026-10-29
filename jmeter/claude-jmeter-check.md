@@ -40,6 +40,11 @@ docker run --rm alpine df -h / | tail -1  # Docker VM disk: an image + container
 gcloud auth print-access-token >/dev/null # registry auth; if expired the user must run `! gcloud auth login`
 ```
 
+The `matchbox` images in `europe-west6-docker.pkg.dev/ahdis-ch/ahdis` can be pulled without credentials. If the gcloud
+token has expired or the Docker Desktop credential helper doesn't answer, use a Docker config without credential
+helpers: `mkdir -p $D && echo '{}' > $D/config.json && ln -s ~/.docker/cli-plugins ~/.docker/contexts $D/ &&
+export DOCKER_CONFIG=$D`.
+
 Keep the machine otherwise idle. A busy machine alone made the same 1.15.0 image run 2× slower
 (30.3 vs 14.7 min).
 
@@ -252,12 +257,48 @@ All runs: 8,000 validations, 0 failures. Runs from 25 Sep 2026 on the same machi
 | `1152-pr596-xmx3g` | 1.15.2 on PR #596 ³ | 4.1.17 / 8.12.1 / 6.10.4 | 3 GB ⁴ | 4.0 min | 105 / 131 | 2.67 / 3.35 | 2026-09-25 |
 | `1152-pr596-xmx3g-dedup` | 1.15.2 on PR #596 ³ | 4.1.17 / 8.12.1 / 6.10.4 | 3 GB ⁵ | 4.0 min | 103 / 127 | 2.53 / 3.35 | 2026-09-25 |
 | `1152-fix1-xmx3g-dedup` | 1.15.2 on branch `jmeter-check-runbook` ³ | 4.1.17 + fix / 8.12.1 / 6.10.4 | 3 GB ⁵ | 4.0 min | 104 / 126 | 2.46 / 3.36 | 2026-09-25 |
+| `1156-main-cc1e929` | 1.15.6 on `main` ⁶ | 4.1.21 / 8.12.1 / 6.10.4 | 70% of the container memory | 3.8 min | 98 / 115 | 2.56 / 4.77 | 2026-10-07 |
+| `1156-pr636` | 1.15.6 on PR #636 ⁶ | 4.1.21 / 8.13.15-pr8189-1 / 6.10.4 (Spring Boot 4, Tomcat) | 70% of the container memory | 3.5 min | 98 / 115 | 2.64 / 4.93 | 2026-10-07 |
+| `1156-pr636-rerun` | 1.15.6 on PR #636 ⁶ | 4.1.21 / 8.13.15-pr8189-1 / 6.10.4 | 70% of the container memory | 3.2 min | 88 / 96 | 2.56 / 4.83 | 2026-10-10 |
+| `1156-pr636-rerun2` | 1.15.6 on PR #636 ⁶ | 4.1.21 / 8.13.15-pr8189-1 / 6.10.4 | 70% of the container memory | 3.2 min | 87 / 97 | 2.56 / 4.80 | 2026-10-10 |
+| `1156-fhir-core-7` | 1.15.6 on branch `fhir-core-7` ⁷ | 4.1.21 / 8.13.15-pr8189-1 / 7.0.1 | 70% of the container memory | 3.5 min | 97 / 108 | 2.61 / 4.90 | 2026-10-10 |
+| `1156-fhir-core-7-r2` | 1.15.6 on branch `fhir-core-7` ⁷ | 4.1.21 / 8.13.15-pr8189-1 / 7.0.1 | 70% of the container memory | 3.5 min | 96 / 109 | 2.55 / 4.74 | 2026-10-10 |
+| `cpu-base7-r1` | 1.15.6 on branch `fhir-core-7` ⁷ | 4.1.21 / 8.13.15-pr8189-1 / 7.0.1 | 70% of the container memory | 3.6 min | 102 / 113 | 2.42 / 4.99 | 2026-10-10 |
+| `cpu-base7-r2` | 1.15.6 on branch `fhir-core-7` ⁷ | 4.1.21 / 8.13.15-pr8189-1 / 7.0.1 | 70% of the container memory | 3.4 min | 95 / 102 | 2.35 / 3.77 | 2026-10-10 |
+| `cpu-fix7-r1` | 1.15.6 on branch `fhir-core-7` with the fixes ⁸ | 4.1.21 / 8.13.15-pr8189-1 / 7.0.1 | 70% of the container memory | 1.6 min | 41 / 44 | 2.17 / 3.35 | 2026-10-10 |
+| `cpu-fix7-r2` | 1.15.6 on branch `fhir-core-7` with the fixes ⁸ | 4.1.21 / 8.13.15-pr8189-1 / 7.0.1 | 70% of the container memory | 1.8 min | 46 / 50 | 2.19 / 3.36 | 2026-10-10 |
+| `1156-mb4121` | 1.15.6 on `matchbox:v4.1.21` ⁹ | 4.1.21 / 8.12.1 / 6.10.4 | 70% of the container memory | 3.6 min | 90 / 100 | 2.46 / 4.71 | 2026-10-20 |
+| `1156-mb500rc1` | 1.15.6 on `matchbox:v5.0.0-rc1` ⁹ | 5.0.0-rc1 / 8.13.15-pr8189-1 / 7.0.2 | 70% of the container memory | 1.7 min | 43 / 48 | 2.68 / 4.80 | 2026-10-20 |
+| `1156-mb4121-r2` | 1.15.6 on `matchbox:v4.1.21` ⁹ | 4.1.21 / 8.12.1 / 6.10.4 | 70% of the container memory | 3.6 min | 91 / 103 | 2.47 / 4.75 | 2026-10-20 |
+| `1156-mb500rc1-r2` | 1.15.6 on `matchbox:v5.0.0-rc1` ⁹ | 5.0.0-rc1 / 8.13.15-pr8189-1 / 7.0.2 | 70% of the container memory | 1.8 min | 44 / 49 | 2.77 / 5.01 | 2026-10-20 |
 
 ¹ Rebuilt from ch-elm commit `f3dd030` on `matchbox:v4.0.16`; the published 1.13.1 image is no longer in the registry.
 ² Machine was busy during this run.
 ³ Local build: ch-elm commit `3deaf40` with only the `FROM` line changed.
 ⁴ `-e JDK_JAVA_OPTIONS="-Xmx3g -XX:+ExitOnOutOfMemoryError"`; the JVM never ran out of memory.
 ⁵ As ⁴ plus `-XX:+UseStringDeduplication`.
+⁶ Local build: ch-elm commit `a07c806` with only the `FROM` line changed, on matchbox images built locally from
+`main` (`cc1e929`, Spring Boot 3.5, Undertow) and from PR #636 (Spring Boot 4, Spring Framework 7.0.9, Tomcat, HAPI
+FHIR build of hapifhir/hapi-fhir#8189). Server ready after 36 / 34 s, live heap after a full GC at the end 663 / 663 MiB.
+The `bytes` of `$validate` differ (34,594 / 33,235) only because of the chunked transfer encoding: Undertow sends the
+OperationOutcome in about 240 small chunks, Tomcat in chunks of 8 KB; the OperationOutcomes are the same.
+⁷ org.hl7.fhir.core 7.0.1 (versionless R6 model). Built without the registry (the Docker credential helper didn't
+answer): `matchbox:pr636` with `/matchbox.jar` replaced (`docker create`, `docker cp`, `docker commit`), then the
+ch-elm commit `a07c806` files copied in and the packages installed in a container that was committed, so the OS and
+JDK layers are the same as for `pr636` (without the ch-elm `apt upgrade`). Runs alternated with the `pr636` reruns on
+the same day: 7.0.1 validates about 10% slower (median 96–97 vs 87–88 ms) with the same OperationOutcome (same 6
+issues); live heap after a full GC at the end 684–686 / 663 MiB, server ready after 37 / 31 s.
+⁸ The fixes of the profile analysis (`profile-analysis-plan.md`, "Results"): `MatchboxEngine.fetch()` keeps the
+resources it converted to the element model (ch-elm's invariants resolve ConceptMaps 14 times per validation), the
+suppressed warning patterns are compiled once and matched without `parallelStream()`, the OID registry is loaded once.
+Image `1156-fhir-core-7` with `/matchbox.jar` replaced, runs alternated with `cpu-base7-*` (the image without the
+fixes), only `*.jtl` and the thread dumps saved (`cpu_run.sh`, `thread_cpu.py`). The same OperationOutcome; CPU per
+request 41–47 instead of 99–101 ms (all threads).
+⁹ The published base images (pulled anonymously), ch-elm commit `a07c806` with only the `FROM` line changed, runs
+alternated. 5.0.0-rc1 validates 2.1× faster (median 43–44 vs 90–91 ms, client 46–47 vs 100 ms), as `cpu-fix7-*`;
+the same OperationOutcome (same 6 issues, `ch.fhir.ig.ch-elm#1.15.1`), response 33,240 / 34,593 bytes (Tomcat /
+Undertow chunks, see ⁶). Server ready after 28–31 / 30–37 s, live heap after a full GC at the end 708–710 / 677–678 MiB
+(+31 MiB), container memory 3.25 / 3.13–3.21 GiB, no errors in the server logs.
 
 ### Startup, first and second validation (lazy loading)
 

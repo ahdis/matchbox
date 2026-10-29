@@ -4,17 +4,17 @@ import java.util.ArrayList;
 import java.util.List;
 
 import ch.ahdis.matchbox.engine.packages.LazyTerminologyLoader;
-import org.hl7.fhir.r5.context.CanonicalResourceManager.CanonicalResourceProxy;
-import org.hl7.fhir.r5.context.SimpleWorkerContext;
-import org.hl7.fhir.r5.model.PackageInformation;
-import org.hl7.fhir.r5.model.Resource;
+import org.hl7.fhir.services.context.CanonicalResourceProxy;
+import org.hl7.fhir.standalone.context.SimpleWorkerContext;
+import org.hl7.fhir.model.core.PackageInformation;
+import org.hl7.fhir.model.core.Resource;
 
 /**
  * The conformance resources of a package (id#version) as they were registered in the worker context of a validation
  * engine: the parsed resources and the proxies of the lazily loaded resources. The same objects are registered in the
  * context of every engine that loads the package, see {@link SharedPackageResourcesCache}.
  * <p>
- * The contexts keep this object alive ({@link org.hl7.fhir.r5.context.BaseWorkerContext#retain(Object)}), so it's
+ * The contexts keep this object alive ({@link org.hl7.fhir.standalone.context.BaseWorkerContext#retain(Object)}), so it's
  * garbage collected when the last engine that loaded the package is dropped.
  */
 public class SharedPackageResources {

@@ -3,10 +3,10 @@ package ch.ahdis.matchbox.util.http;
 import ca.uhn.fhir.context.FhirContext;
 import ca.uhn.fhir.parser.IParser;
 import ca.uhn.fhir.rest.api.Constants;
-import org.hl7.fhir.r5.context.IWorkerContext;
-import org.hl7.fhir.r5.elementmodel.JsonParser;
-import org.hl7.fhir.r5.elementmodel.ParserBase;
-import org.hl7.fhir.r5.elementmodel.XmlParser;
+import org.hl7.fhir.services.context.IWorkerContext;
+import org.hl7.fhir.services.elementmodel.JsonParser;
+import org.hl7.fhir.services.elementmodel.ParserBase;
+import org.hl7.fhir.services.elementmodel.XmlParser;
 
 /**
  * A set of FHIR formats supported by Matchbox.

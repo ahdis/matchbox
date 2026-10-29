@@ -22,12 +22,12 @@ import ch.ahdis.matchbox.util.http.HttpRequestWrapper;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.apache.commons.codec.digest.DigestUtils;
-import org.checkerframework.checker.nullness.qual.NonNull;
-import org.checkerframework.checker.nullness.qual.Nullable;
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
 import org.hl7.fhir.instance.model.api.IBaseResource;
-import org.hl7.fhir.r5.conformance.R5ExtensionsLoader;
-import org.hl7.fhir.r5.terminologies.client.TerminologyClientContext;
-import org.hl7.fhir.r5.utils.validation.constants.ReferenceValidationPolicy;
+import org.hl7.fhir.services.conformance.R5ExtensionsLoader;
+import org.hl7.fhir.standalone.terminology.client.TerminologyClientContext;
+import org.hl7.fhir.services.validation.constants.ReferenceValidationPolicy;
 import org.hl7.fhir.utilities.FhirPublication;
 import org.hl7.fhir.utilities.validation.ValidationOptions.R5BundleRelativeReferencePolicy;
 import org.hl7.fhir.validation.service.DisabledValidationPolicyAdvisor;
@@ -219,7 +219,7 @@ public class MatchboxEngineSupport {
 	 * @param id
 	 * @return
 	 */
-	public IBaseResource getCachedResource(final String resource, final @NonNull String id) {
+	public IBaseResource getCachedResource(final String resource, final @Nonnull String id) {
 		for (final String sessionId : this.engineCache.getSessionIds()) {
 			final MatchboxEngine engine = this.engineCache.fetchEngine(sessionId);
 			final IBaseResource res = engine.getCanonicalResourceById(resource, id);
@@ -230,15 +230,16 @@ public class MatchboxEngineSupport {
 		return null;
 	}
 
-	private MatchboxEngine createMatchboxEngine(final @NonNull MatchboxEngine engine,
+	private MatchboxEngine createMatchboxEngine(final @Nonnull MatchboxEngine engine,
 															  final @Nullable String ig,
-															  final @NonNull CliContext cliContext) throws MatchboxEngineCreationException {
+															  final @Nonnull CliContext cliContext) throws MatchboxEngineCreationException {
 		final String forIg = (ig != null) ? "for " + ig : "";
 		log.info("Creating new validate engine {} with parameters {}", forIg, cliContext.sessionId());
 
 		final MatchboxEngine validator;
 		try { validator = new MatchboxEngine(engine); }
 		catch (final Exception e) { throw new MatchboxEngineCreationException(e); }
+		validator.setFetchCacheMaxSize(this.matchboxFhirProperties.getContext().getFetchCacheSize());
 		validator.setIgLoader(new IgLoaderFromJpaPackageCache(validator.getPcm(),
 																				validator.getContext(),
 																				validator.getVersion(),
@@ -263,14 +264,12 @@ public class MatchboxEngineSupport {
 		}
 		log.debug("Package Summary: {}", validator.getContext().loadedPackageSummary());
 
-		// The new validation engine inherits the `suppressedWarnInfoPatterns`/`suppressedErrorPatterns` from the main
-		// engine, which could be everything from the application.yaml (if all packages were loaded).
-		// We clear them here, they'll be set again in the configureValidationEngine method.
+		// The new validation engine inherits a copy of the `suppressedWarnInfoPatterns` from the main engine, which
+		// could be everything from the application.yaml (if all packages were loaded).
+		// We clear them here, they'll be set again in the configureValidationEngine method. The suppressed errors are
+		// in the policy advisor, which the new engine shares with the main engine until configureValidationEngine
+		// replaces it: they must not be cleared here.
 		validator.getSuppressedWarnInfoPatterns().clear();
-		final var advisor = validator.getMatchboxValidationPolicyAdvisor();
-		if (advisor != null) {
-			advisor.clearErrorMessagesToIgnore();
-		}
 
 		this.configureValidationEngine(validator, cliContext);
 		log.debug("Finished creating new validate engine for {} with parameters {}", forIg, cliContext.sessionId());
@@ -282,7 +281,7 @@ public class MatchboxEngineSupport {
 	 * Returns the FHIR core package for the specified FHIR version in the cliContext, or {@code null} if the FHIR
 	 * version is not supported.
 	 */
-	public @Nullable String getFhirCorePackage(final @NonNull CliContext cliContext) {
+	public @Nullable String getFhirCorePackage(final @Nonnull CliContext cliContext) {
 		if (cliContext.getFhirVersion().startsWith("4.0")) {
 			return "hl7.fhir.r4.core#4.0.1";
 		}
@@ -444,6 +443,7 @@ public class MatchboxEngineSupport {
 			log.info("Cached default engine forever {} with parameters {}",
 						(cliContextMain.getIg() != null ? "for " + cliContextMain.getIg() : ""),
 						cliContextMain.sessionId());
+			mainEngine.setFetchCacheMaxSize(this.matchboxFhirProperties.getContext().getFetchCacheSize());
 			this.engineCache.cachePermanentEngine(cliContextMain, mainEngine);
 			this.cliContext.setIg(null); // otherwise we get for reloads the pacakge name instead a new one later  set ahdis/matchbox #144
 
@@ -746,7 +746,11 @@ public class MatchboxEngineSupport {
 				throw new TerminologyServerException("Error while setting the terminology server: " + e.getMessage(), e);
 			}
 			try {
-				validator.initTxCache(cli.getTxServerCache() ? getTxCachePath(cli.getTxServer()) : null);
+				if (cli.getTxServerCache()) {
+					validator.useTxCacheFolder(getTxCachePath(cli.getTxServer()));
+				} else {
+					validator.disableTxCache();
+				}
 			} catch (final Exception e) {
 				throw new TerminologyServerException("Error while setting the terminology server cache: " + getTxCachePath(cli.getTxServer()), e);
 			}
@@ -807,7 +811,7 @@ public class MatchboxEngineSupport {
 			} else {
 				String rule = bundle[0];
 				String profile = bundle[1];
-				validator.getDefaultInstanceValidatorParameters().getBundleValidationRules().add(new org.hl7.fhir.r5.utils.validation.BundleValidationRule().setRule(rule).setProfile(profile));
+				validator.getDefaultInstanceValidatorParameters().getBundleValidationRules().add(new org.hl7.fhir.services.validation.BundleValidationRule().setRule(rule).setProfile(profile));
 			}
 		}
 		validator.getDefaultInstanceValidatorParameters().setR5BundleRelativeReferencePolicy(R5BundleRelativeReferencePolicy.fromCode(cli.getR5BundleRelativeReferencePolicy()));
@@ -905,8 +909,8 @@ public class MatchboxEngineSupport {
 		}
 	}
 
-	private void addSuppressedWarnInfoToEngine(final @NonNull String pattern,
-															 final @NonNull MatchboxEngine engine) {
+	private void addSuppressedWarnInfoToEngine(final @Nonnull String pattern,
+															 final @Nonnull MatchboxEngine engine) {
 		if (pattern.startsWith("regex:")) {
 			// If it starts with "regex:", then remove the prefix and add it as a regex pattern
 			engine.addSuppressedWarnInfoPattern(pattern.substring(6));
@@ -922,8 +926,8 @@ public class MatchboxEngineSupport {
 	 * @param pattern messageId@^regexPath
 	 * @param engine  The engine to add the pattern to.
 	 */
-	private void addSuppressedErrorToEngine(final @NonNull String pattern,
-															 final @NonNull MatchboxEngine engine) {
+	private void addSuppressedErrorToEngine(final @Nonnull String pattern,
+															 final @Nonnull MatchboxEngine engine) {
 		if (pattern.contains("@")) {
 			String id = pattern.substring(0, pattern.indexOf("@"));
 			String path = pattern.substring(pattern.indexOf("@")+1);

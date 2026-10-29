@@ -280,5 +280,8 @@ The parameter `url` points to a ValueSet that has been sent in a previous reques
 
 ## Caching
 
-Code validation results are cached in a `TerminologyCache`. It can be disabled by putting
-`this.getContext().setCachingAllowed(false);` in the `MatchboxEngine` constructor.
+Code validation results are cached in a `TerminologyCache`. Since org.hl7.fhir.core 7.0.1, the cache of a context is
+in memory only until `initTxCache(folder)` is called. matchbox-server writes it to a folder per terminology server when
+the validation parameter `txServerCache` is `true` (the default), and disables the caching when it is `false`. With
+matchbox-engine, `engine.useTxCacheFolder(folder)` stores the cache in a folder, `engine.disableTxCache()` disables it
+(`engine.initTxCache(folder)` is deprecated).
