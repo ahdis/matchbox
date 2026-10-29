@@ -16,6 +16,10 @@ Includes the changes of 5.0.0-rc1, see below.
   into `matchbox-engine`), the version is now set in the root `pom.xml`. `graphql-java` is excluded, it shades Guava
   32.1.2 and GraphQL isn't enabled in matchbox. The nullness annotations of `checker-qual`, which Guava doesn't bring
   in anymore since 33.4.5, are replaced by `jakarta.annotation` (#669). Thanks @reva!
+- Security checks: Trivy no longer searches Rekor (sigstore) for SBOM attestations of the Docker image (#657). The
+  Maven dependencies are downloaded once (with the HAPI FHIR build from GitHub Packages) and shared with the CodeQL and
+  Trivy jobs, Trivy reads the dependencies from this local Maven repository, uses the `mirror.gcr.io` databases and
+  prints its results to the action log (#661)
 
 2026/10/20 Release 5.0.0-rc1
 
@@ -98,6 +102,8 @@ Includes the changes of 5.0.0-rc1, see below.
 - Release workflow: release candidates `X.Y.Z-rcN` (e.g. `5.0.0-rc1`) are published as GitHub pre-releases and their
   Docker image doesn't get the tag `latest`. The release notes end before the next release section, also one that
   isn't dated yet
+- Security checks: Trivy no longer searches Rekor (sigstore) for SBOM attestations of the Docker image, these searches
+  took the image scan over its 35 min timeout
 - Searching ValueSets (`GET [base]/ValueSet`) in the `onlyOneEngine` mode failed with "This context is configured to
   not allow Iterating ValueSet resources due to performance concerns"
   ([#663](https://github.com/ahdis/matchbox/issues/663)). The search of conformance resources in this mode now loads
