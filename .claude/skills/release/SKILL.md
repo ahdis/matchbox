@@ -6,9 +6,10 @@ description: Make a new matchbox release (e.g. 4.1.19) - bump the version in the
 # Making a matchbox release
 
 A release is one PR that only sets the version and the release date, then the `Create a release` workflow
-(`.github/workflows/release.yml`), which creates the tag `vX.Y.Z` and the GitHub release with the notes of the version
-from `docs/changelog.md`, and starts the Docker (`googleregistry.yml`) and Maven Central (`central_repository.yml`)
-workflows on the tag.
+(`.github/workflows/release.yml`), which builds the Docker image and scans it with Trivy, creates the tag `vX.Y.Z` and
+the GitHub release with the notes of the version from `docs/changelog.md`, and starts the Docker (`googleregistry.yml`)
+and Maven Central (`central_repository.yml`) workflows on the tag. A HIGH or CRITICAL vulnerability with a fix stops the
+release before anything is published.
 
 The user asking for a release authorizes the whole procedure (PR, merge, release workflow). Stop and ask if a check
 fails, if `main` has unexpected changes, or if the version isn't obvious.
