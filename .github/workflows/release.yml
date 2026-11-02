@@ -1,7 +1,8 @@
 name: Create a release
 
-# Creates the tag and the GitHub release for the version in the POM, with the notes of that version from
-# docs/changelog.md, then starts the Docker and Maven Central workflows on the new tag.
+# Checks that Trivy finds no HIGH or CRITICAL vulnerability with a fix in the Docker image, then creates the tag and the
+# GitHub release for the version in the POM, with the notes of that version from docs/changelog.md, and starts the Docker
+# and Maven Central workflows on the new tag.
 # A tag created with the GITHUB_TOKEN doesn't trigger the 'push: tags' workflows, so they're dispatched explicitly.
 
 on:
@@ -17,8 +18,54 @@ permissions:
   actions: write
 
 jobs:
+  # In its own job, so that the build and the scan don't run with the write permissions of the release
+  scan:
+    name: Build the Docker image and scan it with Trivy
+    runs-on: ubuntu-latest
+    env:
+      # Read the HAPI FHIR build from GitHub Packages, see the 'github' repository in pom.xml
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      MAVEN_ARGS: --global-settings ${{ github.workspace }}/.github/maven-settings.xml
+    permissions:
+      packages: read # HAPI FHIR from GitHub Packages
+      contents: read
+
+    steps:
+      - name: Checkout the repository
+        uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
+      - name: Setup Java 21
+        uses: actions/setup-java@v6
+        with:
+          java-version: 21
+          distribution: temurin
+          cache: maven
+
+      - name: Build matchbox server jar
+        run: mvn --batch-mode --update-snapshots package -DskipTests -P release
+
+      - name: Build Docker image
+        run: docker build -t matchbox:scan -f matchbox-server/Dockerfile matchbox-server
+
+      - name: Run Trivy vulnerability scanner on Docker image
+        uses: aquasecurity/trivy-action@8f28faec26515256b6d22074d1d2a8986f4cbd87
+        with:
+          scan-type: 'image'
+          image-ref: 'matchbox:scan'
+          ignore-unfixed: true
+          severity: 'CRITICAL,HIGH'
+          exit-code: '1'
+          version: 'v0.76.1'
+          cache: false
+        env:
+          TRIVY_DB_REPOSITORY: mirror.gcr.io/aquasec/trivy-db:2,public.ecr.aws/aquasecurity/trivy-db:2
+          TRIVY_JAVA_DB_REPOSITORY: mirror.gcr.io/aquasec/trivy-java-db:1,public.ecr.aws/aquasecurity/trivy-java-db:1
+
   release:
     name: Create the release
+    needs: scan
     runs-on: ubuntu-latest
 
     steps:
