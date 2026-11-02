@@ -1,0 +1,89 @@
+name: Scheduled scans of the release candidate
+
+# GitHub starts scheduled workflows only from the default branch, so the daily scans of matchbox_v5 and of its latest
+# image start here. A finding in the image, or a failure of this workflow, is posted to Zulip.
+# Remove this workflow when matchbox_v5 is merged into main.
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '30 8 * * *' # Every day at 8h30
+
+jobs:
+  scan-branch:
+    name: Start the security checks on matchbox_v5
+    runs-on: ubuntu-latest
+    permissions:
+      actions: write
+
+    steps:
+      # The results are in the Security tab, with the filter branch:matchbox_v5
+      - name: Start security.yml on matchbox_v5
+        run: gh workflow run security.yml --repo "$GITHUB_REPOSITORY" --ref matchbox_v5
+        env:
+          GH_TOKEN: ${{ github.token }}
+
+  scan-image:
+    name: Scan the image of the newest release candidate
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    outputs:
+      tag: ${{ steps.release.outputs.tag }}
+      findings: ${{ steps.findings.outputs.findings }}
+
+    steps:
+      - name: Find the newest release candidate
+        id: release
+        run: |
+          TAG=$(gh api "repos/$GITHUB_REPOSITORY/releases?per_page=30" --jq '[.[] | select(.prerelease)][0].tag_name')
+          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+        env:
+          GH_TOKEN: ${{ github.token }}
+
+      # The published image is scanned, a new build would already contain the latest OS updates
+      - name: Run Trivy vulnerability scanner on the published image
+        uses: aquasecurity/trivy-action@8f28faec26515256b6d22074d1d2a8986f4cbd87
+        with:
+          scan-type: 'image'
+          image-ref: europe-west6-docker.pkg.dev/ahdis-ch/ahdis/matchbox:${{ steps.release.outputs.tag }}
+          ignore-unfixed: true
+          severity: 'CRITICAL,HIGH'
+          exit-code: '1'
+          format: 'table'
+          output: 'trivy-image-results.txt'
+          version: 'v0.76.1'
+          cache: false
+        env:
+          TRIVY_DB_REPOSITORY: mirror.gcr.io/aquasec/trivy-db:2,public.ecr.aws/aquasecurity/trivy-db:2
+          TRIVY_JAVA_DB_REPOSITORY: mirror.gcr.io/aquasec/trivy-java-db:1,public.ecr.aws/aquasecurity/trivy-java-db:1
+
+      - name: Print the Trivy results and list the findings
+        id: findings
+        if: always()
+        run: |
+          cat trivy-image-results.txt || true
+          FINDINGS=$(grep -oE '(CVE|GHSA)-[0-9a-z-]+' trivy-image-results.txt | sort -u | paste -sd ' ' -)
+          echo "findings=$FINDINGS" >> "$GITHUB_OUTPUT"
+
+  zulip:
+    name: Post to Zulip
+    needs: [scan-branch, scan-image]
+    if: ${{ failure() }}
+    runs-on: ubuntu-latest
+    permissions: {}
+
+    steps:
+      - name: Send a stream message to Zulip
+        uses: zulip/github-actions-zulip/send-message@v2
+        with:
+          api-key: ${{ secrets.ZULIPAPIKEY }}
+          email: "ahdis-bot@chat.fhir.org"
+          organization-url: "https://chat.fhir.org"
+          to: "ahdis"
+          type: "stream"
+          topic: "matchbox release candidate scan"
+          content: |
+              ${{ needs.scan-image.outputs.findings != '' && format('HIGH or CRITICAL vulnerabilities with a fix in matchbox {0}: {1}', needs.scan-image.outputs.tag, needs.scan-image.outputs.findings) || 'the scheduled scan of the release candidate failed, without a list of findings' }}
+
+              see https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}
