@@ -44,6 +44,7 @@ import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
+import java.util.UUID;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
@@ -668,6 +669,170 @@ class MatchboxApiR4Test {
 		// Currently fails with HTTP 500 due to ClassCastException (R5 ValueSet cast to R4 Resource
 		// inside VersionCanonicalizer$R4Strategy). After the fix this should return 200.
 		assertEquals(200, response.statusCode());
+	}
+
+	/**
+	 * $validate-code against a ValueSet that includes another ValueSet (compose.include.valueSet), sent the way the
+	 * validator sends it: the ValueSet itself as 'valueSet', the included one as 'tx-resource'
+	 * (BaseWorkerContext.addDependentResources).
+	 *
+	 * ValueSetProvider ignores 'tx-resource' and expands with a DummyValidationSupport, so the included ValueSet is
+	 * dropped from the expansion ("expansion contains 1 codes") and its codes are reported as not in the value set.
+	 * A required binding to such a ValueSet then fails for every code that comes from the included ValueSet.
+	 *
+	 * Expected behaviour after fix: 'result' is true for 'unknown' as well.
+	 */
+	@Test
+	void validateCodeInValueSetIncludedFromTxResource() throws Exception {
+		// 'male' is listed in the ValueSet itself, 'unknown' only in the included ValueSet
+		assertTrue(validateCodeWithNestedValueSet("male"), "code listed in the ValueSet itself");
+		assertTrue(validateCodeWithNestedValueSet("unknown"), "code from the included ValueSet (tx-resource)");
+	}
+
+	private boolean validateCodeWithNestedValueSet(final String code) throws Exception {
+		final String parametersJson = """
+			{
+			  "resourceType": "Parameters",
+			  "parameter": [
+			    {
+			      "name": "coding",
+			      "valueCoding": {
+			        "system": "http://hl7.org/fhir/administrative-gender",
+			        "code": "%s"
+			      }
+			    },
+			    {
+			      "name": "valueSet",
+			      "resource": {
+			        "resourceType": "ValueSet",
+			        "url": "http://example.org/fhir/ValueSet/outer",
+			        "status": "active",
+			        "compose": {
+			          "include": [
+			            {
+			              "valueSet": [ "http://example.org/fhir/ValueSet/inner" ]
+			            },
+			            {
+			              "system": "http://hl7.org/fhir/administrative-gender",
+			              "concept": [ { "code": "male" } ]
+			            }
+			          ]
+			        }
+			      }
+			    },
+			    {
+			      "name": "tx-resource",
+			      "resource": {
+			        "resourceType": "ValueSet",
+			        "url": "http://example.org/fhir/ValueSet/inner",
+			        "status": "active",
+			        "compose": {
+			          "include": [
+			            {
+			              "system": "http://hl7.org/fhir/administrative-gender",
+			              "concept": [ { "code": "unknown" } ]
+			            }
+			          ]
+			        }
+			      }
+			    }
+			  ]
+			}
+			""".formatted(code);
+
+		final HttpRequest request = HttpRequest.newBuilder(
+				new URI(TARGET_SERVER + "/tx/ValueSet/$validate-code"))
+			.POST(HttpRequest.BodyPublishers.ofString(parametersJson))
+			.header("Content-Type", "application/fhir+json")
+			.header("Accept", "application/fhir+json")
+			.build();
+
+		final var response = this.httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+		log.debug("$validate-code '{}' response body: {}", code, response.body());
+		assertEquals(200, response.statusCode());
+
+		final var result = FHIR_CONTEXT.newJsonParser().parseResource(Parameters.class, response.body());
+		final var message = result.getParameter("message");
+		log.info("$validate-code '{}': result={}, message={}", code, result.getParameterBool("result"),
+					message == null ? null : message.getValue());
+		return result.getParameterBool("result");
+	}
+
+	/**
+	 * $validate-code within a terminology cache session, sent the way the validator sends it once it has cached a
+	 * ValueSet (BaseWorkerContext.addServerValidationParameters): the first call carries the ValueSet as 'valueSet',
+	 * later calls for the same ValueSet only its 'url'; the cache id travels as the HTTP header 'X-Cache-Id', no
+	 * longer as a 'cache-id' parameter. (The validator caches only against a server whose CapabilityStatement offers
+	 * the 'cache-control' operation, which the internal terminology server does not, so it does not send this today.)
+	 *
+	 * ValueSetProvider reads the cache id from the 'cache-id' parameter only, so with the header it does not cache the
+	 * expansion of the first call. Even with a 'cache-id' parameter the lookup would miss: it uses 'url' via
+	 * toString(), i.e. "UriType[http://…]", while the expansion is cached under the plain url. It answers the miss
+	 * with result=true ("OK - cache miss, value set is null"): 'female' is accepted although the ValueSet lists only
+	 * 'male'.
+	 *
+	 * Expected behaviour after fix: 'result' is false for 'female' on the second call.
+	 */
+	@Test
+	void validateCodeByUrlAfterValueSetCachedWithCacheIdHeader() throws Exception {
+		final String cacheId = "matchbox-test-" + UUID.randomUUID();
+		assertTrue(validateCodeInCacheSession(cacheId, "male", true), "first call, with the ValueSet");
+		assertFalse(validateCodeInCacheSession(cacheId, "female", false), "later call, with the url only");
+	}
+
+	private boolean validateCodeInCacheSession(final String cacheId, final String code,
+															 final boolean withValueSet) throws Exception {
+		final String valueSetParameter = withValueSet ? """
+			{
+			  "name": "valueSet",
+			  "resource": {
+			    "resourceType": "ValueSet",
+			    "url": "http://example.org/fhir/ValueSet/cached",
+			    "status": "active",
+			    "compose": {
+			      "include": [
+			        {
+			          "system": "http://hl7.org/fhir/administrative-gender",
+			          "concept": [ { "code": "male" } ]
+			        }
+			      ]
+			    }
+			  }
+			}""" : """
+			{ "name": "url", "valueUri": "http://example.org/fhir/ValueSet/cached" }""";
+		final String parametersJson = """
+			{
+			  "resourceType": "Parameters",
+			  "parameter": [
+			    {
+			      "name": "coding",
+			      "valueCoding": {
+			        "system": "http://hl7.org/fhir/administrative-gender",
+			        "code": "%s"
+			      }
+			    },
+			    %s
+			  ]
+			}
+			""".formatted(code, valueSetParameter);
+
+		final HttpRequest request = HttpRequest.newBuilder(
+				new URI(TARGET_SERVER + "/tx/ValueSet/$validate-code"))
+			.POST(HttpRequest.BodyPublishers.ofString(parametersJson))
+			.header("Content-Type", "application/fhir+json")
+			.header("Accept", "application/fhir+json")
+			.header("X-Cache-Id", cacheId)
+			.build();
+
+		final var response = this.httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+		log.debug("$validate-code '{}' (cache session) response body: {}", code, response.body());
+		assertEquals(200, response.statusCode());
+
+		final var result = FHIR_CONTEXT.newJsonParser().parseResource(Parameters.class, response.body());
+		final var message = result.getParameter("message");
+		log.info("$validate-code '{}' ({}): result={}, message={}", code, withValueSet ? "valueSet" : "url only",
+					result.getParameterBool("result"), message == null ? null : message.getValue());
+		return result.getParameterBool("result");
 	}
 
 	@Test
