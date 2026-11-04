@@ -6,6 +6,10 @@
 - Documentation: how to provide implementation guides from files (`file:` URLs in `hapi.fhir.implementationguides`, in
   Docker with a volume, dependencies, reinstalling a package with the same version) and how to build an own docker
   image with preinstalled packages ([#643](https://github.com/ahdis/matchbox/issues/643))
+- Software Bill of Materials (SBOM, CycloneDX) of the server in `matchbox.jar`, provided by the Spring Boot actuator
+  as `/actuator/sbom/application` and uploaded to the GitHub release (`matchbox-server-<version>.cdx.json`), the
+  Docker images have an SBOM attestation, `matchbox-engine` is published with its SBOM
+  (`matchbox-engine-<version>-cyclonedx.json`)
 - Frontend: update Angular to 22.2.3 and angular-eslint to 22.6.0. The Angular CLI uses
   `@modelcontextprotocol/server` instead of `@modelcontextprotocol/sdk` 1.30.0 (and with it express and proxy-addr),
   `source-map-js` is updated to 1.2.2 (Dependabot alerts
