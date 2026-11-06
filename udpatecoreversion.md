@@ -53,7 +53,7 @@ All matchbox-specific patches are marked with `matchbox patch` comments in the s
 
 ### Patched files and their patches
 
-The following files have matchbox-specific patches (as of the 7.0.2 update, versionless R6 modules):
+The following files have matchbox-specific patches (as of the 7.0.5 update, versionless R6 modules):
 
 | File | Patch Description | Issue |
 |------|------------------|-------|
@@ -66,6 +66,7 @@ The following files have matchbox-specific patches (as of the 7.0.2 update, vers
 | `BaseWorkerContext.java` | Remove the narrative of resources loaded from packages | #566 |
 | `BaseWorkerContext.java` | fhirVersioned URL stripping in fetchResourceWithExceptionByVersion | #265 |
 | `CanonicalResourceManager.java` | `getVersion()`, `getMasterVersion()` without parsing proxies | #627 |
+| `ValueSetValidator.java` | No error for an include with an unknown code system when inferring the system of a code, if the include lists its concepts (UCUM `units-of-time` without a terminology server, since 7.0.5) | offline validation |
 | `CanonicalResourceProxy.java` | `getResource()` synchronized, proxies are shared between contexts | concurrency |
 | `BaseLoaderRN.java`, `R3/R4/R4B/R5ToRNLoader.java` | `skipNarrative`: don't parse the narrative | #614 |
 | `FilesystemPackageCacheManager.java` | Core, terminology, extensions and xver packages from the classpath | packages |
