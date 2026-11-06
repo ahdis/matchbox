@@ -641,7 +641,7 @@ public class MatchboxEngine extends ValidationEngine {
 			return null;
 		}
 
-		String fhirVersionTarget = getFhirVersion(getCanonicalFromStructureMap(map, StructureMap.StructureMapModelMode.TARGET));
+		String fhirVersionTarget = getFhirVersion(getCanonicalFromStructureMap(map, StructureMap.StructureMapModelModeVS.TARGET));
 		if (fhirVersionTarget !=null && (fhirVersionTarget.startsWith("4.0") || fhirVersionTarget.startsWith("4.3") || fhirVersionTarget.startsWith("5.0"))  && !fhirVersionTarget.equals(this.getVersion().substring(0, 3))) {
 			log.info("Loading additional FHIR version for Target into context " + fhirVersionTarget);
 			context = getContextForFhirVersion(fhirVersionTarget);
@@ -680,7 +680,7 @@ public class MatchboxEngine extends ValidationEngine {
 		// if this is the case we do lazy loading of the additional FHIR version into the context
 
 		StructureMap map = context.fetchResource(StructureMap.class, mapUri, org.hl7.fhir.model.core.VersionResolutionRules.defaultRule());
-		String canonicalSource = getCanonicalFromStructureMap(map, StructureMap.StructureMapModelMode.SOURCE);
+		String canonicalSource = getCanonicalFromStructureMap(map, StructureMap.StructureMapModelModeVS.SOURCE);
 
 		String fhirVersionSource = getFhirVersion(canonicalSource);
 		if (fhirVersionSource !=null &&  (fhirVersionSource.startsWith("4.0") || fhirVersionSource.startsWith("4.3") || fhirVersionSource.startsWith("5.0")) && !fhirVersionSource.equals(this.getVersion().substring(0,3))) {
@@ -801,7 +801,7 @@ public class MatchboxEngine extends ValidationEngine {
 	 * @param mode
 	 * @return
 	 */
-	private String getCanonicalFromStructureMap(StructureMap map, StructureMap.StructureMapModelMode mode) {
+	private String getCanonicalFromStructureMap(StructureMap map, StructureMap.StructureMapModelModeVS mode) {
 		String targetTypeUrl = null;
 		for (StructureMap.StructureMapStructureComponent component : map.getStructureList()) {
 			if (component.getMode() == mode) {
@@ -817,7 +817,7 @@ public class MatchboxEngine extends ValidationEngine {
 		String targetTypeUrl = null;
 		SimpleWorkerContext context = (targetContext!=null ? targetContext : this.getContext());
 		for (StructureMap.StructureMapStructureComponent component : map.getStructureList()) {
-			if (component.getMode() == StructureMap.StructureMapModelMode.TARGET) {
+			if (component.getMode() == StructureMap.StructureMapModelModeVS.TARGET) {
 				targetTypeUrl = component.getUrl();
 				break;
 			}
