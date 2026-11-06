@@ -1,3 +1,12 @@
+2026/11/06 Release 5.0.0-rc3
+
+Includes the changes of 5.0.0-rc2 and 5.0.0-rc1, see below.
+
+- Docker image rebuilt to fix CVE-2026-109518 (HIGH) in `apt` and `libapt-pkg6.0` of the Debian 12 base image
+  (fixed in apt 2.6.2), found by the scheduled Trivy scan of `matchbox:v5.0.0-rc2`
+- Release workflow: builds the Docker image and scans it with Trivy before the tag and the release are created, a
+  HIGH or CRITICAL vulnerability with a fix stops the release before anything is published
+
 2026/10/29 Release 5.0.0-rc2
 
 Includes the changes of 5.0.0-rc1, see below.
