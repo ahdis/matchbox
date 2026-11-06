@@ -740,7 +740,8 @@ public class MatchboxEngineSupport {
 				TerminologyClientContext.setAllowNonConformantServers(true);
 				TerminologyClientContext.setCanAllowNonConformantServers(true);
 				// Currently all terminology clients are to R4 for version greater than R4
-				final String txver = validator.setTerminologyServer(cli.getTxServer(), cli.getTxLog(), FhirPublication.R4, cli.isTxUseEcosystem());
+				final String txver = validator.setTerminologyServer(cli.getTxServer(), cli.getTxLog(), FhirPublication.R4,
+					MatchboxEngine.getTxEcosystem(cli.getTxServer(), cli.isTxUseEcosystem()));
 				log.debug("Version of the terminology server: {}", txver);
 			} catch (final Exception e) {
 				throw new TerminologyServerException("Error while setting the terminology server: " + e.getMessage(), e);

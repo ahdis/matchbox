@@ -15,6 +15,11 @@ Includes the changes of 5.0.0-rc3, 5.0.0-rc2 and 5.0.0-rc1, see below.
   the value set includes a code system that isn't known, also if the include lists its codes, e.g. the UCUM units of
   `http://hl7.org/fhir/ValueSet/units-of-time` (`Timing.repeat.periodUnit`): such an include is used again (matchbox
   patch of `ValueSetValidator`)
+- The terminology ecosystem (tx-reg, which routes the requests for a code system to the server that knows it, e.g.
+  the Swiss SNOMED CT edition to tx.fhir.ch) is only used with `https://tx.fhir.org` since FHIR Core 7.0.4: with the
+  `http://tx.fhir.org` of the matchbox configurations, codes of the Swiss SNOMED CT edition failed. matchbox uses the
+  HL7 ecosystem (`https://ecosystem.hl7.org/tx-reg`) for `http://tx.fhir.org` too, and none for other terminology
+  servers (`MatchboxEngine.getTxEcosystem`)
 
 2026/11/06 Release 5.0.0-rc3
 
