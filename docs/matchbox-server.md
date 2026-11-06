@@ -14,6 +14,7 @@ They can be set in the Spring configuration (e.g. `application.properties`/`appl
 | `matchbox.fhir.context.txServer`                    | `n/a`         | The URL of the terminology server to use, or `n/a` not to use a terminology server.                                                                             |
 | `matchbox.fhir.context.igsPreloaded`                | `[]`          | The list of IGs to always pre-load when initializing a Matchbox engine.                                                                                         |
 | `matchbox.fhir.context.onlyOneEngine`               | `false`       | Forces the server to initialize only one engine. See the section [_Only one engine_](#only-one-engine) below.                                                   |
+| `matchbox.fhir.context.fetchCacheSize`              | `100`         | The number of resources each engine keeps converted for `resolve()` in FHIRPath expressions (e.g. ConceptMaps in invariants), `0` to keep none. |
 | `matchbox.fhir.context.suppressWarnInfo`            | `{}`          | The list of warnings/infos to suppress in validation reports. See [_Suppress warning/information-level issues in validation_](validation.md#suppress-warnings). |
 | `matchbox.fhir.context.suppressError`               | `{}`          | The list of errors to suppress in validation reports. See [_Suppress error-level issues in validation_](validation.md#suppress-errors).                         |
 | `matchbox.fhir.context.httpReadOnly`                | `false`       | Whether the server is in read-only mode or not. See the section [_Read-only mode_](#read-only) below.                                                           |
@@ -128,13 +129,10 @@ docker image, see [_Configure an own docker image with preinstalled packages_](d
 
 ### Maximum request size
 
-Matchbox runs on Undertow, which rejects request bodies larger than 2 MiB by default with
-`RequestTooBigException: UT000020: Connection terminated as request was larger than 2097152`.
-Matchbox raises that limit to 100 MB; if you have to send larger resources, increase
-`server.undertow.max-http-post-size` (e.g. with the environment variable
-`SERVER_UNDERTOW_MAX_HTTP_POST_SIZE`). The value must be positive, Undertow cannot be configured for
-unlimited request bodies through Spring Boot. Note that a reverse proxy in front of Matchbox may
-enforce its own, smaller limit.
+Matchbox runs on the embedded Tomcat of Spring Boot (Spring Boot 4 dropped the support for Undertow), which does
+not limit the size of FHIR request bodies (`server.tomcat.max-http-form-post-size` only applies to form posts). The
+former `server.undertow.max-http-post-size` setting is not used anymore. Note that a reverse proxy in front of Matchbox
+may enforce its own limit.
 
 ## Read-only mode {: #read-only}
 

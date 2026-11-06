@@ -7,20 +7,21 @@ import java.lang.management.MemoryMXBean;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.hl7.fhir.r5.context.ContextUtilities;
-import org.hl7.fhir.r5.context.SimpleWorkerContext;
-import org.hl7.fhir.r5.context.Slf4JLoggingService;
-import org.hl7.fhir.r5.elementmodel.Manager;
-import org.hl7.fhir.r5.elementmodel.Manager.FhirFormat;
-import org.hl7.fhir.r5.formats.IParser;
-import org.hl7.fhir.r5.model.Bundle;
-import org.hl7.fhir.r5.model.OperationOutcome;
-import org.hl7.fhir.r5.model.Resource;
-import org.hl7.fhir.r5.model.StructureDefinition;
-import org.hl7.fhir.r5.model.StructureMap;
-import org.hl7.fhir.r5.terminologies.CodeSystemUtilities;
-import org.hl7.fhir.r5.terminologies.client.TerminologyClientManager.InternalLogEvent;
-import org.hl7.fhir.r5.utils.validation.constants.ReferenceValidationPolicy;
+import org.hl7.fhir.services.context.ContextUtilities;
+import org.hl7.fhir.standalone.context.SimpleWorkerContext;
+import org.hl7.fhir.utilities.logging.Slf4JLoggingService;
+import org.hl7.fhir.services.elementmodel.Manager;
+import org.hl7.fhir.model.utilities.formats.FhirFormat;
+import org.hl7.fhir.model.utilities.formats.IParser;
+import org.hl7.fhir.model.utilities.formats.OutputStyle;
+import org.hl7.fhir.model.core.Bundle;
+import org.hl7.fhir.model.core.OperationOutcome;
+import org.hl7.fhir.model.core.Resource;
+import org.hl7.fhir.model.core.StructureDefinition;
+import org.hl7.fhir.model.fml.StructureMap;
+import org.hl7.fhir.model.utilities.CodeSystemUtilities;
+import org.hl7.fhir.standalone.terminology.client.TerminologyClientManager.InternalLogEvent;
+import org.hl7.fhir.services.validation.constants.ReferenceValidationPolicy;
 import org.hl7.fhir.utilities.FileUtilities;
 import org.hl7.fhir.utilities.TimeTracker;
 import org.hl7.fhir.utilities.Utilities;
@@ -99,7 +100,7 @@ public class MatchboxService {
 
     for (FileInfo fp : request.getFilesToValidate()) {
       List<ValidationMessage> messages = new ArrayList<>();
-      validator.validate(fp.getFileContent().getBytes(), Manager.FhirFormat.getFhirFormat(fp.getFileType()),
+      validator.validate(fp.getFileContent().getBytes(), FhirFormat.getFhirFormat(fp.getFileType()),
         request.getValidationContext().getProfiles(), messages);
       ValidationOutcome outcome = new ValidationOutcome().setFileInfo(fp);
       messages.forEach(outcome::addMessage);
@@ -113,7 +114,7 @@ public class MatchboxService {
     VersionSourceInformation versions = new VersionSourceInformation();
     IgLoader igLoader = new IgLoader(
       new FilesystemPackageCacheManager.Builder().build(),
-      new SimpleWorkerContext.SimpleWorkerContextBuilder().fromNothing(),
+      new SimpleWorkerContext.SimpleWorkerContextBuilder(org.hl7.fhir.model.ModelContext.fullCoreContext()).fromNothing(),
       null);
     for (String src : validationContext.getIgs()) {
       igLoader.scanForIgVersion(src, validationContext.isRecursive(), versions);
@@ -150,8 +151,8 @@ public class MatchboxService {
       if (renderer.handlesBundleDirectly()) {
         renderer.render((Bundle) r);
       } else {
-        renderer.start(((Bundle) r).getEntry().size() > 1);
-        for (Bundle.BundleEntryComponent e : ((Bundle) r).getEntry()) {
+        renderer.start(((Bundle) r).getEntryList().size() > 1);
+        for (Bundle.BundleEntryComponent e : ((Bundle) r).getEntryList()) {
           OperationOutcome op = (OperationOutcome) e.getResource();
           ec = ec + countErrors(op); 
           renderer.render(op);
@@ -197,7 +198,7 @@ public class MatchboxService {
 
   private int countErrors(OperationOutcome oo) {
     int error = 0;
-    for (OperationOutcome.OperationOutcomeIssueComponent issue : oo.getIssue()) {
+    for (OperationOutcome.OperationOutcomeIssueComponent issue : oo.getIssueList()) {
       if (issue.getSeverity() == OperationOutcome.IssueSeverity.FATAL || issue.getSeverity() == OperationOutcome.IssueSeverity.ERROR)
         error++;
     }
@@ -307,14 +308,14 @@ public class MatchboxService {
         }
       }
       validator.setMapLog(validationContext.getMapLog());
-      org.hl7.fhir.r5.elementmodel.Element r = validator.transform(validationContext.getSources().get(0), validationContext.getMap());
+      org.hl7.fhir.services.elementmodel.Element r = validator.transform(validationContext.getSources().get(0), validationContext.getMap());
       System.out.println(" ...success");
       if (validationContext.getOutput() != null) {
         FileOutputStream s = new FileOutputStream(validationContext.getOutput());
         if (validationContext.getOutput() != null && validationContext.getOutput().endsWith(".json"))
-          new org.hl7.fhir.r5.elementmodel.JsonParser(validator.getContext()).compose(r, s, IParser.OutputStyle.PRETTY, null);
+          new org.hl7.fhir.services.elementmodel.JsonParser(validator.getContext()).compose(r, s, OutputStyle.PRETTY, null);
         else
-          new org.hl7.fhir.r5.elementmodel.XmlParser(validator.getContext()).compose(r, s, IParser.OutputStyle.PRETTY, null);
+          new org.hl7.fhir.services.elementmodel.XmlParser(validator.getContext()).compose(r, s, OutputStyle.PRETTY, null);
         s.close();
       }
     } catch (Exception e) {
@@ -364,7 +365,7 @@ public class MatchboxService {
       if (validationContext.getMapLog() != null) {
         validator.setMapLog(validationContext.getMapLog());
       }
-      byte[] r = validator.transformVersion(validationContext.getSources().get(0), validationContext.getTargetVer(), validationContext.getOutput().endsWith(".json") ? Manager.FhirFormat.JSON : Manager.FhirFormat.XML, validationContext.getCanDoNative());
+      byte[] r = validator.transformVersion(validationContext.getSources().get(0), validationContext.getTargetVer(), validationContext.getOutput().endsWith(".json") ? FhirFormat.JSON : FhirFormat.XML, validationContext.getCanDoNative());
       System.out.println(" ...success");
       FileUtilities.bytesToFile(r, validationContext.getOutput());
     } catch (Exception e) {

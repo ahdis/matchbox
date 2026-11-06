@@ -29,7 +29,7 @@ public class MatchboxTxConfig {
 		server.registerInterceptor(new TerminologyCapabilitiesInterceptor(matchboxFhirVersion));
 
 		server.registerProvider(new CodeSystemProvider(matchboxFhirVersion));
-		server.registerProvider(new ValueSetProvider(fhirContext, txValidationCache, matchboxFhirVersion));
+		server.registerProvider(new ValueSetProvider(txValidationCache, matchboxFhirVersion));
 
 		return server;
 	}

@@ -5,7 +5,7 @@ import java.net.URISyntaxException;
 
 import org.hl7.fhir.exceptions.FHIRException;
 import org.hl7.fhir.r4.model.Bundle;
-import org.hl7.fhir.r5.model.StructureMap;
+import org.hl7.fhir.model.fml.StructureMap;
 import org.hl7.fhir.validation.ValidationEngine;
 
 import ch.ahdis.matchbox.engine.cli.VersionUtil;

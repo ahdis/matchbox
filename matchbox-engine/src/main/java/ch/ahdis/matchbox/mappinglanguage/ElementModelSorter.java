@@ -24,10 +24,10 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 
-import org.hl7.fhir.r5.context.IWorkerContext;
-import org.hl7.fhir.r5.elementmodel.Element;
-import org.hl7.fhir.r5.model.ElementDefinition;
-import org.hl7.fhir.r5.model.StructureDefinition;
+import org.hl7.fhir.services.context.IWorkerContext;
+import org.hl7.fhir.services.elementmodel.Element;
+import org.hl7.fhir.model.core.ElementDefinition;
+import org.hl7.fhir.model.core.StructureDefinition;
 import org.hl7.fhir.utilities.NamedItemList;
 
 /**
@@ -42,10 +42,10 @@ public class ElementModelSorter {
 	public static void sort(Element el) {
 		if (el.hasChildren()) {
 
-			for (Element child : el.getChildren()) {
+			for (Element child : el.getChildList()) {
 				sort(child);
 			}
-			NamedItemList<Element> ch = el.getChildren();
+			NamedItemList<Element> ch = el.getChildList();
 			ch.sort(new ElementSortComparator(el, el.getProperty()));
 		}
 	}
@@ -54,17 +54,17 @@ public class ElementModelSorter {
 class ElementSortComparator implements Comparator<Element> {
 	private List<String> children;
 
-	public ElementSortComparator(Element e, org.hl7.fhir.r5.elementmodel.Property property) {
+	public ElementSortComparator(Element e, org.hl7.fhir.services.elementmodel.Property property) {
 		String tn = e.getType();
 //    StructureDefinition sd = property.getContext().fetchResource(StructureDefinition.class, ProfileUtilities.sdNs(tn, property.getContext().getOverrideVersionNs()));
-		StructureDefinition sd = property.getContext().fetchResource(StructureDefinition.class, "http://hl7.org/fhir/StructureDefinition/"+tn, IWorkerContext.VersionResolutionRules.defaultRule());
+		StructureDefinition sd = property.getContext().fetchResource(StructureDefinition.class, "http://hl7.org/fhir/StructureDefinition/"+tn, org.hl7.fhir.model.core.VersionResolutionRules.defaultRule());
 		children = new ArrayList<String>();
 		if (sd != null && !sd.getAbstract())
-			for (ElementDefinition def : sd.getSnapshot().getElement()) {
+			for (ElementDefinition def : sd.getSnapshot().getElementList()) {
 				children.add(def.getPath());
 			}
 		else
-			for (ElementDefinition def : property.getStructure().getSnapshot().getElement()) {
+			for (ElementDefinition def : property.getStructure().getSnapshot().getElementList()) {
 				children.add(def.getPath());
 			}
 	}

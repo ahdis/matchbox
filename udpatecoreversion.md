@@ -53,37 +53,56 @@ All matchbox-specific patches are marked with `matchbox patch` comments in the s
 
 ### Patched files and their patches
 
-The following files have matchbox-specific patches (as of 6.9.1 update):
+The following files have matchbox-specific patches (as of the 7.0.2 update, versionless R6 modules):
 
 | File | Patch Description | Issue |
 |------|------------------|-------|
+| `BaseWorkerContext.java` | `BinaryLoader` keeps a provider for its file instead of the whole `NpmPackage` | #597 |
+| `BaseWorkerContext.java` | `retain()`: objects kept alive as long as the context and its copies | memory |
 | `BaseWorkerContext.java` | Locale handling (preserve locale across engine copies) | #425 |
-| `BaseWorkerContext.java` | Duplicate resource handling (drop+re-register instead of throw) | #227, #452 |
+| `BaseWorkerContext.java` | `copy()` copies the inner sets/maps of `oidCacheManual` and `validationCache` (`allResourcesById` is copied upstream since 7.0.2) | #608 |
+| `BaseWorkerContext.java` | Duplicate resource handling (no exception for duplicates) | #227, #452 |
+| `BaseWorkerContext.java` | `registerOids()`, `getResourceVersion()` for lazy loaded proxies | #627 |
+| `BaseWorkerContext.java` | Remove the narrative of resources loaded from packages | #566 |
 | `BaseWorkerContext.java` | fhirVersioned URL stripping in fetchResourceWithExceptionByVersion | #265 |
-| `StructureMapUtilities.java` | createType in processTarget uses services.createType() | #264 |
-| `StructureMapUtilities.java` | CDA type matching: URL suffix comparison in matchesType | CDA support |
-| `StructureMapUtilities.java` | DEF_GROUP_NAME handling in executeRule | 6.9.1 compat |
-| `FHIRPathHostServices.java` | FML resolve() in Bundle | #359 |
-| `Element.java` | Choice type handling in setProperty and convertToElement | FML suppor
-t |
-| `Property.java` | getName() path-based name, getChild() choice type matching | FML support |
-| `XmlParser.java` | ST.r2b datatype handling (dot replacement in xsiType) | #439 |
+| `CanonicalResourceManager.java` | `getVersion()`, `getMasterVersion()` without parsing proxies | #627 |
+| `CanonicalResourceProxy.java` | `getResource()` synchronized, proxies are shared between contexts | concurrency |
+| `BaseLoaderRN.java`, `R3/R4/R4B/R5ToRNLoader.java` | `skipNarrative`: don't parse the narrative | #614 |
+| `FilesystemPackageCacheManager.java` | Core, terminology, extensions and xver packages from the classpath | packages |
+| `ProfileUtilities.java` | findProfile | #424 |
+| `Element.java` | Type of converted choice elements in `convertToElement`; `copy()` copies the xhtml (done upstream for R5 only) | FML, concurrency |
+| `XmlParser.java` | ST.r2b datatype handling, whitespace of non string types for CDA | #439 |
+| `FHIRPathHostServices.java` | FML resolve() in Bundle, conformsTo context | #359 |
+| `StructureMapTools.java` | `actualType` given as the alias of a structure (no `matchbox patch` marker) | #67 |
+| `TestDataFactory.java` | 3-param lookup | core #1942 |
 | `BaseValidator.java` | ruleInv suppression uses invId instead of theMessage | Validation |
 | `BundleValidator.java` | Profile-based validation of document bundle entries | #348 |
-| `InstanceValidator.java` | Various patches (isNoService casing, resolveReferencesInBundle) | Multiple |
-| `TestDataFactory.java` | 3-param lookup | #1942 |
-| `ProfileUtilities.java` | findProfile | #424 |
-| `ValidatorResourceFetcher.java` | Signature updates for VersionResolutionRules | 6.9.1 compat |
-| `MatchboxEngine.java` | setValidatorFactory for InstanceValidator | 6.9.1 compat |
-| `MatchboxService.java` | InstanceValidatorParameters for validate() | 6.9.1 compat |
-| `HapiWorkerContext.java` | Add missing IWorkerContext 6.9.1 methods (VersionResolutionRules, expandVS, etc.) | 6.9.1 compat |
+| `InstanceValidator.java` | resolve() through the fetch cache, OID registry loaded once (core PR #2711), warnings of referenced resources don't fail the referrer (#543), xver extensions (#138), resolveReferencesInBundle (#359) | Multiple |
+
+matchbox-server overrides HAPI FHIR classes that HAPI builds with an older core: `HapiWorkerContext` (DSTU3, R4, R4B,
+R5), `WorkerContextValidationSupportAdapter` and `TermReadSvcImpl` (the version convertors have no conversion path
+since 7.0.2).
 
 ### Strategy for re-applying patches
 
-1. **Before running updatehapi.sh**, save the current patched files or use `git stash` / `git diff` to capture the patches.
-2. After running updatehapi.sh, use `git diff` to see all changes. The diff shows both removed patches AND new upstream changes.
-3. For each patched file, re-apply ONLY the matchbox-specific changes (marked with `matchbox patch`). Do NOT revert upstream 6.9.1 changes.
-4. Some patches may need adaptation if the surrounding code changed significantly.
+Use a three-way merge per file, with the old core release as the base, the matchbox file as ours and the new core
+release as theirs; it keeps the patches and the upstream changes, conflicts show where both changed the same code:
+
+```bash
+cd ../org.hl7.fhir.core
+git show 7.0.1:$FILE > /tmp/base.java   # the core release matchbox was on
+git show 7.0.2:$FILE > /tmp/theirs.java # the new core release
+cd ../matchbox
+git merge-file -p $MATCHBOX_FILE /tmp/base.java /tmp/theirs.java > /tmp/merged.java
+```
+
+- A patch that is done upstream is either merged without a difference to the new release or shows up as a conflict
+  (take the upstream side and drop the patch).
+- Some core files have CRLF line endings, the matchbox copies LF: strip the CRs of base and theirs before merging.
+- Count the `matchbox patch` markers per file before and after, and check the new core release notes for changes in
+  the same files that make a patch obsolete although the code differs.
+- Compiling isn't enough for the HAPI FHIR jars: scan their bytecode for references to core classes and members that
+  are missing in the new release (see the `ILoggingService` move in 7.0.0).
 
 ## 5. Handle API changes
 

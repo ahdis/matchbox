@@ -183,7 +183,6 @@ public class MatchboxJpaConfig extends StarterJpaConfig {
 																 null,
 																 null,
 																 null,
-																 null,
 																 partitionManagementProvider,
 																 null,
 																 packageInstallerSvc,

@@ -6,8 +6,8 @@ import ca.uhn.fhir.rest.annotation.OperationParam;
 import ch.ahdis.matchbox.util.MatchboxEngineSupport;
 import ch.ahdis.matchbox.engine.MatchboxEngine;
 
-import org.hl7.fhir.r5.fhirpath.ExpressionNode;
-import org.hl7.fhir.r5.fhirpath.FHIRPathEngine;
+import org.hl7.fhir.services.fhirpath.ExpressionNode;
+import org.hl7.fhir.services.fhirpath.FHIRPathEngine;
 import org.hl7.fhir.r5.model.*;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -84,7 +84,7 @@ public class QuestionnaireAssembleProviderR5 {
 							FHIRPathEngine fp = matchboxEngine.getFhirPathEngine();
 							ExpressionNode exp = fp.parse(expr.getExpression());
 							// TODO: need to add linkIdPrefix as a variable to the FHIRPath expression, expression could also be    "expression" : "%linkIdPrefix + 'name.'", see https://build.fhir.org/ig/HL7/sdc/Parameters-sdc-modular-root-assembled.json.html
-							List<Base> result = fp.evaluate(null, exp);
+							List<org.hl7.fhir.model.Base> result = fp.evaluate(null, exp);
 							subLinkdIdPrefix = result.get(0).primitiveValue();
 						}
 					}

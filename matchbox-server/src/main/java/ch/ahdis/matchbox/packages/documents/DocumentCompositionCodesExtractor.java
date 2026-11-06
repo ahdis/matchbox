@@ -195,20 +195,31 @@ public class DocumentCompositionCodesExtractor {
 	 * exist, or its fixed/pattern value doesn't resolve to exactly one fully-specified Coding.
 	 */
 	@Nullable
-	private static String extractFixedCodingAsCode(final StructureDefinition sd, final String path) {
+	private static String extractFixedCodingAsCode(final StructureDefinition sd,
+	                                               final String path) {
 		final var codingPath = path + ".coding";
+		// The last CodeableConcept element at the path, the one that contains the Coding elements that follow it
+		ElementDefinition codeableConceptElement = null;
 		for (final ElementDefinition element : elementsOf(sd)) {
+			if (path.equals(element.getPath())) {
+				codeableConceptElement = element;
+			}
 			if (!element.hasPattern()) {
 				continue;
 			}
 			Coding coding = null;
+
+			if (element.getMin() == 0) {
+				// We only assert element that are required
+				continue;
+			}
 
 			if (path.equals(element.getPath()) && element.getPattern() instanceof CodeableConcept patternCC) {
 				// Check if the CodeableConcept has a pattern
 				if (patternCC.getCoding().size() == 1) {
 					coding = patternCC.getCodingFirstRep();
 				}
-			} else if (codingPath.equals(element.getPath()) && element.getPattern() instanceof Coding patternCoding) {
+			} else if (codingPath.equals(element.getPath()) && codeableConceptElement != null && codeableConceptElement.getMin() > 0 && element.getPattern() instanceof Coding patternCoding) {
 				// Check if the Coding inside the CodeableConcept has a pattern
 				coding = patternCoding;
 			}

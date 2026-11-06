@@ -83,6 +83,9 @@
             @if (hasInstalledVersion(entry.name)) {
               <span class="installed-badge">installed</span>
             }
+            @if (hasInstallingVersion(entry.name)) {
+              <span class="installed-badge">installing…</span>
+            }
           </td>
           <td class="secondary">{{ entry.version }}</td>
           <td class="secondary">{{ entry.fhirVersion }}</td>
@@ -110,7 +113,7 @@
               &nbsp;
               @if (readOnly) {
                 <span class="secondary">The server is read-only, ImplementationGuides can only be installed through the configuration</span>
-              } @else if (update) {
+              } @else if (isInstalling(entry.name, registryVersion.value)) {
                 <span class="installing">
                   <mat-progress-spinner mode="indeterminate" diameter="32"></mat-progress-spinner>
                   Installing {{ entry.name }}#{{ registryVersion.value }}…
@@ -175,7 +178,7 @@
 </div>
 }
 
-@if (update) {
+@if (update || installingPackages.size > 0) {
   <mat-progress-spinner mode="indeterminate"></mat-progress-spinner>
 } @if (errorMessage) {
   <div class="white-block logs">

@@ -43,15 +43,15 @@ import ch.ahdis.matchbox.packages.MatchboxImplementationGuideProvider;
 import dev.langchain4j.model.chat.listener.ChatModelListener;
 import org.apache.commons.beanutils.BeanUtils;
 import org.apache.commons.codec.digest.DigestUtils;
-import org.checkerframework.checker.nullness.qual.NonNull;
-import org.checkerframework.checker.nullness.qual.Nullable;
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
 import org.hl7.fhir.instance.model.api.IBase;
 import org.hl7.fhir.instance.model.api.IBaseOperationOutcome;
 import org.hl7.fhir.instance.model.api.IBaseResource;
 import org.hl7.fhir.r5.model.*;
-import org.hl7.fhir.r5.elementmodel.Manager.FhirFormat;
-import org.hl7.fhir.r5.extensions.ExtensionDefinitions;
-import org.hl7.fhir.r5.utils.EOperationOutcome;
+import org.hl7.fhir.model.utilities.formats.FhirFormat;
+import org.hl7.fhir.model.extensions.ExtensionDefinitions;
+import org.hl7.fhir.model.utilities.EOperationOutcome;
 import org.hl7.fhir.r5.utils.OperationOutcomeUtilities;
 import org.hl7.fhir.utilities.validation.ValidationMessage;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -119,7 +119,7 @@ public class ValidationProvider {
 	/**
 	 * The langchain4j {@link ChatModelListener} beans (e.g. Micrometer/Observation listeners registered in
 	 * {@link ch.ahdis.matchbox.config.MatchboxMetricsConfig}) to attach to the AI chat model built by
-	 * {@link LLMConnector}, so that gen_ai.* metrics are actually recorded.
+	 * {@link LlmConnector}, so that gen_ai.* metrics are actually recorded.
 	 */
 	@Autowired(required = false)
 	private List<ChatModelListener> chatModelListeners = List.of();
@@ -293,7 +293,7 @@ public class ValidationProvider {
 		if (versionSeparator != -1) {
 			profile = profile.substring(0, versionSeparator);
 		}
-		if (engine.getStructureDefinitionR5(profile) == null) {
+		if (engine.getStructureDefinitionR6(profile) == null) {
 			return this.getOoForError(
 				"Engine configured, but validation for profile '%s' not found. %s".formatted(profile, engine));
 		}
@@ -384,16 +384,16 @@ public class ValidationProvider {
 			issue.setSeverity(OperationOutcome.IssueSeverity.INFORMATION);
 			issue.setCode(OperationOutcome.IssueType.INFORMATIONAL);
 
-			final org.hl7.fhir.r5.model.StructureDefinition structDefR5 = engine.getStructureDefinitionR5(profile);
+			final org.hl7.fhir.model.core.StructureDefinition structDef = engine.getStructureDefinitionR6(profile);
 
-			final var profileDate = (structDefR5.getDateElement() != null)
-				? " (%s)".formatted(structDefR5.getDateElement().asStringValue())
+			final var profileDate = (structDef.getDateElement() != null)
+				? " (%s)".formatted(structDef.getDateElement().asStringValue())
 				: " ";
 
 			issue.setDiagnostics(
 				"Validation for profile %s|%s%s. Loaded packages: %s. Duration: %s. %s. Validation parameters: %s".formatted(
-					structDefR5.getUrl(),
-					structDefR5.getVersion(),
+					structDef.getUrl(),
+					structDef.getVersion(),
 					profileDate,
 					String.join(", ", engine.getContext().getLoadedPackages()),
 					ms / 1000.0 + "s",
@@ -406,9 +406,11 @@ public class ValidationProvider {
 								 new StringType(VersionUtil.getPoweredBy()));
 
 			var ext = issue.addExtension().setUrl("http://matchbox.health/validation");
-			addExtension(ext, "profile", new UriType(structDefR5.getUrl()));
-			addExtension(ext, "profileVersion", new UriType(structDefR5.getVersion()));
-			addExtension(ext, "profileDate", structDefR5.getDateElement());
+			addExtension(ext, "profile", new UriType(structDef.getUrl()));
+			addExtension(ext, "profileVersion", new UriType(structDef.getVersion()));
+			addExtension(ext, "profileDate", structDef.hasDate()
+				? new org.hl7.fhir.r5.model.DateTimeType(structDef.getDateElement().getValueAsString())
+				: null);
 
 			ext.addExtension("total", new Duration().setUnit("ms").setValue(ms));
 			addExtension(ext, "validatorVersion", new StringType(VersionUtil.getPoweredBy()));
@@ -477,7 +479,7 @@ public class ValidationProvider {
 		return oo;
 	}
 
-	private OperationOutcome getOoForError(final @NonNull String message) {
+	private OperationOutcome getOoForError(final @Nonnull String message) {
 		final var oo = new OperationOutcome();
 		final var issue = oo.addIssue();
 		issue.setSeverity(OperationOutcome.IssueSeverity.ERROR);

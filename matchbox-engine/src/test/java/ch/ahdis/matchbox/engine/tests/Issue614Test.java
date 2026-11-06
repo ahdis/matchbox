@@ -10,11 +10,11 @@ import java.io.ByteArrayInputStream;
 
 import java.nio.charset.StandardCharsets;
 
-import org.hl7.fhir.convertors.loaders.loaderR5.BaseLoaderR5;
-import org.hl7.fhir.r5.model.CodeSystem;
-import org.hl7.fhir.r5.model.Resource;
-import org.hl7.fhir.r5.model.StructureDefinition;
-import org.hl7.fhir.r5.model.ValueSet;
+import org.hl7.fhir.convertors.loaders.loaderRN.BaseLoaderRN;
+import org.hl7.fhir.model.core.CodeSystem;
+import org.hl7.fhir.model.core.Resource;
+import org.hl7.fhir.model.core.StructureDefinition;
+import org.hl7.fhir.model.core.ValueSet;
 import org.hl7.fhir.utilities.npm.NpmPackage;
 import org.hl7.fhir.validation.ValidatorUtils;
 import org.junit.jupiter.api.Test;
@@ -29,7 +29,7 @@ import ch.ahdis.matchbox.engine.packages.PackageResourceParser;
  * Tests for #614: the narrative of package resources isn't needed for the validation.
  * <p>
  * {@link PackageResourceParser}, which the server uses for the resources of the IG packages, and the core loaders with
- * the {@code skipNarrative} option (matchbox patch of {@link BaseLoaderR5}), which the engine uses, don't parse it.
+ * the {@code skipNarrative} option (matchbox patch of {@link BaseLoaderRN}), which the engine uses, don't parse it.
  * The resources that are parsed when a package is loaded drop it in {@code BaseWorkerContext.cacheResourceFromPackage()}
  * (#566), and the lazily loaded ones (#599) in core's {@code CanonicalResourceProxy.getResource()}.
  *
@@ -90,26 +90,26 @@ class Issue614Test {
 		assertFalse(contained.hasText(), "The narrative of the contained resource should not have been parsed");
 
 		assertEquals("active", contained.getStatus().toCode());
-		assertEquals(1, sd.getDifferential().getElement().get(1).getMin());
+		assertEquals(1, sd.getDifferential().getElementList().get(1).getMin());
 	}
 
 	@ParameterizedTest
 	@ValueSource(strings = {"3.0.2", "4.0.1", "4.3.0", "5.0.0"})
 	void loaderSkipsTheNarrative(final String fhirVersion) throws Exception {
-		final BaseLoaderR5 loader = ValidatorUtils.loaderForVersion(fhirVersion).setSkipNarrative(true);
+		final BaseLoaderRN loader = ValidatorUtils.loaderForVersion(org.hl7.fhir.model.ModelContext.fullCoreContext(), fhirVersion).setSkipNarrative(true);
 		final Resource fromBundle = loader.loadBundle(profile(), true).getEntryFirstRep().getResource();
 		for (final Resource resource : new Resource[]{fromBundle, loader.loadResource(profile(), true)}) {
 			final StructureDefinition sd = assertInstanceOf(StructureDefinition.class, resource);
 			assertFalse(sd.hasText(), "The narrative of the resource should not have been parsed");
 			assertFalse(sd.getContained().get(0) instanceof final ValueSet vs && vs.hasText(),
 							"The narrative of the contained resource should not have been parsed");
-			assertEquals(1, sd.getDifferential().getElement().get(1).getMin());
+			assertEquals(1, sd.getDifferential().getElementList().get(1).getMin());
 		}
 	}
 
 	@Test
 	void loaderKeepsTheNarrativeByDefault() throws Exception {
-		final BaseLoaderR5 loader = ValidatorUtils.loaderForVersion("4.0.1");
+		final BaseLoaderRN loader = ValidatorUtils.loaderForVersion(org.hl7.fhir.model.ModelContext.fullCoreContext(), "4.0.1");
 		final StructureDefinition sd = assertInstanceOf(StructureDefinition.class,
 																		loader.loadBundle(profile(), true).getEntryFirstRep().getResource());
 		assertTrue(sd.hasText());
@@ -117,9 +117,9 @@ class Issue614Test {
 
 	@Test
 	void newLoaderSkipsTheNarrativeToo() throws Exception {
-		final BaseLoaderR5 loader = ValidatorUtils.loaderForVersion("4.0.1").setSkipNarrative(true);
+		final BaseLoaderRN loader = ValidatorUtils.loaderForVersion(org.hl7.fhir.model.ModelContext.fullCoreContext(), "4.0.1").setSkipNarrative(true);
 		final NpmPackage r5Package = NpmPackage.fromPackage(Issue614Test.class.getResourceAsStream("/hl7.fhir.r5.core.tgz"));
-		assertTrue(((BaseLoaderR5) loader.getNewLoader(r5Package)).isSkipNarrative());
+		assertTrue(((BaseLoaderRN) loader.getNewLoader(r5Package)).isSkipNarrative());
 	}
 
 	@Test
@@ -129,7 +129,7 @@ class Issue614Test {
 		assertNotNull(cs);
 		assertEquals("hl7.terminology.r4", cs.getSourcePackage().getId());
 		assertFalse(cs.hasText(), "The narrative should have been dropped");
-		assertFalse(cs.getConcept().isEmpty());
+		assertFalse(cs.getConceptList().isEmpty());
 	}
 
 	private static ByteArrayInputStream profile() {

@@ -25,26 +25,26 @@ import java.util.List;
 
 
 import org.hl7.fhir.exceptions.FHIRException;
-import org.hl7.fhir.r5.conformance.profile.ProfileKnowledgeProvider;
-import org.hl7.fhir.r5.context.ContextUtilities;
-import org.hl7.fhir.r5.context.IWorkerContext;
-import org.hl7.fhir.r5.model.Base;
-import org.hl7.fhir.r5.model.CodeType;
-import org.hl7.fhir.r5.model.CodeableConcept;
-import org.hl7.fhir.r5.model.Coding;
-import org.hl7.fhir.r5.model.ConceptMap;
-import org.hl7.fhir.r5.model.ConceptMap.ConceptMapGroupComponent;
-import org.hl7.fhir.r5.model.ConceptMap.SourceElementComponent;
-import org.hl7.fhir.r5.model.ConceptMap.TargetElementComponent;
-import org.hl7.fhir.r5.model.Enumerations.ConceptMapRelationship;
-import org.hl7.fhir.r5.model.Resource;
-import org.hl7.fhir.r5.model.StringType;
-import org.hl7.fhir.r5.model.StructureMap;
-import org.hl7.fhir.r5.model.UriType;
-import org.hl7.fhir.r5.utils.structuremap.ITransformerServices;
-import org.hl7.fhir.r5.utils.structuremap.SourceElementComponentWrapper;
-import org.hl7.fhir.r5.utils.structuremap.StructureMapUtilities;
-import org.hl7.fhir.r5.utils.structuremap.TransformContext;
+import org.hl7.fhir.services.conformance.profile.ProfileKnowledgeProvider;
+import org.hl7.fhir.services.context.ContextUtilities;
+import org.hl7.fhir.services.context.IWorkerContext;
+import org.hl7.fhir.model.Base;
+import org.hl7.fhir.model.core.CodeType;
+import org.hl7.fhir.model.core.CodeableConcept;
+import org.hl7.fhir.model.core.Coding;
+import org.hl7.fhir.model.core.ConceptMap;
+import org.hl7.fhir.model.core.ConceptMap.ConceptMapGroupComponent;
+import org.hl7.fhir.model.core.ConceptMap.SourceElementComponent;
+import org.hl7.fhir.model.core.ConceptMap.TargetElementComponent;
+import org.hl7.fhir.model.core.Enumerations.ConceptMapRelationship;
+import org.hl7.fhir.model.core.Resource;
+import org.hl7.fhir.model.core.StringType;
+import org.hl7.fhir.model.fml.StructureMap;
+import org.hl7.fhir.model.core.UriType;
+import org.hl7.fhir.services.fml.ITransformerServices;
+import org.hl7.fhir.services.fml.SourceElementComponentWrapper;
+import org.hl7.fhir.services.fml.StructureMapTools;
+import org.hl7.fhir.services.fml.TransformContext;
 
 import ch.ahdis.matchbox.engine.MatchboxEngine;
 
@@ -52,7 +52,7 @@ import ch.ahdis.matchbox.engine.MatchboxEngine;
  * Class to overwrite translation method to fix certain problems with CDA2FHIR
  * mapping
  */
-public class MatchboxStructureMapUtilities extends StructureMapUtilities {
+public class MatchboxStructureMapUtilities extends StructureMapTools {
 
 	private IWorkerContext worker;
 	private MatchboxEngine engine;
@@ -89,17 +89,17 @@ public class MatchboxStructureMapUtilities extends StructureMapUtilities {
 		if (source.isPrimitive()) {
 			src.setCode(source.primitiveValue());
 		} else if ("Coding".equals(source.fhirType())) {
-			Base[] b = source.getProperty("system".hashCode(), "system", true);
+			Base[] b = source.getNamedValue("system", true);
 			if (b.length == 1)
 				src.setSystem(b[0].primitiveValue());
-			b = source.getProperty("code".hashCode(), "code", true);
+			b = source.getNamedValue("code", true);
 			if (b.length == 1)
 				src.setCode(b[0].primitiveValue());
 		} else if (source.fhirType().endsWith("CE")) {// else if ("CE".equals(source.fhirType())) {
-			Base[] b = source.getProperty("codeSystem".hashCode(), "codeSystem", true);
+			Base[] b = source.getNamedValue("codeSystem", true);
 			if (b.length == 1)
 				src.setSystem(b[0].primitiveValue());
-			b = source.getProperty("code".hashCode(), "code", true);
+			b = source.getNamedValue("code", true);
 			if (b.length == 1)
 				src.setCode(b[0].primitiveValue());
 		} else
@@ -151,8 +151,8 @@ public class MatchboxStructureMapUtilities extends StructureMapUtilities {
 				}
 			} else {
 				List<SourceElementComponentWrapper> list = new ArrayList<SourceElementComponentWrapper>();
-				for (ConceptMapGroupComponent g : cmap.getGroup()) {
-					for (SourceElementComponent e : g.getElement()) {
+				for (ConceptMapGroupComponent g : cmap.getGroupList()) {
+					for (SourceElementComponent e : g.getElementList()) {
 						String srccode = src.getCode();
 						String srcsys = src.getSystem();
 						String ecode = e.getCode();
@@ -166,11 +166,11 @@ public class MatchboxStructureMapUtilities extends StructureMapUtilities {
 				}
 				if (list.size() == 0)
 					done = true;
-				else if (list.get(0).getComp().getTarget().size() == 0)
+				else if (list.get(0).getComp().getTargetList().size() == 0)
 					message = "Concept map " + su + " found no translation for " + src.getCode();
 				else {
-					for (TargetElementComponent tgt : list.get(0).getComp().getTarget()) {
-						if (outcome == null && list.get(0).getComp().getTarget().size() > 1) {
+					for (TargetElementComponent tgt : list.get(0).getComp().getTargetList()) {
+						if (outcome == null && list.get(0).getComp().getTargetList().size() > 1) {
 							outcome = new CodeableConcept();
 						}
 						if (tgt.getRelationship() == null || EnumSet
@@ -223,7 +223,7 @@ public class MatchboxStructureMapUtilities extends StructureMapUtilities {
 				}
 			}
 			// check if outcome is CodeableConcept and size>0
-			if ((outcome instanceof CodeableConcept) && ((CodeableConcept) outcome).getCoding().size() > 0) {
+			if ((outcome instanceof CodeableConcept) && ((CodeableConcept) outcome).getCodingList().size() > 0) {
 				if ("code".equals(fieldToReturn)) {
 					return new CodeType(((CodeableConcept) outcome).getCodingFirstRep().getCode())
 							.setSystem(((CodeableConcept) outcome).getCodingFirstRep().getSystem());

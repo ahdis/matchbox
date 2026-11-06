@@ -27,9 +27,9 @@ import org.hl7.fhir.r4b.model.Expression;
 import org.hl7.fhir.r4b.model.Extension;
 import org.hl7.fhir.r4b.model.Questionnaire;
 import org.hl7.fhir.r4b.model.Questionnaire.QuestionnaireItemComponent;
-import org.hl7.fhir.r5.fhirpath.ExpressionNode;
-import org.hl7.fhir.r5.fhirpath.FHIRPathEngine;
-import org.hl7.fhir.r5.model.Base;
+import org.hl7.fhir.services.fhirpath.ExpressionNode;
+import org.hl7.fhir.services.fhirpath.FHIRPathEngine;
+import org.hl7.fhir.model.Base;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import ca.uhn.fhir.rest.annotation.Operation;

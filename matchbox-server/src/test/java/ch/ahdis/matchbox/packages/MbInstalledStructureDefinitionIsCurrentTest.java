@@ -12,7 +12,7 @@ import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.*;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.annotation.Bean;
@@ -41,7 +41,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 class MbInstalledStructureDefinitionIsCurrentTest {
 
 	private static final String PACKAGE_ID = "matchbox.health.test.ig.r4";
-	private static final String PACKAGE_VERSION = "0.3.0";
 
 	@Autowired
 	private MbInstalledStructureDefinitionRepository installedStructureDefinitionRepository;
@@ -51,6 +50,9 @@ class MbInstalledStructureDefinitionIsCurrentTest {
 
 	@Autowired
 	private MatchboxEngineSupport matchboxEngineSupport;
+
+	@Value("${hapi.fhir.implementationguides.matchbox_health_test_ig_r4.version}")
+	private String matchboxTestIgVersion;
 
 	@BeforeAll
 	void waitUntilStartup() throws Exception {
@@ -89,7 +91,7 @@ class MbInstalledStructureDefinitionIsCurrentTest {
 				"Sanity check: the test IG is the only installed version of its package, so it should start out current");
 
 		try {
-			this.packageVersionFlipper.setCurrentVersion(PACKAGE_ID, PACKAGE_VERSION, false);
+			this.packageVersionFlipper.setCurrentVersion(PACKAGE_ID, this.matchboxTestIgVersion, false);
 
 			final List<MbInstalledStructureDefinitionEntity> afterFlip = this.findRowsForTestIg();
 			assertFalse(afterFlip.isEmpty());
@@ -99,7 +101,7 @@ class MbInstalledStructureDefinitionIsCurrentTest {
 		} finally {
 			// Restore the flag, in case this Spring context ever gets reused by another test relying on it (e.g.
 			// the Gazelle/CapabilityStatement profile listing tests).
-			this.packageVersionFlipper.setCurrentVersion(PACKAGE_ID, PACKAGE_VERSION, true);
+			this.packageVersionFlipper.setCurrentVersion(PACKAGE_ID, this.matchboxTestIgVersion, true);
 		}
 
 		final List<MbInstalledStructureDefinitionEntity> afterRestore = this.findRowsForTestIg();
@@ -109,7 +111,7 @@ class MbInstalledStructureDefinitionIsCurrentTest {
 	private List<MbInstalledStructureDefinitionEntity> findRowsForTestIg() {
 		return this.installedStructureDefinitionRepository.findAllValidatable().stream()
 				.filter(entity -> PACKAGE_ID.equals(entity.getPackageId())
-						&& PACKAGE_VERSION.equals(entity.getPackageVersion()))
+						&& this.matchboxTestIgVersion.equals(entity.getPackageVersion()))
 				.toList();
 	}
 

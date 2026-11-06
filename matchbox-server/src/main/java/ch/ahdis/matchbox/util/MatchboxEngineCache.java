@@ -40,7 +40,7 @@ import java.util.concurrent.TimeUnit;
  */
 public class MatchboxEngineCache {
 
-	private final Map<String, MatchboxEngine> permanentEngines = new ConcurrentHashMap<>(8);
+	private final Map<String, MatchboxEngine> permanentEngines = new ConcurrentHashMap<>(2);
 	private final Map<String, MatchboxEngine> transientEngines =
 		Collections.synchronizedMap(new PassiveExpiringMap<>(60, TimeUnit.MINUTES));
 
@@ -113,6 +113,15 @@ public class MatchboxEngineCache {
 
 	public int numberOfPermanentEngines() {
 		return this.permanentEngines.size();
+	}
+
+	public int enginesFetchCacheTotalSize() {
+		final Set<MatchboxEngine> allEngines = new HashSet<>(this.numberOfPermanentEngines() + this.numberOfTransientEngines());
+		allEngines.addAll(this.permanentEngines.values());
+		synchronized (this.transientEngines) {
+			allEngines.addAll(this.transientEngines.values());
+		}
+		return allEngines.stream().mapToInt(MatchboxEngine::getFetchCacheSize).sum();
 	}
 
 	/**
