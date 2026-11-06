@@ -1,3 +1,26 @@
+2026/11/xx Release 5.0.0
+
+Includes the changes of 5.0.0-rc3, 5.0.0-rc2 and 5.0.0-rc1, see below.
+
+- Upgrade to FHIR Core [7.0.5](https://github.com/hapifhir/org.hl7.fhir.core/releases/tag/7.0.5) (from 7.0.2, see
+  also [7.0.3](https://github.com/hapifhir/org.hl7.fhir.core/releases/tag/7.0.3) and
+  [7.0.4](https://github.com/hapifhir/org.hl7.fhir.core/releases/tag/7.0.4)), e.g. terminology content of both
+  `hl7.terminology` and a core package (a reference that names a core version gets it), global and only one version
+  of a CodeSystem supplement, reserved code spaces, `-level` applied to all messages, whitespace-only values,
+  `conformsTo()` with an implementation guide and the FHIRPath document functions, `contentReferenceProfile` and
+  reslicing in snapshot generation, the invariants of an expanded `contentReference` (`Composition.section.section`).
+  The matchbox patches were merged with a three-way merge, `StructureMap.StructureMapModelMode` of the R6 model is now
+  `StructureMapModelModeVS`
+- Without a terminology server, inferring the system of a code from a value set failed since FHIR Core 7.0.5 when
+  the value set includes a code system that isn't known, also if the include lists its codes, e.g. the UCUM units of
+  `http://hl7.org/fhir/ValueSet/units-of-time` (`Timing.repeat.periodUnit`): such an include is used again (matchbox
+  patch of `ValueSetValidator`)
+- The terminology ecosystem (tx-reg, which routes the requests for a code system to the server that knows it, e.g.
+  the Swiss SNOMED CT edition to tx.fhir.ch) is only used with `https://tx.fhir.org` since FHIR Core 7.0.4: with the
+  `http://tx.fhir.org` of the matchbox configurations, codes of the Swiss SNOMED CT edition failed. matchbox uses the
+  HL7 ecosystem (`https://ecosystem.hl7.org/tx-reg`) for `http://tx.fhir.org` too, and none for other terminology
+  servers (`MatchboxEngine.getTxEcosystem`)
+
 2026/11/06 Release 5.0.0-rc3
 
 Includes the changes of 5.0.0-rc2 and 5.0.0-rc1, see below.

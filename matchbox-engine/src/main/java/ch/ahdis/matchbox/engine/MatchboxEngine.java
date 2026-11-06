@@ -75,6 +75,7 @@ import org.hl7.fhir.utilities.ByteProvider;
 import org.hl7.fhir.utilities.FhirPublication;
 import org.hl7.fhir.utilities.Utilities;
 import org.hl7.fhir.utilities.VersionUtilities;
+import org.hl7.fhir.utilities.settings.FhirSettings;
 import org.hl7.fhir.utilities.json.model.JsonObject;
 import org.hl7.fhir.utilities.npm.CommonPackages;
 import org.hl7.fhir.utilities.npm.FilesystemPackageCacheManager;
@@ -128,6 +129,23 @@ public class MatchboxEngine extends ValidationEngine {
 	 * The default number of resources that {@link #fetch} keeps converted to the element model, per engine.
 	 */
 	public static final int DEFAULT_FETCH_CACHE_SIZE = 100;
+
+	/**
+	 * The terminology ecosystem (tx-reg) to use with a terminology server, which routes the requests for a code system
+	 * to the server that knows it (e.g. the Swiss SNOMED CT edition to tx.fhir.ch): the HL7 ecosystem for tx.fhir.org,
+	 * none for other servers or if {@code useEcosystem} is false. Since FHIR Core 7.0.4 the ecosystem is only used
+	 * with {@code https://tx.fhir.org}, the matchbox configurations use {@code http://tx.fhir.org}, which got no
+	 * ecosystem anymore.
+	 */
+	public static String getTxEcosystem(final String txServer, final boolean useEcosystem) {
+		if (!useEcosystem || txServer == null) {
+			return null;
+		}
+		final String server = txServer.startsWith("http://tx.fhir.org")
+			? "https://" + txServer.substring("http://".length())
+			: txServer;
+		return FhirSettings.getDefaultTxEcosystemFor(server);
+	}
 
 	/**
 	 * A resource of the context that {@link #fetch} converted to the element model, and the resource instance it was
@@ -333,7 +351,7 @@ public class MatchboxEngine extends ValidationEngine {
 				engine.getContext().setCanRunWithoutTerminology(false);
 				engine.getContext().setNoTerminologyServer(false);
 				try {
-					engine.setTerminologyServer(this.txServer, null, FhirPublication.R4, true);
+					engine.setTerminologyServer(this.txServer, null, FhirPublication.R4, getTxEcosystem(this.txServer, true));
 				} catch (final Exception e) {
 					throw new TerminologyServerException(e);
 				}
@@ -375,7 +393,7 @@ public class MatchboxEngine extends ValidationEngine {
 				engine.getContext().setCanRunWithoutTerminology(false);
 				engine.getContext().setNoTerminologyServer(false);
 				try {
-					engine.setTerminologyServer(this.txServer, null, FhirPublication.R4, true);
+					engine.setTerminologyServer(this.txServer, null, FhirPublication.R4, getTxEcosystem(this.txServer, true));
 				} catch (final Exception e) {
 					throw new TerminologyServerException(e);
 				}
@@ -417,7 +435,7 @@ public class MatchboxEngine extends ValidationEngine {
 				engine.getContext().setCanRunWithoutTerminology(false);
 				engine.getContext().setNoTerminologyServer(false);
 				try {
-					engine.setTerminologyServer(this.txServer, null, FhirPublication.R5, true);
+					engine.setTerminologyServer(this.txServer, null, FhirPublication.R5, getTxEcosystem(this.txServer, true));
 				} catch (final Exception e) {
 					throw new TerminologyServerException(e);
 				}
@@ -452,7 +470,7 @@ public class MatchboxEngine extends ValidationEngine {
 				engine.getContext().setCanRunWithoutTerminology(false);
 				engine.getContext().setNoTerminologyServer(false);
 				try {
-					engine.setTerminologyServer(this.txServer, null, this.fhirVersion, true);
+					engine.setTerminologyServer(this.txServer, null, this.fhirVersion, getTxEcosystem(this.txServer, true));
 				} catch (final Exception e) {
 					throw new TerminologyServerException(e);
 				}
@@ -641,7 +659,7 @@ public class MatchboxEngine extends ValidationEngine {
 			return null;
 		}
 
-		String fhirVersionTarget = getFhirVersion(getCanonicalFromStructureMap(map, StructureMap.StructureMapModelMode.TARGET));
+		String fhirVersionTarget = getFhirVersion(getCanonicalFromStructureMap(map, StructureMap.StructureMapModelModeVS.TARGET));
 		if (fhirVersionTarget !=null && (fhirVersionTarget.startsWith("4.0") || fhirVersionTarget.startsWith("4.3") || fhirVersionTarget.startsWith("5.0"))  && !fhirVersionTarget.equals(this.getVersion().substring(0, 3))) {
 			log.info("Loading additional FHIR version for Target into context " + fhirVersionTarget);
 			context = getContextForFhirVersion(fhirVersionTarget);
@@ -680,7 +698,7 @@ public class MatchboxEngine extends ValidationEngine {
 		// if this is the case we do lazy loading of the additional FHIR version into the context
 
 		StructureMap map = context.fetchResource(StructureMap.class, mapUri, org.hl7.fhir.model.core.VersionResolutionRules.defaultRule());
-		String canonicalSource = getCanonicalFromStructureMap(map, StructureMap.StructureMapModelMode.SOURCE);
+		String canonicalSource = getCanonicalFromStructureMap(map, StructureMap.StructureMapModelModeVS.SOURCE);
 
 		String fhirVersionSource = getFhirVersion(canonicalSource);
 		if (fhirVersionSource !=null &&  (fhirVersionSource.startsWith("4.0") || fhirVersionSource.startsWith("4.3") || fhirVersionSource.startsWith("5.0")) && !fhirVersionSource.equals(this.getVersion().substring(0,3))) {
@@ -801,7 +819,7 @@ public class MatchboxEngine extends ValidationEngine {
 	 * @param mode
 	 * @return
 	 */
-	private String getCanonicalFromStructureMap(StructureMap map, StructureMap.StructureMapModelMode mode) {
+	private String getCanonicalFromStructureMap(StructureMap map, StructureMap.StructureMapModelModeVS mode) {
 		String targetTypeUrl = null;
 		for (StructureMap.StructureMapStructureComponent component : map.getStructureList()) {
 			if (component.getMode() == mode) {
@@ -817,7 +835,7 @@ public class MatchboxEngine extends ValidationEngine {
 		String targetTypeUrl = null;
 		SimpleWorkerContext context = (targetContext!=null ? targetContext : this.getContext());
 		for (StructureMap.StructureMapStructureComponent component : map.getStructureList()) {
-			if (component.getMode() == StructureMap.StructureMapModelMode.TARGET) {
+			if (component.getMode() == StructureMap.StructureMapModelModeVS.TARGET) {
 				targetTypeUrl = component.getUrl();
 				break;
 			}
