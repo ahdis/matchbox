@@ -11,6 +11,16 @@ Includes the changes of 5.0.0-rc3, 5.0.0-rc2 and 5.0.0-rc1, see below.
   reslicing in snapshot generation, the invariants of an expanded `contentReference` (`Composition.section.section`).
   The matchbox patches were merged with a three-way merge, `StructureMap.StructureMapModelMode` of the R6 model is now
   `StructureMapModelModeVS`
+- Upgrade to FHIR Core [7.0.6](https://github.com/hapifhir/org.hl7.fhir.core/releases/tag/7.0.6)
+  [#677](https://github.com/ahdis/matchbox/issues/677), e.g. new checks: an empty JSON array of a primitive element,
+  a coding without a version for a code system with `versionNeeded`, Observations that don't fit the properties of
+  their LOINC code (units, time aspect, scale), SNOMED CT codes that don't fit where they are used (an error for a
+  medication code that isn't a medication), refuted negations (Condition, AllergyIntolerance); terminology: an
+  unknown code system is asked for once per run, `$subsumes` answers are cached, recovery when the terminology server
+  lost its cache, the ecosystem only sends requests to servers known to support the code system, LOINC answer list
+  value sets are sent by their implicit url, the language of a value set no longer leaks to the next validation.
+  The matchbox patches were merged with a three-way merge, `parseAndClose(InputStream)` of the R4B, R5 and R6
+  parsers is removed (not used by matchbox or HAPI FHIR, there is a new `parseFile`)
 - Without a terminology server, inferring the system of a code from a value set failed since FHIR Core 7.0.5 when
   the value set includes a code system that isn't known, also if the include lists its codes, e.g. the UCUM units of
   `http://hl7.org/fhir/ValueSet/units-of-time` (`Timing.repeat.periodUnit`): such an include is used again (matchbox
