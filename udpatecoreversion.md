@@ -53,7 +53,7 @@ All matchbox-specific patches are marked with `matchbox patch` comments in the s
 
 ### Patched files and their patches
 
-The following files have matchbox-specific patches (as of the 7.0.5 update, versionless R6 modules):
+The following files have matchbox-specific patches (as of the 7.0.6 update, versionless R6 modules):
 
 | File | Patch Description | Issue |
 |------|------------------|-------|
