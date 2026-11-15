@@ -2,6 +2,16 @@
 
 Includes the changes of 5.0.0-rc3, 5.0.0-rc2 and 5.0.0-rc1, see below.
 
+- Add the ITB (GITB REST) validation service `FHIRValidator` under `[server]/itb/fhir`, so the Interoperability Test Bed
+  (ITB 1.30.0 or later, with `handlerApiType="REST"`) can validate FHIR resources with matchbox: `GET
+  getModuleDefinition` and `POST validate`, which returns a TAR report. It follows the contract of the HL7 validator's
+  ITB services (hapifhir/org.hl7.fhir.core#2615). The types of the GITB REST API come from
+  `eu.europa.ec.itb:gitb-types-model` 1.30.3 ([#589](https://github.com/ahdis/matchbox/issues/589))
+- Add the validation parameters `bpWarnings` and `resourceIdRule`
+  ([#589](https://github.com/ahdis/matchbox/issues/589))
+- `$validate`, the Gazelle API and the ITB API share their validation logic (`ValidationHelper`). For a profile that
+  no engine knows, `$validate` now answers "Validation for profile '...' not supported by this validator instance",
+  like the Gazelle API ([#589](https://github.com/ahdis/matchbox/issues/589))
 - Upgrade to FHIR Core [7.0.5](https://github.com/hapifhir/org.hl7.fhir.core/releases/tag/7.0.5) (from 7.0.2, see
   also [7.0.3](https://github.com/hapifhir/org.hl7.fhir.core/releases/tag/7.0.3) and
   [7.0.4](https://github.com/hapifhir/org.hl7.fhir.core/releases/tag/7.0.4)), e.g. terminology content of both
