@@ -2,15 +2,15 @@ package ch.ahdis.matchbox.itb;
 
 import ca.uhn.fhir.jpa.starter.Application;
 import ch.ahdis.matchbox.test.CompareUtil;
-import ch.ahdis.matchbox.validation.itb.models.AnyContent;
-import ch.ahdis.matchbox.validation.itb.models.ReportItem;
-import ch.ahdis.matchbox.validation.itb.models.SeverityLevel;
-import ch.ahdis.matchbox.validation.itb.models.TAR;
-import ch.ahdis.matchbox.validation.itb.models.TestResultType;
-import ch.ahdis.matchbox.validation.itb.models.TypedParameter;
-import ch.ahdis.matchbox.validation.itb.models.UsageEnumeration;
-import ch.ahdis.matchbox.validation.itb.models.ValidateRequest;
-import ch.ahdis.matchbox.validation.itb.models.ValueEmbeddingEnumeration;
+import com.gitb.model.core.AnyContent;
+import com.gitb.model.tr.ReportItem;
+import com.gitb.model.tr.SeverityLevel;
+import com.gitb.model.tr.TAR;
+import com.gitb.model.tr.TestResultType;
+import com.gitb.model.core.TypedParameter;
+import com.gitb.model.core.UsageEnumeration;
+import com.gitb.model.vs.ValidateRequest;
+import com.gitb.model.core.ValueEmbeddingEnumeration;
 import org.apache.commons.io.FileUtils;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -105,7 +105,7 @@ public class ItbApiR4Test {
 		assertEquals("0", getContext(tar, "warningCount").getValue());
 		assertEquals("0", getContext(tar, "informationCount").getValue());
 		assertEquals("information", getContext(tar, "severity").getValue());
-		assertFalse(getContext(tar, "errorCount").getForDisplay());
+		assertFalse(getContext(tar, "errorCount").isForDisplay());
 
 		// How the validation was done, shown in the ITB step report
 		final var validation = getContext(tar, "validation");
@@ -208,12 +208,11 @@ public class ItbApiR4Test {
 
 	@Test
 	void validateBase64() throws Exception {
-		final var request = new ValidateRequest()
-			.addInput(new AnyContent()
-							 .setName("contentToValidate")
-							 .setValue(Base64.getEncoder().encodeToString(PATIENT.getBytes(StandardCharsets.UTF_8)))
-							 .setEmbeddingMethod(ValueEmbeddingEnumeration.BASE_64))
-			.addInput(ItbClient.input("profiles", PATIENT_PROFILE));
+		final var request = ItbClient.request(AnyContent.builder()
+							 .withName("contentToValidate")
+							 .withValue(Base64.getEncoder().encodeToString(PATIENT.getBytes(StandardCharsets.UTF_8)))
+							 .withEmbeddingMethod(ValueEmbeddingEnumeration.BASE_64).build(),
+			ItbClient.input("profiles", PATIENT_PROFILE));
 		final TAR tar = this.client.validate(request);
 		assertEquals(TestResultType.SUCCESS, tar.getResult());
 		assertEquals(PATIENT, getContext(tar, "content").getValue());
@@ -221,7 +220,7 @@ public class ItbApiR4Test {
 
 	@Test
 	void sessionIdInNote() throws Exception {
-		final var request = new ValidateRequest().addInput(ItbClient.input("contentToValidate", PATIENT));
+		final var request = ItbClient.request(ItbClient.input("contentToValidate", PATIENT));
 		final var response = this.client.post(request, Map.of("Gitb-Test-Session-Identifier", "session-42"));
 		assertEquals(200, response.status());
 		assertEquals("session-42", this.client.readTree(response.body()).get("report").get("overview").get("note").asText());
@@ -229,35 +228,31 @@ public class ItbApiR4Test {
 
 	@Test
 	void badRequests() throws Exception {
-		assertBadRequest(new ValidateRequest().addInput(ItbClient.input("profiles", PATIENT_PROFILE)),
+		assertBadRequest(ItbClient.request(ItbClient.input("profiles", PATIENT_PROFILE)),
 							  "Missing required input: contentToValidate");
-		assertBadRequest(new ValidateRequest().addInput(ItbClient.input("contentToValidate", "")),
+		assertBadRequest(ItbClient.request(ItbClient.input("contentToValidate", "")),
 							  "Required input 'contentToValidate' is present but empty");
-		assertBadRequest(new ValidateRequest().addInput(new AnyContent()
-																			.setName("contentToValidate")
-																			.setValue("http://example.org/Patient/1")
-																			.setEmbeddingMethod(ValueEmbeddingEnumeration.URI)),
+		assertBadRequest(ItbClient.request(AnyContent.builder()
+																			.withName("contentToValidate")
+																			.withValue("http://example.org/Patient/1")
+																			.withEmbeddingMethod(ValueEmbeddingEnumeration.URI).build()),
 							  "embeddingMethod URI is not supported");
-		assertBadRequest(new ValidateRequest().addInput(new AnyContent()
-																			.setName("contentToValidate")
-																			.setValue("%%% not base64 %%%")
-																			.setEmbeddingMethod(ValueEmbeddingEnumeration.BASE_64)),
+		assertBadRequest(ItbClient.request(AnyContent.builder()
+																			.withName("contentToValidate")
+																			.withValue("%%% not base64 %%%")
+																			.withEmbeddingMethod(ValueEmbeddingEnumeration.BASE_64).build()),
 							  "Invalid base64 value");
-		assertBadRequest(new ValidateRequest()
-								  .addInput(ItbClient.input("contentToValidate", PATIENT))
-								  .addInput(ItbClient.input("profiles", PATIENT_PROFILE + "," + BUNDLE_PROFILE)),
+		assertBadRequest(ItbClient.request(ItbClient.input("contentToValidate", PATIENT),
+			ItbClient.input("profiles", PATIENT_PROFILE + "," + BUNDLE_PROFILE)),
 							  "Only one profile");
-		assertBadRequest(new ValidateRequest()
-								  .addInput(ItbClient.input("contentToValidate", PATIENT))
-								  .addInput(ItbClient.input("failOn", "fatal")),
+		assertBadRequest(ItbClient.request(ItbClient.input("contentToValidate", PATIENT),
+			ItbClient.input("failOn", "fatal")),
 							  "Invalid value 'fatal' for input 'failOn'");
-		assertBadRequest(new ValidateRequest()
-								  .addInput(ItbClient.input("contentToValidate", PATIENT))
-								  .addInput(ItbClient.input("contentType", "text/turtle")),
+		assertBadRequest(ItbClient.request(ItbClient.input("contentToValidate", PATIENT),
+			ItbClient.input("contentType", "text/turtle")),
 							  "Unsupported contentType");
-		assertBadRequest(new ValidateRequest()
-								  .addInput(ItbClient.input("contentToValidate", PATIENT))
-								  .addInput(ItbClient.input("bpWarnings", "Sometimes")),
+		assertBadRequest(ItbClient.request(ItbClient.input("contentToValidate", PATIENT),
+			ItbClient.input("bpWarnings", "Sometimes")),
 							  "Invalid bpWarnings");
 
 		final var response = this.client.post("{not json", Map.of());

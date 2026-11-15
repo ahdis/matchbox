@@ -1,11 +1,12 @@
 package ch.ahdis.matchbox.itb;
 
-import ch.ahdis.matchbox.validation.itb.models.AnyContent;
-import ch.ahdis.matchbox.validation.itb.models.GetModuleDefinitionResponse;
-import ch.ahdis.matchbox.validation.itb.models.TAR;
-import ch.ahdis.matchbox.validation.itb.models.ValidateRequest;
-import ch.ahdis.matchbox.validation.itb.models.ValidationResponse;
-import ch.ahdis.matchbox.validation.itb.models.ValueEmbeddingEnumeration;
+import ch.ahdis.matchbox.validation.itb.ItbJson;
+import com.gitb.model.core.AnyContent;
+import com.gitb.model.vs.GetModuleDefinitionResponse;
+import com.gitb.model.tr.TAR;
+import com.gitb.model.vs.ValidateRequest;
+import com.gitb.model.vs.ValidationResponse;
+import com.gitb.model.core.ValueEmbeddingEnumeration;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.http.MediaType;
@@ -24,7 +25,7 @@ import java.util.Map;
 public class ItbClient {
 
 	private final URI serviceUri;
-	private final ObjectMapper objectMapper = new ObjectMapper();
+	private final ObjectMapper objectMapper = ItbJson.mapper();
 	private final HttpClient httpClient;
 
 	/**
@@ -56,8 +57,8 @@ public class ItbClient {
 	 * @param inputs the inputs besides {@code contentToValidate}, as name and value (embedded as STRING).
 	 */
 	public TAR validate(final String content, final Map<String, String> inputs) throws IOException, InterruptedException {
-		final var request = new ValidateRequest().addInput(input("contentToValidate", content));
-		inputs.forEach((name, value) -> request.addInput(input(name, value)));
+		final var request = request(input("contentToValidate", content));
+		inputs.forEach((name, value) -> request.getInput().add(input(name, value)));
 		return this.validate(request);
 	}
 
@@ -91,7 +92,11 @@ public class ItbClient {
 		return this.objectMapper.readTree(json);
 	}
 
+	public static ValidateRequest request(final AnyContent... inputs) {
+		return ValidateRequest.builder().withInput(inputs).build();
+	}
+
 	public static AnyContent input(final String name, final String value) {
-		return new AnyContent().setName(name).setValue(value).setEmbeddingMethod(ValueEmbeddingEnumeration.STRING);
+		return AnyContent.builder().withName(name).withValue(value).withEmbeddingMethod(ValueEmbeddingEnumeration.STRING).build();
 	}
 }

@@ -2,7 +2,8 @@
 
 - Add the ITB (GITB REST) validation service `FHIRValidator` under `[server]/itb/fhir`, so the Interoperability Test Bed
   1.30.0 can validate FHIR resources with matchbox; it follows the contract of the HL7 validator's ITB services
-  (hapifhir/org.hl7.fhir.core#2615) (#589)
+  (hapifhir/org.hl7.fhir.core#2615) (#589). The types of the GITB REST API come from
+  `eu.europa.ec.itb:gitb-types-model` 1.30.3
 - Add the validation parameters `bpWarnings` and `resourceIdRule` (#589)
 - Share the validation logic of `$validate`, the Gazelle API and the ITB API (#589)
 - Remove the duplicate `opentelemetry-spring-boot-starter` entry in the `dependencyManagement` of the root `pom.xml`,

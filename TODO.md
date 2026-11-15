@@ -23,8 +23,9 @@ State as of 2026-09-22. Issue: https://github.com/ahdis/matchbox/issues/589. Rel
   ([GazelleValidationWs.java](matchbox-server/src/main/java/ch/ahdis/matchbox/validation/gazelle/GazelleValidationWs.java))
   with hand-written Jackson DTOs, registered in
   [Application.java](matchbox-server/src/main/java/ca/uhn/fhir/jpa/starter/Application.java).
-- **There is no usable Maven dependency.** Maven Central only has `gitb-types` 1.25.2, which holds the SOAP types. The
-  REST model is not published, and ITB advises validator projects not to depend on it, so we write our own DTOs.
+- **The REST model is a Maven dependency since ITB 1.30.0** (2026-11-15): `eu.europa.ec.itb:gitb-types-model` (plain
+  Java types and builders, no dependencies, EUPL 1.2), which replaced the DTOs we first wrote ourselves. The types have
+  no JSON annotations, `ItbJson` holds the mapper for them. Maven Central's `gitb-types` holds the SOAP types.
 - **The test ITB** in [../gazelle/maestro-tutorial/itb](../gazelle/maestro-tutorial/itb) runs 1.29.5 and has to be
   moved to 1.30.0.
 
@@ -44,10 +45,9 @@ Endpoints, below the context path (e.g. `http://host:8080/matchboxv3/itb/fhir`):
 
 - [x] New package `ch.ahdis.matchbox.validation.itb`
   - [x] `ItbValidationWs`: `@RestController`, registered in `Application` next to `GazelleValidationWs`
-  - [x] `models/`: hand-written POJOs from `gitb_vs.json`: `AnyContent`, `Configuration`, `TypedParameter`,
-        `Parameter`, `Metadata`, `ValidationModule`, `GetModuleDefinitionResponse`, `ValidateRequest`,
-        `ValidationResponse`, `TAR`, `ReportItem`, `ValidationCounters`, `ValidationOverview`, plus the enums
-        `ValueEmbeddingEnumeration`, `SeverityLevel`, `TestResultType`, `UsageEnumeration`, `ConfigurationType`
+  - [x] the types of `gitb_vs.json` come from `gitb-types-model` (`com.gitb.model.core`, `.tr`, `.vs`); `ItbJson` is
+        the Jackson mapper for them (no `null` values, no empty `item` array, `date` with its offset, unknown
+        properties ignored, `embeddingMethod` read case-insensitively and `BASE64` accepted), tested by `ItbJsonTest`
   - [x] `ItbInputs`: resolves `AnyContent` values
     - supports `STRING` and `BASE_64`
     - rejects `URI` with HTTP 400, as upstream does, because fetching a caller-supplied URL is an SSRF risk

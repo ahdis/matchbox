@@ -9,17 +9,17 @@ import ch.ahdis.matchbox.engine.cli.VersionUtil;
 import ch.ahdis.matchbox.engine.exception.MatchboxEngineCreationException;
 import ch.ahdis.matchbox.util.metrics.MatchboxMetrics;
 import ch.ahdis.matchbox.validation.ValidationHelper;
-import ch.ahdis.matchbox.validation.itb.models.AnyContent;
-import ch.ahdis.matchbox.validation.itb.models.ConfigurationType;
-import ch.ahdis.matchbox.validation.itb.models.GetModuleDefinitionResponse;
-import ch.ahdis.matchbox.validation.itb.models.Metadata;
-import ch.ahdis.matchbox.validation.itb.models.TAR;
-import ch.ahdis.matchbox.validation.itb.models.TypedParameter;
-import ch.ahdis.matchbox.validation.itb.models.UsageEnumeration;
-import ch.ahdis.matchbox.validation.itb.models.ValidateRequest;
-import ch.ahdis.matchbox.validation.itb.models.ValidationModule;
-import ch.ahdis.matchbox.validation.itb.models.ValidationOverview;
-import ch.ahdis.matchbox.validation.itb.models.ValidationResponse;
+import com.gitb.model.core.AnyContent;
+import com.gitb.model.core.ConfigurationType;
+import com.gitb.model.vs.GetModuleDefinitionResponse;
+import com.gitb.model.core.Metadata;
+import com.gitb.model.tr.TAR;
+import com.gitb.model.core.TypedParameter;
+import com.gitb.model.core.UsageEnumeration;
+import com.gitb.model.vs.ValidateRequest;
+import com.gitb.model.vs.ValidationModule;
+import com.gitb.model.tr.ValidationOverview;
+import com.gitb.model.vs.ValidationResponse;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -44,6 +44,7 @@ import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamReader;
 import java.io.StringReader;
 import java.lang.reflect.Field;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
@@ -105,33 +106,35 @@ public class ItbValidationWs {
 	 * Returns the definition of the validation service, with the inputs it accepts.
 	 */
 	@GetMapping(path = "/getModuleDefinition", produces = MediaType.APPLICATION_JSON_VALUE)
-	public GetModuleDefinitionResponse getModuleDefinition(final HttpServletRequest request) {
-		final var module = new ValidationModule()
-			.setId(SERVICE_ID)
-			.setOperation("validate")
-			.setServiceLocation(request.getRequestURL().toString().replace("/getModuleDefinition", ""))
-			.setMetadata(new Metadata()
-								 .setName(SERVICE_NAME)
-								 .setVersion(VersionUtil.getVersion())
-								 .setDescription("Validates a FHIR resource (JSON or XML) against a profile of the " +
-														 "implementation guides installed in matchbox, and returns a TAR report."));
+	public ResponseEntity<byte[]> getModuleDefinition(final HttpServletRequest request) throws JsonProcessingException {
+		final var module = ValidationModule.builder()
+			.withId(SERVICE_ID)
+			.withOperation("validate")
+			.withServiceLocation(request.getRequestURL().toString().replace("/getModuleDefinition", ""))
+			.withMetadata(Metadata.builder()
+								  .withName(SERVICE_NAME)
+								  .withVersion(VersionUtil.getVersion())
+								  .withDescription("Validates a FHIR resource (JSON or XML) against a profile of the " +
+															"implementation guides installed in matchbox, and returns a TAR report.")
+								  .build())
+			.build();
 
-		module.addInput(input(INPUT_CONTENT, "string", true,
+		module.getInputs().add(input(INPUT_CONTENT, "string", true,
 									 "The FHIR resource to validate, JSON or XML."));
-		module.addInput(input(INPUT_CONTENT_TYPE, "string", false,
+		module.getInputs().add(input(INPUT_CONTENT_TYPE, "string", false,
 									 "application/fhir+json or application/fhir+xml. Detected from the content if missing."));
-		module.addInput(input(INPUT_PROFILES, "string", false,
+		module.getInputs().add(input(INPUT_PROFILES, "string", false,
 									 "One profile, 'canonical' or 'canonical|version'. The version selects the implementation guide " +
 										 "version. Defaults to the base profile of the resource type."));
-		module.addInput(input(INPUT_FAIL_ON, "string", false,
+		module.getInputs().add(input(INPUT_FAIL_ON, "string", false,
 									 "The severity from which the result is FAILURE: error (default), warning or information."));
-		module.addInput(input(INPUT_INCLUDE_CONTENT, "boolean", false,
+		module.getInputs().add(input(INPUT_INCLUDE_CONTENT, "boolean", false,
 									 "Whether the validated content is added to the report context (default true)."));
-		module.addInput(input(INPUT_BP_WARNINGS, "string", false,
+		module.getInputs().add(input(INPUT_BP_WARNINGS, "string", false,
 									 "Best practice warning level: Ignore, Hint, Warning or Error."));
-		module.addInput(input(INPUT_RESOURCE_ID_RULE, "string", false,
+		module.getInputs().add(input(INPUT_RESOURCE_ID_RULE, "string", false,
 									 "Resource id rule: OPTIONAL, REQUIRED or PROHIBITED."));
-		module.addInput(input(INPUT_DISPLAY_WARNINGS, "boolean", false,
+		module.getInputs().add(input(INPUT_DISPLAY_WARNINGS, "boolean", false,
 									 "Whether wrong displays are reported as warnings instead of errors (same as displayIssuesAreWarnings)."));
 
 		// The matchbox validation parameters, as for $validate
@@ -148,11 +151,11 @@ public class ItbValidationWs {
 			} else {
 				type = "string";
 			}
-			module.addInput(input(field.getName(), type, false,
+			module.getInputs().add(input(field.getName(), type, false,
 										 "Validation parameter, as for $validate (default: %s).".formatted(this.getDefaultValue(field))));
 		}
 
-		return new GetModuleDefinitionResponse().setModule(module);
+		return json(GetModuleDefinitionResponse.builder().withModule(module).build());
 	}
 
 	/**
@@ -176,14 +179,14 @@ public class ItbValidationWs {
 		try {
 			request = (body == null || body.isBlank())
 				? new ValidateRequest()
-				: this.objectMapper.readValue(body, ValidateRequest.class);
+				: ItbJson.mapper().readValue(body, ValidateRequest.class);
 		} catch (final JsonProcessingException e) {
 			return error(HttpStatus.BAD_REQUEST, "Malformed JSON: " + e.getOriginalMessage());
 		}
 
 		try {
 			final String note = testSessionId != null ? testSessionId : request.getSessionId();
-			return ResponseEntity.ok(new ValidationResponse().setReport(this.doValidate(request, note)));
+			return json(ValidationResponse.builder().withReport(this.doValidate(request, note)).build());
 		} catch (final ItbBadRequestException e) {
 			return error(HttpStatus.BAD_REQUEST, e.getMessage());
 		} catch (final Exception e) {
@@ -247,13 +250,13 @@ public class ItbValidationWs {
 		final TAR tar = ItbTarMapper.toTar(messages, engine, failOn, includeContent ? ItbTarMapper.CONTEXT_CONTENT : null);
 
 		// How the validation was done, readable in the step report
-		tar.getContext().addItem(this.getValidationContextItem(engine, structDef, cliContext, millis));
+		tar.getContext().getItem().add(this.getValidationContextItem(engine, structDef, cliContext, millis));
 
 		// The OperationOutcome that $validate returns, in the FHIR version of the server
 		final var operationOutcome = this.validationHelper.getOperationOutcome(tar.getId(), messages, canonical,
 																										  engine, millis, cliContext);
 		try {
-			tar.getContext().addItem(ItbTarMapper.contextItem(ItbTarMapper.CONTEXT_OPERATION_OUTCOME,
+			tar.getContext().getItem().add(ItbTarMapper.contextItem(ItbTarMapper.CONTEXT_OPERATION_OUTCOME,
 																			  this.matchboxFhirVersion.serializeForResponse(operationOutcome),
 																			  "application/fhir+json",
 																			  true));
@@ -261,7 +264,7 @@ public class ItbValidationWs {
 			log.error("Error while serializing the OperationOutcome", e);
 		}
 		if (includeContent) {
-			tar.getContext().addItem(ItbTarMapper.contextItem(ItbTarMapper.CONTEXT_CONTENT,
+			tar.getContext().getItem().add(ItbTarMapper.contextItem(ItbTarMapper.CONTEXT_CONTENT,
 																			  content,
 																			  encoding == EncodingEnum.XML ? "application/fhir+xml" : "application/fhir+json",
 																			  true));
@@ -278,45 +281,45 @@ public class ItbValidationWs {
 													final StructureDefinition structDef,
 													final CliContext cliContext,
 													final long millis) {
-		final var validation = new AnyContent()
-			.setName(ItbTarMapper.CONTEXT_VALIDATION)
-			.setType("map")
-			.addItem(ItbTarMapper.contextItem("profile", "%s|%s".formatted(structDef.getUrl(), structDef.getVersion()),
-														 "text/plain", true));
+		final List<AnyContent> items = new ArrayList<>();
+		items.add(ItbTarMapper.contextItem("profile", "%s|%s".formatted(structDef.getUrl(), structDef.getVersion()),
+													  "text/plain", true));
 		if (structDef.hasDate()) {
-			validation.addItem(ItbTarMapper.contextItem("profileDate", structDef.getDateElement().asStringValue(),
+			items.add(ItbTarMapper.contextItem("profileDate", structDef.getDateElement().asStringValue(),
 																	  "text/plain", true));
 		}
-		validation.addItem(ItbTarMapper.contextItem("validator", VersionUtil.getPoweredBy(), "text/plain", true));
-		validation.addItem(ItbTarMapper.contextItem("duration", millis + " ms", "text/plain", true));
+		items.add(ItbTarMapper.contextItem("validator", VersionUtil.getPoweredBy(), "text/plain", true));
+		items.add(ItbTarMapper.contextItem("duration", millis + " ms", "text/plain", true));
 		final String sessionId = this.validationHelper.getSessionId(engine);
 		if (sessionId != null) {
-			validation.addItem(ItbTarMapper.contextItem("sessionId", sessionId, "text/plain", true));
+			items.add(ItbTarMapper.contextItem("sessionId", sessionId, "text/plain", true));
 		}
-		validation.addItem(listItem("packages", engine.getContext().getLoadedPackages()));
+		items.add(listItem("packages", engine.getContext().getLoadedPackages()));
 
-		final var parameters = new AnyContent().setName("parameters").setType("map");
+		final var parameters = AnyContent.builder().withName("parameters").withType("map").build();
 		for (final Field field : cliContext.getValidateEngineParameters()) {
 			final String value = getValue(field, cliContext);
 			if (value != null) {
-				parameters.addItem(ItbTarMapper.contextItem(field.getName(), value, "text/plain", true));
+				parameters.getItem().add(ItbTarMapper.contextItem(field.getName(), value, "text/plain", true));
 			}
 		}
-		validation.addItem(parameters);
+		items.add(parameters);
 
 		if (!engine.getSuppressedWarnInfoPatterns().isEmpty()) {
-			validation.addItem(listItem("suppressedWarnings", engine.getSuppressedWarnInfoPatterns()));
+			items.add(listItem("suppressedWarnings", engine.getSuppressedWarnInfoPatterns()));
 		}
 		if (!engine.getSuppressedErrors().isEmpty()) {
-			validation.addItem(listItem("suppressedErrors", engine.getSuppressedErrors()));
+			items.add(listItem("suppressedErrors", engine.getSuppressedErrors()));
 		}
+		final var validation = AnyContent.builder().withName(ItbTarMapper.CONTEXT_VALIDATION).withType("map").build();
+		validation.getItem().addAll(items);
 		return validation;
 	}
 
 	private static AnyContent listItem(final String name, final Iterable<String> values) {
-		final var list = new AnyContent().setName(name).setType("list");
+		final var list = AnyContent.builder().withName(name).withType("list").build();
 		for (final String value : values) {
-			list.addItem(ItbTarMapper.contextItem(null, value, "text/plain", true));
+			list.getItem().add(ItbTarMapper.contextItem(null, value, "text/plain", true));
 		}
 		return list;
 	}
@@ -409,27 +412,37 @@ public class ItbValidationWs {
 	}
 
 	private static TAR withOverview(final TAR tar, final @Nullable String profileId, final @Nullable String note) {
-		return tar.setOverview(new ValidationOverview()
-										  .setProfileID(profileId)
-										  .setValidationServiceName(SERVICE_NAME)
-										  .setValidationServiceVersion(VersionUtil.getVersion())
-										  .setNote(note));
+		tar.setOverview(ValidationOverview.builder()
+								 .withProfileID(profileId)
+								 .withValidationServiceName(SERVICE_NAME)
+								 .withValidationServiceVersion(VersionUtil.getVersion())
+								 .withNote(note)
+								 .build());
+		return tar;
 	}
 
 	private static TypedParameter input(final String name,
 													final String type,
 													final boolean required,
 													final String description) {
-		return new TypedParameter()
-			.setName(name)
-			.setType(type)
-			.setUse(required ? UsageEnumeration.R : UsageEnumeration.O)
-			.setKind(ConfigurationType.SIMPLE)
-			.setDesc(description);
+		return TypedParameter.builder()
+			.withName(name)
+			.withType(type)
+			.withUse(required ? UsageEnumeration.R : UsageEnumeration.O)
+			.withKind(ConfigurationType.SIMPLE)
+			.withDesc(description)
+			.build();
 	}
 
 	private String getDefaultValue(final Field field) {
 		return Objects.requireNonNullElse(getValue(field, this.baseCliContext), "not set");
+	}
+
+	/**
+	 * Answers with a GITB type as JSON, written with the mapper of the GITB types ({@link ItbJson}).
+	 */
+	private static ResponseEntity<byte[]> json(final Object body) throws JsonProcessingException {
+		return ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON).body(ItbJson.mapper().writeValueAsBytes(body));
 	}
 
 	private static ResponseEntity<Map<String, String>> error(final HttpStatus status, final String message) {

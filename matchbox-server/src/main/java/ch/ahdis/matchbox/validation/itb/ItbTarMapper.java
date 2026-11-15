@@ -2,18 +2,17 @@ package ch.ahdis.matchbox.validation.itb;
 
 import ch.ahdis.matchbox.engine.MatchboxEngine;
 import ch.ahdis.matchbox.validation.ValidationHelper;
-import ch.ahdis.matchbox.validation.itb.models.AnyContent;
-import ch.ahdis.matchbox.validation.itb.models.ReportItem;
-import ch.ahdis.matchbox.validation.itb.models.SeverityLevel;
-import ch.ahdis.matchbox.validation.itb.models.TAR;
-import ch.ahdis.matchbox.validation.itb.models.TestResultType;
-import ch.ahdis.matchbox.validation.itb.models.ValidationCounters;
-import ch.ahdis.matchbox.validation.itb.models.ValueEmbeddingEnumeration;
+import com.gitb.model.core.AnyContent;
+import com.gitb.model.tr.ReportItem;
+import com.gitb.model.tr.SeverityLevel;
+import com.gitb.model.tr.TAR;
+import com.gitb.model.tr.TestResultType;
+import com.gitb.model.tr.ValidationCounters;
+import com.gitb.model.core.ValueEmbeddingEnumeration;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hl7.fhir.utilities.validation.ValidationMessage;
 
-import java.time.OffsetDateTime;
-import java.util.ArrayList;
+import java.time.ZonedDateTime;
 import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
@@ -76,7 +75,7 @@ final class ItbTarMapper {
 						  final @Nullable String contentName) {
 		final var tar = newTar();
 		for (final ValidationMessage message : messages) {
-			tar.addItem(toItem(message, engine, contentName));
+			tar.getItems().add(toItem(message, engine, contentName));
 		}
 		final var counters = countItems(tar.getItems());
 		tar.setCounters(counters);
@@ -165,27 +164,32 @@ final class ItbTarMapper {
 											final String value,
 											final String mimeType,
 											final boolean forDisplay) {
-		return new AnyContent()
-			.setName(name)
-			.setValue(value)
-			.setType("string")
-			.setEmbeddingMethod(ValueEmbeddingEnumeration.STRING)
-			.setEncoding("UTF-8")
-			.setMimeType(mimeType)
-			.setForContext(true)
-			.setForDisplay(forDisplay);
+		return AnyContent.builder()
+			.withName(name)
+			.withValue(value)
+			.withType("string")
+			.withEmbeddingMethod(ValueEmbeddingEnumeration.STRING)
+			.withEncoding("UTF-8")
+			.withMimeType(mimeType)
+			.withForContext(true)
+			.withForDisplay(forDisplay)
+			.build();
 	}
 
 	private static TAR newTar() {
-		return new TAR()
-			.setId(UUID.randomUUID().toString())
-			.setDate(OffsetDateTime.now().toString())
-			.setItems(new ArrayList<>());
+		return TAR.builder()
+			.withId(UUID.randomUUID().toString())
+			.withDate(ZonedDateTime.now())
+			.build();
 	}
 
 	private static TAR singleErrorTar(final TestResultType result, final String description) {
 		final var tar = newTar();
-		tar.addItem(new ReportItem().setLevel(SeverityLevel.ERROR).setDescription(description).setType("exception"));
+		tar.getItems().add(ReportItem.builder()
+									.withLevel(SeverityLevel.ERROR)
+									.withDescription(description)
+									.withType("exception")
+									.build());
 		final var counters = countItems(tar.getItems());
 		tar.setCounters(counters);
 		tar.setResult(result);
@@ -204,7 +208,11 @@ final class ItbTarMapper {
 				case INFO -> information++;
 			}
 		}
-		return new ValidationCounters().setNrOfErrors(errors).setNrOfWarnings(warnings).setNrOfAssertions(information);
+		return ValidationCounters.builder()
+			.withNrOfErrors(errors)
+			.withNrOfWarnings(warnings)
+			.withNrOfAssertions(information)
+			.build();
 	}
 
 	/**
@@ -212,12 +220,13 @@ final class ItbTarMapper {
 	 * {@code <verify output="$ctx">}. The counts are hidden from the displayed report, which shows the counters.
 	 */
 	private static AnyContent newContext(final ValidationCounters counters, final String severity) {
-		return new AnyContent()
-			.setType("map")
-			.addItem(contextItem(CONTEXT_ERROR_COUNT, String.valueOf(counters.getNrOfErrors()), "text/plain", false))
-			.addItem(contextItem(CONTEXT_WARNING_COUNT, String.valueOf(counters.getNrOfWarnings()), "text/plain", false))
-			.addItem(contextItem(CONTEXT_INFORMATION_COUNT, String.valueOf(counters.getNrOfAssertions()), "text/plain", false))
-			.addItem(contextItem(CONTEXT_SEVERITY, severity, "text/plain", false));
+		return AnyContent.builder()
+			.withType("map")
+			.withItem(contextItem(CONTEXT_ERROR_COUNT, String.valueOf(counters.getNrOfErrors()), "text/plain", false),
+						 contextItem(CONTEXT_WARNING_COUNT, String.valueOf(counters.getNrOfWarnings()), "text/plain", false),
+						 contextItem(CONTEXT_INFORMATION_COUNT, String.valueOf(counters.getNrOfAssertions()), "text/plain", false),
+						 contextItem(CONTEXT_SEVERITY, severity, "text/plain", false))
+			.build();
 	}
 
 	/**

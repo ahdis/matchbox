@@ -1,7 +1,7 @@
 package ch.ahdis.matchbox.validation.itb;
 
-import ch.ahdis.matchbox.validation.itb.models.AnyContent;
-import ch.ahdis.matchbox.validation.itb.models.ValueEmbeddingEnumeration;
+import com.gitb.model.core.AnyContent;
+import com.gitb.model.core.ValueEmbeddingEnumeration;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 import java.nio.charset.StandardCharsets;
