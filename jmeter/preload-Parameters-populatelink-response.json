@@ -1,0 +1,1 @@
+{"resourceType":"Parameters","id":"populatelink-response","meta":{"profile":["http://hl7.org/fhir/uv/sdc/StructureDefinition/parameters-questionnaire-populate-link-out"]},"language":"en","parameter":[{"name":"link","valueUri":"http://example.org/someHtmlPage"}]}

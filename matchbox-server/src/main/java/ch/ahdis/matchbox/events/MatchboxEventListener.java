@@ -83,6 +83,14 @@ public class MatchboxEventListener {
 	}
 
 	/**
+	 * A package version has been installed or uninstalled: the IG of a canonical may have changed.
+	 */
+	@EventListener
+	public void handleInstalledPackagesChangedEvent(final InstalledPackagesChangedEvent ignored) {
+		this.matchboxEngineSupport.onInstalledPackagesChanged();
+	}
+
+	/**
 	 * Performs data migration for Matchbox data, stored in the {$link MbInstalledStructureDefinitionRepository}.
 	 */
 	private void migrateMatchboxData() {

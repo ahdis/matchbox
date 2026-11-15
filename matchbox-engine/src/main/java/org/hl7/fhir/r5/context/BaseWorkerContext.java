@@ -139,18 +139,32 @@ public abstract class BaseWorkerContext extends I18nBase implements IWorkerConte
 
   public class BytesFromPackageProvider implements IByteProvider {
 
-    private NpmPackage pi;
-    private String name;
+    // matchbox patch https://github.com/ahdis/matchbox/issues/597: keep only a provider for the single file instead of the whole NpmPackage. Packages loaded from
+    // the classpath hold the content of all their files in memory, so a reference to the package kept e.g. all files
+    // of hl7.fhir.uv.xver-r5.r4 (about 160 MB) on the heap for the few binaries in its 'other' folder.
+    private final org.hl7.fhir.utilities.ByteProvider provider;
+    private final IOException loadException;
 
     public BytesFromPackageProvider(NpmPackage pi, String name) {
-      this.pi = pi;
-      this.name = name;
+      org.hl7.fhir.utilities.ByteProvider provider = null;
+      IOException loadException = null;
+      try {
+        provider = pi.getProvider("other", name);
+      } catch (IOException e) {
+        loadException = e;
+      }
+      this.provider = provider;
+      this.loadException = loadException;
     }
 
     @Override
     public byte[] bytes() throws IOException {
-      return FileUtilities.streamToBytes(pi.load("other", name));
+      if (loadException != null) {
+        throw loadException;
+      }
+      return provider.getBytes();
     }
+    // END matchbox patch
 
   }
 
@@ -281,6 +295,9 @@ public abstract class BaseWorkerContext extends I18nBase implements IWorkerConte
 
   private UcumService ucumService;
   protected Map<String, IByteProvider> binaries = new HashMap<String, IByteProvider>();
+  // matchbox patch: objects that must be kept alive as long as this context (and its copies) is used, e.g. the
+  // resources of a package that are shared between several contexts through a cache of weak references
+  private final List<Object> retainedObjects = new ArrayList<>();
   protected Map<String, Set<IOIDServices.OIDDefinition>> oidCacheManual = new HashMap<>();
   protected List<OIDSource> oidSources = new ArrayList<>();
 
@@ -300,8 +317,37 @@ public abstract class BaseWorkerContext extends I18nBase implements IWorkerConte
   protected AtomicReference<Parameters> expansionParameters = new AtomicReference<>(null);
   private Map<String, PackageInformation> packages = new HashMap<>();
 
-  @Getter
-  protected TerminologyCache txCache = new TerminologyCache(this, null);
+  // matchbox patch https://github.com/ahdis/matchbox/issues/618: the default terminology cache ([tmp]/default-tx-cache)
+  // is created when it's first used (getTxCache()) instead of in the field initializer. The initializer read the whole
+  // folder into memory for every context, also for a copy (SimpleWorkerContext(other) is super() and copy(other)),
+  // which then replaces it with the cache of the original (~230 ms per copy with an 87 MB folder).
+  private volatile TerminologyCache txCache;
+  private volatile boolean txCacheInitialized;
+  private final Object txCacheInitLock = new Object();
+
+  public TerminologyCache getTxCache() {
+    if (!txCacheInitialized) {
+      synchronized (txCacheInitLock) {
+        if (!txCacheInitialized) {
+          try {
+            txCache = new TerminologyCache(this, null);
+          } catch (IOException e) {
+            throw new FHIRException(e);
+          }
+          txCacheInitialized = true;
+        }
+      }
+    }
+    return txCache;
+  }
+
+  private void setTxCache(TerminologyCache cache) {
+    synchronized (txCacheInitLock) {
+      txCache = cache;
+      txCacheInitialized = true;
+    }
+  }
+  // END matchbox patch
   protected TimeTracker clock;
   private boolean tlogging = true;
   private IWorkerContextManager.ICanonicalResourceLocator locator;
@@ -348,7 +394,12 @@ public abstract class BaseWorkerContext extends I18nBase implements IWorkerConte
 
   protected void copy(BaseWorkerContext other) {
     synchronized (other.lock) { // tricky, because you need to lock this as well, but it's really not in use yet 
-      allResourcesById.putAll(other.allResourcesById);
+      // matchbox patch https://github.com/ahdis/matchbox/issues/608: copy the maps per resource type, otherwise they are
+      // shared and the resources registered in a copy are also found by the untyped lookups of the original context
+      for (Map.Entry<String, Map<String, ResourceProxy>> entry : other.allResourcesById.entrySet()) {
+        allResourcesById.put(entry.getKey(), new HashMap<>(entry.getValue()));
+      }
+      // END matchbox patch
       codeSystems.copy(other.codeSystems);
       valueSets.copy(other.valueSets);
       maps.copy(other.maps);
@@ -378,8 +429,10 @@ public abstract class BaseWorkerContext extends I18nBase implements IWorkerConte
       txLog = other.txLog;
       canRunWithoutTerminology = other.canRunWithoutTerminology;
       noTerminologyServer = other.noTerminologyServer;
-      if (other.txCache != null)
-        txCache = other.txCache; // no copy. for now?
+      // matchbox patch https://github.com/ahdis/matchbox/issues/618: the cache of the original, created if it isn't yet
+      final TerminologyCache otherTxCache = other.getTxCache();
+      if (otherTxCache != null)
+        setTxCache(otherTxCache); // no copy. for now?
       expandCodesLimit = other.expandCodesLimit;
       logger = other.logger;
       expansionParameters = other.expansionParameters != null ? new AtomicReference<>(other.copyExpansionParametersWithUserData()) : null;
@@ -389,9 +442,16 @@ public abstract class BaseWorkerContext extends I18nBase implements IWorkerConte
       codeSystemsUsed.addAll(other.codeSystemsUsed);
       ucumService = other.ucumService;
       binaries.putAll(other.binaries);
+      retainedObjects.addAll(other.retainedObjects); // matchbox patch
       oidSources.addAll(other.oidSources);
-      oidCacheManual.putAll(other.oidCacheManual);
-      validationCache.putAll(other.validationCache);
+      // matchbox patch https://github.com/ahdis/matchbox/issues/608: copy the inner sets and maps, as for allResourcesById
+      for (Map.Entry<String, Set<IOIDServices.OIDDefinition>> entry : other.oidCacheManual.entrySet()) {
+        oidCacheManual.put(entry.getKey(), new HashSet<>(entry.getValue()));
+      }
+      for (Map.Entry<String, Map<String, ValidationResult>> entry : other.validationCache.entrySet()) {
+        validationCache.put(entry.getKey(), new HashMap<>(entry.getValue()));
+      }
+      // END matchbox patch
       tlogging = other.tlogging;
       locator = other.locator;
       userAgent = other.userAgent;
@@ -423,23 +483,64 @@ public abstract class BaseWorkerContext extends I18nBase implements IWorkerConte
       }
 
       String url = r.getUrl();
-      if (!allowLoadingDuplicates && hasResourceVersion(r.getType(), url, r.getVersion()) && !packageInfo.isTHO()) {
+      // matchbox patch for duplicate resources, see https://github.com/ahdis/matchbox/issues/227 and issues/452: the
+      // exception for a duplicate is disabled, so only check for a duplicate where the result is used. The check parses
+      // the registered resource if it's a proxy (lazy loading).
+      if (!allowLoadingDuplicates && Utilities.existsInList(url, "http://hl7.org/fhir/SearchParameter/example")
+          && hasResourceVersion(r.getType(), url, r.getVersion()) && !packageInfo.isTHO()) {
         // special workaround for known problems with existing packages
-        if (Utilities.existsInList(url, "http://hl7.org/fhir/SearchParameter/example")) {
-          return;
-        }
-        // matchbox patch for duplicate resources, see https://github.com/ahdis/matchbox/issues/227 and issues/452
+        return;
         // CanonicalResource ex = fetchResourceWithException(r.getType(), url, VersionResolutionRules.defaultRule());
         // throw new DefinitionException(formatMessage(I18nConstants.DUPLICATE_RESOURCE_, url, r.getVersion(), ex.getVersion(),
         //   ex.fhirType()));
-        // END matchbox patch
       }
+      // END matchbox patch
       boolean added = registerResource(r, packageInfo);
       if (added) {
         registerInAllResourceIndex(r, packageInfo);
       }
     }
   }
+
+  // matchbox patch: keeps an object alive as long as this context (and its copies) is used
+  public void retain(Object object) {
+    synchronized (lock) {
+      retainedObjects.add(object);
+    }
+  }
+  // END matchbox patch
+
+  // matchbox patch: register the OIDs of a CodeSystem or NamingSystem that is registered as a proxy (lazy loading);
+  // cacheResourceFromPackage() does this for parsed resources
+  public void registerOids(String resourceType, String url, String version, Set<String> oids) {
+    synchronized (lock) {
+      for (String oid : oids) {
+        oidCacheManual.computeIfAbsent(oid, k -> new HashSet<>())
+          .add(new IOIDServices.OIDDefinition(resourceType, oid, url, version, null, null));
+      }
+    }
+  }
+  // END matchbox patch
+
+  // matchbox patch: the version of the CodeSystem, ValueSet or StructureDefinition that a canonical URL without version
+  // resolves to, without parsing it if it's a proxy (lazy loading); used to pin the versions of the core package when a
+  // proxy is loaded. It doesn't acquire the lock of this context: it's called while a (shared) proxy is loaded, which
+  // another thread may wait for while it holds the lock, and the indexes of the core package don't change anymore.
+  // CodeSystems and ValueSets are only resolved to the core package (https://github.com/ahdis/matchbox/issues/627):
+  // CoreVersionPinner pins them when the context contains only the core package, the proxies are loaded when it also
+  // contains the other packages (e.g. the not-present UCUM CodeSystem 3.0.1 of hl7.fhir.uv.xver-r5.r4).
+  // StructureDefinitions are pinned when the core package is loaded.
+  public String getResourceVersion(Class<? extends CanonicalResource> type, String url) {
+    if (type == CodeSystem.class) {
+      return codeSystems.getMasterVersion(url);
+    } else if (type == ValueSet.class) {
+      return valueSets.getMasterVersion(url);
+    } else if (type == StructureDefinition.class) {
+      return structures.getVersion(ProfileUtilities.sdNs(url, null));
+    }
+    throw new IllegalArgumentException("Unsupported type " + type);
+  }
+  // END matchbox patch
 
   private void registerInAllResourceIndex(CanonicalResourceProxy r, PackageInformation packageInfo) {
     if (r.getId() != null) {
@@ -584,17 +685,18 @@ public abstract class BaseWorkerContext extends I18nBase implements IWorkerConte
       if (r instanceof CanonicalResource) {
         CanonicalResource m = (CanonicalResource) r;
         String url = m.getUrl();
-        if (!allowLoadingDuplicates && hasResource(r.getClass(), url)) {
+        // matchbox patch for duplicate resources, see https://github.com/ahdis/matchbox/issues/227 and issues/452: the
+        // exception for a duplicate is disabled, so only check for a duplicate where the result is used. The check
+        // parses the registered resource if it's a proxy (lazy loading).
+        if (!allowLoadingDuplicates && Utilities.existsInList(url, "http://hl7.org/fhir/SearchParameter/example")
+            && hasResource(r.getClass(), url)) {
           // special workaround for known problems with existing packages
-          if (Utilities.existsInList(url, "http://hl7.org/fhir/SearchParameter/example")) {
-            return;
-          }
-          // matchbox patch for duplicate resources, see https://github.com/ahdis/matchbox/issues/227 and issues/452
+          return;
           // CanonicalResource ex = (CanonicalResource) fetchResourceWithException(r.getClass(), url, VersionResolutionRules.defaultRule());
           // throw new DefinitionException(formatMessage(I18nConstants.DUPLICATE_RESOURCE_, url, ((CanonicalResource) r).getVersion(), ex.getVersion(),
           //   ex.fhirType()));
-          // END matchbox patch
         }
+        // END matchbox patch
         if (r instanceof StructureDefinition) {
           StructureDefinition sd = (StructureDefinition) m;
           if ("1.4.0".equals(version)) {
@@ -904,9 +1006,9 @@ public abstract class BaseWorkerContext extends I18nBase implements IWorkerConte
     vs.setCompose(new ValueSetComposeComponent());
     vs.getCompose().setInactive(!noInactive);
     vs.getCompose().getInclude().add(inc);
-    CacheToken cacheToken = txCache.generateExpandToken(vs, new ExpansionOptions().withHierarchical(hierarchical));
+    CacheToken cacheToken = getTxCache().generateExpandToken(vs, new ExpansionOptions().withHierarchical(hierarchical));
     ValueSetExpansionOutcome res;
-    res = txCache.getExpansion(cacheToken);
+    res = getTxCache().getExpansion(cacheToken);
     if (res != null) {
       return res;
     }
@@ -928,7 +1030,7 @@ public abstract class BaseWorkerContext extends I18nBase implements IWorkerConte
     }
     p.addParameter("count", expandCodesLimit);
     p.addParameter("offset", 0);
-    txLog("$expand on " + txCache.summary(vs) + " on " + tc.getAddress());
+    txLog("$expand on " + getTxCache().summary(vs) + " on " + tc.getAddress());
     // dependent resources are still sent; the cache-id now travels as an HTTP header
     addDependentResources(opCtxt, tc, p, vs);
 
@@ -951,7 +1053,7 @@ public abstract class BaseWorkerContext extends I18nBase implements IWorkerConte
         res.setTxLink(txLog == null ? null : txLog.getLastId());
       }
     }
-    txCache.cacheExpansion(cacheToken, res, TerminologyCache.PERMANENT);
+    getTxCache().cacheExpansion(cacheToken, res, TerminologyCache.PERMANENT);
     return res;
   }
 
@@ -985,10 +1087,10 @@ public abstract class BaseWorkerContext extends I18nBase implements IWorkerConte
     p.setParameter("_limit", new IntegerType("10000"));
     p.setParameter("_incomplete", new BooleanType("true"));
 
-    CacheToken cacheToken = txCache.generateExpandToken(url, options);
+    CacheToken cacheToken = getTxCache().generateExpandToken(url, options);
     ValueSetExpansionOutcome res;
     if (options.isCacheOk()) {
-      res = txCache.getExpansion(cacheToken);
+      res = getTxCache().getExpansion(cacheToken);
       if (res != null) {
         return res;
       }
@@ -1019,7 +1121,7 @@ public abstract class BaseWorkerContext extends I18nBase implements IWorkerConte
     } catch (Exception e) {
       res = new ValueSetExpansionOutcome((e.getMessage() == null ? e.getClass().getName() : e.getMessage()), TerminologyServiceErrorClass.UNKNOWN, allErrors, true).setTxLink(txLog == null ? null : txLog.getLastId());
     }
-    txCache.cacheExpansion(cacheToken, res, TerminologyCache.PERMANENT);
+    getTxCache().cacheExpansion(cacheToken, res, TerminologyCache.PERMANENT);
     return res;
   }
 
@@ -1099,10 +1201,10 @@ public abstract class BaseWorkerContext extends I18nBase implements IWorkerConte
       p.setParameter("incomplete-ok", true);
     }
 
-    CacheToken cacheToken = txCache.generateExpandToken(vs, options);
+    CacheToken cacheToken = getTxCache().generateExpandToken(vs, options);
     ValueSetExpansionOutcome res;
     if (options.isCacheOk()) {
-      res = txCache.getExpansion(cacheToken);
+      res = getTxCache().getExpansion(cacheToken);
       if (res != null) {
         return res;
       }
@@ -1132,7 +1234,7 @@ public abstract class BaseWorkerContext extends I18nBase implements IWorkerConte
       if (!res.getValueset().hasUrl()) {
         throw new Error(formatMessage(I18nConstants.NO_URL_IN_EXPAND_VALUE_SET));
       }
-      txCache.cacheExpansion(cacheToken, res, TerminologyCache.TRANSIENT);
+      getTxCache().cacheExpansion(cacheToken, res, TerminologyCache.TRANSIENT);
       return res;
     }
     if (res.getErrorClass() == TerminologyServiceErrorClass.INTERNAL_ERROR
@@ -1152,7 +1254,7 @@ public abstract class BaseWorkerContext extends I18nBase implements IWorkerConte
     addDependentResources(null, tc, p, vs);
 
 
-    txLog("$expand on " + txCache.summary(vs) + " on " + tc.getAddress());
+    txLog("$expand on " + getTxCache().summary(vs) + " on " + tc.getAddress());
 
     try {
       ValueSet result = tc.getClient().expandValueset(vs, p);
@@ -1175,7 +1277,7 @@ public abstract class BaseWorkerContext extends I18nBase implements IWorkerConte
     if (res != null && res.getValueset() != null) {
       res.getValueset().setUserData(UserDataNames.VS_EXPANSION_SOURCE, tc.getHost());
     }
-    txCache.cacheExpansion(cacheToken, res, TerminologyCache.PERMANENT);
+    getTxCache().cacheExpansion(cacheToken, res, TerminologyCache.PERMANENT);
     return res;
   }
 
@@ -1233,12 +1335,12 @@ public abstract class BaseWorkerContext extends I18nBase implements IWorkerConte
     // 2nd pass: What can we do internally 
     // 3rd pass: hit the server
     for (CodingValidationRequest t : codes) {
-      t.setCacheToken(txCache != null ? txCache.generateValidationToken(options, t.getCoding(), vs, getExpansionParametersForCacheToken()) : null);
+      t.setCacheToken(getTxCache() != null ? getTxCache().generateValidationToken(options, t.getCoding(), vs, getExpansionParametersForCacheToken()) : null);
       if (t.getCoding().hasSystem()) {
         codeSystemsUsed.add(t.getCoding().getSystem());
       }
-      if (txCache != null) {
-        t.setResult(txCache.getValidation(t.getCacheToken()));
+      if (getTxCache() != null) {
+        t.setResult(getTxCache().getValidation(t.getCacheToken()));
       }
     }
     if (options.isUseClient()) {
@@ -1248,8 +1350,8 @@ public abstract class BaseWorkerContext extends I18nBase implements IWorkerConte
             ValueSetValidator vsc = constructValueSetCheckerSimple(options, vs);
             vsc.setThrowToServer(options.isUseServer() && terminologyClientManager.hasClient());
             ValidationResult res = vsc.validateCode("Coding", t.getCoding());
-            if (txCache != null) {
-              txCache.cacheValidation(t.getCacheToken(), res, TerminologyCache.TRANSIENT);
+            if (getTxCache() != null) {
+              getTxCache().cacheValidation(t.getCacheToken(), res, TerminologyCache.TRANSIENT);
             }
             t.setResult(res);
           } catch (Exception e) {
@@ -1303,8 +1405,8 @@ public abstract class BaseWorkerContext extends I18nBase implements IWorkerConte
         if (responseAtIndex.getResource() instanceof Parameters) {
           checkBatchResultMatches(tc, requestAtIndex, (Parameters) responseAtIndex.getResource(), i);
           requestAtIndex.setResult(processValidationResult((Parameters) responseAtIndex.getResource(), null, tc.getAddress()));
-          if (txCache != null) {
-            txCache.cacheValidation(requestAtIndex.getCacheToken(), requestAtIndex.getResult(), TerminologyCache.PERMANENT);
+          if (getTxCache() != null) {
+            getTxCache().cacheValidation(requestAtIndex.getCacheToken(), requestAtIndex.getResult(), TerminologyCache.PERMANENT);
           }
         } else {
           requestAtIndex.setResult(new ValidationResult(IssueSeverity.ERROR, getResponseText(responseAtIndex.getResource()), null).setTxLink(txLog == null ? null : txLog.getLastId()));
@@ -1487,10 +1589,10 @@ public abstract class BaseWorkerContext extends I18nBase implements IWorkerConte
       codeSystemsUsed.add(code.getSystem());
     }
 
-    final CacheToken cacheToken = cachingAllowed && txCache != null ? txCache.generateValidationToken(options, code, vs, getExpansionParametersForCacheToken()) : null;
+    final CacheToken cacheToken = cachingAllowed && getTxCache() != null ? getTxCache().generateValidationToken(options, code, vs, getExpansionParametersForCacheToken()) : null;
     ValidationResult res = null;
-    if (cachingAllowed && txCache != null) {
-      res = txCache.getValidation(cacheToken);
+    if (cachingAllowed && getTxCache() != null) {
+      res = getTxCache().getValidation(cacheToken);
     }
     if (res != null) {
       updateUnsupportedCodeSystems(res, code, getCodeKey(code));
@@ -1515,8 +1617,8 @@ public abstract class BaseWorkerContext extends I18nBase implements IWorkerConte
         vsc.setExternalSource((CanonicalResource) options.getExternalSource());
         if (!ValueSetUtilities.isServerSide(code.getSystem())) {
           res = vsc.validateCode(path, code.copy());
-          if (txCache != null && cachingAllowed) {
-            txCache.cacheValidation(cacheToken, res, TerminologyCache.TRANSIENT);
+          if (getTxCache() != null && cachingAllowed) {
+            getTxCache().cacheValidation(cacheToken, res, TerminologyCache.TRANSIENT);
           }
           return res;
         }
@@ -1590,9 +1692,9 @@ public abstract class BaseWorkerContext extends I18nBase implements IWorkerConte
     Set<String> systems = findRelevantSystems(code, vs);
     TerminologyClientContext tc = terminologyClientManager.chooseServer(vs, systems, false, findValidationLanguage(options));
 
-    String csumm = cachingAllowed && txCache != null ? txCache.summary(code) : null;
-    if (cachingAllowed && txCache != null) {
-      txLog("$validate " + csumm + (vs == null ? "" : " for " + txCache.summary(vs)) + " on " + tc.getAddress());
+    String csumm = cachingAllowed && getTxCache() != null ? getTxCache().summary(code) : null;
+    if (cachingAllowed && getTxCache() != null) {
+      txLog("$validate " + csumm + (vs == null ? "" : " for " + getTxCache().summary(vs)) + " on " + tc.getAddress());
     } else {
       txLog("$validate " + csumm + " before cache exists on " + tc.getAddress());
     }
@@ -1614,8 +1716,8 @@ public abstract class BaseWorkerContext extends I18nBase implements IWorkerConte
       return res;
     }
     updateUnsupportedCodeSystems(res, code, codeKey);
-    if (cachingAllowed && txCache != null) { // we never cache unsupported code systems - we always keep trying (but only once per run)
-      txCache.cacheValidation(cacheToken, res, TerminologyCache.PERMANENT);
+    if (cachingAllowed && getTxCache() != null) { // we never cache unsupported code systems - we always keep trying (but only once per run)
+      getTxCache().cacheValidation(cacheToken, res, TerminologyCache.PERMANENT);
     }
     return res;
   }
@@ -1640,9 +1742,9 @@ public abstract class BaseWorkerContext extends I18nBase implements IWorkerConte
       return null;
     }
 
-    final CacheToken cacheToken = cachingAllowed && txCache != null ? txCache.generateSubsumesToken(options, parent, child, getExpansionParametersForCacheToken()) : null;
-    if (cachingAllowed && txCache != null) {
-      Boolean res = txCache.getSubsumes(cacheToken);
+    final CacheToken cacheToken = cachingAllowed && getTxCache() != null ? getTxCache().generateSubsumesToken(options, parent, child, getExpansionParametersForCacheToken()) : null;
+    if (cachingAllowed && getTxCache() != null) {
+      Boolean res = getTxCache().getSubsumes(cacheToken);
       if (res != null) {
         return res;
       }
@@ -1652,8 +1754,8 @@ public abstract class BaseWorkerContext extends I18nBase implements IWorkerConte
       try {
         SubsumptionOutcome outcome = new TerminologySubsumptionTester(this).subsumes(parent, child);
         Boolean b = outcome == SubsumptionOutcome.EQUIVALENT || outcome == SubsumptionOutcome.SUBSUMES;
-        if (txCache != null && cachingAllowed) {
-          txCache.cacheSubsumes(cacheToken, b, true);
+        if (getTxCache() != null && cachingAllowed) {
+          getTxCache().cacheSubsumes(cacheToken, b, true);
         }
         return b;
       } catch (SubsumptionException e) {
@@ -1777,10 +1879,10 @@ public abstract class BaseWorkerContext extends I18nBase implements IWorkerConte
 
   @Override
   public ValidationResult validateCode(ValidationOptions options, CodeableConcept code, ValueSet vs) {
-    CacheToken cacheToken = txCache.generateValidationToken(options, code, vs, getExpansionParametersForCacheToken());
+    CacheToken cacheToken = getTxCache().generateValidationToken(options, code, vs, getExpansionParametersForCacheToken());
     ValidationResult res = null;
     if (cachingAllowed) {
-      res = txCache.getValidation(cacheToken);
+      res = getTxCache().getValidation(cacheToken);
       if (res != null) {
         return res;
       }
@@ -1805,7 +1907,7 @@ public abstract class BaseWorkerContext extends I18nBase implements IWorkerConte
         vsc.setThrowToServer(options.isUseServer() && terminologyClientManager.hasClient());
         res = vsc.validateCode("CodeableConcept", code);
         if (cachingAllowed) {
-          txCache.cacheValidation(cacheToken, res, TerminologyCache.TRANSIENT);
+          getTxCache().cacheValidation(cacheToken, res, TerminologyCache.TRANSIENT);
         }
         return res;
       } catch (VSCheckerException e) {
@@ -1853,7 +1955,7 @@ public abstract class BaseWorkerContext extends I18nBase implements IWorkerConte
     Set<String> systems = findRelevantSystems(code, vs);
     TerminologyClientContext tc = terminologyClientManager.chooseServer(vs, systems, false, findValidationLanguage(options));
 
-    txLog("$validate " + txCache.summary(code) + " for " + txCache.summary(vs) + " on " + tc.getAddress());
+    txLog("$validate " + getTxCache().summary(code) + " for " + getTxCache().summary(vs) + " on " + tc.getAddress());
     try {
       Parameters pIn = constructParameters(options, code);
       res = validateOnServer2(tc, vs, pIn, options, systems);
@@ -1865,7 +1967,7 @@ public abstract class BaseWorkerContext extends I18nBase implements IWorkerConte
       res = new ValidationResult(IssueSeverity.ERROR, e.getMessage() == null ? e.getClass().getName() : e.getMessage(), issues).setTxLink(txLog == null ? null : txLog.getLastId()).setErrorClass(TerminologyServiceErrorClass.SERVER_ERROR);
     }
     if (cachingAllowed) {
-      txCache.cacheValidation(cacheToken, res, TerminologyCache.PERMANENT);
+      getTxCache().cacheValidation(cacheToken, res, TerminologyCache.PERMANENT);
     }
     return res;
   }
@@ -2326,18 +2428,17 @@ public abstract class BaseWorkerContext extends I18nBase implements IWorkerConte
 
   public void initTxCache(String cachePath) throws FileNotFoundException, FHIRException, IOException {
     if (cachePath != null) {
-      txCache = new TerminologyCache(lock, cachePath);
-      initTxCache(txCache);
+      initTxCache(new TerminologyCache(lock, cachePath));
     }
   }
 
   public void initTxCache(TerminologyCache cache) {
-    txCache = cache;
-    terminologyClientManager.setCache(txCache);
+    setTxCache(cache); // matchbox patch https://github.com/ahdis/matchbox/issues/618
+    terminologyClientManager.setCache(cache);
   }
 
   public void clearTSCache(String url) throws Exception {
-    txCache.removeCS(url);
+    getTxCache().removeCS(url);
   }
 
   public boolean isCanRunWithoutTerminology() {
@@ -2960,6 +3061,70 @@ public abstract class BaseWorkerContext extends I18nBase implements IWorkerConte
     }
     return res;
   }
+
+  // matchbox patch https://github.com/ahdis/matchbox/issues/663: a page of the resources of a type, sorted by URL and
+  // version. Unlike fetchResourcesByType(), only the resources of the page are loaded through the lazy loading, so this
+  // also pages through the ValueSets, which fetchResourcesByType() doesn't allow to iterate (see
+  // isAllowedToIterateTerminologyResources())
+  public record ResourcePage<T extends Resource>(List<T> resources, int total) {
+  }
+
+  @SuppressWarnings("unchecked")
+  public <T extends Resource> ResourcePage<T> fetchResourcesByType(Class<T> class_, int offset, int count) {
+    CanonicalResourceManager<?> manager = canonicalResourceManagerFor(class_);
+    if (manager == null) {
+      throw new FHIRException("Paging through the resources of type " + class_.getSimpleName() + " is not supported");
+    }
+    synchronized (lock) {
+      List<? extends CanonicalResourceManager<?>.CachedCanonicalResource<?>> all = manager.getCachedList().stream()
+        .sorted(Comparator.comparing((CanonicalResourceManager<?>.CachedCanonicalResource<?> cr) -> cr.getUrl(), Comparator.nullsFirst(Comparator.<String>naturalOrder()))
+          .thenComparing(cr -> cr.getVersion(), Comparator.nullsFirst(Comparator.<String>naturalOrder())))
+        .toList();
+      List<T> res = new ArrayList<>();
+      for (int i = Math.max(offset, 0); i < Math.min((long) offset + count, all.size()); i++) {
+        res.add((T) all.get(i).getResource());
+      }
+      return new ResourcePage<>(res, all.size());
+    }
+  }
+
+  private CanonicalResourceManager<?> canonicalResourceManagerFor(Class<? extends Resource> class_) {
+    if (class_ == ImplementationGuide.class) {
+      return guides;
+    } else if (class_ == CapabilityStatement.class) {
+      return capstmts;
+    } else if (class_ == Measure.class) {
+      return measures;
+    } else if (class_ == Library.class) {
+      return libraries;
+    } else if (class_ == StructureDefinition.class) {
+      return structures;
+    } else if (class_ == StructureMap.class) {
+      return transforms;
+    } else if (class_ == ValueSet.class) {
+      return valueSets;
+    } else if (class_ == CodeSystem.class) {
+      return codeSystems;
+    } else if (class_ == NamingSystem.class) {
+      return systems;
+    } else if (class_ == ActorDefinition.class) {
+      return actors;
+    } else if (class_ == Requirements.class) {
+      return requirements;
+    } else if (class_ == ConceptMap.class) {
+      return maps;
+    } else if (class_ == PlanDefinition.class) {
+      return plans;
+    } else if (class_ == OperationDefinition.class) {
+      return operations;
+    } else if (class_ == Questionnaire.class) {
+      return questionnaires;
+    } else if (class_ == SearchParameter.class) {
+      return searchParameters;
+    }
+    return null;
+  }
+  // END matchbox patch
 
   @SuppressWarnings("unchecked")
   public <T extends Resource> List<T> fetchResourceVersionsByTypeAndUrl(Class<T> class_, String url) {
@@ -3610,7 +3775,10 @@ public abstract class BaseWorkerContext extends I18nBase implements IWorkerConte
 
     binaries.clear();
     validationCache.clear();
-    txCache.unload();
+    // matchbox patch https://github.com/ahdis/matchbox/issues/618: don't create the default cache to unload it
+    if (txCacheInitialized && txCache != null) {
+      txCache.unload();
+    }
     // release any server-side terminology caches we started (best-effort)
     if (terminologyClientManager != null) {
       terminologyClientManager.shutdown();
@@ -3625,11 +3793,11 @@ public abstract class BaseWorkerContext extends I18nBase implements IWorkerConte
         return (T) ivs;
       }
       SourcedValueSet svs = null;
-      if (txCache.hasValueSet(canonical)) {
-        svs = txCache.getValueSet(canonical);
+      if (getTxCache().hasValueSet(canonical)) {
+        svs = getTxCache().getValueSet(canonical);
       } else {
         svs = terminologyClientManager.findValueSetOnServer(canonical);
-        txCache.cacheValueSet(canonical, svs);
+        getTxCache().cacheValueSet(canonical, svs);
       }
       if (svs != null) {
         String web = ExtensionUtilities.readStringExtension(svs.getVs(), ExtensionDefinitions.EXT_WEB_SOURCE_OLD, ExtensionDefinitions.EXT_WEB_SOURCE_NEW);
@@ -3647,12 +3815,12 @@ public abstract class BaseWorkerContext extends I18nBase implements IWorkerConte
       }
     } else if (class_ == CodeSystem.class) {
       SourcedCodeSystem scs = null;
-      if (txCache.hasCodeSystem(canonical)) {
-        scs = txCache.getCodeSystem(canonical);
+      if (getTxCache().hasCodeSystem(canonical)) {
+        scs = getTxCache().getCodeSystem(canonical);
       } else {
 
         scs = terminologyClientManager.findCodeSystemOnServer(canonical);
-        txCache.cacheCodeSystem(canonical, scs);
+        getTxCache().cacheCodeSystem(canonical, scs);
       }
       if (scs != null) {
         String web = ExtensionUtilities.readStringExtension(scs.getCs(), ExtensionDefinitions.EXT_WEB_SOURCE_OLD, ExtensionDefinitions.EXT_WEB_SOURCE_NEW);
@@ -3939,7 +4107,7 @@ public abstract class BaseWorkerContext extends I18nBase implements IWorkerConte
 
 
   public String txCacheReport() {
-    return txCache.getReport();
+    return getTxCache().getReport();
   }
 
 

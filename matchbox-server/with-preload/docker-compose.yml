@@ -11,7 +11,7 @@ services:
     volumes:
       - ./:/config      
   matchbox-db:
-    image: postgres:latest
+    image: postgres:18
     container_name: matchbox-db
     restart: always
     # Comment out to not log queries
@@ -24,4 +24,4 @@ services:
       POSTGRES_USER: 'matchbox'
       POSTGRES_PASSWORD: 'matchbox'     
     volumes:
-      - ./data:/var/lib/postgresql/data
+      - ./data:/var/lib/postgresql

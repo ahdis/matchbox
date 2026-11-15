@@ -19,6 +19,11 @@ package ch.ahdis.matchbox.engine;
  * limitations under the License.
  * #L%
  */
+import java.util.List;
+import org.hl7.fhir.r5.model.PackageInformation;
+import org.hl7.fhir.r5.context.IContextResourceLoader;
+import ch.ahdis.matchbox.engine.packages.MetadataCoreVersionPinner;
+import ch.ahdis.matchbox.engine.packages.LazyTerminologyLoader;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.FileNotFoundException;
@@ -35,6 +40,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import org.fhir.ucum.UcumEssenceService;
 import org.hl7.fhir.convertors.factory.VersionConvertorFactory_40_50;
 import org.hl7.fhir.convertors.factory.VersionConvertorFactory_43_50;
+import org.hl7.fhir.convertors.loaders.loaderR5.BaseLoaderR5;
 import org.hl7.fhir.exceptions.FHIRException;
 import org.hl7.fhir.instance.model.api.IBaseResource;
 import org.hl7.fhir.r4.model.OperationOutcome;
@@ -111,14 +117,25 @@ public class MatchboxEngine extends ValidationEngine {
 	protected Set<String> suppressedWarnInfoPatterns = new HashSet<>(11, 0.75f); // For 8 elements
 	protected PassiveExpiringSessionCache sessionCache = new PassiveExpiringSessionCache();
 
+	/**
+	 * The terminology cache path for a context that doesn't need cached terminology results: an in-memory cache,
+	 * instead of reading the content of the shared default cache folder ([tmp]/default-tx-cache) into memory (#618).
+	 */
+	private static final String NO_TX_CACHE_FOLDER = "n/a";
+
 	static protected ValidationEngine nullEngine;
 
-	static protected SimpleWorkerContext fmlParseContext = null;
+	/**
+	 * The context to parse FML with. Parsing uses the context only to parse the FHIRPath expressions, which doesn't
+	 * need any definitions, so it's an empty R5 context instead of one with the R5 core package (#618).
+	 */
+	static protected SimpleWorkerContext fmlParseContext;
 
 
 	static {
 			try {
-				nullEngine = new ValidationEngineBuilder().fromNothing();
+				nullEngine = new ValidationEngineBuilder().withTerminologyCachePath(NO_TX_CACHE_FOLDER).fromNothing();
+				fmlParseContext = new SimpleWorkerContextBuilder().withTerminologyCachePath(NO_TX_CACHE_FOLDER).fromNothing();
 		} catch (IOException e) {
 				log.error("problem with inizializin", e);
 		}
@@ -262,8 +279,7 @@ public class MatchboxEngine extends ValidationEngine {
 			log.info(VersionUtil.getPoweredBy());
 			final MatchboxEngine engine ;
 			try {
-					engine = new MatchboxEngine(
-									new SimpleWorkerContextBuilder().fromPackage(NpmPackage.fromPackage(getClass().getResourceAsStream("/hl7.fhir.r4.core.tgz")), ValidatorUtils.loaderForVersion("4.0.1"), false));
+					engine = new MatchboxEngine(createCoreWorkerContext("/hl7.fhir.r4.core.tgz", "4.0.1"));
 			}
 			catch (final Exception e) { throw new MatchboxEngineCreationException(e); }
 			log.info("loaded hl7.fhir.r4.core#4.0.1 from classpath");
@@ -306,7 +322,7 @@ public class MatchboxEngine extends ValidationEngine {
 			log.info("Initializing Matchbox Engine (FHIR R4B with terminology provided in classpath)");
 			log.info(VersionUtil.getPoweredBy());
 			final MatchboxEngine engine ;
-			try { engine = new MatchboxEngine(new SimpleWorkerContextBuilder().fromPackage(NpmPackage.fromPackage(getClass().getResourceAsStream("/hl7.fhir.r4b.core.tgz")), ValidatorUtils.loaderForVersion("4.3.0"), false));
+			try { engine = new MatchboxEngine(createCoreWorkerContext("/hl7.fhir.r4b.core.tgz", "4.3.0"));
 			}
 			catch (final Exception e) { throw new MatchboxEngineCreationException(e); }
 			log.info("loaded hl7.fhir.r4b.core#4.3.0 from classpath");
@@ -470,13 +486,38 @@ public class MatchboxEngine extends ValidationEngine {
 		}
 	}
 
+	/**
+	 * The core loader of the resources of a package of a FHIR version, without parsing their narrative, which the
+	 * worker context doesn't need (#614).
+	 */
+	private static BaseLoaderR5 loaderForVersion(final String fhirVersion) {
+		final BaseLoaderR5 loader = ValidatorUtils.loaderForVersion(fhirVersion);
+		if (loader != null) {
+			loader.setSkipNarrative(true);
+		}
+		return loader;
+	}
+
 	public static SimpleWorkerContext createR5WorkerContext() throws IOException {
-		return new SimpleWorkerContextBuilder()
-			.fromPackage(
-				NpmPackage.fromPackage(MatchboxEngine.class.getResourceAsStream("/hl7.fhir.r5.core.tgz")),
-				ValidatorUtils.loaderForVersion("5.0.0"),
-				false
-			);
+		return createCoreWorkerContext("/hl7.fhir.r5.core.tgz", "5.0.0");
+	}
+
+	/**
+	 * Creates a worker context with a FHIR core package from the classpath. Its terminology resources are loaded lazily
+	 * (see {@link LazyTerminologyLoader}) and pinned to the core versions when they're parsed, like
+	 * SimpleWorkerContext.finishLoading() pins them when it parses them all.
+	 */
+	public static SimpleWorkerContext createCoreWorkerContext(final String packageResource,
+																				 final String fhirVersion) throws IOException {
+		final NpmPackage pi = NpmPackage.fromPackage(MatchboxEngine.class.getResourceAsStream(packageResource));
+		final IContextResourceLoader loader = loaderForVersion(fhirVersion);
+		final SimpleWorkerContext context = new SimpleWorkerContextBuilder()
+			.fromPackage(pi, LazyTerminologyLoader.withoutLazyLoadedTypes(loader), false);
+		final MetadataCoreVersionPinner pinner = new MetadataCoreVersionPinner(context);
+		LazyTerminologyLoader.registerProxies(context, pi, new PackageInformation(pi, true), loader, pinner);
+		// finishLoading() pinned the StructureDefinitions before the ValueSets were registered, pin their bindings now
+		pinner.pinCoreVersions(List.of(), List.of(), context.listStructures());
+		return context;
 	}
 
 	/**
@@ -982,13 +1023,6 @@ public class MatchboxEngine extends ValidationEngine {
 	 * @throws FHIRException FHIR Exception
 	 */
 	public org.hl7.fhir.r5.model.StructureMap parseMapR5(String content) throws IOException, FHIRException {
-		if (MatchboxEngine.fmlParseContext == null) {
-			if ("5.0.0".equals(this.getContext().getVersion())) {
-				MatchboxEngine.fmlParseContext = this.getContext();
-			} else {
-				MatchboxEngine.fmlParseContext = MatchboxEngine.createR5WorkerContext();
-			}
-		}
 		List<Base> outputs = new ArrayList<>();
 		StructureMapUtilities scu = new MatchboxStructureMapUtilities(fmlParseContext,
 				new TransformSupportServices(fmlParseContext, outputs), this);
@@ -1104,7 +1138,14 @@ public class MatchboxEngine extends ValidationEngine {
 
 		// Remove the dependencies to disable recursive loading
 		npmPackage.getNpm().set("dependencies", new JsonObject());
-		this.getIgLoader().loadPackage(npmPackage, true);
+		if (npmPackage.isCoreExamples()) {
+			return;
+		}
+		// Like IgLoader.loadPackage(npmPackage, true), but the terminology resources are loaded lazily
+		final IContextResourceLoader loader = loaderForVersion(npmPackage.fhirVersion());
+		this.getContext().loadFromPackage(npmPackage, LazyTerminologyLoader.withoutLazyLoadedTypes(loader));
+		LazyTerminologyLoader.registerProxies(this.getContext(), npmPackage, new PackageInformation(npmPackage, false),
+														  loader, null);
 	}
 
 	/**

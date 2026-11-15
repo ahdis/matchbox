@@ -125,7 +125,7 @@ spring:
     driverClassName: org.postgresql.Driver
   jpa:
     properties:
-      hibernate.dialect: ca.uhn.fhir.jpa.model.dialect.HapiFhirPostgres94Dialect
+      hibernate.dialect: ca.uhn.fhir.jpa.model.dialect.HapiFhirPostgresDialect
 ```
 
 **Build & Run**:
@@ -308,6 +308,24 @@ mvn verify
 - `TransformTest` - StructureMap transformation tests
 - `GazelleApiR4Test` - IHE Gazelle integration tests
 
+### Test Implementation Guide (`matchbox.health.test.ig.r4`)
+
+Tests that need an IG (profiles, examples, a package to load into an engine) should use the Matchbox test IG instead of
+a real IG, so they don't depend on the content of external packages:
+
+- **Source**: https://github.com/ahdis/matchbox-test-ig (usually checked out next to this repository, as
+  `../matchbox-test-ig`), FSH/SUSHI + IG Publisher, canonical `http://matchbox.health/ig/test/r4`, FHIR 4.0.1,
+  depends on `hl7.fhir.uv.xver-r5.r4#0.1.0`
+- **Package**: `matchbox.health.test.ig.r4-0.3.0.tgz` (the `output/package.tgz` of the IG Publisher build), copied to
+  - `matchbox-server/src/test/resources/`: loaded in `application-test-r4.yaml` (`classpath:/…`), used by
+    `MatchboxApiR4Test`, `GazelleApiR4Test`, `MbInstalledStructureDefinitionIsCurrentTest`
+  - `matchbox-engine/src/test/resources/`: loaded with `MatchboxEngine.loadPackage(InputStream)`, see `Issue608Test`
+- **Content**: profiles `practitioner-identifier-required`, `practitioner-identifier-version-different-then-ig`,
+  `encounter-ext-r5` (R5 extensions in R4), `document-bundle` and `document-composition`, examples and TestScripts
+- **Changes**: add what the test needs to the test IG, raise the version in `sushi-config.yaml`, build it, copy the
+  new package to both test resource folders (remove the old one) and update the references to the version (e.g. grep
+  for `matchbox.health.test.ig.r4`)
+
 ## Configuration
 
 ### Key Application Properties
@@ -460,14 +478,7 @@ The `upstream` remote points to `hapifhir/hapi-fhir-jpaserver-starter`, which is
 
 ## Release Process
 
-1. Update versions in `pom.xml`, `package.json`, and documentation
-2. Create PR and wait for tests to pass
-3. Merge PR to main, but on origin (https://github.com/ahdis/matchbox.git) not on upstream
-4. Wait for Angular build workflow to complete
-5. Create GitHub release with tag (e.g., `v4.0.16`)
-6. Automated workflows publish:
-   - Docker image to Google Artifact Registry
-   - Maven artifacts to Maven Central
+Use the `release` skill (`.claude/skills/release/SKILL.md`).
 
 ## Dependencies Management
 

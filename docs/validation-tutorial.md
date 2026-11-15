@@ -19,13 +19,13 @@ You should fix first the structure errors, then the semantics error before you t
 
 We will go through the different type of error messages to explain what possibilities you have to identify the errors.
 
-## Using matchbox as a validation tool
+## Using Matchbox as a validation tool
 
-You can use matchbox as a validation tool with a GUI, a test instance is located at: [http://test.ahdis.ch/matchboxv3/fhir](http://test.ahdis.ch/matchboxv3/fhir). Alternatively matchbox offers a $validate operation and you can call this directly with a client. In this article we will use VSCode together with the RESTClient extension to show the different validation behaviors, you can open this file locally in your VS Code instance and then you can click on `Send Request`. As an alternative here is also a link for each validation provided which triggers the validation on the matchbox test instance.  
+You can use Matchbox as a validation tool with a GUI, a test instance is located at: [http://test.ahdis.ch/matchboxv3/fhir](http://test.ahdis.ch/matchboxv3/fhir). Alternatively Matchbox offers a $validate operation and you can call this directly with a client. In this article we will use VSCode together with the RESTClient extension to show the different validation behaviors, you can open this file locally in your VS Code instance and then you can click on `Send Request`. As an alternative here is also a link for each validation provided which triggers the validation on the Matchbox test instance.  
 
 To check if you have set it up correctly, perform a first successful validation: This should validate the XML Patient resource with a family name test against the Patient profile of the FHIR specification, in the test instance, the default validation is to FHIR Release R4:
 
-Validation Request with [matchbox](https://test.ahdis.ch/matchboxv3/validate#resource=PFBhdGllbnQgeG1sbnM9Imh0dHA6Ly9obDcub3JnL2ZoaXIiPgogICAgPG5hbWU-CiAgICAgIDxmYW1pbHkgdmFsdWU9IlRlc3QiLz4KICAgIDwvbmFtZT4KICA8L1BhdGllbnQ-&profile=http%3A%2F%2Fhl7.org%2Ffhir%2FStructureDefinition%2FPatient):
+Validation Request with [Matchbox](https://test.ahdis.ch/matchboxv3/validate#resource=PFBhdGllbnQgeG1sbnM9Imh0dHA6Ly9obDcub3JnL2ZoaXIiPgogICAgPG5hbWU-CiAgICAgIDxmYW1pbHkgdmFsdWU9IlRlc3QiLz4KICAgIDwvbmFtZT4KICA8L1BhdGllbnQ-&profile=http%3A%2F%2Fhl7.org%2Ffhir%2FStructureDefinition%2FPatient):
 ```http
 @host = https://test.ahdis.ch/matchboxv3/fhir
 POST {{host}}/$validate?profile=http://hl7.org/fhir/StructureDefinition/Patient HTTP/1.1
@@ -39,7 +39,7 @@ Content-Type: application/fhir+xml
 </Patient>
 ```
 
-Validation response by matchbox:
+Validation response by Matchbox:
 ```json
 {
   "resourceType": "OperationOutcome",
@@ -59,12 +59,67 @@ Validation response by matchbox:
 }
 ```
 
-The validation response always contains a FHIR OperationOutcome Resource, with a list of different issues encountered during validation. One issue with severity information and code information will be always present with which configuration parameters the validation has been performed. Those parameters can change by different requests. The GUI of matchbox shows the exact same information in the results. If you have no fatal or error issues you will get another information issue with "No fatal or error issues detected, the validation has passed", meaning you passed the validation according to the specified profile!
+The validation response always contains a FHIR OperationOutcome Resource, with a list of different issues encountered during validation. One issue with severity information and code information will be always present with which configuration parameters the validation has been performed. Those parameters can change by different requests. The GUI of Matchbox shows the exact same information in the results. If you have no fatal or error issues you will get another information issue with "No fatal or error issues detected, the validation has passed", meaning you passed the validation according to the specified profile!
 
 | Severity | Code        |  Diagnostics                      | Expression     |
 |----------|-------------|---------------------------------- |--------------------|
 | information    | information     | No fatal or error issues detected, the validation has passed. |   |
 
+
+### Validating on the type level: `[base]/{Type}/$validate`
+
+Besides the system-level `[base]/$validate`, Matchbox offers the operation on the type level for every resource type
+of the FHIR version of the server, as defined by the FHIR specification (`POST [base]/{Type}/$validate`). This is for
+clients that validate against a FHIR server (e.g. [Smart Forms](https://github.com/aehrc/smart-forms) before writing
+extracted resources back), the system-level operation is unchanged.
+
+The type in the URL says which resource is expected, so the resource can be wrapped in a `Parameters`:
+
+| Request body | Validated resource |
+|---|---|
+| a resource of type `{Type}` | the body itself |
+| a `Parameters` with a `resource` parameter of type `{Type}` | the resource in the parameter |
+| a `Parameters` posted to `Parameters/$validate` | the `Parameters` itself, it's not read as an envelope |
+| anything else, e.g. a `Parameters` whose `resource` has another type | not validated, an `error` issue names the expected type |
+
+The `profile` is optional on the type level, the first match is used:
+
+1. the `profile` query parameter
+2. the `profile` parameter of the `Parameters` envelope
+3. `meta.profile` of the resource. With several profiles, the first one selects the validation engine (and the
+   implementation guide); an `information` issue lists the other ones, which are only validated if they're known in
+   that implementation guide
+4. the base definition `http://hl7.org/fhir/StructureDefinition/{Type}`
+
+The response is the same OperationOutcome as on the system level, the first issue tells which profile was used. All
+other validation parameters (`txServer`, `analyzeErrorsWithLlm`, ...) are query parameters, as on the system level.
+
+A JSON resource in a `Parameters` is validated exactly as it was sent (the line and column of an issue are relative to
+the resource, not to the `Parameters`). An XML resource in a `Parameters` is serialized again, because it inherits its
+namespaces from the envelope.
+
+```http
+POST {{host}}/DocumentReference/$validate HTTP/1.1
+Accept: application/fhir+json
+Content-Type: application/fhir+json
+
+{
+  "resourceType": "Parameters",
+  "parameter": [
+    {
+      "name": "resource",
+      "resource": {
+        "resourceType": "DocumentReference",
+        "meta": {
+          "profile": [ "http://fhir.ch/ig/ch-ekm/StructureDefinition/ch-ekm-documentreference" ]
+        },
+        "status": "current",
+        "content": [ { "attachment": { "contentType": "application/fhir+json", "url": "Bundle/1013" } } ]
+      }
+    }
+  ]
+}
+```
 
 ## Structure (Syntax) issues
 
@@ -265,10 +320,10 @@ Content-Type: application/fhir+json
 The validator checks also the validity of the codes and if the codes are appropriate for the bounded ValueSet according to the binding strength.
 For this a validator needs the support of a terminology server which provides a [terminology service](https://hl7.org/fhir/terminology-service.html#4.7). 
 
-matchbox can use different terminology severs:
+Matchbox can use different terminology severs:
 - tx.fhir.org which is the default terminology sever used by the FHIR validator
 - Ontoserver as of version 6.15.0 
-- matchbox provides an internal terminology server, but this internal terminology server has only limited terminology capabilities, e.g. it will not validate display names or it can't expand intensional ValueSets.
+- Matchbox provides an internal terminology server, but this internal terminology server has only limited terminology capabilities, e.g. it will not validate display names or it can't expand intensional ValueSets.
 
 ### invalid code for gender
 
@@ -300,7 +355,7 @@ validation with [tx.fhir.org](https://test.ahdis.ch/matchboxv3/validate#resource
 | error    | code-invalid | Unknown code '444444444' in the CodeSystem 'http://snomed.info/sct' version 'http://snomed.info/sct/900000000000207008/version/20240801'                                                                                                              | Condition.code.coding[0].code |
 | error    | code-invalid | None of the codings provided are in the value set 'Caveat Condition' (http://fhir.ch/ig/ch-rad-order/ValueSet/ch-rad-order-caveat-condition\|2.0.0-ballot), and a coding from this value set is required) (codes = http://snomed.info/sct#444444444)" | Condition.code                |
 
-validation with matchbox's internal terminology server will not return an error, because the intensional ValueSet will be [ignored](https://test.ahdis.ch/matchboxv3/validate#resource=ewogICJyZXNvdXJjZVR5cGUiIDogIkNvbmRpdGlvbiIsCiAgImlkIiA6ICJDYXZlYXREZXZpY2VDYXJkaWFjUGFjZW1ha2VyIiwKICAibWV0YSIgOiB7CiAgICAicHJvZmlsZSIgOiBbImh0dHA6Ly9maGlyLmNoL2lnL2NoLXJhZC1vcmRlci9TdHJ1Y3R1cmVEZWZpbml0aW9uL2NoLXJhZC1vcmRlci1jYXZlYXQtY29uZGl0aW9uIl0KICB9LAogICJleHRlbnNpb24iIDogW3sKICAgICJ1cmwiIDogImh0dHA6Ly9maGlyLmNoL2lnL2NoLXJhZC1vcmRlci9TdHJ1Y3R1cmVEZWZpbml0aW9uL2NoLXJhZC1vcmRlci1jYXZlYXQtdHlwZSIsCiAgICAidmFsdWVDb2RpbmciIDogewogICAgICAic3lzdGVtIiA6ICJodHRwOi8vc25vbWVkLmluZm8vc2N0IiwKICAgICAgImNvZGUiIDogIjM5NzU3ODAwMSIsCiAgICAgICJkaXNwbGF5IiA6ICJEZXZpY2UgaW4gc2l0dSAoZmluZGluZykiCiAgICB9CiAgfSwKICB7CiAgICAidXJsIiA6ICJodHRwOi8vZmhpci5jaC9pZy9jaC1yYWQtb3JkZXIvU3RydWN0dXJlRGVmaW5pdGlvbi9jaC1yYWQtb3JkZXItcXVhbGlmaWVyLXZhbHVlIiwKICAgICJ2YWx1ZUNvZGluZyIgOiB7CiAgICAgICJzeXN0ZW0iIDogImh0dHA6Ly9zbm9tZWQuaW5mby9zY3QiLAogICAgICAiY29kZSIgOiAiNTIxMDEwMDQiLAogICAgICAiZGlzcGxheSIgOiAiUHJlc2VudCAocXVhbGlmaWVyIHZhbHVlKSIKICAgIH0KICB9XSwKICAiY2xpbmljYWxTdGF0dXMiIDogewogICAgImNvZGluZyIgOiBbewogICAgICAic3lzdGVtIiA6ICJodHRwOi8vdGVybWlub2xvZ3kuaGw3Lm9yZy9Db2RlU3lzdGVtL2NvbmRpdGlvbi1jbGluaWNhbCIsCiAgICAgICJjb2RlIiA6ICJhY3RpdmUiCiAgICB9XQogIH0sCiAgImNhdGVnb3J5IiA6IFt7CiAgICAiY29kaW5nIiA6IFt7CiAgICAgICJzeXN0ZW0iIDogImh0dHA6Ly90ZXJtaW5vbG9neS5obDcub3JnL0NvZGVTeXN0ZW0vY29uZGl0aW9uLWNhdGVnb3J5IiwKICAgICAgImNvZGUiIDogInByb2JsZW0tbGlzdC1pdGVtIiwKICAgICAgImRpc3BsYXkiIDogIlByb2JsZW0gTGlzdCBJdGVtIgogICAgfV0KICB9XSwKICAiY29kZSIgOiB7CiAgICAiY29kaW5nIiA6IFt7CiAgICAgICJzeXN0ZW0iIDogImh0dHA6Ly9zbm9tZWQuaW5mby9zY3QiLAogICAgICAiY29kZSIgOiAiNDQ0NDQ0NDQ0IiwKICAgICAgImRpc3BsYXkiIDogIm5vdGludmFsdWVzZXQiCiAgICB9XQogIH0sCiAgInN1YmplY3QiIDogewogICAgInJlZmVyZW5jZSIgOiAiUGF0aWVudC9TVWZmZXJlciIKICB9Cn0&profile=http%3A%2F%2Ffhir.ch%2Fig%2Fch-rad-order%2FStructureDefinition%2Fch-rad-order-caveat-condition&doNative=false&hintAboutNonMustSupport=false&recursive=false&showMessagesFromReferences=false&doDebug=false&assumeValidRestReferences=false&canDoNative=false&noExtensibleBindingMessages=false&noUnicodeBiDiControlChars=false&noInvariants=false&displayIssuesAreWarnings=true&wantInvariantsInMessages=false&doImplicitFHIRPathStringConversion=false&txServer=http%3A%2F%2Flocalhost%3A8080%2Fmatchboxv3%2Ffhir&txServerCache=true&txUseEcosystem=true&fhirVersion=4.0.1&securityChecks=false&crumbTrails=false&forPublication=false&showMessageIds=false&showTerminologyRouting=false&clearTxCache=false&allowExampleUrls=true&locale=en&jurisdiction=urn%3Aiso%3Astd%3Aiso%3A3166%23US&checkIpsCodes=false&checkReferences=false&disableDefaultResourceFetcher=true) and there is no validation of codes from SNOMED CT or LOINC (CodeSystems not provided directly through the HL7 FHIR ecosystem).
+validation with Matchbox's internal terminology server will not return an error, because the intensional ValueSet will be [ignored](https://test.ahdis.ch/matchboxv3/validate#resource=ewogICJyZXNvdXJjZVR5cGUiIDogIkNvbmRpdGlvbiIsCiAgImlkIiA6ICJDYXZlYXREZXZpY2VDYXJkaWFjUGFjZW1ha2VyIiwKICAibWV0YSIgOiB7CiAgICAicHJvZmlsZSIgOiBbImh0dHA6Ly9maGlyLmNoL2lnL2NoLXJhZC1vcmRlci9TdHJ1Y3R1cmVEZWZpbml0aW9uL2NoLXJhZC1vcmRlci1jYXZlYXQtY29uZGl0aW9uIl0KICB9LAogICJleHRlbnNpb24iIDogW3sKICAgICJ1cmwiIDogImh0dHA6Ly9maGlyLmNoL2lnL2NoLXJhZC1vcmRlci9TdHJ1Y3R1cmVEZWZpbml0aW9uL2NoLXJhZC1vcmRlci1jYXZlYXQtdHlwZSIsCiAgICAidmFsdWVDb2RpbmciIDogewogICAgICAic3lzdGVtIiA6ICJodHRwOi8vc25vbWVkLmluZm8vc2N0IiwKICAgICAgImNvZGUiIDogIjM5NzU3ODAwMSIsCiAgICAgICJkaXNwbGF5IiA6ICJEZXZpY2UgaW4gc2l0dSAoZmluZGluZykiCiAgICB9CiAgfSwKICB7CiAgICAidXJsIiA6ICJodHRwOi8vZmhpci5jaC9pZy9jaC1yYWQtb3JkZXIvU3RydWN0dXJlRGVmaW5pdGlvbi9jaC1yYWQtb3JkZXItcXVhbGlmaWVyLXZhbHVlIiwKICAgICJ2YWx1ZUNvZGluZyIgOiB7CiAgICAgICJzeXN0ZW0iIDogImh0dHA6Ly9zbm9tZWQuaW5mby9zY3QiLAogICAgICAiY29kZSIgOiAiNTIxMDEwMDQiLAogICAgICAiZGlzcGxheSIgOiAiUHJlc2VudCAocXVhbGlmaWVyIHZhbHVlKSIKICAgIH0KICB9XSwKICAiY2xpbmljYWxTdGF0dXMiIDogewogICAgImNvZGluZyIgOiBbewogICAgICAic3lzdGVtIiA6ICJodHRwOi8vdGVybWlub2xvZ3kuaGw3Lm9yZy9Db2RlU3lzdGVtL2NvbmRpdGlvbi1jbGluaWNhbCIsCiAgICAgICJjb2RlIiA6ICJhY3RpdmUiCiAgICB9XQogIH0sCiAgImNhdGVnb3J5IiA6IFt7CiAgICAiY29kaW5nIiA6IFt7CiAgICAgICJzeXN0ZW0iIDogImh0dHA6Ly90ZXJtaW5vbG9neS5obDcub3JnL0NvZGVTeXN0ZW0vY29uZGl0aW9uLWNhdGVnb3J5IiwKICAgICAgImNvZGUiIDogInByb2JsZW0tbGlzdC1pdGVtIiwKICAgICAgImRpc3BsYXkiIDogIlByb2JsZW0gTGlzdCBJdGVtIgogICAgfV0KICB9XSwKICAiY29kZSIgOiB7CiAgICAiY29kaW5nIiA6IFt7CiAgICAgICJzeXN0ZW0iIDogImh0dHA6Ly9zbm9tZWQuaW5mby9zY3QiLAogICAgICAiY29kZSIgOiAiNDQ0NDQ0NDQ0IiwKICAgICAgImRpc3BsYXkiIDogIm5vdGludmFsdWVzZXQiCiAgICB9XQogIH0sCiAgInN1YmplY3QiIDogewogICAgInJlZmVyZW5jZSIgOiAiUGF0aWVudC9TVWZmZXJlciIKICB9Cn0&profile=http%3A%2F%2Ffhir.ch%2Fig%2Fch-rad-order%2FStructureDefinition%2Fch-rad-order-caveat-condition&doNative=false&hintAboutNonMustSupport=false&recursive=false&showMessagesFromReferences=false&doDebug=false&assumeValidRestReferences=false&canDoNative=false&noExtensibleBindingMessages=false&noUnicodeBiDiControlChars=false&noInvariants=false&displayIssuesAreWarnings=true&wantInvariantsInMessages=false&doImplicitFHIRPathStringConversion=false&txServer=http%3A%2F%2Flocalhost%3A8080%2Fmatchboxv3%2Ffhir&txServerCache=true&txUseEcosystem=true&fhirVersion=4.0.1&securityChecks=false&crumbTrails=false&forPublication=false&showMessageIds=false&showTerminologyRouting=false&clearTxCache=false&allowExampleUrls=true&locale=en&jurisdiction=urn%3Aiso%3Astd%3Aiso%3A3166%23US&checkIpsCodes=false&checkReferences=false&disableDefaultResourceFetcher=true) and there is no validation of codes from SNOMED CT or LOINC (CodeSystems not provided directly through the HL7 FHIR ecosystem).
 
 ## Constraints by the FHIR Specification 
 

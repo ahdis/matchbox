@@ -6,14 +6,17 @@ import ca.uhn.fhir.context.FhirVersionEnum;
 import ca.uhn.fhir.context.RuntimeResourceDefinition;
 import ca.uhn.fhir.jpa.starter.Application;
 
+import ch.ahdis.matchbox.util.MatchboxEngineSupport;
 import org.apache.commons.io.FileUtils;
 import org.hl7.fhir.instance.model.api.*;
 import org.hl7.fhir.r5.model.OperationOutcome;
 import org.hl7.fhir.r5.model.OperationOutcome.IssueSeverity;
 import org.hl7.fhir.r5.model.OperationOutcome.OperationOutcomeIssueComponent;
+import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.context.SpringBootTest.WebEnvironment;
 import org.springframework.core.io.ClassPathResource;
@@ -36,6 +39,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @SpringBootTest(webEnvironment = WebEnvironment.DEFINED_PORT,
 	properties = {
@@ -70,12 +74,19 @@ public class MatchboxApiR5Test {
 	private final FhirContext context = FhirContext.forR5Cached();
 	private final HttpClient httpClient = HttpClient.newHttpClient();
 
+	@Autowired
+	private MatchboxEngineSupport matchboxEngineSupport;
+
 	@BeforeAll
 	void waitUntilStartup() throws Exception {
-		Thread.sleep(10000); // give the server some time to start up
-		ValidationClient validationClient = new ValidationClient(this.context, this.targetServer + "/fhir");
-		validationClient.capabilities();
+		ServerStartup.awaitServerReady(this.targetServer, this.matchboxEngineSupport);
 		CompareUtil.logMemory();
+	}
+
+	@AfterAll
+	void releaseContext() {
+		// JUnit can keep the PER_CLASS test instance until the end of the run: don't let it retain the closed context
+		this.matchboxEngineSupport = null;
 	}
 
 	private static IBaseExtension<?, ?> getMatchboxValidationExtension(FhirContext theCtx,
@@ -130,6 +141,69 @@ public class MatchboxApiR5Test {
 		List<IBaseExtension<?, ?>> extensions = (List<IBaseExtension<?, ?>>) ext.getExtension();
 		for (IBaseExtension<?, ?> next : extensions) {
 			if (next.getUrl().equals("txServer")) {
+				IPrimitiveType<?> value = (IPrimitiveType<?>) next.getValue();
+				return value.getValueAsString();
+			}
+		}
+		return null;
+	}
+
+	// Type-level $validate, https://github.com/ahdis/matchbox/issues/629
+	@Test
+	public void validateTypeLevel() throws Exception {
+		final String documentReference = """
+			{
+			  "resourceType": "DocumentReference",
+			  "status": "current",
+			  "content": [ { "attachment": { "contentType": "application/fhir+json", "url": "Bundle/1013" } } ]
+			}""";
+		final String enveloped = """
+			{ "resourceType": "Parameters", "parameter": [ { "name": "resource", "resource": %s } ] }""".formatted(documentReference);
+
+		// The resource itself or in a Parameters, validated against the base definition without a profile
+		for (final String body : List.of(documentReference, enveloped)) {
+			final OperationOutcome outcome = this.validateTypeLevel("DocumentReference", body);
+			assertEquals(0, getValidationFailures(outcome), body);
+			assertEquals("http://hl7.org/fhir/StructureDefinition/DocumentReference", getProfile(outcome));
+		}
+
+		// meta.profile is used if there's no profile parameter
+		OperationOutcome outcome = this.validateTypeLevel("DocumentReference", documentReference.replace(
+			"\"status\"",
+			"\"meta\": { \"profile\": [ \"http://example.org/unknown-profile\" ] }, \"status\""));
+		assertEquals(IssueSeverity.ERROR, outcome.getIssueFirstRep().getSeverity());
+		assertTrue(outcome.getIssueFirstRep().getDiagnostics().contains("http://example.org/unknown-profile"));
+
+		// A Parameters posted to Parameters/$validate is not an envelope
+		outcome = this.validateTypeLevel("Parameters", enveloped);
+		assertEquals(0, getValidationFailures(outcome));
+		assertEquals("http://hl7.org/fhir/StructureDefinition/Parameters", getProfile(outcome));
+
+		// The type of the URL is expected
+		for (final String body : List.of(documentReference, enveloped)) {
+			outcome = this.validateTypeLevel("Patient", body);
+			assertEquals(IssueSeverity.ERROR, outcome.getIssueFirstRep().getSeverity());
+			assertTrue(outcome.getIssueFirstRep().getDiagnostics().contains("'Patient'"));
+			assertTrue(outcome.getIssueFirstRep().getDiagnostics().contains("'DocumentReference'"));
+		}
+	}
+
+	private OperationOutcome validateTypeLevel(final String type, final String body) throws Exception {
+		final HttpRequest request = HttpRequest.newBuilder(new URI(this.targetServer + "/fhir/" + type + "/$validate"))
+			.POST(HttpRequest.BodyPublishers.ofString(body))
+			.header("Content-Type", "application/fhir+json")
+			.header("Accept", "application/fhir+json")
+			.build();
+		final HttpResponse<String> response = this.httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+		assertEquals(200, response.statusCode(), response.body());
+		return this.context.newJsonParser().parseResource(OperationOutcome.class, response.body());
+	}
+
+	private String getProfile(final IBaseOperationOutcome outcome) {
+		IBaseExtension<?, ?> ext = getMatchboxValidationExtension(this.context, outcome);
+		List<IBaseExtension<?, ?>> extensions = (List<IBaseExtension<?, ?>>) ext.getExtension();
+		for (IBaseExtension<?, ?> next : extensions) {
+			if (next.getUrl().equals("profile")) {
 				IPrimitiveType<?> value = (IPrimitiveType<?>) next.getValue();
 				return value.getValueAsString();
 			}

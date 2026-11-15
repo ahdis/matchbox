@@ -175,6 +175,9 @@ public class MatchboxCapabilityStatementProvider extends ServerCapabilityStateme
 	 * parameters supported and the list of installed profiles.
 	 */
 	private void updateValidateOperationDefinition(final OperationDefinition validateOperationDefinition) {
+		// HAPI only knows the system-level binding, the type level is routed by the MatchboxRestfulServer
+		validateOperationDefinition.setType(true);
+		validateOperationDefinition.addResource(Enumerations.VersionIndependentResourceTypesAll.RESOURCE);
 		validateOperationDefinition.addParameter()
 			.setName("resource")
 			.setUse(Enumerations.OperationParameterUse.IN)

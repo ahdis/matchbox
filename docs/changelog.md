@@ -1,10 +1,221 @@
-2026/09/22 Release 4.1.18
+2026/10/xx Release 4.1.22
 
 - Add the ITB (GITB REST) validation service `FHIRValidator` under `[server]/itb/fhir`, so the Interoperability Test Bed
   1.30.0 can validate FHIR resources with matchbox; it follows the contract of the HL7 validator's ITB services
   (hapifhir/org.hl7.fhir.core#2615) (#589)
 - Add the validation parameters `bpWarnings` and `resourceIdRule` (#589)
 - Share the validation logic of `$validate`, the Gazelle API and the ITB API (#589)
+- Remove the duplicate `opentelemetry-spring-boot-starter` entry in the `dependencyManagement` of the root `pom.xml`,
+  which the Maven version of the GitHub runners rejects ("'dependencyManagement.dependencies.dependency' must be
+  unique")
+- Documentation: how to provide implementation guides from files (`file:` URLs in `hapi.fhir.implementationguides`, in
+  Docker with a volume, dependencies, reinstalling a package with the same version) and how to build an own docker
+  image with preinstalled packages ([#643](https://github.com/ahdis/matchbox/issues/643))
+- Frontend: update Angular to 22.2.3 and angular-eslint to 22.6.0. The Angular CLI uses
+  `@modelcontextprotocol/server` instead of `@modelcontextprotocol/sdk` 1.30.0 (and with it express and proxy-addr),
+  `source-map-js` is updated to 1.2.2 (Dependabot alerts
+  [#418](https://github.com/ahdis/matchbox/security/dependabot/418) proxy-addr,
+  [#419](https://github.com/ahdis/matchbox/security/dependabot/419) source-map-js,
+  [#421](https://github.com/ahdis/matchbox/security/dependabot/421) @modelcontextprotocol/sdk, all development
+  dependencies)
+- Release workflow: release candidates `X.Y.Z-rcN` (e.g. `5.0.0-rc1`) are published as GitHub pre-releases and their
+  Docker image doesn't get the tag `latest`. The release notes end before the next release section, also one that
+  isn't dated yet
+- Security checks: Trivy no longer searches Rekor (sigstore) for SBOM attestations of the Docker image, these searches
+  took the image scan over its 35 min timeout
+- Searching ValueSets (`GET [base]/ValueSet`) in the `onlyOneEngine` mode failed with "This context is configured to
+  not allow Iterating ValueSet resources due to performance concerns"
+  ([#663](https://github.com/ahdis/matchbox/issues/663)). The search of conformance resources in this mode now loads
+  only the resources of the requested page (sorted by URL and version) instead of all resources of the type
+- The `onlyOneEngine` mode exposes the NamingSystems of the main engine (`GET [base]/NamingSystem`), e.g. to debug the
+  OID to URI mapping of `http://hl7.org/fhir/ConceptMap/special-oid2uri` in transformations
+  ([#664](https://github.com/ahdis/matchbox/issues/664))
+
+2026/10/05 Release 4.1.21
+
+- Upgrade `piscina` (used by `@angular/build` of the frontend build) to 5.3.2 with an npm override to fix
+  [GHSA-67c8-pqhq-4rmx](https://github.com/advisories/GHSA-67c8-pqhq-4rmx) (prototype pollution of the
+  `ThreadPool` options allows code execution via `execArgv`, `loadBalancer` or `env`), a build-time dependency only
+
+2026/10/02 Release 4.1.20
+
+- Type-level `$validate` for all resource types, e.g. `POST [base]/DocumentReference/$validate` or
+  `[base]/Bundle/$validate` ([#629](https://github.com/ahdis/matchbox/issues/629)), for clients that validate against
+  a FHIR server like Smart Forms. The body is the resource or a `Parameters` with a `resource` parameter of the type
+  in the URL (JSON and XML; a JSON resource is cut out of the envelope as it was sent, without a HAPI round trip). The
+  profile is optional: `profile` query parameter, `profile` parameter of the envelope, `meta.profile` (the first one,
+  an `information` issue lists the other ones), then the base definition of the type. It's the same operation for
+  every type and FHIR version (R4, R4B, R5): `MatchboxRestfulServer` routes the type level to the system-level
+  `$validate`, which is unchanged (the `profile` is required and a `Parameters` is validated as the resource). The
+  OperationDefinition of `$validate` states `type = true` for `Resource`
+- UCUM codes in a core value set were rejected with a terminology server since 4.1.18, e.g. `Timing.repeat.periodUnit`
+  `h`: "The value provided ('h') was not found in the value set 'UnitsOfTime' (...) A definition for CodeSystem
+  'http://unitsofmeasure.org' version '3.0.1' could not be found" ([#627](https://github.com/ahdis/matchbox/issues/627)).
+  The lazily loaded CodeSystems and ValueSets of the core package (#599) are pinned to the core versions when they're
+  parsed, but were pinned to any loaded package: the `units-of-time` include to `http://unitsofmeasure.org|3.0.1`, the
+  not-present UCUM CodeSystem of `hl7.fhir.uv.xver-r5.r4` (and `hl7.terminology.r4` up to 6.x), which the terminology
+  server doesn't know (UCUM 2.2). They're now only pinned to the core package, like core's `CoreVersionPinner`
+- Upgrade Jackson 2 (`com.fasterxml.jackson.core`) to 2.22.3 and Jackson 3 (`tools.jackson.core`) to 3.2.3 to fix
+  the `jackson-databind` vulnerabilities [GHSA-cxp5-3px4-pw24](https://github.com/advisories/GHSA-cxp5-3px4-pw24)
+  (quadratic forward-reference completion) and [GHSA-wv8q-qhhj-9h54](https://github.com/advisories/GHSA-wv8q-qhhj-9h54)
+  (retains every unknown raw type ID)
+- Packages with a contained `Bundle`, `Parameters` or `Binary` that has an extension on a root-level primitive (e.g.
+  SDC `$extract` templates with `templateExtractValue` on `Bundle.timestamp`, as in the CH EKM Questionnaires) could
+  not be installed, and the server didn't start if the IG was configured
+  ([#625](https://github.com/ahdis/matchbox/issues/625)). matchbox carries the HAPI parser fixes
+  [hapifhir/hapi-fhir#8260](https://github.com/hapifhir/hapi-fhir/pull/8260) (NPE when encoding, not merged yet) and
+  [hapifhir/hapi-fhir#8371](https://github.com/hapifhir/hapi-fhir/pull/8371) (extensions on a repeating primitive
+  without a value, e.g. `_line` without `line`, were dropped when parsing JSON, HAPI 8.14.0) in patched copies of
+  `BaseParser` and `JsonParser`
+- Additional JMeter testing: release comparison for ch-elm and with-preload, and a test plan with all Swiss IGs
+  (`jmeter/ch-elm-release-comparison.md`, `jmeter/swiss-igs.md`)
+
+2026/09/30 Release 4.1.19
+
+- Release: the frontend version in `package.json` is the release version again (was 4.1.8); the release procedure
+  moved from the README and `CLAUDE.md` to the Claude Code skill `.claude/skills/release/SKILL.md`, which is now
+  tracked in git (`.gitignore`)
+- Frontend: update the transitive development dependencies `brace-expansion` 5.0.12
+  ([GHSA-q2hr-2g5m-vwhr](https://github.com/advisories/GHSA-q2hr-2g5m-vwhr)), `ip-address` 10.7.2
+  ([GHSA-j6r3-76f7-8jcv](https://github.com/advisories/GHSA-j6r3-76f7-8jcv)) and `fast-uri` 3.1.8
+  ([GHSA-hrr3-gc8f-f4qj](https://github.com/advisories/GHSA-hrr3-gc8f-f4qj)) in `package-lock.json`
+- FML parsing ([#618](https://github.com/ahdis/matchbox/issues/618)): `MatchboxEngine.parseMapR5()` parsed with a
+  static R5 worker context that kept the R5 core package (R4 servers) or the context of the first R5 engine that parsed,
+  with its IG, for the lifetime of the JVM. Parsing only uses the context to parse the FHIRPath expressions, which
+  doesn't need any definitions, so it now uses an empty R5 context. It and the `nullEngine` template use an in-memory
+  terminology cache instead of reading the core validator's default terminology cache folder
+  (`[tmp]/default-tx-cache`) into memory. Used memory after GC for the two static contexts: 391 MB (with an 87 MB
+  default terminology cache folder) → 11 MB (including the classes loaded by the static initializer). The default
+  terminology cache of a worker context is created when it's first used instead of in a field initializer: every
+  context, also each copy for an engine, read the whole folder into memory, and a copy then replaced it with the cache
+  of the original. Contexts keep the same cache as before; copying a context with an 87 MB default folder 250 → 30 ms
+- R5 server (`fhir_version: R5`): HAPI's R5 `DefaultProfileValidationSupport` is no longer created at startup. It
+  loaded the complete R5 core, extensions and terminology packages (7027 resources, about 500 MB, 3–4 s) into a static
+  map for the lifetime of the JVM, although matchbox validates with its own engine. `LazyDefaultProfileValidationSupport`
+  replaces it in the JPA validation support chain, in the FHIRPath engine of the search parameter extractor and in the
+  cached R5 `FhirContext`, and only creates it when a StructureDefinition, ValueSet or CodeSystem is requested. For the
+  search parameter registry it reads only the SearchParameters of the core package, like HAPI (the same 1243
+  SearchParameters). `myInstanceValidator` is created with the validation support chain instead of the `FhirContext`.
+  `MatchboxApiR5Test`: used memory after GC 973 → 518 MB, 21 → 18 s
+- Requests no longer wait for the creation of the engines of other IGs: `MatchboxEngineSupport.getMatchboxEngine()` was
+  `synchronized`, now the requests hold a read lock and only the requests for an engine that is being created wait
+  for it; the main engine (startup, `$load-all`, `reload`), the uninstall of a package and the `onlyOneEngine` mode
+  take the write lock. Engines that are created at the same time load a shared package only once. The IG of a
+  `profile` that isn't in the main engine (also "not found") is cached instead of being looked up in the database on
+  every request, until a package version is installed or uninstalled. `matchbox-server/with-preload` (12 IGs): an R4
+  core validation while the engines of the IGs are created takes at most 0.2–0.3 s instead of up to 8 s, first
+  validation per IG max 12 → 9 s; with 2 ms of latency to PostgreSQL, a `$validate` with `profile` alone by 4 parallel
+  clients 55 → 17 ms, as fast as with `ig`. New metric `matchbox.engines.creating.number`. JMeter: `preload_engines.sh`
+  can reuse the installed database (`DB_TEMPLATE=1`), add latency to PostgreSQL (`LATENCY=2ms`), and measures the
+  requests for an existing engine during engine creation (`probe.py`) and the IG lookup of a profile
+  (`profile_lookup.py`), see `jmeter/claude-jmeter-check.md` (#616)
+- The narrative of the package resources is no longer parsed, only to be dropped afterwards (#566): the server
+  (`PackageResourceParser`) and the engine (matchbox patch of core's `BaseLoaderR5` and version loaders, option
+  `skipNarrative`, to be contributed upstream) remove it from the JSON before parsing, and parse the JSON with Gson
+  instead of R4's `JsonTrackingParser`. The parsed resources are the same apart from the narrative (checked on 25,297
+  resources of the core, terminology, extensions and IG packages). `matchbox-server/with-preload` (12 IGs): startup
+  27–28 → 24–26 s, engine creation 20–22 → 15–17 s for the 12 engines, ch-atc 8.6–9.2 → 6.1–6.4 s; ch-elm engine
+  8.7–9.2 → 7.4–7.8 s; main R4 engine 4.6 → 3.6 s, see `jmeter/claude-jmeter-check.md` (#614)
+- Package resources whose file name ends with `template.json` are loaded again, e.g. the SDC template extraction
+  profile `sdc-questionnaire-extr-template` of `hl7.fhir.uv.sdc#4.0.0`: the server parsed the package resources with
+  core's `IgLoader.loadResourceByVersion()`, which rejects these file names ("Unsupported format"), now with the parser
+  of the package's FHIR version (`PackageResourceParser`). The examples package of a FHIR version (e.g.
+  `hl7.fhir.r4.examples`, a dependency of SDC) is skipped as a dependency instead of logging "Package not found", like
+  `MatchboxEngine.loadPackage()` does (#610)
+- Faster creation of the validation engine of an IG whose packages other engines have already loaded: the name,
+  version and dependencies of the installed packages are kept in memory, so the package archive is no longer read from
+  the database and unpacked for every package and dependency, and a package that isn't loaded yet is read once instead
+  of twice. With the next change, `matchbox-server/with-preload` (12 IGs): engine creation median 3.3–3.5 → 0.6–0.7 s,
+  57–59 → 20–22 s for the 12 engines, first validation per IG median 16 → 3 s, the same on H2 and PostgreSQL (#609)
+- Registering the resources of a `hl7.terminology` package no longer gets slower with each further version of it in
+  the context: `CanonicalResourceManager.see()` looked through all resources of the type for a resource of the core
+  package with the same URL, now it only looks at those with the URL (port of the core fix `3b4427401`). A version of
+  `hl7.terminology.r4` is registered in about 0.4 s instead of 1.6–2.0 s (#609)
+- Updating a ci-build (or localhost) package of an installed version, e.g. through the GUI, replaces the package in the
+  database; now the cached engines with the package and its shared resources are dropped too, like when the package
+  is uninstalled, so that the new content is used (#609)
+- JMeter: add `preload_engines.sh` and `engine_creation.py` to measure the engine creation with
+  `matchbox-server/with-preload` on H2 and PostgreSQL, see `jmeter/claude-jmeter-check.md` (#609)
+- Add a manual workflow (`Create a release`) that creates the tag and the GitHub release of the version in the POM with
+  the notes from the changelog, and starts the Docker and Maven Central workflows
+- Tests: replace the fixed 10 s "give the server some time to start up" sleep of the server integration tests with a
+  readiness check (`ServerStartup`) that waits for the validation engine to be initialized and `/fhir/metadata` to
+  answer. The startup, including the loading of the IGs, is already synchronous, so the check passes immediately and
+  each test class starts about 10 s earlier
+- Make the `initialized` flag of `MatchboxEngineSupport` volatile, as it's polled by request threads
+- The engines of the IGs no longer share their resources with the main engine and with each other: the copy of the
+  context (`BaseWorkerContext.copy()`) shared the resource index per type and the OID index, so the resources of an IG
+  were also found by the untyped lookups of the other engines, and the validation results of the main engine depended
+  on the IG engines created since the start of the server (#608)
+- Tests: add the Matchbox test IG (`matchbox.health.test.ig.r4`) to the test resources of matchbox-engine, and document
+  it
+- Docker `with-postgres` and `with-preload`: use HAPI's `HapiFhirPostgresDialect` instead of Hibernate's
+  `PostgreSQLDialect`, so that Hibernate doesn't create check constraints with the values of enum columns in a new
+  database (24 of them), which newer HAPI FHIR versions that add values would violate (#605)
+- HAPI FHIR services now use the dialect set in `hibernate.dialect` (e.g. `HapiFhirPostgresDialect`, `HapiFhirH2Dialect`)
+  instead of the one Hibernate derives from the database, so the database schema check is no longer skipped (port of
+  `JpaHibernatePropertiesProvider` from the hapi-fhir-jpaserver-starter) (#605)
+- Docker `with-postgres` and `with-preload`: pin PostgreSQL to 18 and mount the data directory at `/var/lib/postgresql`;
+  `postgres:latest` (18) refused to start with the mount at `/var/lib/postgresql/data`. A data directory of an earlier
+  PostgreSQL version needs to be upgraded, see the Docker documentation. `with-postgres` also didn't mount its
+  configuration, so Matchbox started with H2, and the export and import commands in the Docker documentation used a
+  wrong service name (#605)
+- Upgrade Jackson 3 (`tools.jackson.core:jackson-databind`) to 3.2.2 to fix CVE-2026-68497, CVE-2026-19032 and
+  CVE-2026-83557
+- Frontend: override `csv-parse` to 7.x (CVE-2026-85063); it's a declared but unused dependency of
+  `@lhncbc/ucum-lhc`, which still requires 4.x
+- Documentation: upgrade `mkdocs-material` to 9.7.7 (CVE-2026-73295)
+- Tests: the matchbox-server test suite no longer keeps the contexts of the finished Spring test classes. Spring
+  Boot's static `OnAvailableEndpointCondition` cache kept them softly reachable, so the JVM grew the heap instead of
+  clearing them (surefire now runs with `-XX:SoftRefLRUPolicyMSPerMB=0`), and JUnit kept the instance of the first
+  `PER_CLASS` test class, with its `MatchboxEngineSupport`, until the end of the run (the Spring tests now release
+  their autowired fields in `@AfterAll`). Used memory after GC at `MbInstalledStructureDefinitionIsCurrentTest`
+  4006 → 1523 MB, heap 13.8 → 5.3 GB
+
+2026/09/26 Release 4.1.18
+
+- Docker: size the heap relative to the memory limit of the container (`-XX:MaxRAMPercentage=70` instead of `-Xmx12g`
+  in the default `JDK_JAVA_OPTIONS`); a memory limit of 4 GB is enough for a typical setup of implementation guides
+  (measured with the 12 IGs of `with-preload`: about 1.3 GB of live heap) (#599)
+- Docker: enable the string deduplication of the garbage collector (`-XX:+UseStringDeduplication`) by default; it
+  reduces the heap used by the ch-elm validation engine by about 15% at no measurable cost in validation time (#597)
+- Don't keep the whole content of a package in memory for the few binaries of its `other` folder: this kept e.g. all
+  files of `hl7.fhir.uv.xver-r5.r4` and `hl7.fhir.r4.core` (about 210 MB) on the heap of the main engine (#597)
+- Load the terminology resources (CodeSystem, ValueSet, NamingSystem, ConceptMap) of the implementation guide packages
+  and their dependencies lazily: they're registered with the metadata of the package index and parsed when they're
+  first used, like the core validator does. For the ch-elm implementation guide, which pulls in 7 versions of
+  `hl7.terminology.r4`, the engine keeps about 225 MB less heap and is created about 6 s faster (#599)
+- Load the terminology resources of the FHIR core package and of the packages from the classpath (hl7.terminology,
+  extensions, xver, CDA) lazily too; the core terminology resources are pinned to the core versions when they're
+  parsed. Another 105 MB less heap and 4–6 s faster startup (#599)
+- Don't make HAPI parse and keep all StructureDefinitions of the FHIR core (about 40 MB for R4) for the FHIRPath engine of
+  the JPA search parameter extractors, which only uses them for its static type analysis (#599)
+- Don't load a package again when a dependency with a wildcard version (e.g. `ch.fhir.ig.ch-term#3.3.x`) resolves to an
+  already loaded version (#599)
+- Share the conformance resources of a package between the validation engines of several IGs that depend on it: an
+  engine registers the resources that another engine has loaded instead of loading and parsing the package again. The
+  cache keeps them only as long as an engine that uses them is alive. With ch-core and ch-epr-fhir, the resources that
+  were loaded in both engines (53 MB) exist once (#599)
+- Update the `with-preload` sample configuration to the latest released versions of its IGs (`ihe.iti.mhd` and
+  `ihe.iti.pixm` replace `ihe.mhd.fhir` and `IHE.ITI.PIXm`, `ch.fhir.ig.ch-epr-fhir` replaces `ch.fhir.ig.ch-epr-mhealth`)
+- Fix the `with-ch` sample configuration, which didn't start since 4.1.12: its local terminology server is reached over
+  http, so it needs `matchbox.fhir.context.ssrfProtectionEnabled: false`
+- Add a JMeter test with several IGs (`jmeter/multi-ig.jmx`) to check which packages the validation engines share (#599)
+- Add a JMeter runbook with the memory and validation time of the ch-elm images from 1.13.1 to 1.15.2
+  (`jmeter/claude-jmeter-check.md`)
+- Docker: the JVM options can be configured with the `JDK_JAVA_OPTIONS` environment variable, which defaults to
+  `-Xmx12g -XX:+ExitOnOutOfMemoryError` (#594)
+- Docker: exit on the first `OutOfMemoryError` (`-XX:+ExitOnOutOfMemoryError`) instead of continuing in an undefined
+  state while the health check still reports UP, so that the container gets restarted (#457)
+- Docker: use the exec form of the entrypoint, so that matchbox receives the stop signal and shuts down gracefully;
+  arguments given to the container are now passed to matchbox as Spring Boot arguments instead of being ignored (#594).
+  Thanks @reva!
+- Fix the Gazelle Validation Service API reporting `PASSED` when nothing could be validated (unknown profile, engine
+  not initialized, engine creation failure): the result is now `UNDEFINED` (#590)
+- Gazelle Validation Service API: reject a request without `validationProfileId` or inputs with a 400 instead of a 500,
+  and answer a request arriving while the engine is not yet initialized with a retryable 503 (#590)
+- Gazelle Validation Service API: send an `ETag` on the profile list (v1 and v2) and answer `If-None-Match` with a
+  `304`, so that a client revalidating the list does not transfer it again (#591)
 
 2026/09/21 Release 4.1.17
 

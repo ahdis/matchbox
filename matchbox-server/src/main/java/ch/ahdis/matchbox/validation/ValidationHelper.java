@@ -99,6 +99,7 @@ public class ValidationHelper {
 	 * @param profile    the profile, {@code canonical} or {@code canonical|version}.
 	 * @param cliContext the CLI context of the request.
 	 * @param reload     whether to reload the engine.
+	 * @throws EngineNotInitializedException   if the engine is not (yet) initialized, the request may succeed later.
 	 * @throws MatchboxEngineCreationException if no engine can validate against the profile.
 	 */
 	public MatchboxEngine getEngine(final @NonNull String profile,
@@ -112,18 +113,37 @@ public class ValidationHelper {
 			throw new MatchboxEngineCreationException(
 				"Error while initializing the validation engine: %s".formatted(e.getMessage()), e);
 		}
-		if (engine == null) {
-			throw new MatchboxEngineCreationException(
-				"Matchbox engine for profile '%s' could not be created, check the installed IGs".formatted(profile));
-		}
-		if (engine.getStructureDefinitionR5(ProfileReference.parse(profile).canonical()) == null) {
+		if (engine == null || engine.getStructureDefinitionR5(ProfileReference.parse(profile).canonical()) == null) {
+			// A reload may have been started in the meantime: the profile is then not unknown, the engine is only not
+			// ready yet, and the same request may succeed later.
+			this.requireInitializedEngine();
 			throw new MatchboxEngineCreationException(
 				"Validation for profile '%s' not supported by this validator instance".formatted(profile));
 		}
-		if (!this.matchboxEngineSupport.isInitialized()) {
-			throw new MatchboxEngineCreationException("Validation engine not initialized, please try again");
-		}
+		this.requireInitializedEngine();
 		return engine;
+	}
+
+	/**
+	 * Throws if the validation engine is not (yet) initialized.
+	 *
+	 * @throws EngineNotInitializedException if the engine is not initialized.
+	 */
+	private void requireInitializedEngine() {
+		if (!this.matchboxEngineSupport.isInitialized()) {
+			throw new EngineNotInitializedException("Validation engine not initialized, please try again");
+		}
+	}
+
+	/**
+	 * Thrown when the validation engine is not (yet) initialized, i.e. during startup or while an implementation guide
+	 * is being (re)loaded. Unlike the other failures of {@link #getEngine(String, CliContext, boolean)}, the same
+	 * request may succeed later.
+	 */
+	public static class EngineNotInitializedException extends MatchboxEngineCreationException {
+		public EngineNotInitializedException(final String message) {
+			super(message);
+		}
 	}
 
 	/**

@@ -6,6 +6,9 @@ import ca.uhn.fhir.jpa.model.entity.MbInstalledStructureDefinitionEntity;
 import ca.uhn.fhir.jpa.model.entity.NpmPackageVersionEntity;
 import ca.uhn.fhir.jpa.starter.Application;
 import ch.ahdis.matchbox.test.CompareUtil;
+import ch.ahdis.matchbox.test.ServerStartup;
+import ch.ahdis.matchbox.util.MatchboxEngineSupport;
+import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
@@ -46,10 +49,21 @@ class MbInstalledStructureDefinitionIsCurrentTest {
 	@Autowired
 	private PackageVersionFlipper packageVersionFlipper;
 
+	@Autowired
+	private MatchboxEngineSupport matchboxEngineSupport;
+
 	@BeforeAll
 	void waitUntilStartup() throws Exception {
-		Thread.sleep(10000); // give the server some time to start up
+		ServerStartup.awaitEngineInitialized(this.matchboxEngineSupport);
 		CompareUtil.logMemory();
+	}
+
+	@AfterAll
+	void releaseContext() {
+		// JUnit can keep the PER_CLASS test instance until the end of the run: don't let it retain the closed context
+		this.installedStructureDefinitionRepository = null;
+		this.packageVersionFlipper = null;
+		this.matchboxEngineSupport = null;
 	}
 
 	/**

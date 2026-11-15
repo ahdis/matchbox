@@ -140,6 +140,7 @@ public class MatchboxJpaConfig extends StarterJpaConfig {
 	                                           final Optional<ValueSetResourceProvider> valueSetProvider,
 	                                           final Optional<ConceptMapResourceProvider> conceptMapProvider,
 	                                           final Optional<CodeSystemResourceProvider> codeSystemProvider,
+	                                           final Optional<NamingSystemResourceProvider> namingSystemProvider,
 	                                           final Optional<StructureMapTransformProvider> structureMapTransformProvider,
 	                                           final StructureMapListProvider structureMapListProvider,
 															 final BundleResourceProvider bundleResourceProvider,
@@ -209,6 +210,7 @@ public class MatchboxJpaConfig extends StarterJpaConfig {
 			questionnaireProvider,
 			conceptMapProvider,
 			codeSystemProvider,
+			namingSystemProvider,
 			valueSetProvider,
 			structureMapTransformProvider
 		);
@@ -648,6 +650,13 @@ public class MatchboxJpaConfig extends StarterJpaConfig {
 	@Primary
 	public CodeSystemResourceProvider codeSystemResourceProvider() {
 		return new CodeSystemResourceProvider();
+	}
+
+	@Bean
+	@Conditional(OnMatchboxOnlyOneEnginePresent.class)
+	@Primary
+	public NamingSystemResourceProvider namingSystemResourceProvider() {
+		return new NamingSystemResourceProvider();
 	}
 
 	@Bean

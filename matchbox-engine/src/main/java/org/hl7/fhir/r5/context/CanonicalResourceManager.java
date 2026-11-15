@@ -95,7 +95,9 @@ public class CanonicalResourceManager<T extends CanonicalResource> {
       this.derivation = derivation;
     }
 
-    public CanonicalResource getResource() throws FHIRException {
+    // matchbox patch: synchronized, a proxy can be shared between several contexts (the copies of the main engine, the
+    // SharedPackageResourcesCache), which have different locks; loadResource() doesn't acquire any other lock
+    public synchronized CanonicalResource getResource() throws FHIRException {
       if (resource == null) {
         resource = loadResource();
         if (hacked) {
@@ -380,17 +382,24 @@ public class CanonicalResourceManager<T extends CanonicalResource> {
     }
 
     // special case logic for UTG support prior to version 5
-    if (cr.getPackageInfo() != null && cr.getPackageInfo().getId().startsWith("hl7.terminology")) {
-      List<CachedCanonicalResource<T>> toDrop = new ArrayList<>();
-      for (CachedCanonicalResource<T> n : allResources) {
-        if (n.getUrl() != null && n.getUrl().equals(cr.getUrl()) && isBasePackage(n.getPackageInfo())) {
-          toDrop.add(n);
+    // matchbox patch https://github.com/ahdis/matchbox/issues/609, from core 3b4427401 (not yet released): listForUrl
+    // holds the same resources as allResources, indexed by url, so look the url up instead of scanning all resources.
+    // The scan made registering a hl7.terminology package slower with each further version of it in the context.
+    if (cr.getPackageInfo() != null && cr.getPackageInfo().getId().startsWith("hl7.terminology") && cr.getUrl() != null) {
+      List<CachedCanonicalResource<T>> sameUrl = listForUrl.get(cr.getUrl());
+      if (sameUrl != null) {
+        List<CachedCanonicalResource<T>> toDrop = new ArrayList<>();
+        for (CachedCanonicalResource<T> n : sameUrl) {
+          if (isBasePackage(n.getPackageInfo())) {
+            toDrop.add(n);
+          }
+        }
+        for (CachedCanonicalResource<T> n : toDrop) {
+          drop(n);
         }
       }
-      for (CachedCanonicalResource<T> n : toDrop) {
-        drop(n);
-      }
     }
+    // END matchbox patch
 //    CachedCanonicalResource<T> existing = cr.hasVersion() ? map.get(cr.getUrl()+"|"+cr.getVersion()) : map.get(cr.getUrl()+"|#0");
 //    if (existing != null) {
 //      drop(existing); // was list.remove(existing)
@@ -723,6 +732,23 @@ public class CanonicalResourceManager<T extends CanonicalResource> {
     else
       return false;
   }
+
+  // matchbox patch: the version of the resource that get(url) returns, without parsing it if it's a proxy (lazy loading)
+  public String getVersion(String url) {
+    CachedCanonicalResource<T> cr = masterDefinitions.get(url);
+    if (cr == null) {
+      cr = indexedResources.get(url);
+    }
+    return cr == null ? null : cr.getVersion();
+  }
+
+  // matchbox patch https://github.com/ahdis/matchbox/issues/627: the version of the resource of the master (core) package
+  // with this URL, without parsing it if it's a proxy (lazy loading)
+  public String getMasterVersion(String url) {
+    CachedCanonicalResource<T> cr = masterDefinitions.get(url);
+    return cr == null ? null : cr.getVersion();
+  }
+  // END matchbox patch
 
   public T get(String url) {
     CachedCanonicalResource<T> cr = masterDefinitions.get(url);

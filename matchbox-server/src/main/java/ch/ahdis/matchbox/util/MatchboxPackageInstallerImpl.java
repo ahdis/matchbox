@@ -31,6 +31,7 @@ import org.hl7.fhir.utilities.npm.NpmPackage.NpmPackageFolder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.support.TransactionTemplate;
@@ -60,6 +61,7 @@ import ca.uhn.fhir.rest.server.exceptions.InternalErrorException;
 import ca.uhn.fhir.util.FhirTerser;
 import ca.uhn.fhir.util.SearchParameterUtil;
 import ch.ahdis.matchbox.engine.MatchboxEngine;
+import ch.ahdis.matchbox.events.ImplementationGuideUninstalledEvent;
 
 /**
  * This is a copy of ca.uhn.fhir.jpa.packages.PackageInstallerSvcImpl with the
@@ -94,6 +96,8 @@ public class MatchboxPackageInstallerImpl implements IPackageInstallerSvc {
 	private INpmPackageVersionResourceDao myPackageVersionResourceDao;
 	@Autowired
 	private PartitionSettings myPartitionSettings;
+	@Autowired
+	private ApplicationEventPublisher myApplicationEventPublisher;
 
 	/**
 	 * Constructor
@@ -173,6 +177,9 @@ public class MatchboxPackageInstallerImpl implements IPackageInstallerSvc {
 						ourLog.info("Remove Package {}#{} because it is a ci-build package or coming form localhost",
 								theInstallationSpec.getName(), theInstallationSpec.getVersion());
 						myPackageCacheManager.uninstallPackage(theInstallationSpec.getName(), theInstallationSpec.getVersion());
+						// the engines and the shared resources with the replaced content must not be used anymore (#609)
+						myApplicationEventPublisher.publishEvent(new ImplementationGuideUninstalledEvent(this,
+							theInstallationSpec.getName(), theInstallationSpec.getVersion()));
 					} else {
 						// Abort loading, the package is already installed
 						return retVal;

@@ -1,6 +1,6 @@
-# Running matchbox in docker
+# Running Matchbox in docker
 
-You can run matchbox directly in docker.
+You can run Matchbox directly in docker.
 
 ```bash
 docker run -d --name matchbox -p 8080:8080 -e matchbox.fhir.context.onlyOneEngine=true -v ${PWD}/config/:/config/ europe-west6-docker.pkg.dev/ahdis-ch/ahdis/matchbox:latest
@@ -12,7 +12,49 @@ The optional local volume /Users/oliveregger/config/ will be mapped inside the c
 
 The parameter (matchbox.fhir.context.onlyOneEngine) is to set development environment, which allows you to create/update conformance resources (e.g. transform StructureMaps). If not provided, you need to provide the conformance resources by an FHIR Implementation Guide.
 
-We recommend to put at least 2.5 GB of RAM for the container instance, depending on how many ImplementationGuides's you plan to install and want to use.
+We recommend a memory limit of 4 GB for the container (e.g. `docker run -m 4g ...` or `resources.limits.memory: 4Gi` in
+Kubernetes), which is enough for a typical setup of implementation guides; see [JVM options](#jvm-options).
+
+## JVM options
+
+The image sets the JVM options through the `JDK_JAVA_OPTIONS` environment variable, which defaults to
+`-XX:MaxRAMPercentage=70 -XX:+ExitOnOutOfMemoryError -XX:+UseStringDeduplication`.
+
+With `-XX:MaxRAMPercentage=70` the maximum heap is 70% of the memory limit of the container: a container with a limit of
+4 GB (`-m 4g`) gets a heap of 2.8 GB, and the rest remains for the memory Matchbox needs outside the heap. **Set a memory
+limit for the container**: without one, the heap is sized from the memory of the host (e.g. of the Docker Desktop VM) and
+can grow to 70% of it.
+
+A memory limit of **4 GB** is enough for a typical setup of implementation guides. Measured with the Swiss IGs of
+`with-preload` (12 IGs with their dependencies, 55 packages, each validated in its own engine), Matchbox needs about
+1.3 GB of live heap; a single IG such as ch-elm needs about 0.7 GB (a limit of 2 GB is enough then). Plan more memory
+for many more IGs in use at the same time, for large documents or many parallel requests.
+
+With `-XX:+ExitOnOutOfMemoryError` the JVM exits
+on the first `OutOfMemoryError` instead of continuing in an undefined state, so that the container can be restarted
+(e.g. with `--restart unless-stopped` or by Kubernetes). With `-XX:+UseStringDeduplication` the garbage collector
+merges identical strings in the background. The loaded implementation guides and their dependencies, often in several
+versions, contain many identical strings, so this reduces the memory needed by the validation engines (by about 15% for
+the ch-elm implementation guide).
+
+```bash
+docker run -d --name matchbox -p 8080:8080 -m 4g europe-west6-docker.pkg.dev/ahdis-ch/ahdis/matchbox:latest
+```
+
+You can override the options, e.g. to set a fixed heap size:
+
+```bash
+docker run -d --name matchbox -p 8080:8080 -m 4g -e JDK_JAVA_OPTIONS="-Xmx2g -XX:+ExitOnOutOfMemoryError -XX:+UseStringDeduplication" europe-west6-docker.pkg.dev/ahdis-ch/ahdis/matchbox:latest
+```
+
+Setting `JDK_JAVA_OPTIONS` replaces the default, so include a heap setting (`-XX:MaxRAMPercentage` or `-Xmx`),
+`-XX:+ExitOnOutOfMemoryError` and `-XX:+UseStringDeduplication` together with any other option you add, otherwise the JVM uses its default of 25% of the
+container memory and keeps running after an `OutOfMemoryError`. `-Xmx` takes precedence over `-XX:MaxRAMPercentage`, and
+a fixed `-Xmx` doesn't follow the memory limit of the container: keep it well below the limit, Matchbox also needs a
+substantial amount of memory outside the heap, otherwise the container is killed when it exceeds its limit.
+
+Arguments given after the image name are passed to Matchbox as Spring Boot arguments, e.g.
+`--matchbox.fhir.context.onlyOneEngine=true`.
 
 ## Live and Readiness checks
 
@@ -49,6 +91,25 @@ To use docker-compose with Matchbox you need to check out Matchbox from [github]
 
 The database will be stored in the "data" directory. The configuration can be found in the "with-postgres" directory or in the "with-preload" directory.
 
+The compose files use PostgreSQL 18, which keeps its data in a subdirectory per major version (`data/18/docker`), so
+the "data" directory is mounted at `/var/lib/postgresql`. A "data" directory created with an earlier version of these
+files (PostgreSQL 17 or older, mounted at `/var/lib/postgresql/data`) isn't used by PostgreSQL 18. Either keep the old
+mount and pin the image to the old version, or move the database to PostgreSQL 18 with a dump:
+
+```
+# with the old docker-compose.yml, and the image pinned to the version that created the data (e.g. postgres:17)
+docker-compose up -d matchbox-db
+docker-compose exec -T matchbox-db pg_dump -Fc -U matchbox matchbox > mydump
+docker-compose down
+mv data data-old && mkdir data
+
+# with the new docker-compose.yml
+docker-compose up -d matchbox-db
+# wait until 'docker-compose logs matchbox-db' shows "PostgreSQL init process complete"
+docker-compose exec -T matchbox-db pg_restore -U matchbox -d matchbox < mydump
+docker-compose up -d
+```
+
 Change to either with-posgres directory or the with-preload directory
 
 For the first time, you might need to do
@@ -70,28 +131,65 @@ Matchbox-gui will be available at [http://localhost:8080/matchboxv3/#/](http://l
 Export the DB data:
 
 ```
-docker-compose exec -T matchbox-test-db pg_dump -Fc -U matchbox matchbox > mydump
+docker-compose exec -T matchbox-db pg_dump -Fc -U matchbox matchbox > mydump
 ```
 
 Reimport the DB data:
 
 ```
-docker-compose exec -T matchbox-test-db pg_restore -c -U matchbox -d matchbox < mydump
+docker-compose exec -T matchbox-db pg_restore -c -U matchbox -d matchbox < mydump
 ```
 
-## Configure an own docker image with preinstalled packages
+## Provide packages from files {: #packages-from-files}
 
-During a regular container startup all implementation guides will be deployed to the database. This packages can be provided by the
+During a regular container startup all implementation guides configured in `hapi.fhir.implementationguides` are
+installed into the database. They can be loaded from the FHIR package servers, from an http address, from the classpath
+or from the filesystem, see [_Providing implementation guides_](matchbox-server.md#implementationguides).
 
-1. FHIR package servers
-2. absolute http address to package
-3. classpath
-4. filesystem
+To use packages from files (e.g. a package of an IG that isn't published, or because the container has no internet
+access), mount the directory with the packages as a volume and reference them with a `file:` URL. The path is the path
+inside the container:
 
-If you want to prepare a container which does not need internet access during the startup (required by 1 and 2) you can
-build a new container image will do the download and installation packages already during the startup process (adding this line
-into the Dockerfile):
-
+```bash
+docker run -d --name matchbox -p 8080:8080 -m 4g \
+  -v ${PWD}/config:/config \
+  -v ${PWD}/packages:/packages \
+  europe-west6-docker.pkg.dev/ahdis-ch/ahdis/matchbox:latest
 ```
+
+with `config/application.yaml`:
+
+```yaml
+hapi:
+  fhir:
+    implementationguides:
+      my-ig:
+        name: example.fhir.ig.my-ig
+        version: 0.1.0
+        url: file:/packages/example.fhir.ig.my-ig-0.1.0.tgz
+```
+
+The packages need to be in the `packages` directory when the container starts. Dependencies that aren't listed are
+downloaded from the FHIR package servers, list them as well if the container has no internet access.
+
+## Configure an own docker image with preinstalled packages {: #own-image}
+
+Instead of installing the packages at every container startup, you can build your own image that already contains them.
+Copy the packages and the `application.yaml` into the image and install the packages during the build with
+`--hapi.fhir.only_install_packages=true` (Matchbox installs the packages into the database and stops):
+
+```dockerfile
+FROM europe-west6-docker.pkg.dev/ahdis-ch/ahdis/matchbox:v4.1.21
+
+COPY ./application.yaml /config/
+COPY ./packages/*.tgz /packages/
+
 RUN java -Xmx1G -Xms1G -jar /matchbox.jar --hapi.fhir.only_install_packages=true
 ```
+
+With the default H2 database, the installed packages are then part of the image and the container starts without
+access to the package servers or to the files. Use the same `application.yaml` (with the `file:/packages/...` URLs)
+for the build and at runtime.
+
+[matchbox-ch-elm](https://github.com/ahdis/matchbox-ch-elm) is an example of such an image, configured for the
+validation of the ch-elm implementation guide.

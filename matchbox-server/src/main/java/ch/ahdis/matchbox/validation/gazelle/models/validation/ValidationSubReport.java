@@ -184,6 +184,13 @@ public class ValidationSubReport {
 			.orElse(assertionsResult)
 			: assertionsResult;
 		this.subReportResult = this.getHeaviestResult(assertionsResult, subReportsResult);
+
+		// An unexpected error means that the validation could not be performed: neither PASSED nor FAILED is true, so
+		// the result is UNDEFINED (which is also the heaviest weight).
+		// https://github.com/ahdis/matchbox/issues/590
+		if (this.unexpectedErrors != null && !this.unexpectedErrors.isEmpty()) {
+			this.subReportResult = ValidationTestResult.UNDEFINED;
+		}
 	}
 
 	static int keepHeaviestResult(ValidationTestResult result1, ValidationTestResult result2) {
@@ -202,7 +209,15 @@ public class ValidationSubReport {
 
 	public void computeCountersSubReport() {
 		this.computeCountersFromAssertionReports();
+		this.computeCountersFromUnexpectedErrors();
 		this.computeCountersFromSubReports();
+	}
+
+	private void computeCountersFromUnexpectedErrors() {
+		if (this.unexpectedErrors != null) {
+			this.getSubCounters().setNumberOfUnexpectedErrors(
+				this.getSubCounters().getNumberOfUnexpectedErrors() + this.unexpectedErrors.size());
+		}
 	}
 
 	private void computeCountersFromAssertionReports() {

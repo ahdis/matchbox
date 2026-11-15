@@ -4,13 +4,21 @@ import ca.uhn.fhir.context.FhirContext;
 import ca.uhn.fhir.context.FhirVersionEnum;
 import ca.uhn.fhir.jpa.starter.Application;
 import ch.ahdis.matchbox.test.CompareUtil;
+import ch.ahdis.matchbox.test.ServerStartup;
 import ch.ahdis.matchbox.test.ValidationClient;
+import ch.ahdis.matchbox.util.MatchboxEngineSupport;
 import org.apache.commons.io.FileUtils;
+import org.hl7.fhir.r4.model.Bundle;
+import org.hl7.fhir.r4.model.NamingSystem;
+import org.hl7.fhir.r4.model.OperationOutcome;
 import org.hl7.fhir.r4.model.Parameters;
 import org.hl7.fhir.r4.model.StringType;
+import org.hl7.fhir.r4.model.ValueSet;
+import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
@@ -25,6 +33,7 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -45,11 +54,19 @@ public class TransformTest {
 	private final ValidationClient validationClient = new ValidationClient(FHIR_CONTEXT, TARGET_SERVER + "/fhir");
 	private final HttpClient httpClient = HttpClient.newHttpClient();
 
+	@Autowired
+	private MatchboxEngineSupport matchboxEngineSupport;
+
 	@BeforeAll
 	void waitUntilStartup() throws Exception {
-		Thread.sleep(10000); // give the server some time to start up
-		this.validationClient.capabilities();
+		ServerStartup.awaitServerReady(TARGET_SERVER, this.matchboxEngineSupport);
 		CompareUtil.logMemory();
+	}
+
+	@AfterAll
+	void releaseContext() {
+		// JUnit can keep the PER_CLASS test instance until the end of the run: don't let it retain the closed context
+		this.matchboxEngineSupport = null;
 	}
 
 	@Test
@@ -191,6 +208,120 @@ public class TransformTest {
 			.build();
 		final var readResponse = this.httpClient.send(readRequest, HttpResponse.BodyHandlers.ofString());
 		assertEquals(404, readResponse.statusCode(), "expected a 404: " + readResponse.body());
+	}
+
+	/**
+	 * In the 'onlyOneEngine' mode, a StructureDefinition that is created on the server is used by the next validation,
+	 * also when a validation before has looked up its canonical in the installed packages, without finding it: the
+	 * cached lookup of the IG of a profile (#616) must not hide it.
+	 */
+	@Test
+	void testValidateWithCreatedStructureDefinition() throws Exception {
+		final String profile = "http://matchbox.health/test/issue616/StructureDefinition/practitioner-name-required";
+		final String practitioner = """
+			{ "resourceType": "Practitioner", "active": true }""";
+
+		// not known yet: the canonical is looked up in the installed packages, and not found
+		final List<String> unknown = errors(this.validationClient.validate(practitioner, profile));
+		assertFalse(unknown.isEmpty(), "the profile should be unknown before its creation");
+		assertTrue(unknown.stream().noneMatch(e -> e.contains("Practitioner.name")), unknown.toString());
+
+		final var createRequest = HttpRequest.newBuilder(URI.create(TARGET_SERVER + "/fhir/StructureDefinition"))
+			.POST(HttpRequest.BodyPublishers.ofString("""
+				{
+				  "resourceType": "StructureDefinition",
+				  "url": "%s",
+				  "version": "0.1.0",
+				  "name": "PractitionerNameRequired",
+				  "status": "active",
+				  "fhirVersion": "4.0.1",
+				  "kind": "resource",
+				  "abstract": false,
+				  "type": "Practitioner",
+				  "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Practitioner",
+				  "derivation": "constraint",
+				  "differential": {
+				    "element": [
+				      { "id": "Practitioner", "path": "Practitioner" },
+				      { "id": "Practitioner.name", "path": "Practitioner.name", "min": 1 }
+				    ]
+				  }
+				}""".formatted(profile)))
+			.header("Content-Type", "application/fhir+json")
+			.header("Accept", "application/fhir+json")
+			.build();
+		final var createResponse = this.httpClient.send(createRequest, HttpResponse.BodyHandlers.ofString());
+		assertEquals(201, createResponse.statusCode(), createResponse.body());
+
+		// now the profile is used: the missing name is the only error
+		final List<String> missingName = errors(this.validationClient.validate(practitioner, profile));
+		assertEquals(1, missingName.size(), missingName.toString());
+		assertTrue(missingName.getFirst().contains("Practitioner.name"), missingName.toString());
+		assertEquals(List.of(), errors(this.validationClient.validate("""
+			{ "resourceType": "Practitioner", "active": true, "name": [ { "family": "Muster" } ] }""", profile)));
+	}
+
+	/**
+	 * In the 'onlyOneEngine' mode, the ValueSets are searched in the main engine, which doesn't allow to iterate all
+	 * its ValueSets: only the ValueSets of the requested page are loaded, see
+	 * <a href="https://github.com/ahdis/matchbox/issues/663">issue 663</a>.
+	 */
+	@Test
+	void testSearchValueSets() throws Exception {
+		final Bundle firstPage = this.search("ValueSet?_count=5");
+		assertTrue(firstPage.getTotal() > 10, "the main engine should have the ValueSets of the core package");
+		final List<String> firstUrls = valueSetUrls(firstPage);
+		assertEquals(5, firstUrls.size(), firstUrls.toString());
+
+		final Bundle secondPage = this.search("ValueSet?_count=5&_offset=5");
+		assertEquals(firstPage.getTotal(), secondPage.getTotal());
+		final List<String> secondUrls = valueSetUrls(secondPage);
+		assertEquals(5, secondUrls.size(), secondUrls.toString());
+		assertTrue(secondUrls.stream().noneMatch(firstUrls::contains), firstUrls + " " + secondUrls);
+
+		final Bundle byUrl = this.search("ValueSet?url=http://hl7.org/fhir/ValueSet/administrative-gender");
+		assertEquals(List.of("http://hl7.org/fhir/ValueSet/administrative-gender"), valueSetUrls(byUrl));
+	}
+
+	/**
+	 * In the 'onlyOneEngine' mode, the NamingSystems of the main engine are exposed, e.g. to debug the OID to URI
+	 * mapping of http://hl7.org/fhir/ConceptMap/special-oid2uri, see
+	 * <a href="https://github.com/ahdis/matchbox/issues/664">issue 664</a>.
+	 */
+	@Test
+	void testSearchNamingSystems() throws Exception {
+		final Bundle namingSystems = this.search("NamingSystem?_count=5");
+		assertTrue(namingSystems.getTotal() > 0, "the main engine should have NamingSystems");
+		assertFalse(namingSystems.getEntry().isEmpty());
+		for (final var entry : namingSystems.getEntry()) {
+			final var namingSystem = assertInstanceOf(NamingSystem.class, entry.getResource());
+			assertTrue(namingSystem.hasUniqueId(), namingSystem.getName());
+		}
+	}
+
+	private Bundle search(final String query) throws Exception {
+		final var request = HttpRequest.newBuilder(URI.create(TARGET_SERVER + "/fhir/" + query))
+			.GET()
+			.header("Accept", "application/fhir+json")
+			.build();
+		final var response = this.httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+		assertEquals(200, response.statusCode(), "the search " + query + " failed: " + response.body());
+		return FHIR_CONTEXT.newJsonParser().parseResource(Bundle.class, response.body());
+	}
+
+	private static List<String> valueSetUrls(final Bundle bundle) {
+		return bundle.getEntry().stream()
+			.map(e -> assertInstanceOf(ValueSet.class, e.getResource()).getUrl())
+			.toList();
+	}
+
+	private static List<String> errors(final org.hl7.fhir.instance.model.api.IBaseOperationOutcome outcome) {
+		return ((OperationOutcome) outcome).getIssue().stream()
+			.filter(i -> i.getSeverity() == OperationOutcome.IssueSeverity.ERROR
+				|| i.getSeverity() == OperationOutcome.IssueSeverity.FATAL)
+			.map(i -> String.join(",", i.getExpression().stream().map(Object::toString).toList()) + ": "
+				+ (i.getDetails().hasText() ? i.getDetails().getText() : i.getDiagnostics()))
+			.toList();
 	}
 
 	private String getContent(final String resourceName) throws IOException {

@@ -19,6 +19,8 @@
  */
 package ca.uhn.fhir.jpa.searchparam.extractor;
 
+import ch.ahdis.matchbox.util.LazyDefaultProfileValidationSupport;
+import ch.ahdis.matchbox.util.NoAllStructureDefinitionsValidationSupport;
 import ca.uhn.fhir.context.FhirContext;
 import ca.uhn.fhir.jpa.model.config.PartitionSettings;
 import ca.uhn.fhir.jpa.model.entity.StorageSettings;
@@ -85,7 +87,11 @@ public class SearchParamExtractorR5 extends BaseSearchParamExtractor implements 
 	}
 
 	public void initFhirPath() {
-		IWorkerContext worker = new HapiWorkerContext(getContext(), getContext().getValidationSupport());
+		// matchbox: don't make the FHIRPathEngine constructor load all StructureDefinitions of the FHIR core, see
+		// NoAllStructureDefinitionsValidationSupport. The FhirContext has no validation support yet, and its default for R5
+		// would load the complete R5 core package: LazyDefaultProfileValidationSupport only loads it if it's needed
+		IWorkerContext worker = new HapiWorkerContext(getContext(),
+			new NoAllStructureDefinitionsValidationSupport(getContext(), new LazyDefaultProfileValidationSupport(getContext())));
 		myFhirPathEngine = new FHIRPathEngine(worker);
 
 		myParsedFhirPathCache = CacheFactory.build(TimeUnit.MINUTES.toMillis(10));

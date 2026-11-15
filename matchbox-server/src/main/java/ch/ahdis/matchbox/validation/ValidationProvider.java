@@ -25,6 +25,7 @@ import ca.uhn.fhir.jpa.dao.data.INpmPackageVersionResourceDao;
 import ca.uhn.fhir.rest.annotation.Operation;
 import ca.uhn.fhir.rest.annotation.OperationParam;
 import ca.uhn.fhir.rest.api.EncodingEnum;
+import ca.uhn.fhir.rest.api.server.RequestDetails;
 import ca.uhn.fhir.rest.server.exceptions.BaseServerResponseException;
 import ca.uhn.fhir.util.StopWatch;
 import ch.ahdis.matchbox.CliContext;
@@ -42,6 +43,7 @@ import ch.ahdis.matchbox.packages.MatchboxImplementationGuideProvider;
 import dev.langchain4j.model.chat.listener.ChatModelListener;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.checkerframework.checker.nullness.qual.NonNull;
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hl7.fhir.instance.model.api.IBase;
 import org.hl7.fhir.instance.model.api.IBaseOperationOutcome;
 import org.hl7.fhir.instance.model.api.IBaseResource;
@@ -55,6 +57,7 @@ import ch.ahdis.matchbox.validation.matchspark.LlmErrorMessage;
 import jakarta.servlet.http.HttpServletRequest;
 
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -72,6 +75,8 @@ public class ValidationProvider {
 	public static final String PARAM_LLM_PROVIDER = "llmProvider";
 	public static final String PARAM_LLM_MODEL_NAME = "llmModelName";
 	public static final String PARAM_LLM_API_KEY = "llmApiKey";
+	public static final String OPERATION_VALIDATE = "$validate";
+	private static final String BASE_DEFINITION_PREFIX = "http://hl7.org/fhir/StructureDefinition/";
 
 	@Autowired
 	protected MatchboxEngineSupport matchboxEngineSupport;
@@ -133,12 +138,19 @@ public class ValidationProvider {
 //		return null;
 //	}
 
-	@Operation(name = "$validate", manualRequest = true, idempotent = true, returnParameters = {
+	/**
+	 * The operation $validate, on the system level ({@code [base]/$validate}) and on the type level
+	 * ({@code [base]/{Type}/$validate}, for any resource type).
+	 * <p>
+	 * HAPI binds this method on the system level only, {@link ch.ahdis.matchbox.MatchboxRestfulServer} routes the
+	 * type-level requests to it. The resource type of the request tells which one it is.
+	 */
+	@Operation(name = OPERATION_VALIDATE, manualRequest = true, idempotent = true, returnParameters = {
 		@OperationParam(name = "return", type = IBase.class, min = 1, max = 1)})
-	public IBaseResource validate(final HttpServletRequest theRequest) {
+	public IBaseResource validate(final HttpServletRequest theRequest, final RequestDetails theRequestDetails) {
 		try {
 			// validate
-			final var response = this.getValidation(theRequest);
+			final var response = this.getValidation(theRequest, theRequestDetails.getResourceName());
 
 			// check if validation response is an OperationOutcome and store it
 			if (response instanceof final OperationOutcome operationOutcome) {
@@ -161,7 +173,10 @@ public class ValidationProvider {
 		}
 	}
 
-	private OperationOutcome getValidation(final HttpServletRequest theRequest) {
+	/**
+	 * @param type the resource type of a type-level request, {@code null} on the system level.
+	 */
+	private OperationOutcome getValidation(final HttpServletRequest theRequest, final @Nullable String type) {
 		log.debug("$validate");
 		this.matchboxMetrics.ifPresent(MatchboxMetrics::addValidation);
 
@@ -173,10 +188,10 @@ public class ValidationProvider {
 
 		ValidationHelper.applyValidationParameters(cliContext, theRequest::getParameterValues);
 
-		if (theRequest.getParameter("profile") == null) {
+		String profile = theRequest.getParameter("profile");
+		if (profile == null && type == null) {
 			return this.getOoForError("The 'profile' parameter must be provided");
 		}
-		String profile = theRequest.getParameter("profile");
 
 		boolean reload = false;
 		if (theRequest.getParameter("reload") != null) {
@@ -196,6 +211,33 @@ public class ValidationProvider {
 			log.trace(contentString);
 		}
 
+		EncodingEnum encoding = EncodingEnum.forContentType(theRequest.getContentType());
+		if (encoding == null) {
+			encoding = EncodingEnum.detectEncoding(contentString);
+		}
+
+		// On the type level, the resource may be wrapped in a Parameters and the profile is optional
+		final List<String> otherMetaProfiles = new ArrayList<>();
+		if (type != null) {
+			final ValidationContent content;
+			try {
+				content = ValidationContent.resolve(contentString, encoding, type);
+			} catch (final ValidationContent.ValidationContentException e) {
+				return this.getOoForError(e.getMessage());
+			}
+			contentString = content.content();
+			if (profile == null) {
+				profile = content.envelopeProfile();
+			}
+			if (profile == null && !content.metaProfiles().isEmpty()) {
+				profile = content.metaProfiles().getFirst();
+				otherMetaProfiles.addAll(content.metaProfiles().subList(1, content.metaProfiles().size()));
+			}
+			if (profile == null) {
+				profile = BASE_DEFINITION_PREFIX + type;
+			}
+		}
+
 		final MatchboxEngine engine;
 		try {
 			engine = this.validationHelper.getEngine(profile, cliContext, reload);
@@ -205,11 +247,6 @@ public class ValidationProvider {
 		profile = ValidationHelper.ProfileReference.parse(profile).canonical();
 
 		final String sha3Hex = new DigestUtils("SHA3-256").digestAsHex(contentString + profile);
-
-		EncodingEnum encoding = EncodingEnum.forContentType(theRequest.getContentType());
-		if (encoding == null) {
-			encoding = EncodingEnum.detectEncoding(contentString);
-		}
 
 		final List<ValidationMessage> messages;
 		try {
@@ -226,6 +263,14 @@ public class ValidationProvider {
 		this.matchboxMetrics.ifPresent(m -> m.addValidationDuration(java.time.Duration.ofMillis(millis)));
 
 		final OperationOutcome oo = this.validationHelper.getOperationOutcome(sha3Hex, messages, profile, engine, millis, cliContext);
+		if (!otherMetaProfiles.isEmpty()) {
+			oo.addIssue()
+				.setSeverity(OperationOutcome.IssueSeverity.INFORMATION)
+				.setCode(OperationOutcome.IssueType.INFORMATIONAL)
+				.setDiagnostics(
+					"The resource declares several profiles in meta.profile, the validation engine was selected for the first one, '%s'. The other ones are only validated if this engine knows them: %s".formatted(
+						profile, String.join(", ", otherMetaProfiles)));
+		}
 
 		// Check if we should analyze errors with LLM, either from the request parameter or from the configuration
 		boolean analyzeErrorsWithLlm = this.matchboxProps.getValidation().isAnalyzeErrorsWithLlm();

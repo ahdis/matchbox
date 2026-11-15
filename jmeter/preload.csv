@@ -1,0 +1,14 @@
+profile,bodyfile
+http://fhir.ch/ig/ch-allergyintolerance/StructureDefinition/ch-allergyintolerance-condition,preload-Condition-CH-AllergyIntolerance-Condition-Usecase-3.json
+http://fhir.ch/ig/ch-atc/StructureDefinition/AccessAuditTrailEvent,preload-AuditEvent-atc-log-read.json
+http://fhir.ch/ig/ch-core/StructureDefinition/ch-core-practitioner,preload-Practitioner-SchreibKraft.json
+http://fhir.ch/ig/ch-emed/StructureDefinition/ch-emed-practitioner,preload-Practitioner-PriskaHuber.json
+http://fhir.ch/ig/ch-epr-fhir/StructureDefinition/ch-pixm-in-parameters,preload-Parameters-ParametersPIXmInput.json
+http://fhir.ch/ig/ch-etoc/StructureDefinition/ch-etoc-lab-observation,preload-Observation-HbA1c.json
+http://fhir.ch/ig/ch-orf/StructureDefinition/ch-orf-location,preload-Location-LocationOfAppointment.json
+http://fhir.ch/ig/ch-rad-order/StructureDefinition/ch-rad-order-INR-observation,preload-Observation-CaveatBloodCoagulationINR.json
+http://fhir.ch/ig/ch-vacd/StructureDefinition/ch-vacd-pastillnesses,preload-Condition-TCE01-UNDILL1-de.json
+http://hl7.org/fhir/uv/sdc/StructureDefinition/parameters-questionnaire-populate-link-out,preload-Parameters-populatelink-response.json
+https://profiles.ihe.net/ITI/MHD/StructureDefinition/IHE.MHD.Patch.Parameters,preload-Parameters-ex-patchParameters.json
+https://profiles.ihe.net/ITI/PIXm/StructureDefinition/IHE.PIXm.Query.Parameters.In,preload-Parameters-pixm-request-mohralice-red-all.json
+http://hl7.org/fhir/StructureDefinition/Patient,multi-ig-Patient-MaxMuster.json

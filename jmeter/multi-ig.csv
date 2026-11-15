@@ -1,0 +1,6 @@
+profile,bodyfile
+http://fhir.ch/ig/ch-core/StructureDefinition/ch-core-patient,multi-ig-Patient-MaxMuster.json
+http://fhir.ch/ig/ch-epr-fhir/StructureDefinition/ch-mhd-documentreference-comprehensive,multi-ig-DocumentReference-DocRefPdf.json
+http://fhir.ch/ig/ch-core/StructureDefinition/ch-core-composition,multi-ig-Composition-ZuweisungZurRadiologischenDiagnostik.json
+http://fhir.ch/ig/ch-epr-fhir/StructureDefinition/PpqmConsentTemplate201,multi-ig-Consent-PpqmConsentTemplate201Example.json
+http://hl7.org/fhir/StructureDefinition/Patient,multi-ig-Patient-MaxMuster.json
