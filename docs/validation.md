@@ -187,6 +187,67 @@ To configure a Matchbox instance in the EVSClient, the following actions shall b
      - [Example screenshot](assets/evsclient_menu.png)
 4. You can now validate your resource, the new standard appears in the menu.
 
+### ITB (GITB REST) API
+
+The [Interoperability Test Bed](https://interoperable-europe.ec.europa.eu/collection/itb) (ITB) calls test services
+over REST since version 1.30.0. Matchbox provides the GITB validation service `FHIRValidator`, with
+`[server]/itb/fhir` as its root (e.g. `http://localhost:8080/matchboxv3/itb/fhir`):
+
+| Operation | Endpoint |
+|---|---|
+| Module definition (the inputs of the service) | `GET [server]/itb/fhir/getModuleDefinition` |
+| Validation | `POST [server]/itb/fhir/validate` |
+
+The service follows the contract of the HL7 validator's ITB services
+([hapifhir/org.hl7.fhir.core#2615](https://github.com/hapifhir/org.hl7.fhir.core/pull/2615)): the same service name,
+input names and report. A test case written for the HL7 validator runs against matchbox with only the address changed.
+
+| Input | Required | Description |
+|---|---|---|
+| `contentToValidate` | yes | The FHIR resource to validate, JSON or XML |
+| `contentType` | no | `application/fhir+json` or `application/fhir+xml`. Detected from the content if missing |
+| `profiles` | no | One profile, `canonical` or `canonical\|version`. The version selects the implementation guide version. Defaults to the base profile of the resource type. Matchbox validates against one profile per call, more than one gives HTTP 400 |
+| `failOn` | no | The severity from which the result is `FAILURE`: `error` (default), `warning` or `information` |
+| `includeContentInReport` | no | Whether the validated content is added to the report context (default `true`) |
+| `bpWarnings` | no | Best practice warning level: `Ignore`, `Hint`, `Warning` or `Error` |
+| `resourceIdRule` | no | `OPTIONAL`, `REQUIRED` or `PROHIBITED` |
+| `displayWarnings` | no | Whether wrong displays are reported as warnings (same as `displayIssuesAreWarnings`) |
+| any validation parameter of `$validate` | no | e.g. `txServer`, `noExtensibleBindingMessages`, `suppressErrors`, `ig`. All are listed by `getModuleDefinition` |
+
+Inputs are embedded as `STRING` or `BASE_64`. `URI` is not supported, because fetching a URL given by the caller is an
+SSRF risk. An invalid request (a missing `contentToValidate`, a `URI` embedding, more than one profile, ...) gives
+HTTP 400 with `{"error": "..."}`. A validation that cannot be done, e.g. for an unknown profile, gives a report with the
+result `FAILURE`.
+
+The report (TAR) contains:
+
+- `result`: `FAILURE` if there are errors, `WARNING` if there are only warnings, `SUCCESS` otherwise; `failOn` makes
+  warnings or information issues a `FAILURE`. `UNDEFINED` if the validation engine failed.
+- `items`: one per issue, with the message as `description`, the message id as `assertionID` and the issue type as
+  `type`. The `location` is `content:<line>:<column>|<FHIRPath>`: ITB shows the FHIRPath and links it to the line in
+  the validated content. Without the content in the report, the `location` is the FHIRPath only.
+- `counters`: the number of errors, warnings and information issues.
+- `overview`: the profile used (`canonical|version`), the matchbox version, and the ITB test session id as `note`.
+- `context`: the item `validation`, how the validation was done (profile, packages, validator version, duration and
+  the validation parameters), which ITB shows as a group in the step report; the items `errorCount`, `warningCount`, `informationCount` and `severity` (the highest severity), hidden in
+  the displayed report; `operationOutcome`, the OperationOutcome that `$validate` returns; and `content`, the validated
+  resource.
+
+A test case captures the context with `output` and reads its items:
+
+```xml
+<verify id="validatePatient" desc="Validate the patient" handler="$DOMAIN{FHIRValidator}" handlerApiType="REST" output="$ctx">
+  <input name="contentToValidate">$patient</input>
+  <input name="profiles">'http://fhir.ch/ig/ch-core/StructureDefinition/ch-core-patient'</input>
+  <input name="failOn">'warning'</input>
+</verify>
+<assign to="$errorCount">$ctx{errorCount}</assign>
+```
+
+To use matchbox in ITB, register a domain test service `FHIRValidator` with the API type _REST_ and the address of the
+service root, e.g. `http://matchbox:8080/matchboxv3/itb/fhir`. Test steps can also use the address directly as their
+`handler`.
+
 ## Terminology server
 
 A terminology server may be used to validate resources.
