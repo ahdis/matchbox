@@ -121,6 +121,13 @@
             <artifactId>commons-beanutils</artifactId>
         </dependency>
 
+        <!-- The types of the GITB (Interoperability Test Bed) REST API, for the ITB validation service -->
+        <dependency>
+            <groupId>eu.europa.ec.itb</groupId>
+            <artifactId>gitb-types-model</artifactId>
+            <version>${gitb_types_version}</version>
+        </dependency>
+
         <!-- If you are using HAPI narrative generation, you will need to include Thymeleaf as well. Otherwise the following can be omitted. <dependency> <groupId>org.thymeleaf</groupId> <artifactId>thymeleaf</artifactId> </dependency> -->
 
         <!-- Needed for parsing the config -->

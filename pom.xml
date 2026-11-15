@@ -56,6 +56,7 @@
         <jakarta_annotation_version>3.0.0</jakarta_annotation_version>
         <junit_version>6.0.3</junit_version>
         <logback_version>1.6.3</logback_version>
+        <gitb_types_version>1.30.3</gitb_types_version>
         <jackson2_version>2.22.3</jackson2_version>
         <jackson3_version>3.2.3</jackson3_version>
         <jackson_annotations_version>2.22</jackson_annotations_version>

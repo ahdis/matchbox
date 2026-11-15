@@ -3,7 +3,9 @@ package ch.ahdis.matchbox.validation.gazelle;
 import ca.uhn.fhir.jpa.dao.data.MbInstalledStructureDefinitionRepository;
 import ch.ahdis.matchbox.CliContext;
 import ch.ahdis.matchbox.engine.exception.MatchboxEngineCreationException;
+import ch.ahdis.matchbox.config.property.MatchboxFhirProperties;
 import ch.ahdis.matchbox.util.MatchboxEngineSupport;
+import ch.ahdis.matchbox.validation.ValidationHelper;
 import ch.ahdis.matchbox.validation.gazelle.models.validation.*;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import tools.jackson.databind.json.JsonMapper;
@@ -320,6 +322,7 @@ class GazelleValidationWsTest {
 		}
 		when(engineSupport.isInitialized()).thenReturn(initialized);
 		return new GazelleValidationWs(engineSupport,
+												 new ValidationHelper(engineSupport, mock(MatchboxFhirProperties.class)),
 												 new CliContext(new MockEnvironment()),
 												 Optional.empty(),
 												 mock(MbInstalledStructureDefinitionRepository.class),
