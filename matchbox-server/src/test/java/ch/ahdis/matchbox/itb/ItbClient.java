@@ -2,6 +2,8 @@ package ch.ahdis.matchbox.itb;
 
 import ch.ahdis.matchbox.validation.itb.ItbJson;
 import com.gitb.model.core.AnyContent;
+import com.gitb.model.ps.ProcessRequest;
+import com.gitb.model.ps.ProcessResponse;
 import com.gitb.model.vs.GetModuleDefinitionResponse;
 import com.gitb.model.tr.TAR;
 import com.gitb.model.vs.ValidateRequest;
@@ -20,7 +22,7 @@ import java.time.Duration;
 import java.util.Map;
 
 /**
- * A client for the ITB (GITB REST) validation service of matchbox.
+ * A client for an ITB (GITB REST) service of matchbox, a validation or a processing service.
  */
 public class ItbClient {
 
@@ -29,7 +31,7 @@ public class ItbClient {
 	private final HttpClient httpClient;
 
 	/**
-	 * @param serviceUrl the root of the validation service, ending with a slash.
+	 * @param serviceUrl the root of the service, ending with a slash.
 	 */
 	public ItbClient(final String serviceUrl) {
 		this.serviceUri = URI.create(serviceUrl);
@@ -70,8 +72,38 @@ public class ItbClient {
 		return this.objectMapper.readValue(response.body(), ValidationResponse.class).getReport();
 	}
 
+	/**
+	 * Calls the operation of a processing service with the given inputs (embedded as STRING).
+	 *
+	 * @param operation the operation, or {@code null} to leave it out.
+	 */
+	public Response process(final String operation, final Map<String, String> inputs) throws IOException, InterruptedException {
+		final var request = ProcessRequest.builder().withOperation(operation).build();
+		inputs.forEach((name, value) -> request.getInput().add(input(name, value)));
+		return this.post("process", this.objectMapper.writeValueAsString(request), Map.of());
+	}
+
+	public ProcessResponse readProcessResponse(final Response response) throws IOException {
+		if (response.status() != 200) {
+			throw new IllegalStateException("HTTP %d: %s".formatted(response.status(), response.body()));
+		}
+		return this.objectMapper.readValue(response.body(), ProcessResponse.class);
+	}
+
+	public Response get(final String path) throws IOException, InterruptedException {
+		final HttpRequest request = HttpRequest.newBuilder(this.serviceUri.resolve(path)).GET().build();
+		final HttpResponse<String> response = this.httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+		return new Response(response.statusCode(), response.body());
+	}
+
 	public Response post(final String body, final Map<String, String> headers) throws IOException, InterruptedException {
-		final var builder = HttpRequest.newBuilder(this.serviceUri.resolve("validate"))
+		return this.post("validate", body, headers);
+	}
+
+	public Response post(final String path,
+								final String body,
+								final Map<String, String> headers) throws IOException, InterruptedException {
+		final var builder = HttpRequest.newBuilder(this.serviceUri.resolve(path))
 			.POST(HttpRequest.BodyPublishers.ofString(body))
 			.header("Content-Type", MediaType.APPLICATION_JSON_VALUE);
 		headers.forEach(builder::header);

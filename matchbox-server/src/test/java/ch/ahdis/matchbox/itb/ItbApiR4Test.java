@@ -3,6 +3,7 @@ package ch.ahdis.matchbox.itb;
 import ca.uhn.fhir.jpa.starter.Application;
 import ch.ahdis.matchbox.test.CompareUtil;
 import com.gitb.model.core.AnyContent;
+import com.gitb.model.ps.ProcessResponse;
 import com.gitb.model.tr.ReportItem;
 import com.gitb.model.tr.SeverityLevel;
 import com.gitb.model.tr.TAR;
@@ -36,7 +37,8 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
- * Tests of the ITB (GITB REST) validation service, see https://github.com/ahdis/matchbox/issues/589.
+ * Tests of the ITB (GITB REST) services: the validation service (https://github.com/ahdis/matchbox/issues/589), and
+ * the FHIRPath and IG manager processing services (https://github.com/ahdis/matchbox/issues/681).
  */
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT)
 @ContextConfiguration(classes = {Application.class})
@@ -66,6 +68,8 @@ public class ItbApiR4Test {
 	private static final String BUNDLE_PROFILE = "http://hl7.org/fhir/StructureDefinition/Bundle";
 
 	private final ItbClient client = new ItbClient("http://localhost:8081/matchboxv3/itb/fhir/");
+	private final ItbClient fhirPathClient = new ItbClient("http://localhost:8081/matchboxv3/itb/fhirPath/");
+	private final ItbClient igManagerClient = new ItbClient("http://localhost:8081/matchboxv3/itb/igManager/");
 
 	@Value("${hapi.fhir.implementationguides.matchbox_health_test_ig_r4.version}")
 	private String matchboxTestIgVersion;
@@ -264,6 +268,136 @@ public class ItbApiR4Test {
 		final var response = this.client.post("{not json", Map.of());
 		assertEquals(400, response.status());
 		assertTrue(this.client.readTree(response.body()).get("error").asText().startsWith("Malformed JSON"));
+	}
+
+	@Test
+	void fhirPathModuleDefinition() throws Exception {
+		final var response = this.fhirPathClient.get("getModuleDefinition");
+		assertEquals(200, response.status(), response.body());
+		final var module = this.fhirPathClient.readTree(response.body()).get("module");
+		assertEquals("FHIRPathProcessor", module.get("id").asText());
+		assertTrue(module.get("serviceLocation").asText().endsWith("/matchboxv3/itb/fhirPath"));
+		final var operation = module.get("operation").get(0);
+		assertEquals("evaluate", operation.get("name").asText());
+		assertEquals("content", operation.get("inputs").get(0).get("name").asText());
+		assertEquals("expression", operation.get("inputs").get(1).get("name").asText());
+		assertEquals("result", operation.get("outputs").get(0).get("name").asText());
+	}
+
+	@Test
+	void fhirPathEvaluate() throws Exception {
+		final String json = """
+			{"resourceType": "Patient", "id": "example", "active": true,
+			 "name": [{"family": "Muster", "given": ["Anna", "Maria"]}]}""";
+
+		assertEquals("true", this.evaluate("evaluate", json, "Patient.active"));
+		assertEquals("true", this.evaluate("evaluate", json, "name.given.count() = 2"));
+		assertEquals("false", this.evaluate("evaluate", json, "name.family = 'Other'"));
+		assertEquals("Muster", this.evaluate("evaluate", json, "Patient.name.family"));
+		assertEquals("2", this.evaluate("evaluate", json, "name.given.count()"));
+		// A collection, and an empty one
+		assertEquals("Anna,Maria", this.evaluate("evaluate", json, "name.given"));
+		assertEquals("", this.evaluate("evaluate", json, "Patient.birthDate"));
+		// The operation can be left out, and the content can be XML
+		assertEquals("example", this.evaluate(null, PATIENT, "Patient.id"));
+
+		// As the test cases read it, with a JSON pointer
+		final var response = this.fhirPathClient.process("evaluate", Map.of("content", json, "expression", "active"));
+		final var tree = this.fhirPathClient.readTree(response.body());
+		assertEquals("true", tree.at("/output/0/value").asText());
+		assertEquals("result", tree.at("/output/0/name").asText());
+		assertFalse(tree.has("report"));
+	}
+
+	@Test
+	void fhirPathEvaluateOperationOutcome() throws Exception {
+		// The checks of a test case on the OperationOutcome of a validation
+		final TAR tar = this.client.validate(PATIENT, Map.of("profiles", BUNDLE_PROFILE));
+		final String operationOutcome = getContext(tar, "operationOutcome").getValue();
+		assertEquals("1", this.evaluate("evaluate", operationOutcome,
+												  "OperationOutcome.issue.where(severity = 'error' or severity = 'fatal').count()"));
+	}
+
+	@Test
+	void fhirPathBadRequests() throws Exception {
+		assertBadProcessRequest(this.fhirPathClient, "evaluate", Map.of("expression", "Patient.id"),
+										"Missing required input: content");
+		assertBadProcessRequest(this.fhirPathClient, "evaluate", Map.of("content", PATIENT),
+										"Missing required input: expression");
+		assertBadProcessRequest(this.fhirPathClient, "evaluate", Map.of("content", PATIENT, "expression", "Patient.id.("),
+										"FHIRPath evaluation failed");
+		assertBadProcessRequest(this.fhirPathClient, "evaluate", Map.of("content", "{not json", "expression", "id"),
+										"FHIRPath evaluation failed");
+		assertBadProcessRequest(this.fhirPathClient, "transform", Map.of("content", PATIENT, "expression", "Patient.id"),
+										"Unknown operation: transform. Supported: evaluate");
+
+		final var response = this.fhirPathClient.post("process", "{not json", Map.of());
+		assertEquals(400, response.status());
+		assertTrue(this.fhirPathClient.readTree(response.body()).get("error").asText().startsWith("Malformed JSON"));
+	}
+
+	@Test
+	void processingTransaction() throws Exception {
+		final var begin = this.fhirPathClient.post("beginTransaction", "{}", Map.of());
+		assertEquals(200, begin.status(), begin.body());
+		assertFalse(this.fhirPathClient.readTree(begin.body()).get("sessionId").asText().isEmpty());
+		assertEquals(204, this.fhirPathClient.post("endTransaction", "{}", Map.of()).status());
+	}
+
+	@Test
+	void igManagerModuleDefinition() throws Exception {
+		final var response = this.igManagerClient.get("getModuleDefinition");
+		assertEquals(200, response.status(), response.body());
+		final var module = this.igManagerClient.readTree(response.body()).get("module");
+		assertEquals("IGManager", module.get("id").asText());
+		final var operation = module.get("operation").get(0);
+		assertEquals("loadIG", operation.get("name").asText());
+		assertEquals("ig", operation.get("inputs").get(0).get("name").asText());
+		assertEquals("loaded", operation.get("outputs").get(0).get("name").asText());
+	}
+
+	@Test
+	void igManagerLoadIg() throws Exception {
+		// An installed package is confirmed
+		final String ig = "matchbox.health.test.ig.r4#" + this.matchboxTestIgVersion;
+		final var response = this.igManagerClient.process("loadIG", Map.of("ig", ig));
+		final ProcessResponse loaded = this.igManagerClient.readProcessResponse(response);
+		assertNull(loaded.getReport());
+		assertEquals(1, loaded.getOutput().size());
+		assertEquals("loaded", loaded.getOutput().getFirst().getName());
+		assertEquals(ig, loaded.getOutput().getFirst().getValue());
+		assertEquals(ig, this.igManagerClient.readTree(response.body()).at("/output/0/value").asText());
+
+		// The server of the tests is read-only: a package that is not installed is not installed, the step fails
+		final ProcessResponse missing = this.igManagerClient.readProcessResponse(
+			this.igManagerClient.process("loadIG", Map.of("ig", "matchbox.health.test.ig.r4#9.9.9")));
+		assertTrue(missing.getOutput().isEmpty());
+		assertEquals(TestResultType.FAILURE, missing.getReport().getResult());
+		assertTrue(getFirstError(missing.getReport()).getDescription().contains("is not installed"));
+
+		assertBadProcessRequest(this.igManagerClient, "loadIG", Map.of(), "Missing required input: ig");
+		assertBadProcessRequest(this.igManagerClient, "loadIG", Map.of("ig", "matchbox.health.test.ig.r4"),
+										"expected 'id#version'");
+		assertBadProcessRequest(this.igManagerClient, "loadIG", Map.of("ig", "../../x#1.0.0"), "expected 'id#version'");
+		assertBadProcessRequest(this.igManagerClient, "listIGs", Map.of("ig", ig), "Unknown operation: listIGs");
+	}
+
+	private String evaluate(final String operation, final String content, final String expression) throws Exception {
+		final ProcessResponse response = this.fhirPathClient.readProcessResponse(
+			this.fhirPathClient.process(operation, Map.of("content", content, "expression", expression)));
+		assertEquals(1, response.getOutput().size());
+		assertEquals("result", response.getOutput().getFirst().getName());
+		return response.getOutput().getFirst().getValue();
+	}
+
+	private static void assertBadProcessRequest(final ItbClient client,
+															  final String operation,
+															  final Map<String, String> inputs,
+															  final String expectedError) throws Exception {
+		final var response = client.process(operation, inputs);
+		assertEquals(400, response.status(), response.body());
+		final String error = client.readTree(response.body()).get("error").asText();
+		assertTrue(error.contains(expectedError), error);
 	}
 
 	private void assertBadRequest(final ValidateRequest request, final String expectedError) throws Exception {
