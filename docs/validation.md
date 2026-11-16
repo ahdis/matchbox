@@ -248,6 +248,37 @@ To use matchbox in ITB, register a domain test service `FHIRValidator` with the 
 service root, e.g. `http://matchbox:8080/matchboxv3/itb/fhir`. Test steps can also use the address directly as their
 `handler`.
 
+#### Processing services
+
+Matchbox also provides two GITB processing services, with the contract of the HL7 validator's ITB services. Each has
+`GET [root]/getModuleDefinition`, `POST [root]/process`, and `POST [root]/beginTransaction` and
+`POST [root]/endTransaction` (the services are stateless, a transaction only gets an id).
+
+| Service | Root | Operation | Inputs | Output |
+|---|---|---|---|---|
+| `FHIRPathProcessor` | `[server]/itb/fhirPath` | `evaluate` | `content` (the FHIR resource, JSON or XML), `expression` (the FHIRPath expression), optional `contentType` | `result` |
+| `IGManager` | `[server]/itb/igManager` | `loadIG` | `ig` (the package, `id#version`) | `loaded` |
+
+`evaluate` uses the engine of the FHIR version of the server, without an implementation guide. The `result` is text:
+`true` or `false` for a boolean, the values of a collection separated by a comma, and an empty text for an empty
+collection. An expression or a content that cannot be parsed gives HTTP 400 with `{"error": "..."}`.
+
+```json
+{"operation": "evaluate", "input": [
+  {"name": "content", "value": "{\"resourceType\": \"Patient\", \"active\": true}", "embeddingMethod": "STRING"},
+  {"name": "expression", "value": "Patient.active", "embeddingMethod": "STRING"}]}
+```
+
+```json
+{"output": [{"name": "result", "value": "true", "embeddingMethod": "STRING", "type": "string", "mimeType": "text/plain"}]}
+```
+
+`loadIG` confirms a package that is installed in matchbox. A package that is not installed is installed from the
+package registry with its dependencies, unless the server is read-only (`matchbox.fhir.context.httpReadOnly`): then,
+or if the installation fails, the answer has no `output` but a `report` with the result `FAILURE`, which fails the test
+step. Validation picks the implementation guide from the profile, a test case does not have to call `loadIG` before
+`validate`.
+
 ## Terminology server
 
 A terminology server may be used to validate resources.

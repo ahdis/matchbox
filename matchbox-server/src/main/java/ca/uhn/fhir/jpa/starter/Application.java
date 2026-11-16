@@ -9,6 +9,8 @@ import ch.ahdis.matchbox.events.MatchboxEventListener;
 import ch.ahdis.matchbox.terminology.MatchboxTxServer;
 import ch.ahdis.matchbox.terminology.RegistryWs;
 import ch.ahdis.matchbox.validation.gazelle.GazelleValidationWs;
+import ch.ahdis.matchbox.validation.itb.ItbFhirPathWs;
+import ch.ahdis.matchbox.validation.itb.ItbIgManagerWs;
 import ch.ahdis.matchbox.validation.itb.ItbValidationWs;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -40,6 +42,8 @@ import ch.ahdis.matchbox.config.MatchboxJpaConfig;
 	MatchboxEventListener.class,
 	GazelleValidationWs.class,
 	ItbValidationWs.class,
+	ItbFhirPathWs.class,
+	ItbIgManagerWs.class,
   RegistryWs.class,
   MatchboxStaticResourceConfig.class,
   McpServerConfig.class,

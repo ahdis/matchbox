@@ -1,3 +1,13 @@
+2026/11/xx Release 5.0.0-rc5
+
+- Add the ITB (GITB REST) processing services `FHIRPathProcessor` under `[server]/itb/fhirPath` (operation `evaluate`:
+  evaluates a FHIRPath expression on a FHIR resource) and `IGManager` under `[server]/itb/igManager` (operation
+  `loadIG`: confirms an installed package, or installs it from the package registry unless the server is
+  `httpReadOnly`), with `GET getModuleDefinition`, `POST process`, `POST beginTransaction` and `POST endTransaction`.
+  They follow the contract of the HL7 validator's ITB services (hapifhir/org.hl7.fhir.core#2615), so test suites
+  written for it, as the EU Health Data API tests, can call matchbox
+  ([#681](https://github.com/ahdis/matchbox/issues/681))
+
 2026/11/15 Release 5.0.0-rc4
 
 Includes the changes of 5.0.0-rc3, 5.0.0-rc2 and 5.0.0-rc1, see below.
