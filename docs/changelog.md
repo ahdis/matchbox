@@ -1,4 +1,6 @@
-2026/11/xx Release 5.0.0-rc5
+2026/11/16 Release 5.0.0-rc5
+
+Includes the changes of 5.0.0-rc4, 5.0.0-rc3, 5.0.0-rc2 and 5.0.0-rc1, see below.
 
 - Add the ITB (GITB REST) processing services `FHIRPathProcessor` under `[server]/itb/fhirPath` (operation `evaluate`:
   evaluates a FHIRPath expression on a FHIR resource) and `IGManager` under `[server]/itb/igManager` (operation
