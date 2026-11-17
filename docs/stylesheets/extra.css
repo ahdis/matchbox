@@ -1,5 +1,54 @@
-[data-md-color-scheme="matchbox"] {
-    --md-primary-fg-color:        #97D6BA;
-    --md-primary-fg-color--light: #97D6BA;
-    --md-primary-fg-color--dark:  #97D6BA;
-  }
+/*
+ * Matchbox colors.
+ *
+ * The Matchbox mint (#97D6BA) is too light to be used as a text color on white, so it is only used as the topbar
+ * background and as a tint. The theme's primary color (used for texts such as the active navigation link and the
+ * links) is a darker green.
+ */
+[data-md-color-scheme="matchbox"][data-mx-topbar="primary"] {
+  --matchbox-mint:                     #97D6BA;
+  --matchbox-green:                    #17694B; /* 6.7:1 on white */
+  --matchbox-green-dark:               #264760; /* 7.5:1 on the mint */
+
+  --md-primary-fg-color:               var(--matchbox-green);
+  --md-primary-fg-color--light:        #1F8A62;
+  --md-primary-fg-color--dark:         var(--matchbox-green-dark);
+  /* Background of the active navigation link: a light mint tint (5.7:1 with the green text) */
+  --md-primary-fg-color--transparent:  rgba(151, 214, 186, 0.2);
+  --md-primary-bg-color:               #FFFFFF;
+  --md-primary-bg-color--light:        rgba(255, 255, 255, 0.7);
+
+  /* Hover and focus color, instead of the default indigo */
+  --md-accent-fg-color:                #12805A; /* 4.9:1 on white */
+  --md-accent-fg-color--transparent:   rgba(18, 128, 90, 0.1);
+  --md-accent-bg-color:                #FFFFFF;
+  --md-accent-bg-color--light:         rgba(255, 255, 255, 0.7);
+
+  --md-typeset-a-color:                var(--md-primary-fg-color);
+
+  --md-code-fg-color:                  #2a3940;
+
+  --mx-topbar-bg:                      var(--matchbox-mint);
+  --mx-topbar-fg:                      var(--matchbox-green-dark);
+  --mx-topbar-fg-muted:                rgba(11, 59, 42, 0.85);
+  --mx-search-outline:                 rgba(11, 59, 42, 0.35);
+  --mx-search-hover-bg:                rgba(11, 59, 42, 0.12);
+  /* The active tab is otherwise only distinguished by its opacity */
+  --mx-tabs-active-underline:          var(--mx-topbar-fg);
+}
+
+/* Navigation tabs (Home / Tutorials / ...): the theme dims the inactive ones to 70% */
+[data-md-color-scheme="matchbox"] .md-tabs__link {
+  opacity: 0.85;
+}
+
+[data-md-color-scheme="matchbox"] .md-tabs__item--active .md-tabs__link,
+[data-md-color-scheme="matchbox"] .md-tabs__link:hover,
+[data-md-color-scheme="matchbox"] .md-tabs__link:focus {
+  opacity: 1;
+}
+
+.md-typeset code {
+  padding: 2px 0.3em;
+  margin: 0 0.1em;
+}

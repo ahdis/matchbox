@@ -1,10 +1,14 @@
 site_name: Matchbox
 theme:
-  name: material
+  name: materialx
   logo: assets/matchbox_logo_color.png
   favicon: assets/favicon-96x96.png
+  topbar_style: primary
   palette:
     scheme: matchbox
+    # The colors are defined in docs/stylesheets/extra.css
+    primary: custom
+    accent: custom
   features:
     - navigation.tabs
     - navigation.indexes

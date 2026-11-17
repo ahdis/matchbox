@@ -20,12 +20,12 @@ jobs:
           cache: 'pip'
           cache-dependency-path: 'requirements.txt'
 
-      - name: Install mkdocs
+      - name: Install ProperDocs
         run: pip install -r requirements.txt
 
       - name: Build static documentation and deploy
-        run: mkdocs gh-deploy --force
-        # https://www.mkdocs.org/user-guide/deploying-your-docs/#github-pages
+        run: properdocs gh-deploy --force
+        # https://properdocs.org/user-guide/deploying-your-docs/#github-pages
 
       - name: Setup Java
         uses: actions/setup-java@v6
