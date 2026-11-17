@@ -1,127 +1,47 @@
-# How to validate FHIR resources
+# Understanding validation errors
 
-This article shows, how FHIR resource can be validated and analyzed.
+Validation is a powerful tool to verify that you produce conformant FHIR resources, but the number of messages can be
+overwhelming for complex structures like an IPS document (see e.g. this
+[validation result](https://gazelle.ihe.net/evs/report.seam?oid=1.3.6.1.4.1.12559.11.11.4.17466&standard=31)). This page
+explains what a validator checks, in which order to read the issues, and what the typical messages of each kind mean.
 
-Validation is a powerful tool to verify that you produce conformant FHIR resources, however the amount of error messages can be overwhelming if you have complex FHIR data structures like a FHIR IPS document (see validation result [here](https://gazelle.ihe.net/evs/report.seam?oid=1.3.6.1.4.1.12559.11.11.4.17466&standard=31)).
+If you have never validated a resource with Matchbox, do the
+[first tutorial](../tutorials/first-validation.md) first. The parameters of the operation are in the
+[`$validate` reference](../reference/operations.md#validate).
 
-## What does a validator check
+## What a validator checks
 
-The validation tooling checks the following to verify that your FHIR resource is conformant on the following levels:
+The validator verifies that a resource is conformant on several levels:
 
-1. Structure (Syntax) 
-2. Semantics  
-3. Constraints by the FHIR Specification 
-4. Constraints by FHIR Implementation Guides  
-   - Additional rules for FHIR implementation guides 
-   - Slicing in FHIR documents
+1. **Structure (syntax)**: the resource can be parsed, and its elements, cardinalities and data types are the ones of
+   the FHIR specification.
+2. **Semantics**: the codes are valid and belong to the value sets they are bound to.
+3. **Constraints of the FHIR specification**: the invariants defined for the resources and data types.
+4. **Constraints of FHIR implementation guides**: the additional rules of the profile, including slicing.
 
-You should fix first the structure errors, then the semantics error before you tackle the constraint errors.
+Each level builds on the previous one: fix the structure errors first, then the semantic errors, and only then the
+constraint errors. An error on a lower level often causes several errors on the higher levels, which disappear with
+it.
 
-We will go through the different type of error messages to explain what possibilities you have to identify the errors.
+## How to read the examples
 
-## Using Matchbox as a validation tool
+Every example below shows a request to `$validate` and the relevant issues of the returned `OperationOutcome`. The
+requests use the variable `{{host}}` for the base address of the FHIR API (e.g.
+`https://test.ahdis.ch/matchboxv3/fhir`); most examples also have a link that opens them in the web interface of the
+public test server.
 
-You can use Matchbox as a validation tool with a GUI, a test instance is located at: [http://test.ahdis.ch/matchboxv3/fhir](http://test.ahdis.ch/matchboxv3/fhir). Alternatively Matchbox offers a $validate operation and you can call this directly with a client. In this article we will use VSCode together with the RESTClient extension to show the different validation behaviors, you can open this file locally in your VS Code instance and then you can click on `Send Request`. As an alternative here is also a link for each validation provided which triggers the validation on the Matchbox test instance.  
+| Column      | Element of the issue                | Meaning                                                       |
+|-------------|-------------------------------------|---------------------------------------------------------------|
+| Severity    | `OperationOutcome.issue.severity`   | `fatal`, `error`, `warning` or `information`                  |
+| Code        | `OperationOutcome.issue.code`       | The kind of issue (`structure`, `invalid`, `code-invalid`, …) |
+| Diagnostics | `OperationOutcome.issue.diagnostics` | The message of the validator                                  |
+| Expression  | `OperationOutcome.issue.expression` | The FHIRPath of the element that has the issue                |
 
-To check if you have set it up correctly, perform a first successful validation: This should validate the XML Patient resource with a family name test against the Patient profile of the FHIR specification, in the test instance, the default validation is to FHIR Release R4:
-
-Validation Request with [Matchbox](https://test.ahdis.ch/matchboxv3/validate#resource=PFBhdGllbnQgeG1sbnM9Imh0dHA6Ly9obDcub3JnL2ZoaXIiPgogICAgPG5hbWU-CiAgICAgIDxmYW1pbHkgdmFsdWU9IlRlc3QiLz4KICAgIDwvbmFtZT4KICA8L1BhdGllbnQ-&profile=http%3A%2F%2Fhl7.org%2Ffhir%2FStructureDefinition%2FPatient):
-```http
-@host = https://test.ahdis.ch/matchboxv3/fhir
-POST {{host}}/$validate?profile=http://hl7.org/fhir/StructureDefinition/Patient HTTP/1.1
-Accept: application/fhir+json
-Content-Type: application/fhir+xml
-
-<Patient xmlns="http://hl7.org/fhir">
-  <name>
-    <family value="Test"/>
-  </name>
-</Patient>
-```
-
-Validation response by Matchbox:
-```json
-{
-  "resourceType": "OperationOutcome",
-  "id": "75e89102282782b6c16df8acfb99310150a261ee35eed42c3b181b14d00a051e",
-  "issue": [
-    {
-      "severity": "information",
-      "code": "informational",
-      "diagnostics": "Validation for profile http://hl7.org/fhir/StructureDefinition/Patient|4.0.1 (2019-11-01T09:29:23+11:00). Loaded packages: hl7.fhir.r4.core#4.0.1, hl7.fhir.xver-extensions#4.0, hl7.terminology#5.4.0, hl7.fhir.uv.extensions#1.0.0. Duration: 0.015s. powered by matchbox 3.9.3, hapi-fhir 7.4.0 and org.hl7.fhir.core 6.3.24. Validation parameters: CliContext{doNative=false, extensions=[any], hintAboutNonMustSupport=false, recursive=false, showMessagesFromReferences=false, doDebug=false, assumeValidRestReferences=false, canDoNative=false, noExtensibleBindingMessages=false, noUnicodeBiDiControlChars=false, noInvariants=false, displayIssuesAreWarnings=true, wantInvariantsInMessages=false, doImplicitFHIRPathStringConversion=false, htmlInMarkdownCheck=WARNING, txServer='https://test.ahdis.ch/matchboxv3/fhir', txServerCache='true', txLog='null', txUseEcosystem=true, lang='null', snomedCT='null', fhirVersion='4.0.1', ig='hl7.fhir.r4.core#4.0.1', questionnaireMode=CHECK, level=HINTS, mode=VALIDATION, securityChecks=false, crumbTrails=false, forPublication=false, allowExampleUrls=true, locale='en', locations={}, jurisdiction='urn:iso:std:iso:3166#US', igsPreloaded=[ch.fhir.ig.ch-elm#1.4.0], onlyOneEngine=false, httpReadOnly=false}"
-    },
-    {
-      "severity": "information",
-      "code": "informational",
-      "diagnostics": "No fatal or error issues detected, the validation has passed"
-    }
-  ]
-}
-```
-
-The validation response always contains a FHIR OperationOutcome Resource, with a list of different issues encountered during validation. One issue with severity information and code information will be always present with which configuration parameters the validation has been performed. Those parameters can change by different requests. The GUI of Matchbox shows the exact same information in the results. If you have no fatal or error issues you will get another information issue with "No fatal or error issues detected, the validation has passed", meaning you passed the validation according to the specified profile!
-
-| Severity | Code        |  Diagnostics                      | Expression     |
-|----------|-------------|---------------------------------- |--------------------|
-| information    | information     | No fatal or error issues detected, the validation has passed. |   |
+The first issue of every result is an `information` issue that describes the configuration of the validation; it is
+left out in the examples. A validation has passed when no issue has the severity `fatal` or `error`.
 
 
-### Validating on the type level: `[base]/{Type}/$validate`
-
-Besides the system-level `[base]/$validate`, Matchbox offers the operation on the type level for every resource type
-of the FHIR version of the server, as defined by the FHIR specification (`POST [base]/{Type}/$validate`). This is for
-clients that validate against a FHIR server (e.g. [Smart Forms](https://github.com/aehrc/smart-forms) before writing
-extracted resources back), the system-level operation is unchanged.
-
-The type in the URL says which resource is expected, so the resource can be wrapped in a `Parameters`:
-
-| Request body | Validated resource |
-|---|---|
-| a resource of type `{Type}` | the body itself |
-| a `Parameters` with a `resource` parameter of type `{Type}` | the resource in the parameter |
-| a `Parameters` posted to `Parameters/$validate` | the `Parameters` itself, it's not read as an envelope |
-| anything else, e.g. a `Parameters` whose `resource` has another type | not validated, an `error` issue names the expected type |
-
-The `profile` is optional on the type level, the first match is used:
-
-1. the `profile` query parameter
-2. the `profile` parameter of the `Parameters` envelope
-3. `meta.profile` of the resource. With several profiles, the first one selects the validation engine (and the
-   implementation guide); an `information` issue lists the other ones, which are only validated if they're known in
-   that implementation guide
-4. the base definition `http://hl7.org/fhir/StructureDefinition/{Type}`
-
-The response is the same OperationOutcome as on the system level, the first issue tells which profile was used. All
-other validation parameters (`txServer`, `analyzeErrorsWithLlm`, ...) are query parameters, as on the system level.
-
-A JSON resource in a `Parameters` is validated exactly as it was sent (the line and column of an issue are relative to
-the resource, not to the `Parameters`). An XML resource in a `Parameters` is serialized again, because it inherits its
-namespaces from the envelope.
-
-```http
-POST {{host}}/DocumentReference/$validate HTTP/1.1
-Accept: application/fhir+json
-Content-Type: application/fhir+json
-
-{
-  "resourceType": "Parameters",
-  "parameter": [
-    {
-      "name": "resource",
-      "resource": {
-        "resourceType": "DocumentReference",
-        "meta": {
-          "profile": [ "http://fhir.ch/ig/ch-ekm/StructureDefinition/ch-ekm-documentreference" ]
-        },
-        "status": "current",
-        "content": [ { "attachment": { "contentType": "application/fhir+json", "url": "Bundle/1013" } } ]
-      }
-    }
-  ]
-}
-```
-
-## Structure (Syntax) issues
+## Structure (syntax) issues
 
 You have to provide your FHIR resource in the right structure and syntax (xml or json) and also in the right FHIR version. If the validator is not able to parse your message as a FHIR resource (or as FHIR logical model instance, e.g. a CDA instance), you will get issues with a type of severity error or fatal.
 
@@ -155,9 +75,9 @@ Hello validator
 |----------|-------------|---------------------------------- |--------------------|
 | fatal    | invalid     | Error parsing JSON: Error parsing JSON source: Unexpected content at start of JSON: String at Line 1 (path=[Hello]) | |
 
-### Common additional XML Structure issues
+### Common XML structure issues
 
-#### Not providing an xml namespace
+#### Missing XML namespace
 
 [example no xml namespace](https://test.ahdis.ch/matchboxv3/validate#resource=PFBhdGllbnQ-CiAgICA8bmFtZT4KICAgICAgPGZhbWlseSB2YWx1ZT0iVGVzdCIvPgogICAgPC9uYW1lPgogIDwvUGF0aWVudD4&profile=http%3A%2F%2Fhl7.org%2Ffhir%2FStructureDefinition%2FPatient)
 
@@ -177,7 +97,7 @@ Content-Type: application/fhir+xml
 |----------|-----------|----------------------------------------------------------------------------------------------------------------|-------------|
 | fatal    | structure | This content cannot be parsed (unknown or unrecognized XML Root element namespace/name 'noNamespace::Patient') | "Patient"   |
 
-#### Wrong XML element test (not allowed)
+#### Undefined XML element
 
 [example undefined xml element](https://test.ahdis.ch/matchboxv3/validate#resource=PFBhdGllbnQgeG1sbnM9Imh0dHA6Ly9obDcub3JnL2ZoaXIiPgogICAgPHRlc3QgdmFsdWU9InRydWUiIC8-CiAgPC9QYXRpZW50PgogIA&profile=http%3A%2F%2Fhl7.org%2Ffhir%2FStructureDefinition%2FPatient)
 ```http
@@ -192,7 +112,7 @@ Content-Type: application/fhir+xml
 |----------|------------|-----------------------------------------|--------------|
 | error    | structure  | Undefined element 'test' at /f:Patient" | "f:/Patient" |
 
-#### Wrong order of xml elements
+#### Wrong order of XML elements
 
 [example wrong order](https://test.ahdis.ch/matchboxv3/validate#resource=PFBhdGllbnQgeG1sbnM9Imh0dHA6Ly9obDcub3JnL2ZoaXIiPgogIDxnZW5kZXIgdmFsdWU9Im1hbGUiIC8-CiAgPG5hbWU-CiAgICA8ZmFtaWx5IHZhbHVlPSJUZXN0IiAvPgogIDwvbmFtZT4KPC9QYXRpZW50Pg&profile=http%3A%2F%2Fhl7.org%2Ffhir%2FStructureDefinition%2FPatient)
 ```http
@@ -214,9 +134,9 @@ Content-Type: application/fhir+xml
 the gender element must be after the name.
 
 
-### common JSON Structure error messages
+### Common JSON structure issues
 
-#### JSON Array for 0..*
+#### JSON array for repeating elements
 
 If an element has a 0..* cardinality this needs in json representation an array. 
 
@@ -251,7 +171,7 @@ Content-Type: application/fhir+json
 | error    | invalid | The property name must be a JSON Array, not an Object (at Patient) | Patient.name |
 
 
-#### boolean or numbers quoted invalid
+#### Quoted booleans or numbers
 
 in JSON booleans or numbers must not be quoted as objects [example](https://test.ahdis.ch/matchboxv3/validate#resource=ewogICAgInJlc291cmNlVHlwZSI6ICJQYXRpZW50IiwKICAgICJhY3RpdmUiIDogInRydWUiCiAgfQ&profile=http%3A%2F%2Fhl7.org%2Ffhir%2FStructureDefinition%2FPatient):
 
@@ -292,11 +212,11 @@ Content-Type: application/fhir+json
 | error    | structure | Patient.communication.language: minimum required = 1, but only found 0 (from http://hl7.org/fhir/StructureDefinition/Patient\| 4.0.1) | communication[0] |
 
 
-### Value Domain
+### Value domain
 
 The validator checks that all values of all properties conform to the rules for the specified types (including checking that enumerated codes are valid).
 
-#### invalid content for boolean
+#### Invalid content for a boolean
 [example](https://test.ahdis.ch/matchboxv3/validate#resource=ewogICJyZXNvdXJjZVR5cGUiOiAiUGF0aWVudCIsCiAgImFjdGl2ZSIgOiB0cnVlb3JmYWxzZQp9&profile=http%3A%2F%2Fhl7.org%2Ffhir%2FStructureDefinition%2FPatient)
 ```http
 POST {{host}}/$validate?profile=http://hl7.org/fhir/StructureDefinition/Patient HTTP/1.1
@@ -315,17 +235,18 @@ Content-Type: application/fhir+json
 | error    | invalid | Boolean values must be 'true' or 'false'                                                | Patient.active |
 
 
-## Semantic validation
+## Semantic issues
 
 The validator checks also the validity of the codes and if the codes are appropriate for the bounded ValueSet according to the binding strength.
 For this a validator needs the support of a terminology server which provides a [terminology service](https://hl7.org/fhir/terminology-service.html#4.7). 
 
-Matchbox can use different terminology severs:
-- tx.fhir.org which is the default terminology sever used by the FHIR validator
+Matchbox can use different terminology servers (see [Terminology in validation](terminology.md)):
+
+- tx.fhir.org which is the default terminology server used by the FHIR validator
 - Ontoserver as of version 6.15.0 
 - Matchbox provides an internal terminology server, but this internal terminology server has only limited terminology capabilities, e.g. it will not validate display names or it can't expand intensional ValueSets.
 
-### invalid code for gender
+### Invalid code
 
 [example](https://test.ahdis.ch/matchboxv3/validate#resource=ewogICAgInJlc291cmNlVHlwZSI6ICJQYXRpZW50IiwKICAgICJnZW5kZXIiIDogIj8iCn0&profile=http%3A%2F%2Fhl7.org%2Ffhir%2FStructureDefinition%2FPatient)
 ```http
@@ -343,7 +264,7 @@ Content-Type: application/fhir+json
 | error    | code-invalid | The value provided ('?') was not found in the value set 'AdministrativeGender' (http://hl7.org/fhir/ValueSet/administrative-gender\|4.0.1), and a code is required from this value set  (error message = The System URI could not be determined for the code '?' in the ValueSet 'http://hl7.org/fhir/ValueSet/administrative-gender\|4.0.1'; The provided code '#?' was not found in the value set 'http://hl7.org/fhir/ValueSet/administrative-gender\|4.0.1') | Patient.gender |
 
 
-### intensional ValueSet
+### Intensional value sets
 
 ValueSets can be [intensional](https://hl7.org/fhir/valueset.html#int-ext) which requires a terminology server to expand them or verify if a code is valid within. E.g. see [Caveat Condition](https://fhir.ch/ig/ch-rad-order/ValueSet-ch-rad-order-caveat-condition.html) where the ValueSet includes codes from http://snomed.info/sct where concept is-a 397578001 (Device in situ (finding)).
 
@@ -357,7 +278,7 @@ validation with [tx.fhir.org](https://test.ahdis.ch/matchboxv3/validate#resource
 
 validation with Matchbox's internal terminology server will not return an error, because the intensional ValueSet will be [ignored](https://test.ahdis.ch/matchboxv3/validate#resource=ewogICJyZXNvdXJjZVR5cGUiIDogIkNvbmRpdGlvbiIsCiAgImlkIiA6ICJDYXZlYXREZXZpY2VDYXJkaWFjUGFjZW1ha2VyIiwKICAibWV0YSIgOiB7CiAgICAicHJvZmlsZSIgOiBbImh0dHA6Ly9maGlyLmNoL2lnL2NoLXJhZC1vcmRlci9TdHJ1Y3R1cmVEZWZpbml0aW9uL2NoLXJhZC1vcmRlci1jYXZlYXQtY29uZGl0aW9uIl0KICB9LAogICJleHRlbnNpb24iIDogW3sKICAgICJ1cmwiIDogImh0dHA6Ly9maGlyLmNoL2lnL2NoLXJhZC1vcmRlci9TdHJ1Y3R1cmVEZWZpbml0aW9uL2NoLXJhZC1vcmRlci1jYXZlYXQtdHlwZSIsCiAgICAidmFsdWVDb2RpbmciIDogewogICAgICAic3lzdGVtIiA6ICJodHRwOi8vc25vbWVkLmluZm8vc2N0IiwKICAgICAgImNvZGUiIDogIjM5NzU3ODAwMSIsCiAgICAgICJkaXNwbGF5IiA6ICJEZXZpY2UgaW4gc2l0dSAoZmluZGluZykiCiAgICB9CiAgfSwKICB7CiAgICAidXJsIiA6ICJodHRwOi8vZmhpci5jaC9pZy9jaC1yYWQtb3JkZXIvU3RydWN0dXJlRGVmaW5pdGlvbi9jaC1yYWQtb3JkZXItcXVhbGlmaWVyLXZhbHVlIiwKICAgICJ2YWx1ZUNvZGluZyIgOiB7CiAgICAgICJzeXN0ZW0iIDogImh0dHA6Ly9zbm9tZWQuaW5mby9zY3QiLAogICAgICAiY29kZSIgOiAiNTIxMDEwMDQiLAogICAgICAiZGlzcGxheSIgOiAiUHJlc2VudCAocXVhbGlmaWVyIHZhbHVlKSIKICAgIH0KICB9XSwKICAiY2xpbmljYWxTdGF0dXMiIDogewogICAgImNvZGluZyIgOiBbewogICAgICAic3lzdGVtIiA6ICJodHRwOi8vdGVybWlub2xvZ3kuaGw3Lm9yZy9Db2RlU3lzdGVtL2NvbmRpdGlvbi1jbGluaWNhbCIsCiAgICAgICJjb2RlIiA6ICJhY3RpdmUiCiAgICB9XQogIH0sCiAgImNhdGVnb3J5IiA6IFt7CiAgICAiY29kaW5nIiA6IFt7CiAgICAgICJzeXN0ZW0iIDogImh0dHA6Ly90ZXJtaW5vbG9neS5obDcub3JnL0NvZGVTeXN0ZW0vY29uZGl0aW9uLWNhdGVnb3J5IiwKICAgICAgImNvZGUiIDogInByb2JsZW0tbGlzdC1pdGVtIiwKICAgICAgImRpc3BsYXkiIDogIlByb2JsZW0gTGlzdCBJdGVtIgogICAgfV0KICB9XSwKICAiY29kZSIgOiB7CiAgICAiY29kaW5nIiA6IFt7CiAgICAgICJzeXN0ZW0iIDogImh0dHA6Ly9zbm9tZWQuaW5mby9zY3QiLAogICAgICAiY29kZSIgOiAiNDQ0NDQ0NDQ0IiwKICAgICAgImRpc3BsYXkiIDogIm5vdGludmFsdWVzZXQiCiAgICB9XQogIH0sCiAgInN1YmplY3QiIDogewogICAgInJlZmVyZW5jZSIgOiAiUGF0aWVudC9TVWZmZXJlciIKICB9Cn0&profile=http%3A%2F%2Ffhir.ch%2Fig%2Fch-rad-order%2FStructureDefinition%2Fch-rad-order-caveat-condition&doNative=false&hintAboutNonMustSupport=false&recursive=false&showMessagesFromReferences=false&doDebug=false&assumeValidRestReferences=false&canDoNative=false&noExtensibleBindingMessages=false&noUnicodeBiDiControlChars=false&noInvariants=false&displayIssuesAreWarnings=true&wantInvariantsInMessages=false&doImplicitFHIRPathStringConversion=false&txServer=http%3A%2F%2Flocalhost%3A8080%2Fmatchboxv3%2Ffhir&txServerCache=true&txUseEcosystem=true&fhirVersion=4.0.1&securityChecks=false&crumbTrails=false&forPublication=false&showMessageIds=false&showTerminologyRouting=false&clearTxCache=false&allowExampleUrls=true&locale=en&jurisdiction=urn%3Aiso%3Astd%3Aiso%3A3166%23US&checkIpsCodes=false&checkReferences=false&disableDefaultResourceFetcher=true) and there is no validation of codes from SNOMED CT or LOINC (CodeSystems not provided directly through the HL7 FHIR ecosystem).
 
-## Constraints by the FHIR Specification 
+## Constraints of the FHIR specification
 
 FHIR adds additional constraints to resources, e.g: https://hl7.org/fhir/patient.html#invs adds a requirement that a contact should have at least a contact's details or a reference to an organization (name.exists() or telecom.exists() or address.exists() or organization.exists()). [example](https://test.ahdis.ch/matchboxv3/validate#resource=ewoJInJlc291cmNlVHlwZSI6ICJQYXRpZW50IiwKICAgImNvbnRhY3QiIDogW3sKICAgICJyZWxhdGlvbnNoaXAiIDogW3sKICAgICAgImNvZGluZyIgOiBbCiAgICAgIHsKICAgICAgICAic3lzdGVtIiA6ICJodHRwOi8vdGVybWlub2xvZ3kuaGw3Lm9yZy9Db2RlU3lzdGVtL3YyLTAxMzEiLAogICAgICAgICJjb2RlIiA6ICJOIgogICAgICB9CiAgICAgIF0KICAgIH1dCiAgfV0KfQo&profile=http%3A%2F%2Fhl7.org%2Ffhir%2FStructureDefinition%2FPatient)
 
@@ -385,9 +306,9 @@ Content-Type: application/fhir+json
 | error    | invariant | Constraint failed: pat-1: 'SHALL at least contain a contact's details or a reference to an organization' | Patient.contact[0] |
 
 
-## Constraints by FHIR Implementation Guides  
+## Constraints of FHIR implementation guides
 
-### Additional rules for FHIR implementation guides 
+### Additional rules of a profile
 
 FHIR Implementation guides can add additional rules and you can validate if those rules are checked, by specifying the profile for the validation where the rules are defined:
 
@@ -719,4 +640,4 @@ Here we see that the Patient would need to have birthDate that is missing to con
 
 The validator can us not tell directly that Patient.birthDate is missing, it could have other Patient in the Bundle. The validator tells us that a Composition and a Patient according to the IPS definitions could not be found and we have to figure out ourself why they did not match.
 
-Spoiler: There is now an additional validation parameter which bring the patient.birthDate directly up to the error message, this parameter will be by default set with version 4.0.2 [validate](https://test.ahdis.ch/matchboxv3/validate#resource=ewogICAgInJlc291cmNlVHlwZSI6ICJCdW5kbGUiLAogICAgImlkZW50aWZpZXIiOiB7CiAgICAgICAgInN5c3RlbSI6ICJ1cm46b2lkOjIuMTYuNzI0LjQuOC4xMC4yMDAuMTAiLAogICAgICAgICJ2YWx1ZSI6ICIyOGI5NTgxNS03NmNlLTQ1N2ItYjdhZS1hOTcyZTUyN2RiNDAiCiAgICB9LAogICAgInR5cGUiOiAiZG9jdW1lbnQiLAogICAgInRpbWVzdGFtcCI6ICIyMDIwLTEyLTExVDE0OjMwOjAwKzAxOjAwIiwKICAgICJlbnRyeSI6IFsKICAgICAgICB7CiAgICAgICAgICAgICJmdWxsVXJsIjogInVybjp1dWlkOmY0MGIwN2UzLTM3ZTgtNDhjMy1iZjFjLWFlNzBmZTEyZGFiMCIsCiAgICAgICAgICAgICJyZXNvdXJjZSI6IHsKICAgICAgICAgICAgICAgICJyZXNvdXJjZVR5cGUiOiAiQ29tcG9zaXRpb24iLAogICAgICAgICAgICAgICAgImlkIjogImY0MGIwN2UzLTM3ZTgtNDhjMy1iZjFjLWFlNzBmZTEyZGFiMCIsCiAgICAgICAgICAgICAgICAic3RhdHVzIjogImZpbmFsIiwKICAgICAgICAgICAgICAgICJ0eXBlIjogewogICAgICAgICAgICAgICAgICAgICJjb2RpbmciOiBbCiAgICAgICAgICAgICAgICAgICAgICAgIHsKICAgICAgICAgICAgICAgICAgICAgICAgICAgICJzeXN0ZW0iOiAiaHR0cDovL2xvaW5jLm9yZyIsCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAiY29kZSI6ICI2MDU5MS01IiwKICAgICAgICAgICAgICAgICAgICAgICAgICAgICJkaXNwbGF5IjogIlBhdGllbnQgc3VtbWFyeSBEb2N1bWVudCIKICAgICAgICAgICAgICAgICAgICAgICAgfQogICAgICAgICAgICAgICAgICAgIF0KICAgICAgICAgICAgICAgIH0sCiAgICAgICAgICAgICAgICAic3ViamVjdCI6IHsKICAgICAgICAgICAgICAgICAgICAicmVmZXJlbmNlIjogInVybjp1dWlkOjI0NGFkN2MzLWJlZWItNDFkMS04YTJmLWM3NmI4Y2Y3MjBhZCIKICAgICAgICAgICAgICAgIH0sCiAgICAgICAgICAgICAgICAiZGF0ZSI6ICIyMDIwLTEyLTExVDE0OjMwOjAwKzAxOjAwIiwKICAgICAgICAgICAgICAgICJhdXRob3IiOiBbCiAgICAgICAgICAgICAgICAgICAgewogICAgICAgICAgICAgICAgICAgICAgICAicmVmZXJlbmNlIjogInVybjp1dWlkOjQ1MjcxZjdmLTYzYWItNDk0Ni05NzBmLTNkYWFhYTA2NjM3ZiIKICAgICAgICAgICAgICAgICAgICB9CiAgICAgICAgICAgICAgICBdLAogICAgICAgICAgICAgICAgInRpdGxlIjogIlBhdGllbnQgU3VtbWFyeSBhcyBvZiBEZWNlbWJlciAxMSwgMjAyMCAxNDozMCIsCiAgICAgICAgICAgICAgICAiY29uZmlkZW50aWFsaXR5IjogIk4iLAogICAgICAgICAgICAgICAgInNlY3Rpb24iOiBbCiAgICAgICAgICAgICAgICAgICAgewogICAgICAgICAgICAgICAgICAgICAgICAidGl0bGUiOiAiQWN0aXZlIFByb2JsZW1zIiwKICAgICAgICAgICAgICAgICAgICAgICAgImNvZGUiOiB7CiAgICAgICAgICAgICAgICAgICAgICAgICAgICAiY29kaW5nIjogWwogICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIHsKICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgInN5c3RlbSI6ICJodHRwOi8vbG9pbmMub3JnIiwKICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgImNvZGUiOiAiMTE0NTAtNCIsCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICJkaXNwbGF5IjogIlByb2JsZW0gbGlzdCAtIFJlcG9ydGVkIgogICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIH0KICAgICAgICAgICAgICAgICAgICAgICAgICAgIF0KICAgICAgICAgICAgICAgICAgICAgICAgfSwKICAgICAgICAgICAgICAgICAgICAgICAgInRleHQiOiB7CiAgICAgICAgICAgICAgICAgICAgICAgICAgICAic3RhdHVzIjogImdlbmVyYXRlZCIsCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAiZGl2IjogIjxkaXYgeG1sbnM9XCJodHRwOi8vd3d3LnczLm9yZy8xOTk5L3hodG1sXCI-PHVsPjxsaT48ZGl2PjxiPkNvbmRpdGlvbiBOYW1lPC9iPjogTWVub3BhdXNhbCBGbHVzaGluZzwvZGl2PjxkaXY-PGI-Q29kZTwvYj46IDxzcGFuPjE5ODQzNjAwODwvc3Bhbj48L2Rpdj48ZGl2PjxiPlN0YXR1czwvYj46IDxzcGFuPkFjdGl2ZTwvc3Bhbj48L2Rpdj48L2xpPjwvdWw-PC9kaXY-IgogICAgICAgICAgICAgICAgICAgICAgICB9LAogICAgICAgICAgICAgICAgICAgICAgICAiZW50cnkiOiBbCiAgICAgICAgICAgICAgICAgICAgICAgICAgICB7CiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgInJlZmVyZW5jZSI6ICJ1cm46dXVpZDpkMTc5MzIxZS1jMDkxLTRjZDQtODY0Mi0zYTI3NTM3ZDUwNmQiCiAgICAgICAgICAgICAgICAgICAgICAgICAgICB9CiAgICAgICAgICAgICAgICAgICAgICAgIF0KICAgICAgICAgICAgICAgICAgICB9LAogICAgICAgICAgICAgICAgICAgIHsKICAgICAgICAgICAgICAgICAgICAgICAgInRpdGxlIjogIk1lZGljYXRpb24iLAogICAgICAgICAgICAgICAgICAgICAgICAiY29kZSI6IHsKICAgICAgICAgICAgICAgICAgICAgICAgICAgICJjb2RpbmciOiBbCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgewogICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAic3lzdGVtIjogImh0dHA6Ly9sb2luYy5vcmciLAogICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAiY29kZSI6ICIxMDE2MC0wIiwKICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgImRpc3BsYXkiOiAiSGlzdG9yeSBvZiBNZWRpY2F0aW9uIHVzZSBOYXJyYXRpdmUiCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgfQogICAgICAgICAgICAgICAgICAgICAgICAgICAgXQogICAgICAgICAgICAgICAgICAgICAgICB9LAogICAgICAgICAgICAgICAgICAgICAgICAidGV4dCI6IHsKICAgICAgICAgICAgICAgICAgICAgICAgICAgICJzdGF0dXMiOiAiZ2VuZXJhdGVkIiwKICAgICAgICAgICAgICAgICAgICAgICAgICAgICJkaXYiOiAiPGRpdiB4bWxucz1cImh0dHA6Ly93d3cudzMub3JnLzE5OTkveGh0bWxcIj48dWw-PGxpPjxkaXY-PGI-TWVkaWNhdGlvbiBOYW1lPC9iPjogT3JhbCBhbmFzdHJvem9sZSAxbWcgdGFibGV0PC9kaXY-PGRpdj48Yj5Db2RlPC9iPjogPHNwYW4-PC9zcGFuPjwvZGl2PjxkaXY-PGI-U3RhdHVzPC9iPjogPHNwYW4-QWN0aXZlLCBzdGFydGVkIE1hcmNoIDIwMTU8L3NwYW4-PC9kaXY-PGRpdj5JbnN0cnVjdGlvbnM6IFRha2UgMSB0aW1lIHBlciBkYXk8L2Rpdj48L2xpPjwvdWw-PC9kaXY-IgogICAgICAgICAgICAgICAgICAgICAgICB9LAogICAgICAgICAgICAgICAgICAgICAgICAiZW50cnkiOiBbCiAgICAgICAgICAgICAgICAgICAgICAgICAgICB7CiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgInJlZmVyZW5jZSI6ICJ1cm46dXVpZDplMTI3MWVmZC0xOGZmLTQ2NTQtOWVlNy00NWY0MDAxOWM0NTMiCiAgICAgICAgICAgICAgICAgICAgICAgICAgICB9CiAgICAgICAgICAgICAgICAgICAgICAgIF0KICAgICAgICAgICAgICAgICAgICB9LAogICAgICAgICAgICAgICAgICAgIHsKICAgICAgICAgICAgICAgICAgICAgICAgInRpdGxlIjogIkFsbGVyZ2llcyBhbmQgSW50b2xlcmFuY2VzIiwKICAgICAgICAgICAgICAgICAgICAgICAgImNvZGUiOiB7CiAgICAgICAgICAgICAgICAgICAgICAgICAgICAiY29kaW5nIjogWwogICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIHsKICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgInN5c3RlbSI6ICJodHRwOi8vbG9pbmMub3JnIiwKICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgImNvZGUiOiAiNDg3NjUtMiIsCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICJkaXNwbGF5IjogIkFsbGVyZ2llcyBhbmQgYWR2ZXJzZSByZWFjdGlvbnMgRG9jdW1lbnQiCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgfQogICAgICAgICAgICAgICAgICAgICAgICAgICAgXQogICAgICAgICAgICAgICAgICAgICAgICB9LAogICAgICAgICAgICAgICAgICAgICAgICAidGV4dCI6IHsKICAgICAgICAgICAgICAgICAgICAgICAgICAgICJzdGF0dXMiOiAiZ2VuZXJhdGVkIiwKICAgICAgICAgICAgICAgICAgICAgICAgICAgICJkaXYiOiAiPGRpdiB4bWxucz1cImh0dHA6Ly93d3cudzMub3JnLzE5OTkveGh0bWxcIj48dWw-PGxpPjxkaXY-PGI-QWxsZXJneSBOYW1lPC9iPjogUGVuY2lsbGluczwvZGl2PjxkaXY-PGI-VmVyaWZpY2F0aW9uIFN0YXR1czwvYj46IENvbmZpcm1lZDwvZGl2PjxkaXY-PGI-UmVhY3Rpb248L2I-OiA8c3Bhbj5ubyBpbmZvcm1hdGlvbjwvc3Bhbj48L2Rpdj48L2xpPjwvdWw-PC9kaXY-IgogICAgICAgICAgICAgICAgICAgICAgICB9LAogICAgICAgICAgICAgICAgICAgICAgICAiZW50cnkiOiBbCiAgICAgICAgICAgICAgICAgICAgICAgICAgICB7CiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgInJlZmVyZW5jZSI6ICJ1cm46dXVpZDo3NDg2MTMxNi1mNjlkLTQ2NTItOWZiMS04NTEyYTIwYzc5MjciCiAgICAgICAgICAgICAgICAgICAgICAgICAgICB9CiAgICAgICAgICAgICAgICAgICAgICAgIF0KICAgICAgICAgICAgICAgICAgICB9CiAgICAgICAgICAgICAgICBdCiAgICAgICAgICAgIH0KICAgICAgICB9LAogICAgICAgIHsKICAgICAgICAgICAgImZ1bGxVcmwiOiAidXJuOnV1aWQ6MjQ0YWQ3YzMtYmVlYi00MWQxLThhMmYtYzc2YjhjZjcyMGFkIiwKICAgICAgICAgICAgInJlc291cmNlIjogewogICAgICAgICAgICAgICAgInJlc291cmNlVHlwZSI6ICJQYXRpZW50IiwKICAgICAgICAgICAgICAgICJpZCI6ICIyNDRhZDdjMy1iZWViLTQxZDEtOGEyZi1jNzZiOGNmNzIwYWQiLAogICAgICAgICAgICAgICAgIm5hbWUiOiBbCiAgICAgICAgICAgICAgICAgICAgewogICAgICAgICAgICAgICAgICAgICAgICAiZmFtaWx5IjogIkRlTGFyb3NhIiwKICAgICAgICAgICAgICAgICAgICAgICAgImdpdmVuIjogWwogICAgICAgICAgICAgICAgICAgICAgICAgICAgIk1hcnRoYSIKICAgICAgICAgICAgICAgICAgICAgICAgXQogICAgICAgICAgICAgICAgICAgIH0KICAgICAgICAgICAgICAgIF0KICAgICAgICAgICAgfQogICAgICAgIH0sCiAgICAgICAgewogICAgICAgICAgICAiZnVsbFVybCI6ICJ1cm46dXVpZDo0NTI3MWY3Zi02M2FiLTQ5NDYtOTcwZi0zZGFhYWEwNjYzN2YiLAogICAgICAgICAgICAicmVzb3VyY2UiOiB7CiAgICAgICAgICAgICAgICAicmVzb3VyY2VUeXBlIjogIlByYWN0aXRpb25lciIsCiAgICAgICAgICAgICAgICAiaWQiOiAiNDUyNzFmN2YtNjNhYi00OTQ2LTk3MGYtM2RhYWFhMDY2MzdmIiwKICAgICAgICAgICAgICAgICJuYW1lIjogWwogICAgICAgICAgICAgICAgICAgIHsKICAgICAgICAgICAgICAgICAgICAgICAgImZhbWlseSI6ICJ2YW4gSHVscCIsCiAgICAgICAgICAgICAgICAgICAgICAgICJnaXZlbiI6IFsKICAgICAgICAgICAgICAgICAgICAgICAgICAgICJCZWV0amUiCiAgICAgICAgICAgICAgICAgICAgICAgIF0KICAgICAgICAgICAgICAgICAgICB9CiAgICAgICAgICAgICAgICBdCiAgICAgICAgICAgIH0KICAgICAgICB9LAogICAgICAgIHsKICAgICAgICAgICAgImZ1bGxVcmwiOiAidXJuOnV1aWQ6ZDE3OTMyMWUtYzA5MS00Y2Q0LTg2NDItM2EyNzUzN2Q1MDZkIiwKICAgICAgICAgICAgInJlc291cmNlIjogewogICAgICAgICAgICAgICAgInJlc291cmNlVHlwZSI6ICJDb25kaXRpb24iLAogICAgICAgICAgICAgICAgImlkIjogImQxNzkzMjFlLWMwOTEtNGNkNC04NjQyLTNhMjc1MzdkNTA2ZCIsCiAgICAgICAgICAgICAgICAiY29kZSI6IHsKICAgICAgICAgICAgICAgICAgICAiY29kaW5nIjogWwogICAgICAgICAgICAgICAgICAgICAgICB7CiAgICAgICAgICAgICAgICAgICAgICAgICAgICAic3lzdGVtIjogImh0dHA6Ly9zbm9tZWQuaW5mby9zY3QiLAogICAgICAgICAgICAgICAgICAgICAgICAgICAgImNvZGUiOiAiMTk4NDM2MDA4IiwKICAgICAgICAgICAgICAgICAgICAgICAgICAgICJkaXNwbGF5IjogIk1lbm9wYXVzYWwgZmx1c2hpbmcgKGZpbmRpbmcpIgogICAgICAgICAgICAgICAgICAgICAgICB9CiAgICAgICAgICAgICAgICAgICAgXQogICAgICAgICAgICAgICAgfSwKICAgICAgICAgICAgICAgICJzdWJqZWN0IjogewogICAgICAgICAgICAgICAgICAgICJyZWZlcmVuY2UiOiAidXJuOnV1aWQ6MjQ0YWQ3YzMtYmVlYi00MWQxLThhMmYtYzc2YjhjZjcyMGFkIgogICAgICAgICAgICAgICAgfQogICAgICAgICAgICB9CiAgICAgICAgfSwKICAgICAgICB7CiAgICAgICAgICAgICJmdWxsVXJsIjogInVybjp1dWlkOmUxMjcxZWZkLTE4ZmYtNDY1NC05ZWU3LTQ1ZjQwMDE5YzQ1MyIsCiAgICAgICAgICAgICJyZXNvdXJjZSI6IHsKICAgICAgICAgICAgICAgICJyZXNvdXJjZVR5cGUiOiAiTWVkaWNhdGlvblN0YXRlbWVudCIsCiAgICAgICAgICAgICAgICAiaWQiOiAiZTEyNzFlZmQtMThmZi00NjU0LTllZTctNDVmNDAwMTljNDUzIiwKICAgICAgICAgICAgICAgICJzdGF0dXMiOiAiYWN0aXZlIiwKICAgICAgICAgICAgICAgICJtZWRpY2F0aW9uUmVmZXJlbmNlIjogewogICAgICAgICAgICAgICAgICAgICJyZWZlcmVuY2UiOiAidXJuOnV1aWQ6OTVkYjdjOTItNTY2YS00ZGVkLTg5NmItMjIyMGFiMjQ0YTllIgogICAgICAgICAgICAgICAgfSwKICAgICAgICAgICAgICAgICJzdWJqZWN0IjogewogICAgICAgICAgICAgICAgICAgICJyZWZlcmVuY2UiOiAidXJuOnV1aWQ6MjQ0YWQ3YzMtYmVlYi00MWQxLThhMmYtYzc2YjhjZjcyMGFkIgogICAgICAgICAgICAgICAgfSwKICAgICAgICAgICAgICAgICJlZmZlY3RpdmVQZXJpb2QiOiB7CiAgICAgICAgICAgICAgICAgICAgInN0YXJ0IjogIjIwMTUtMDMiCiAgICAgICAgICAgICAgICB9CiAgICAgICAgICAgIH0KICAgICAgICB9LAogICAgICAgIHsKICAgICAgICAgICAgImZ1bGxVcmwiOiAidXJuOnV1aWQ6OTVkYjdjOTItNTY2YS00ZGVkLTg5NmItMjIyMGFiMjQ0YTllIiwKICAgICAgICAgICAgInJlc291cmNlIjogewogICAgICAgICAgICAgICAgInJlc291cmNlVHlwZSI6ICJNZWRpY2F0aW9uIiwKICAgICAgICAgICAgICAgICJpZCI6ICI5NWRiN2M5Mi01NjZhLTRkZWQtODk2Yi0yMjIwYWIyNDRhOWUiLAogICAgICAgICAgICAgICAgImNvZGUiOiB7CiAgICAgICAgICAgICAgICAgICAgImNvZGluZyI6IFsKICAgICAgICAgICAgICAgICAgICAgICAgewogICAgICAgICAgICAgICAgICAgICAgICAgICAgInN5c3RlbSI6ICJodHRwOi8vc25vbWVkLmluZm8vc2N0IiwKICAgICAgICAgICAgICAgICAgICAgICAgICAgICJjb2RlIjogIjEwODc3NDAwMCIsCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAiZGlzcGxheSI6ICJQcm9kdWN0IGNvbnRhaW5pbmcgYW5hc3Ryb3pvbGUgKG1lZGljaW5hbCBwcm9kdWN0KSIKICAgICAgICAgICAgICAgICAgICAgICAgfQogICAgICAgICAgICAgICAgICAgIF0KICAgICAgICAgICAgICAgIH0KICAgICAgICAgICAgfQogICAgICAgIH0sCiAgICAgICAgewogICAgICAgICAgICAiZnVsbFVybCI6ICJ1cm46dXVpZDo3NDg2MTMxNi1mNjlkLTQ2NTItOWZiMS04NTEyYTIwYzc5MjciLAogICAgICAgICAgICAicmVzb3VyY2UiOiB7CiAgICAgICAgICAgICAgICAicmVzb3VyY2VUeXBlIjogIkFsbGVyZ3lJbnRvbGVyYW5jZSIsCiAgICAgICAgICAgICAgICAiaWQiOiAiNzQ4NjEzMTYtZjY5ZC00NjUyLTlmYjEtODUxMmEyMGM3OTI3IiwKICAgICAgICAgICAgICAgICJjbGluaWNhbFN0YXR1cyI6IHsKICAgICAgICAgICAgICAgICAgICAiY29kaW5nIjogWwogICAgICAgICAgICAgICAgICAgICAgICB7CiAgICAgICAgICAgICAgICAgICAgICAgICAgICAic3lzdGVtIjogImh0dHA6Ly90ZXJtaW5vbG9neS5obDcub3JnL0NvZGVTeXN0ZW0vYWxsZXJneWludG9sZXJhbmNlLWNsaW5pY2FsIiwKICAgICAgICAgICAgICAgICAgICAgICAgICAgICJjb2RlIjogImFjdGl2ZSIKICAgICAgICAgICAgICAgICAgICAgICAgfQogICAgICAgICAgICAgICAgICAgIF0KICAgICAgICAgICAgICAgIH0sCiAgICAgICAgICAgICAgICAiY29kZSI6IHsKICAgICAgICAgICAgICAgICAgICAiY29kaW5nIjogWwogICAgICAgICAgICAgICAgICAgICAgICB7CiAgICAgICAgICAgICAgICAgICAgICAgICAgICAic3lzdGVtIjogImh0dHA6Ly9zbm9tZWQuaW5mby9zY3QiLAogICAgICAgICAgICAgICAgICAgICAgICAgICAgImNvZGUiOiAiMzczMjcwMDA0IiwKICAgICAgICAgICAgICAgICAgICAgICAgICAgICJkaXNwbGF5IjogIlN1YnN0YW5jZSB3aXRoIHBlbmljaWxsaW4gc3RydWN0dXJlIGFuZCBhbnRpYmFjdGVyaWFsIG1lY2hhbmlzbSBvZiBhY3Rpb24gKHN1YnN0YW5jZSkiCiAgICAgICAgICAgICAgICAgICAgICAgIH0KICAgICAgICAgICAgICAgICAgICBdCiAgICAgICAgICAgICAgICB9LAogICAgICAgICAgICAgICAgInBhdGllbnQiOiB7CiAgICAgICAgICAgICAgICAgICAgInJlZmVyZW5jZSI6ICJ1cm46dXVpZDoyNDRhZDdjMy1iZWViLTQxZDEtOGEyZi1jNzZiOGNmNzIwYWQiCiAgICAgICAgICAgICAgICB9CiAgICAgICAgICAgIH0KICAgICAgICB9CiAgICBdCn0&profile=http%3A%2F%2Fhl7.org%2Ffhir%2Fuv%2Fips%2FStructureDefinition%2FBundle-uv-ips&doNative=false&hintAboutNonMustSupport=false&recursive=false&showMessagesFromReferences=true&doDebug=false&assumeValidRestReferences=false&canDoNative=false&noExtensibleBindingMessages=false&noUnicodeBiDiControlChars=false&noInvariants=false&displayIssuesAreWarnings=true&wantInvariantsInMessages=false&doImplicitFHIRPathStringConversion=false&txServer=http%3A%2F%2Flocalhost%3A8080%2Fmatchboxv3%2Ffhir&txServerCache=true&txUseEcosystem=true&fhirVersion=4.0.1&securityChecks=false&crumbTrails=false&forPublication=false&showMessageIds=false&showTerminologyRouting=false&clearTxCache=false&allowExampleUrls=true&locale=en&jurisdiction=urn%3Aiso%3Astd%3Aiso%3A3166%23US&checkIpsCodes=false&checkReferences=false&disableDefaultResourceFetcher=true)
+The validation parameter `showMessagesFromReferences` brings the missing `Patient.birthDate` directly up into the error message; it is set by default since version 4.0.2: [validate with the parameter](https://test.ahdis.ch/matchboxv3/validate#resource=ewogICAgInJlc291cmNlVHlwZSI6ICJCdW5kbGUiLAogICAgImlkZW50aWZpZXIiOiB7CiAgICAgICAgInN5c3RlbSI6ICJ1cm46b2lkOjIuMTYuNzI0LjQuOC4xMC4yMDAuMTAiLAogICAgICAgICJ2YWx1ZSI6ICIyOGI5NTgxNS03NmNlLTQ1N2ItYjdhZS1hOTcyZTUyN2RiNDAiCiAgICB9LAogICAgInR5cGUiOiAiZG9jdW1lbnQiLAogICAgInRpbWVzdGFtcCI6ICIyMDIwLTEyLTExVDE0OjMwOjAwKzAxOjAwIiwKICAgICJlbnRyeSI6IFsKICAgICAgICB7CiAgICAgICAgICAgICJmdWxsVXJsIjogInVybjp1dWlkOmY0MGIwN2UzLTM3ZTgtNDhjMy1iZjFjLWFlNzBmZTEyZGFiMCIsCiAgICAgICAgICAgICJyZXNvdXJjZSI6IHsKICAgICAgICAgICAgICAgICJyZXNvdXJjZVR5cGUiOiAiQ29tcG9zaXRpb24iLAogICAgICAgICAgICAgICAgImlkIjogImY0MGIwN2UzLTM3ZTgtNDhjMy1iZjFjLWFlNzBmZTEyZGFiMCIsCiAgICAgICAgICAgICAgICAic3RhdHVzIjogImZpbmFsIiwKICAgICAgICAgICAgICAgICJ0eXBlIjogewogICAgICAgICAgICAgICAgICAgICJjb2RpbmciOiBbCiAgICAgICAgICAgICAgICAgICAgICAgIHsKICAgICAgICAgICAgICAgICAgICAgICAgICAgICJzeXN0ZW0iOiAiaHR0cDovL2xvaW5jLm9yZyIsCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAiY29kZSI6ICI2MDU5MS01IiwKICAgICAgICAgICAgICAgICAgICAgICAgICAgICJkaXNwbGF5IjogIlBhdGllbnQgc3VtbWFyeSBEb2N1bWVudCIKICAgICAgICAgICAgICAgICAgICAgICAgfQogICAgICAgICAgICAgICAgICAgIF0KICAgICAgICAgICAgICAgIH0sCiAgICAgICAgICAgICAgICAic3ViamVjdCI6IHsKICAgICAgICAgICAgICAgICAgICAicmVmZXJlbmNlIjogInVybjp1dWlkOjI0NGFkN2MzLWJlZWItNDFkMS04YTJmLWM3NmI4Y2Y3MjBhZCIKICAgICAgICAgICAgICAgIH0sCiAgICAgICAgICAgICAgICAiZGF0ZSI6ICIyMDIwLTEyLTExVDE0OjMwOjAwKzAxOjAwIiwKICAgICAgICAgICAgICAgICJhdXRob3IiOiBbCiAgICAgICAgICAgICAgICAgICAgewogICAgICAgICAgICAgICAgICAgICAgICAicmVmZXJlbmNlIjogInVybjp1dWlkOjQ1MjcxZjdmLTYzYWItNDk0Ni05NzBmLTNkYWFhYTA2NjM3ZiIKICAgICAgICAgICAgICAgICAgICB9CiAgICAgICAgICAgICAgICBdLAogICAgICAgICAgICAgICAgInRpdGxlIjogIlBhdGllbnQgU3VtbWFyeSBhcyBvZiBEZWNlbWJlciAxMSwgMjAyMCAxNDozMCIsCiAgICAgICAgICAgICAgICAiY29uZmlkZW50aWFsaXR5IjogIk4iLAogICAgICAgICAgICAgICAgInNlY3Rpb24iOiBbCiAgICAgICAgICAgICAgICAgICAgewogICAgICAgICAgICAgICAgICAgICAgICAidGl0bGUiOiAiQWN0aXZlIFByb2JsZW1zIiwKICAgICAgICAgICAgICAgICAgICAgICAgImNvZGUiOiB7CiAgICAgICAgICAgICAgICAgICAgICAgICAgICAiY29kaW5nIjogWwogICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIHsKICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgInN5c3RlbSI6ICJodHRwOi8vbG9pbmMub3JnIiwKICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgImNvZGUiOiAiMTE0NTAtNCIsCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICJkaXNwbGF5IjogIlByb2JsZW0gbGlzdCAtIFJlcG9ydGVkIgogICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIH0KICAgICAgICAgICAgICAgICAgICAgICAgICAgIF0KICAgICAgICAgICAgICAgICAgICAgICAgfSwKICAgICAgICAgICAgICAgICAgICAgICAgInRleHQiOiB7CiAgICAgICAgICAgICAgICAgICAgICAgICAgICAic3RhdHVzIjogImdlbmVyYXRlZCIsCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAiZGl2IjogIjxkaXYgeG1sbnM9XCJodHRwOi8vd3d3LnczLm9yZy8xOTk5L3hodG1sXCI-PHVsPjxsaT48ZGl2PjxiPkNvbmRpdGlvbiBOYW1lPC9iPjogTWVub3BhdXNhbCBGbHVzaGluZzwvZGl2PjxkaXY-PGI-Q29kZTwvYj46IDxzcGFuPjE5ODQzNjAwODwvc3Bhbj48L2Rpdj48ZGl2PjxiPlN0YXR1czwvYj46IDxzcGFuPkFjdGl2ZTwvc3Bhbj48L2Rpdj48L2xpPjwvdWw-PC9kaXY-IgogICAgICAgICAgICAgICAgICAgICAgICB9LAogICAgICAgICAgICAgICAgICAgICAgICAiZW50cnkiOiBbCiAgICAgICAgICAgICAgICAgICAgICAgICAgICB7CiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgInJlZmVyZW5jZSI6ICJ1cm46dXVpZDpkMTc5MzIxZS1jMDkxLTRjZDQtODY0Mi0zYTI3NTM3ZDUwNmQiCiAgICAgICAgICAgICAgICAgICAgICAgICAgICB9CiAgICAgICAgICAgICAgICAgICAgICAgIF0KICAgICAgICAgICAgICAgICAgICB9LAogICAgICAgICAgICAgICAgICAgIHsKICAgICAgICAgICAgICAgICAgICAgICAgInRpdGxlIjogIk1lZGljYXRpb24iLAogICAgICAgICAgICAgICAgICAgICAgICAiY29kZSI6IHsKICAgICAgICAgICAgICAgICAgICAgICAgICAgICJjb2RpbmciOiBbCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgewogICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAic3lzdGVtIjogImh0dHA6Ly9sb2luYy5vcmciLAogICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAiY29kZSI6ICIxMDE2MC0wIiwKICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgImRpc3BsYXkiOiAiSGlzdG9yeSBvZiBNZWRpY2F0aW9uIHVzZSBOYXJyYXRpdmUiCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgfQogICAgICAgICAgICAgICAgICAgICAgICAgICAgXQogICAgICAgICAgICAgICAgICAgICAgICB9LAogICAgICAgICAgICAgICAgICAgICAgICAidGV4dCI6IHsKICAgICAgICAgICAgICAgICAgICAgICAgICAgICJzdGF0dXMiOiAiZ2VuZXJhdGVkIiwKICAgICAgICAgICAgICAgICAgICAgICAgICAgICJkaXYiOiAiPGRpdiB4bWxucz1cImh0dHA6Ly93d3cudzMub3JnLzE5OTkveGh0bWxcIj48dWw-PGxpPjxkaXY-PGI-TWVkaWNhdGlvbiBOYW1lPC9iPjogT3JhbCBhbmFzdHJvem9sZSAxbWcgdGFibGV0PC9kaXY-PGRpdj48Yj5Db2RlPC9iPjogPHNwYW4-PC9zcGFuPjwvZGl2PjxkaXY-PGI-U3RhdHVzPC9iPjogPHNwYW4-QWN0aXZlLCBzdGFydGVkIE1hcmNoIDIwMTU8L3NwYW4-PC9kaXY-PGRpdj5JbnN0cnVjdGlvbnM6IFRha2UgMSB0aW1lIHBlciBkYXk8L2Rpdj48L2xpPjwvdWw-PC9kaXY-IgogICAgICAgICAgICAgICAgICAgICAgICB9LAogICAgICAgICAgICAgICAgICAgICAgICAiZW50cnkiOiBbCiAgICAgICAgICAgICAgICAgICAgICAgICAgICB7CiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgInJlZmVyZW5jZSI6ICJ1cm46dXVpZDplMTI3MWVmZC0xOGZmLTQ2NTQtOWVlNy00NWY0MDAxOWM0NTMiCiAgICAgICAgICAgICAgICAgICAgICAgICAgICB9CiAgICAgICAgICAgICAgICAgICAgICAgIF0KICAgICAgICAgICAgICAgICAgICB9LAogICAgICAgICAgICAgICAgICAgIHsKICAgICAgICAgICAgICAgICAgICAgICAgInRpdGxlIjogIkFsbGVyZ2llcyBhbmQgSW50b2xlcmFuY2VzIiwKICAgICAgICAgICAgICAgICAgICAgICAgImNvZGUiOiB7CiAgICAgICAgICAgICAgICAgICAgICAgICAgICAiY29kaW5nIjogWwogICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIHsKICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgInN5c3RlbSI6ICJodHRwOi8vbG9pbmMub3JnIiwKICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgImNvZGUiOiAiNDg3NjUtMiIsCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICJkaXNwbGF5IjogIkFsbGVyZ2llcyBhbmQgYWR2ZXJzZSByZWFjdGlvbnMgRG9jdW1lbnQiCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgfQogICAgICAgICAgICAgICAgICAgICAgICAgICAgXQogICAgICAgICAgICAgICAgICAgICAgICB9LAogICAgICAgICAgICAgICAgICAgICAgICAidGV4dCI6IHsKICAgICAgICAgICAgICAgICAgICAgICAgICAgICJzdGF0dXMiOiAiZ2VuZXJhdGVkIiwKICAgICAgICAgICAgICAgICAgICAgICAgICAgICJkaXYiOiAiPGRpdiB4bWxucz1cImh0dHA6Ly93d3cudzMub3JnLzE5OTkveGh0bWxcIj48dWw-PGxpPjxkaXY-PGI-QWxsZXJneSBOYW1lPC9iPjogUGVuY2lsbGluczwvZGl2PjxkaXY-PGI-VmVyaWZpY2F0aW9uIFN0YXR1czwvYj46IENvbmZpcm1lZDwvZGl2PjxkaXY-PGI-UmVhY3Rpb248L2I-OiA8c3Bhbj5ubyBpbmZvcm1hdGlvbjwvc3Bhbj48L2Rpdj48L2xpPjwvdWw-PC9kaXY-IgogICAgICAgICAgICAgICAgICAgICAgICB9LAogICAgICAgICAgICAgICAgICAgICAgICAiZW50cnkiOiBbCiAgICAgICAgICAgICAgICAgICAgICAgICAgICB7CiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgInJlZmVyZW5jZSI6ICJ1cm46dXVpZDo3NDg2MTMxNi1mNjlkLTQ2NTItOWZiMS04NTEyYTIwYzc5MjciCiAgICAgICAgICAgICAgICAgICAgICAgICAgICB9CiAgICAgICAgICAgICAgICAgICAgICAgIF0KICAgICAgICAgICAgICAgICAgICB9CiAgICAgICAgICAgICAgICBdCiAgICAgICAgICAgIH0KICAgICAgICB9LAogICAgICAgIHsKICAgICAgICAgICAgImZ1bGxVcmwiOiAidXJuOnV1aWQ6MjQ0YWQ3YzMtYmVlYi00MWQxLThhMmYtYzc2YjhjZjcyMGFkIiwKICAgICAgICAgICAgInJlc291cmNlIjogewogICAgICAgICAgICAgICAgInJlc291cmNlVHlwZSI6ICJQYXRpZW50IiwKICAgICAgICAgICAgICAgICJpZCI6ICIyNDRhZDdjMy1iZWViLTQxZDEtOGEyZi1jNzZiOGNmNzIwYWQiLAogICAgICAgICAgICAgICAgIm5hbWUiOiBbCiAgICAgICAgICAgICAgICAgICAgewogICAgICAgICAgICAgICAgICAgICAgICAiZmFtaWx5IjogIkRlTGFyb3NhIiwKICAgICAgICAgICAgICAgICAgICAgICAgImdpdmVuIjogWwogICAgICAgICAgICAgICAgICAgICAgICAgICAgIk1hcnRoYSIKICAgICAgICAgICAgICAgICAgICAgICAgXQogICAgICAgICAgICAgICAgICAgIH0KICAgICAgICAgICAgICAgIF0KICAgICAgICAgICAgfQogICAgICAgIH0sCiAgICAgICAgewogICAgICAgICAgICAiZnVsbFVybCI6ICJ1cm46dXVpZDo0NTI3MWY3Zi02M2FiLTQ5NDYtOTcwZi0zZGFhYWEwNjYzN2YiLAogICAgICAgICAgICAicmVzb3VyY2UiOiB7CiAgICAgICAgICAgICAgICAicmVzb3VyY2VUeXBlIjogIlByYWN0aXRpb25lciIsCiAgICAgICAgICAgICAgICAiaWQiOiAiNDUyNzFmN2YtNjNhYi00OTQ2LTk3MGYtM2RhYWFhMDY2MzdmIiwKICAgICAgICAgICAgICAgICJuYW1lIjogWwogICAgICAgICAgICAgICAgICAgIHsKICAgICAgICAgICAgICAgICAgICAgICAgImZhbWlseSI6ICJ2YW4gSHVscCIsCiAgICAgICAgICAgICAgICAgICAgICAgICJnaXZlbiI6IFsKICAgICAgICAgICAgICAgICAgICAgICAgICAgICJCZWV0amUiCiAgICAgICAgICAgICAgICAgICAgICAgIF0KICAgICAgICAgICAgICAgICAgICB9CiAgICAgICAgICAgICAgICBdCiAgICAgICAgICAgIH0KICAgICAgICB9LAogICAgICAgIHsKICAgICAgICAgICAgImZ1bGxVcmwiOiAidXJuOnV1aWQ6ZDE3OTMyMWUtYzA5MS00Y2Q0LTg2NDItM2EyNzUzN2Q1MDZkIiwKICAgICAgICAgICAgInJlc291cmNlIjogewogICAgICAgICAgICAgICAgInJlc291cmNlVHlwZSI6ICJDb25kaXRpb24iLAogICAgICAgICAgICAgICAgImlkIjogImQxNzkzMjFlLWMwOTEtNGNkNC04NjQyLTNhMjc1MzdkNTA2ZCIsCiAgICAgICAgICAgICAgICAiY29kZSI6IHsKICAgICAgICAgICAgICAgICAgICAiY29kaW5nIjogWwogICAgICAgICAgICAgICAgICAgICAgICB7CiAgICAgICAgICAgICAgICAgICAgICAgICAgICAic3lzdGVtIjogImh0dHA6Ly9zbm9tZWQuaW5mby9zY3QiLAogICAgICAgICAgICAgICAgICAgICAgICAgICAgImNvZGUiOiAiMTk4NDM2MDA4IiwKICAgICAgICAgICAgICAgICAgICAgICAgICAgICJkaXNwbGF5IjogIk1lbm9wYXVzYWwgZmx1c2hpbmcgKGZpbmRpbmcpIgogICAgICAgICAgICAgICAgICAgICAgICB9CiAgICAgICAgICAgICAgICAgICAgXQogICAgICAgICAgICAgICAgfSwKICAgICAgICAgICAgICAgICJzdWJqZWN0IjogewogICAgICAgICAgICAgICAgICAgICJyZWZlcmVuY2UiOiAidXJuOnV1aWQ6MjQ0YWQ3YzMtYmVlYi00MWQxLThhMmYtYzc2YjhjZjcyMGFkIgogICAgICAgICAgICAgICAgfQogICAgICAgICAgICB9CiAgICAgICAgfSwKICAgICAgICB7CiAgICAgICAgICAgICJmdWxsVXJsIjogInVybjp1dWlkOmUxMjcxZWZkLTE4ZmYtNDY1NC05ZWU3LTQ1ZjQwMDE5YzQ1MyIsCiAgICAgICAgICAgICJyZXNvdXJjZSI6IHsKICAgICAgICAgICAgICAgICJyZXNvdXJjZVR5cGUiOiAiTWVkaWNhdGlvblN0YXRlbWVudCIsCiAgICAgICAgICAgICAgICAiaWQiOiAiZTEyNzFlZmQtMThmZi00NjU0LTllZTctNDVmNDAwMTljNDUzIiwKICAgICAgICAgICAgICAgICJzdGF0dXMiOiAiYWN0aXZlIiwKICAgICAgICAgICAgICAgICJtZWRpY2F0aW9uUmVmZXJlbmNlIjogewogICAgICAgICAgICAgICAgICAgICJyZWZlcmVuY2UiOiAidXJuOnV1aWQ6OTVkYjdjOTItNTY2YS00ZGVkLTg5NmItMjIyMGFiMjQ0YTllIgogICAgICAgICAgICAgICAgfSwKICAgICAgICAgICAgICAgICJzdWJqZWN0IjogewogICAgICAgICAgICAgICAgICAgICJyZWZlcmVuY2UiOiAidXJuOnV1aWQ6MjQ0YWQ3YzMtYmVlYi00MWQxLThhMmYtYzc2YjhjZjcyMGFkIgogICAgICAgICAgICAgICAgfSwKICAgICAgICAgICAgICAgICJlZmZlY3RpdmVQZXJpb2QiOiB7CiAgICAgICAgICAgICAgICAgICAgInN0YXJ0IjogIjIwMTUtMDMiCiAgICAgICAgICAgICAgICB9CiAgICAgICAgICAgIH0KICAgICAgICB9LAogICAgICAgIHsKICAgICAgICAgICAgImZ1bGxVcmwiOiAidXJuOnV1aWQ6OTVkYjdjOTItNTY2YS00ZGVkLTg5NmItMjIyMGFiMjQ0YTllIiwKICAgICAgICAgICAgInJlc291cmNlIjogewogICAgICAgICAgICAgICAgInJlc291cmNlVHlwZSI6ICJNZWRpY2F0aW9uIiwKICAgICAgICAgICAgICAgICJpZCI6ICI5NWRiN2M5Mi01NjZhLTRkZWQtODk2Yi0yMjIwYWIyNDRhOWUiLAogICAgICAgICAgICAgICAgImNvZGUiOiB7CiAgICAgICAgICAgICAgICAgICAgImNvZGluZyI6IFsKICAgICAgICAgICAgICAgICAgICAgICAgewogICAgICAgICAgICAgICAgICAgICAgICAgICAgInN5c3RlbSI6ICJodHRwOi8vc25vbWVkLmluZm8vc2N0IiwKICAgICAgICAgICAgICAgICAgICAgICAgICAgICJjb2RlIjogIjEwODc3NDAwMCIsCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAiZGlzcGxheSI6ICJQcm9kdWN0IGNvbnRhaW5pbmcgYW5hc3Ryb3pvbGUgKG1lZGljaW5hbCBwcm9kdWN0KSIKICAgICAgICAgICAgICAgICAgICAgICAgfQogICAgICAgICAgICAgICAgICAgIF0KICAgICAgICAgICAgICAgIH0KICAgICAgICAgICAgfQogICAgICAgIH0sCiAgICAgICAgewogICAgICAgICAgICAiZnVsbFVybCI6ICJ1cm46dXVpZDo3NDg2MTMxNi1mNjlkLTQ2NTItOWZiMS04NTEyYTIwYzc5MjciLAogICAgICAgICAgICAicmVzb3VyY2UiOiB7CiAgICAgICAgICAgICAgICAicmVzb3VyY2VUeXBlIjogIkFsbGVyZ3lJbnRvbGVyYW5jZSIsCiAgICAgICAgICAgICAgICAiaWQiOiAiNzQ4NjEzMTYtZjY5ZC00NjUyLTlmYjEtODUxMmEyMGM3OTI3IiwKICAgICAgICAgICAgICAgICJjbGluaWNhbFN0YXR1cyI6IHsKICAgICAgICAgICAgICAgICAgICAiY29kaW5nIjogWwogICAgICAgICAgICAgICAgICAgICAgICB7CiAgICAgICAgICAgICAgICAgICAgICAgICAgICAic3lzdGVtIjogImh0dHA6Ly90ZXJtaW5vbG9neS5obDcub3JnL0NvZGVTeXN0ZW0vYWxsZXJneWludG9sZXJhbmNlLWNsaW5pY2FsIiwKICAgICAgICAgICAgICAgICAgICAgICAgICAgICJjb2RlIjogImFjdGl2ZSIKICAgICAgICAgICAgICAgICAgICAgICAgfQogICAgICAgICAgICAgICAgICAgIF0KICAgICAgICAgICAgICAgIH0sCiAgICAgICAgICAgICAgICAiY29kZSI6IHsKICAgICAgICAgICAgICAgICAgICAiY29kaW5nIjogWwogICAgICAgICAgICAgICAgICAgICAgICB7CiAgICAgICAgICAgICAgICAgICAgICAgICAgICAic3lzdGVtIjogImh0dHA6Ly9zbm9tZWQuaW5mby9zY3QiLAogICAgICAgICAgICAgICAgICAgICAgICAgICAgImNvZGUiOiAiMzczMjcwMDA0IiwKICAgICAgICAgICAgICAgICAgICAgICAgICAgICJkaXNwbGF5IjogIlN1YnN0YW5jZSB3aXRoIHBlbmljaWxsaW4gc3RydWN0dXJlIGFuZCBhbnRpYmFjdGVyaWFsIG1lY2hhbmlzbSBvZiBhY3Rpb24gKHN1YnN0YW5jZSkiCiAgICAgICAgICAgICAgICAgICAgICAgIH0KICAgICAgICAgICAgICAgICAgICBdCiAgICAgICAgICAgICAgICB9LAogICAgICAgICAgICAgICAgInBhdGllbnQiOiB7CiAgICAgICAgICAgICAgICAgICAgInJlZmVyZW5jZSI6ICJ1cm46dXVpZDoyNDRhZDdjMy1iZWViLTQxZDEtOGEyZi1jNzZiOGNmNzIwYWQiCiAgICAgICAgICAgICAgICB9CiAgICAgICAgICAgIH0KICAgICAgICB9CiAgICBdCn0&profile=http%3A%2F%2Fhl7.org%2Ffhir%2Fuv%2Fips%2FStructureDefinition%2FBundle-uv-ips&doNative=false&hintAboutNonMustSupport=false&recursive=false&showMessagesFromReferences=true&doDebug=false&assumeValidRestReferences=false&canDoNative=false&noExtensibleBindingMessages=false&noUnicodeBiDiControlChars=false&noInvariants=false&displayIssuesAreWarnings=true&wantInvariantsInMessages=false&doImplicitFHIRPathStringConversion=false&txServer=http%3A%2F%2Flocalhost%3A8080%2Fmatchboxv3%2Ffhir&txServerCache=true&txUseEcosystem=true&fhirVersion=4.0.1&securityChecks=false&crumbTrails=false&forPublication=false&showMessageIds=false&showTerminologyRouting=false&clearTxCache=false&allowExampleUrls=true&locale=en&jurisdiction=urn%3Aiso%3Astd%3Aiso%3A3166%23US&checkIpsCodes=false&checkReferences=false&disableDefaultResourceFetcher=true)

@@ -462,8 +462,15 @@ docker run -d \
 | `README.md` | Project overview |
 | `docs/` | MkDocs documentation |
 | `mkdocs.yml` | Documentation configuration |
-| `docs/validation-tutorial.md` | Validation guide |
-| `docs/api.md` | API documentation |
+| `docs/tutorials/` | Tutorials: lessons to get started |
+| `docs/how-to/` | How-to guides: steps to reach a specific goal |
+| `docs/reference/` | Reference: configuration, FHIR operations, Docker image, Java API |
+| `docs/explanation/` | Explanation: background and design |
+| `docs/changelog.md` | Changelog |
+
+The documentation follows the [Diátaxis](https://diataxis.fr) framework: every page belongs to exactly one of the
+four sections above, and new pages must be added to the `nav` of `mkdocs.yml`. When a page is moved, add a redirect
+from its old address in `mkdocs.yml` (`redirects` plugin).
 
 ## CI/CD Pipeline
 

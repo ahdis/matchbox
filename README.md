@@ -105,7 +105,7 @@ docker run -d --name matchbox -p 8080:8080 -m 4g matchbox
 Setting `JDK_JAVA_OPTIONS` replaces the default, so include a heap setting, `-XX:+ExitOnOutOfMemoryError` and
 `-XX:+UseStringDeduplication`.
 
-See [Running Matchbox in docker](https://ahdis.github.io/matchbox/docker/#jvm-options) for details.
+See [Running Matchbox in docker](https://ahdis.github.io/matchbox/reference/docker-image/#jvm-options) for details.
 
 To dynamically configure run in a kubernetes environment and add a kubernetes config map that provides /config/application.yaml file with implementation guide list like in "with-preload/application.yaml"
 
