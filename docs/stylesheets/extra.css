@@ -52,3 +52,13 @@
   padding: 2px 0.3em;
   margin: 0 0.1em;
 }
+
+html {
+  font-size: 112.5%;
+}
+@media screen and (min-width: 100em) {
+  html { font-size: 125%; }
+}
+@media screen and (min-width: 125em) {
+  html { font-size: 137.5%; }
+}
