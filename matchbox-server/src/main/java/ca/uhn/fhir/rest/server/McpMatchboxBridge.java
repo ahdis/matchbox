@@ -63,7 +63,7 @@ public class McpMatchboxBridge {
   @McpTool(name = "list-fhir-profiles-to-validate-for",
     description = "List FHIR Profiles available for validation.",
     annotations = @McpTool.McpAnnotations(readOnlyHint = true, destructiveHint = false, idempotentHint = true, openWorldHint = false))
-	private McpSchema.CallToolResult getFhirProfilesToValidateFor(
+	public McpSchema.CallToolResult getFhirProfilesToValidateFor(
     @McpToolParam(description = "FHIR resource type list profiles for, if not provided all profiles for all resources and logical models are listed", required = false)
     final @Nullable String resourceType,
     @McpToolParam(description = "package id to list profiles for, if not provided all profiles for the latest ig versions are listed", required = false)
@@ -73,7 +73,7 @@ public class McpMatchboxBridge {
 		var response = new MockHttpServletResponse();
 		arguments.put("resourceType", "OperationDefinition");
 		arguments.put("id", "-s-validate");
-    final var interaction = Interaction.SEARCH;
+    final var interaction = Interaction.READ;
 		var request = new RequestBuilder(restfulServer, arguments, interaction).buildRequest();
 		try {
 			restfulServer.handleRequest(interaction.asRequestType(), request, response);
