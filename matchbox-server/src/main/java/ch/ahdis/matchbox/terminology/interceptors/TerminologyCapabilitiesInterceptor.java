@@ -13,7 +13,7 @@ import org.slf4j.LoggerFactory;
 
 import java.util.List;
 
-import static org.hl7.fhir.r5.terminologies.utilities.TerminologyCache.SystemNameKeyGenerator.*;
+import static org.hl7.fhir.standalone.terminology.utilities.TerminologyCache.SystemNameKeyGenerator.*;
 
 /**
  * An interceptor that provides the terminology capabilities of the server when requested. Otherwise, HAPI sends the

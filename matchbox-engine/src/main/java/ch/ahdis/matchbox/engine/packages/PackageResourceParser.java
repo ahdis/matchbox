@@ -3,11 +3,11 @@ package ch.ahdis.matchbox.engine.packages;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 
-import org.hl7.fhir.convertors.factory.VersionConvertorFactory_30_50;
-import org.hl7.fhir.convertors.factory.VersionConvertorFactory_40_50;
-import org.hl7.fhir.convertors.factory.VersionConvertorFactory_43_50;
+import org.hl7.fhir.convertors.factory.VersionConvertorFactory_30_N;
+import org.hl7.fhir.convertors.factory.VersionConvertorFactory_40_N;
+import org.hl7.fhir.convertors.factory.VersionConvertorFactory_43_N;
 import org.hl7.fhir.exceptions.FHIRException;
-import org.hl7.fhir.r5.model.Resource;
+import org.hl7.fhir.model.core.Resource;
 
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
@@ -45,19 +45,19 @@ public final class PackageResourceParser {
 			throw new FHIRException("Unknown FHIR version of the package");
 		}
 		if (fhirVersion.startsWith("3.0")) {
-			return VersionConvertorFactory_30_50.convertResource(
+			return VersionConvertorFactory_30_N.convertResource(
 				new org.hl7.fhir.dstu3.formats.JsonParser().parse(parseWithoutNarrative(content)));
 		}
 		if (fhirVersion.startsWith("4.0")) {
-			return VersionConvertorFactory_40_50.convertResource(
+			return VersionConvertorFactory_40_N.convertResource(
 				new org.hl7.fhir.r4.formats.JsonParser().parse(parseWithoutNarrative(content)));
 		}
 		if (fhirVersion.startsWith("4.3")) {
-			return VersionConvertorFactory_43_50.convertResource(
+			return VersionConvertorFactory_43_N.convertResource(
 				new org.hl7.fhir.r4b.formats.JsonParser().parse(parseWithoutNarrative(content)));
 		}
 		if (fhirVersion.startsWith("5.0")) {
-			return new org.hl7.fhir.r5.formats.JsonParser().parse(parseWithoutNarrative(content));
+			return new org.hl7.fhir.model.core.formats.JsonParser(org.hl7.fhir.model.ModelContext.fullCoreContext()).parse(parseWithoutNarrative(content));
 		}
 		throw new FHIRException("Unsupported FHIR version " + fhirVersion + " of the package");
 	}

@@ -12,7 +12,7 @@ import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.*;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ActiveProfiles;
@@ -45,6 +45,9 @@ public class GazelleApiR4Test extends AbstractGazelleTest {
 
 	@Autowired
 	private MatchboxEngineSupport matchboxEngineSupport;
+
+	@Value("${hapi.fhir.implementationguides.matchbox_health_test_ig_r4.version}")
+	private String matchboxTestIgVersion;
 
 	@BeforeAll
 	void waitUntilStartup() throws Exception {
@@ -86,7 +89,7 @@ public class GazelleApiR4Test extends AbstractGazelleTest {
 		// A profile from the custom test IG must also be listed, both version-less and versioned
 		final String testIgProfile = "http://matchbox.health/ig/test/r4/StructureDefinition/practitioner-identifier-required";
 		assertTrue(profileIds.contains(testIgProfile));
-		assertTrue(profileIds.contains(testIgProfile + "|0.3.0"));
+		assertTrue(profileIds.contains(testIgProfile + "|" + this.matchboxTestIgVersion));
 		final ValidationProfile testIgValidationProfile = profiles.stream()
 			.filter(profile -> testIgProfile.equals(profile.getProfileID()))
 			.findFirst()
@@ -257,12 +260,12 @@ public class GazelleApiR4Test extends AbstractGazelleTest {
 		String sessionIdFirst = getSessionId(report);
 
 		assertEquals(0, countValidationFailures(report));
-		assertEquals("matchbox.health.test.ig.r4#0.3.0", getIg(report));
+		assertEquals("matchbox.health.test.ig.r4#" + this.matchboxTestIgVersion, getIg(report));
 
-		report = this.client.validate(resource, profileMatchbox + "|0.3.0");
+		report = this.client.validate(resource, profileMatchbox + "|" + this.matchboxTestIgVersion);
 		String sessionIdThird = getSessionId(report);
 		assertEquals(0, countValidationFailures(report));
-		assertEquals("matchbox.health.test.ig.r4#0.3.0", getIg(report));
+		assertEquals("matchbox.health.test.ig.r4#" + this.matchboxTestIgVersion, getIg(report));
 		assertEquals(sessionIdFirst, sessionIdThird);
 
 		// validate with the profile and the ig version, has an internal business
@@ -271,13 +274,13 @@ public class GazelleApiR4Test extends AbstractGazelleTest {
 		report = this.client.validate(resource, profileMatchbox);
 		String sessionIdForth = getSessionId(report);
 		assertEquals(0, countValidationFailures(report));
-		assertEquals("matchbox.health.test.ig.r4#0.3.0", getIg(report));
+		assertEquals("matchbox.health.test.ig.r4#" + this.matchboxTestIgVersion, getIg(report));
 		assertEquals(sessionIdFirst, sessionIdForth);
 
-		report = this.client.validate(resource, profileMatchbox + "|0.3.0");
+		report = this.client.validate(resource, profileMatchbox + "|" + this.matchboxTestIgVersion);
 		String sessionIdFifth = getSessionId(report);
 		assertEquals(0, countValidationFailures(report));
-		assertEquals("matchbox.health.test.ig.r4#0.3.0", getIg(report));
+		assertEquals("matchbox.health.test.ig.r4#" + this.matchboxTestIgVersion, getIg(report));
 		assertEquals(sessionIdFirst, sessionIdFifth);
 	}
 

@@ -1,3 +1,11 @@
 */
 *.jtl
 startup-*.csv
+*.jfr
+profile-*.json
+*.collapsed
+*.agg.tsv
+cpu-*
+profile-*.server.log
+profile-compare.md
+profile-collapsed-compare.md

@@ -1,9 +1,10 @@
 package ch.ahdis.matchbox.engine.tests;
 
+import org.hl7.fhir.model.utilities.formats.FhirFormat;
 import ch.ahdis.matchbox.engine.MatchboxEngine;
 import org.hl7.fhir.r4.model.OperationOutcome;
-import org.hl7.fhir.r5.elementmodel.Manager;
-import org.hl7.fhir.r5.utils.EOperationOutcome;
+import org.hl7.fhir.services.elementmodel.Manager;
+import org.hl7.fhir.model.utilities.EOperationOutcome;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
@@ -47,10 +48,10 @@ class R5ValidationTests {
 	@Test
 	void testValueSetWithSimpleInclude() throws Exception {
 		final String validCareplan = this.careplanRaw.replace("{{INTENT}}", "plan");
-		this.expectValid(validCareplan, Manager.FhirFormat.XML, "http://hl7.org/fhir/StructureDefinition/CarePlan");
+		this.expectValid(validCareplan, FhirFormat.XML, "http://hl7.org/fhir/StructureDefinition/CarePlan");
 
 		final String invalidCareplan = this.careplanRaw.replace("{{INTENT}}", "non-existent-code");
-		final var errors = this.expectInvalid(invalidCareplan, Manager.FhirFormat.XML, "http://hl7" +
+		final var errors = this.expectInvalid(invalidCareplan, FhirFormat.XML, "http://hl7" +
 			".org/fhir/StructureDefinition/CarePlan");
 		assertEquals(2, errors.size());
 		assertTrue(errors.get(0).getDetails().getText().startsWith("The value provided ('non-existent-code') was not found in the value set 'Care Plan Intent' (http://hl7.org/fhir/ValueSet/care-plan-intent|5.0.0)") || errors.get(1).getDetails().getText().startsWith("The value provided ('non-existent-code') was not found in the value set 'Care Plan Intent' (http://hl7.org/fhir/ValueSet/care-plan-intent|5.0.0)") );
@@ -65,10 +66,10 @@ class R5ValidationTests {
 	@Test
 	void testValueSetWithAllFromCodeSystem() throws Exception {
 		final String validMeasure = this.measureRaw.replace("{{STATUS}}", "active");
-		this.expectValid(validMeasure, Manager.FhirFormat.XML, "http://hl7.org/fhir/StructureDefinition/Measure");
+		this.expectValid(validMeasure, FhirFormat.XML, "http://hl7.org/fhir/StructureDefinition/Measure");
 
 		final String invalidMeasure = this.measureRaw.replace("{{STATUS}}", "non-existent-code");
-		final var errors = this.expectInvalid(invalidMeasure, Manager.FhirFormat.XML, "http://hl7.org/fhir/StructureDefinition/Measure");
+		final var errors = this.expectInvalid(invalidMeasure, FhirFormat.XML, "http://hl7.org/fhir/StructureDefinition/Measure");
 		assertEquals(2, errors.size());
 		assertTrue(errors.get(0).getDetails().getText().startsWith("The value provided ('non-existent-code') was not found in the value set 'PublicationStatus'") || errors.get(1).getDetails().getText().startsWith("The value provided ('non-existent-code') was not found in the value set 'PublicationStatus'"));
 	}
@@ -83,7 +84,7 @@ class R5ValidationTests {
 //	@Disabled(value = "No offline expansion yet")
 	void testCodeCorrect() throws Exception {
 		final String validBinary = this.loadSample("code-correct.xml");
-		this.expectValid(validBinary, Manager.FhirFormat.XML, "http://hl7.org/fhir/StructureDefinition/Basic");
+		this.expectValid(validBinary, FhirFormat.XML, "http://hl7.org/fhir/StructureDefinition/Basic");
 	}
 
 	/**
@@ -100,7 +101,7 @@ class R5ValidationTests {
 		final String binaryRaw = this.loadSample("binary.xml");
 
 		final String validBinary = binaryRaw.replace("{{CONTENTTYPE}}", "application/pdf");
-		this.expectValid(validBinary, Manager.FhirFormat.XML, "http://hl7.org/fhir/StructureDefinition/Binary");
+		this.expectValid(validBinary, FhirFormat.XML, "http://hl7.org/fhir/StructureDefinition/Binary");
 	}
 
 	/**
@@ -112,10 +113,10 @@ class R5ValidationTests {
 		final String observationRaw = this.loadSample("observation.xml");
 
 		final String validObservation = observationRaw.replace("{{UNIT}}", "min");
-		this.expectValid(validObservation, Manager.FhirFormat.XML, "http://hl7.org/fhir/StructureDefinition/Observation");
+		this.expectValid(validObservation, FhirFormat.XML, "http://hl7.org/fhir/StructureDefinition/Observation");
 
 		//final String invalidObservation = observationRaw.replace("{{UNIT}}", "non-existent-code");
-		//final var errors = this.expectInvalid(invalidObservation, Manager.FhirFormat.XML, "http://hl7.org/fhir/StructureDefinition/Observation");
+		//final var errors = this.expectInvalid(invalidObservation, FhirFormat.XML, "http://hl7.org/fhir/StructureDefinition/Observation");
 		//assertEquals(1, errors.size());
 	}
 
@@ -142,7 +143,7 @@ class R5ValidationTests {
 	}
 
 	private void expectValid(final String resource,
-									 final Manager.FhirFormat format,
+									 final FhirFormat format,
 									 final String profile) throws EOperationOutcome, IOException {
 		final var response = this.engine.validate(new ByteArrayInputStream(resource.getBytes(StandardCharsets.UTF_8)),
 																format,
@@ -158,7 +159,7 @@ class R5ValidationTests {
 	}
 
 	private List<OperationOutcome.OperationOutcomeIssueComponent> expectInvalid(final String resource,
-																										 final Manager.FhirFormat format,
+																										 final FhirFormat format,
 																										 final String profile) throws EOperationOutcome, IOException {
 		final var response = this.engine.validate(new ByteArrayInputStream(resource.getBytes(StandardCharsets.UTF_8)),
 																format,

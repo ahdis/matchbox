@@ -9,14 +9,16 @@ import ch.ahdis.matchbox.events.MatchboxEventListener;
 import ch.ahdis.matchbox.terminology.MatchboxTxServer;
 import ch.ahdis.matchbox.terminology.RegistryWs;
 import ch.ahdis.matchbox.validation.gazelle.GazelleValidationWs;
+import ch.ahdis.matchbox.validation.itb.ItbFhirPathWs;
+import ch.ahdis.matchbox.validation.itb.ItbIgManagerWs;
+import ch.ahdis.matchbox.validation.itb.ItbValidationWs;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.config.AutowireCapableBeanFactory;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.boot.autoconfigure.elasticsearch.ElasticsearchRestClientAutoConfiguration;
 import org.springframework.boot.builder.SpringApplicationBuilder;
-import org.springframework.boot.web.servlet.ServletComponentScan;
+import org.springframework.boot.web.server.servlet.context.ServletComponentScan;
 import org.springframework.boot.web.servlet.ServletRegistrationBean;
 import org.springframework.boot.web.servlet.support.SpringBootServletInitializer;
 import org.springframework.context.annotation.Bean;
@@ -31,7 +33,7 @@ import ca.uhn.fhir.rest.server.RestfulServer;
 import ch.ahdis.matchbox.config.MatchboxJpaConfig;
 
 @ServletComponentScan(basePackageClasses = {RestfulServer.class})
-@SpringBootApplication(exclude = {ElasticsearchRestClientAutoConfiguration.class})
+@SpringBootApplication
 @Import({
 	MdmConfig.class,
 	MatchboxJpaConfig.class,
@@ -39,6 +41,9 @@ import ch.ahdis.matchbox.config.MatchboxJpaConfig;
   InstallPackageAppCtx.class,
 	MatchboxEventListener.class,
 	GazelleValidationWs.class,
+	ItbValidationWs.class,
+	ItbFhirPathWs.class,
+	ItbIgManagerWs.class,
   RegistryWs.class,
   MatchboxStaticResourceConfig.class,
   McpServerConfig.class,

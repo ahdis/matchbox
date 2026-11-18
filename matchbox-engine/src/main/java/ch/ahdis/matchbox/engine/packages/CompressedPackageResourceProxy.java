@@ -6,15 +6,15 @@ import java.util.zip.Deflater;
 import java.util.zip.Inflater;
 
 import org.hl7.fhir.exceptions.FHIRException;
-import org.hl7.fhir.r5.context.CanonicalResourceManager.CanonicalResourceProxy;
-import org.hl7.fhir.r5.model.CanonicalResource;
-import org.hl7.fhir.r5.model.PackageInformation;
-import org.hl7.fhir.r5.model.Resource;
+import org.hl7.fhir.services.context.CanonicalResourceProxy;
+import org.hl7.fhir.model.core.CanonicalResource;
+import org.hl7.fhir.model.core.PackageInformation;
+import org.hl7.fhir.model.core.Resource;
 import org.hl7.fhir.utilities.npm.NpmPackage.PackageResourceInformation;
 
 /**
  * A conformance resource of a package that is registered in the worker context with the metadata of the package
- * index only, and parsed when it's first used (lazy loading, like core's SimpleWorkerContext.PackageResourceLoader for
+ * index only, and parsed when it's first used (lazy loading, like core's PackageResourceLoader for
  * packages on the filesystem).
  * <p>
  * The packages of the JPA package cache are read into memory, so the proxy keeps the file content itself. It's

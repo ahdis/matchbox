@@ -6,7 +6,7 @@ import ca.uhn.fhir.jpa.model.entity.MbInstalledStructureDefinitionEntity;
 import ca.uhn.fhir.jpa.model.entity.NpmPackageVersionResourceEntity;
 import ca.uhn.fhir.util.FhirTerser;
 import ch.ahdis.matchbox.packages.migrations.MbInstalledStructureDefinitionV1Migration;
-import org.checkerframework.checker.nullness.qual.Nullable;
+import jakarta.annotation.Nullable;
 import org.hl7.fhir.instance.model.api.IBase;
 import org.hl7.fhir.instance.model.api.IBaseResource;
 import org.slf4j.Logger;
@@ -103,9 +103,9 @@ public class MatchboxJpaPackageCache {
 	 */
 	private MbInstalledStructureDefinitionEntity toInstalledStructureDefinitionEntity(
 			final NpmPackageVersionResourceEntity npmPackageVersionResourceEntity,
-			final org.hl7.fhir.r4.model.@Nullable StructureDefinition sdR4,
-			final org.hl7.fhir.r4b.model.@Nullable StructureDefinition sdR4b,
-			final org.hl7.fhir.r5.model.@Nullable StructureDefinition sdR5) {
+			final @Nullable org.hl7.fhir.r4.model.StructureDefinition sdR4,
+			final @Nullable org.hl7.fhir.r4b.model.StructureDefinition sdR4b,
+			final @Nullable org.hl7.fhir.r5.model.StructureDefinition sdR5) {
 		// 1. Extract interesting info
 		final var terser = new FhirTerserWrapper(sdR4, sdR4b, sdR5);
 		var title = terser.getSinglePrimitiveValueOrNull("title");
@@ -157,9 +157,9 @@ public class MatchboxJpaPackageCache {
 	 * </ol>
 	 */
 	private void updateStructureMap(final NpmPackageVersionResourceEntity npmPackageVersionResourceEntity,
-	                                final org.hl7.fhir.r4.model.@Nullable StructureMap smR4,
-	                                final org.hl7.fhir.r4b.model.@Nullable StructureMap smR4b,
-	                                final org.hl7.fhir.r5.model.@Nullable StructureMap smR5) {
+	                                final @Nullable org.hl7.fhir.r4.model.StructureMap smR4,
+	                                final @Nullable org.hl7.fhir.r4b.model.StructureMap smR4b,
+	                                final @Nullable org.hl7.fhir.r5.model.StructureMap smR5) {
 		final var terser = new FhirTerserWrapper(smR4, smR4b, smR5);
 
 		// Change the filename for the StructureDefinition title
@@ -171,9 +171,9 @@ public class MatchboxJpaPackageCache {
 		private final IBase resource;
 		private final FhirTerser terser;
 
-		public FhirTerserWrapper(final org.hl7.fhir.r4.model.@Nullable BaseResource resourceR4,
-										 final org.hl7.fhir.r4b.model.@Nullable BaseResource resourceR4b,
-										 final org.hl7.fhir.r5.model.@Nullable BaseResource resourceR5) {
+		public FhirTerserWrapper(final @Nullable org.hl7.fhir.r4.model.BaseResource resourceR4,
+										 final @Nullable org.hl7.fhir.r4b.model.BaseResource resourceR4b,
+										 final @Nullable org.hl7.fhir.r5.model.BaseResource resourceR5) {
 			if (resourceR4 != null) {
 				this.resource = resourceR4;
 				this.terser = new FhirTerser(FhirContext.forR4Cached());

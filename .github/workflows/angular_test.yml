@@ -3,7 +3,7 @@ name: Test the Angular GUI
 on:
   workflow_dispatch:
   pull_request:
-    branches: [main]
+    branches: [main, matchbox_v5]
 
 jobs:
   test-angular:

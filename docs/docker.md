@@ -53,6 +53,11 @@ container memory and keeps running after an `OutOfMemoryError`. `-Xmx` takes pre
 a fixed `-Xmx` doesn't follow the memory limit of the container: keep it well below the limit, Matchbox also needs a
 substantial amount of memory outside the heap, otherwise the container is killed when it exceeds its limit.
 
+The image always starts the JVM with `-XX:-UseBASE64Intrinsics`, whatever `JDK_JAVA_OPTIONS` is: it turns off the
+hardware-accelerated Base64 decoder, which has the vulnerability CVE-2026-114938 ("Java4Shell", on x86-64 processors
+with AVX-512 VBMI), until the JDK of the image has the fix. Containers of an older image get the same with the
+environment variable `JAVA_TOOL_OPTIONS=-XX:-UseBASE64Intrinsics`.
+
 Arguments given after the image name are passed to Matchbox as Spring Boot arguments, e.g.
 `--matchbox.fhir.context.onlyOneEngine=true`.
 

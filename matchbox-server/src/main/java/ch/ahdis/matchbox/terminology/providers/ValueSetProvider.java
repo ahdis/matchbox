@@ -39,8 +39,7 @@ public class ValueSetProvider extends AbstractMatchboxResourceProvider {
 	private final ValidationSupportContext validationSupportContext;
 	private final TxValidationCache txValidationCache;
 
-	public ValueSetProvider(final FhirContext fhirContext,
-									final TxValidationCache txValidationCache,
+	public ValueSetProvider(final TxValidationCache txValidationCache,
 									final MatchboxFhirVersion matchboxFhirVersion) {
 		super(matchboxFhirVersion,
 				org.hl7.fhir.r4.model.ValueSet.class,
@@ -219,16 +218,15 @@ public class ValueSetProvider extends AbstractMatchboxResourceProvider {
 
 			// Value set is expanded, convert it to R5 for internal use
 			final var baseValueSet = (IDomainResource) result.getValueSet();
-			if (baseValueSet instanceof final org.hl7.fhir.r5.model.ValueSet valueSetR5) {
-				valueSet = valueSetR5;
-			} else if (baseValueSet instanceof final org.hl7.fhir.r4.model.ValueSet valueSetR4) {
-				valueSet = (org.hl7.fhir.r5.model.ValueSet) VersionConvertorFactory_40_50.convertResource(valueSetR4);
-			} else if (baseValueSet instanceof final org.hl7.fhir.r4b.model.ValueSet valueSetR4B) {
-				valueSet = (org.hl7.fhir.r5.model.ValueSet) VersionConvertorFactory_43_50.convertResource(valueSetR4B);
-			} else {
-				throw new MatchboxUnsupportedFhirVersionException("ValueSetCodeValidationProvider",
-																				  baseValueSet.getStructureFhirVersionEnum());
-			}
+			valueSet = switch (baseValueSet) {
+				case final org.hl7.fhir.r5.model.ValueSet valueSetR5 -> valueSetR5;
+				case final ValueSet valueSetR4 ->
+					(org.hl7.fhir.r5.model.ValueSet) VersionConvertorFactory_40_50.convertResource(valueSetR4);
+				case final org.hl7.fhir.r4b.model.ValueSet valueSetR4B ->
+					(org.hl7.fhir.r5.model.ValueSet) VersionConvertorFactory_43_50.convertResource(valueSetR4B);
+				default -> throw new MatchboxUnsupportedFhirVersionException("ValueSetCodeValidationProvider",
+																								 baseValueSet.getStructureFhirVersionEnum());
+			};
 
 			if (valueSet.getExpansion().getContains().isEmpty()) {
 				// The value set expansion is successful but empty
@@ -282,7 +280,7 @@ public class ValueSetProvider extends AbstractMatchboxResourceProvider {
 	 * excluded.
 	 */
 	private CodeMembership evaluateCodeInComposition(final Coding coding,
-																											  final org.hl7.fhir.r5.model.ValueSet.ValueSetComposeComponent compose) {
+																	 final org.hl7.fhir.r5.model.ValueSet.ValueSetComposeComponent compose) {
 		int mayBeIncludedByInclude = 0;
 		for (final var include : compose.getInclude()) {
 			if (include.hasSystem() && !include.getSystem().equals(coding.getSystem())) {

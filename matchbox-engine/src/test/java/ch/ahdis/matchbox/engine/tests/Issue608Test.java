@@ -1,17 +1,19 @@
 package ch.ahdis.matchbox.engine.tests;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.InputStream;
+import java.util.regex.Pattern;
 
-import org.hl7.fhir.r5.context.SimpleWorkerContext;
-import org.hl7.fhir.r5.model.CodeSystem;
-import org.hl7.fhir.r5.model.Enumerations;
-import org.hl7.fhir.r5.model.Resource;
-import org.hl7.fhir.r5.model.StructureDefinition;
+import org.hl7.fhir.standalone.context.SimpleWorkerContext;
+import org.hl7.fhir.model.core.CodeSystem;
+import org.hl7.fhir.model.core.Enumerations;
+import org.hl7.fhir.model.core.Resource;
+import org.hl7.fhir.model.core.StructureDefinition;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 
@@ -33,7 +35,7 @@ import ch.ahdis.matchbox.engine.MatchboxEngine;
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class Issue608Test {
 
-	private static final String TEST_IG = "/matchbox.health.test.ig.r4-0.3.0.tgz";
+	private static final String TEST_IG = "/matchbox.health.test.ig.r4-0.3.1.tgz";
 	private static final String IG_PROFILE_ID = "practitioner-identifier-required";
 	private static final String IG_PROFILE_URL = "http://matchbox.health/ig/test/r4/StructureDefinition/" + IG_PROFILE_ID;
 	// The OID of http://hl7.org/fhir/administrative-gender, known by the main engine
@@ -82,6 +84,27 @@ class Issue608Test {
 
 		assertEquals(knownInMain + 1, this.urlsForOid(igEngine));
 		assertEquals(knownInMain, this.urlsForOid(this.main));
+	}
+
+	/**
+	 * The server clears the suppressed warning/information patterns of an IG engine and adds the ones of the IG; the
+	 * patterns of the main engine and of the other copies must not change.
+	 */
+	@Test
+	void suppressedWarnInfoPatternsOfAnIgEngineAreOnlyItsOwn() throws Exception {
+		this.main.addSuppressedWarnInfo("main");
+		final MatchboxEngine igEngine = new MatchboxEngine(this.main);
+		final MatchboxEngine otherEngine = new MatchboxEngine(this.main);
+		assertTrue(igEngine.getSuppressedWarnInfoPatterns().containsAll(this.main.getSuppressedWarnInfoPatterns()));
+
+		igEngine.getSuppressedWarnInfoPatterns().clear();
+		igEngine.addSuppressedWarnInfo("ig");
+
+		assertEquals(1, igEngine.getSuppressedWarnInfoPatterns().size());
+		for (final MatchboxEngine engine : new MatchboxEngine[]{this.main, otherEngine}) {
+			assertTrue(engine.getSuppressedWarnInfoPatterns().contains(Pattern.quote("main")));
+			assertFalse(engine.getSuppressedWarnInfoPatterns().contains(Pattern.quote("ig")));
+		}
 	}
 
 	private int urlsForOid(final MatchboxEngine engine) {

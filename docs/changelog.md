@@ -1,5 +1,173 @@
+2026/11/18 Release 5.0.0-rc6
+
+Includes the changes of 5.0.0-rc5, 5.0.0-rc4, 5.0.0-rc3, 5.0.0-rc2 and 5.0.0-rc1, see below.
+
+- Docker image: start the JVM with `-XX:-UseBASE64Intrinsics`, the mitigation of CVE-2026-114938 ("Java4Shell", a heap
+  overflow in the hardware-accelerated Base64 decoder of the JDK on x86-64 processors with AVX-512 VBMI), until the JDK
+  of the base image is fixed. The option is set in the entrypoint, so it also applies when `JDK_JAVA_OPTIONS` is
+  replaced. Containers of an older image get the same with the environment variable
+  `JAVA_TOOL_OPTIONS=-XX:-UseBASE64Intrinsics`
+- ci: Trivy doesn't search the registry for SBOM attestations of the image anymore, Docker Hub refuses the request for
+  the image built in the workflow and the scan failed
+
+2026/11/16 Release 5.0.0-rc5
+
+Includes the changes of 5.0.0-rc4, 5.0.0-rc3, 5.0.0-rc2 and 5.0.0-rc1, see below.
+
+- Add the ITB (GITB REST) processing services `FHIRPathProcessor` under `[server]/itb/fhirPath` (operation `evaluate`:
+  evaluates a FHIRPath expression on a FHIR resource) and `IGManager` under `[server]/itb/igManager` (operation
+  `loadIG`: confirms an installed package, or installs it from the package registry unless the server is
+  `httpReadOnly`), with `GET getModuleDefinition`, `POST process`, `POST beginTransaction` and `POST endTransaction`.
+  They follow the contract of the HL7 validator's ITB services (hapifhir/org.hl7.fhir.core#2615), so test suites
+  written for it, as the EU Health Data API tests, can call matchbox
+  ([#681](https://github.com/ahdis/matchbox/issues/681))
+
+2026/11/15 Release 5.0.0-rc4
+
+Includes the changes of 5.0.0-rc3, 5.0.0-rc2 and 5.0.0-rc1, see below.
+
+- Add the ITB (GITB REST) validation service `FHIRValidator` under `[server]/itb/fhir`, so the Interoperability Test Bed
+  (ITB 1.30.0 or later, with `handlerApiType="REST"`) can validate FHIR resources with matchbox: `GET
+  getModuleDefinition` and `POST validate`, which returns a TAR report. It follows the contract of the HL7 validator's
+  ITB services (hapifhir/org.hl7.fhir.core#2615). The types of the GITB REST API come from
+  `eu.europa.ec.itb:gitb-types-model` 1.30.3 ([#589](https://github.com/ahdis/matchbox/issues/589))
+- Add the validation parameters `bpWarnings` and `resourceIdRule`
+  ([#589](https://github.com/ahdis/matchbox/issues/589))
+- `$validate`, the Gazelle API and the ITB API share their validation logic (`ValidationHelper`). For a profile that
+  no engine knows, `$validate` now answers "Validation for profile '...' not supported by this validator instance",
+  like the Gazelle API ([#589](https://github.com/ahdis/matchbox/issues/589))
+- Upgrade to FHIR Core [7.0.5](https://github.com/hapifhir/org.hl7.fhir.core/releases/tag/7.0.5) (from 7.0.2, see
+  also [7.0.3](https://github.com/hapifhir/org.hl7.fhir.core/releases/tag/7.0.3) and
+  [7.0.4](https://github.com/hapifhir/org.hl7.fhir.core/releases/tag/7.0.4)), e.g. terminology content of both
+  `hl7.terminology` and a core package (a reference that names a core version gets it), global and only one version
+  of a CodeSystem supplement, reserved code spaces, `-level` applied to all messages, whitespace-only values,
+  `conformsTo()` with an implementation guide and the FHIRPath document functions, `contentReferenceProfile` and
+  reslicing in snapshot generation, the invariants of an expanded `contentReference` (`Composition.section.section`).
+  The matchbox patches were merged with a three-way merge, `StructureMap.StructureMapModelMode` of the R6 model is now
+  `StructureMapModelModeVS`
+- Upgrade to FHIR Core [7.0.6](https://github.com/hapifhir/org.hl7.fhir.core/releases/tag/7.0.6)
+  [#677](https://github.com/ahdis/matchbox/issues/677), e.g. new checks: an empty JSON array of a primitive element,
+  a coding without a version for a code system with `versionNeeded`, Observations that don't fit the properties of
+  their LOINC code (units, time aspect, scale), SNOMED CT codes that don't fit where they are used (an error for a
+  medication code that isn't a medication), refuted negations (Condition, AllergyIntolerance); terminology: an
+  unknown code system is asked for once per run, `$subsumes` answers are cached, recovery when the terminology server
+  lost its cache, the ecosystem only sends requests to servers known to support the code system, LOINC answer list
+  value sets are sent by their implicit url, the language of a value set no longer leaks to the next validation.
+  The matchbox patches were merged with a three-way merge, `parseAndClose(InputStream)` of the R4B, R5 and R6
+  parsers is removed (not used by matchbox or HAPI FHIR, there is a new `parseFile`)
+- Without a terminology server, inferring the system of a code from a value set failed since FHIR Core 7.0.5 when
+  the value set includes a code system that isn't known, also if the include lists its codes, e.g. the UCUM units of
+  `http://hl7.org/fhir/ValueSet/units-of-time` (`Timing.repeat.periodUnit`): such an include is used again (matchbox
+  patch of `ValueSetValidator`)
+- The terminology ecosystem (tx-reg, which routes the requests for a code system to the server that knows it, e.g.
+  the Swiss SNOMED CT edition to tx.fhir.ch) is only used with `https://tx.fhir.org` since FHIR Core 7.0.4: with the
+  `http://tx.fhir.org` of the matchbox configurations, codes of the Swiss SNOMED CT edition failed. matchbox uses the
+  HL7 ecosystem (`https://ecosystem.hl7.org/tx-reg`) for `http://tx.fhir.org` too, and none for other terminology
+  servers (`MatchboxEngine.getTxEcosystem`)
+
+2026/11/06 Release 5.0.0-rc3
+
+Includes the changes of 5.0.0-rc2 and 5.0.0-rc1, see below.
+
+- Docker image rebuilt to fix CVE-2026-109518 (HIGH) in `apt` and `libapt-pkg6.0` of the Debian 12 base image
+  (fixed in apt 2.6.2), found by the scheduled Trivy scan of `matchbox:v5.0.0-rc2`
+- Release workflow: builds the Docker image and scans it with Trivy before the tag and the release are created, a
+  HIGH or CRITICAL vulnerability with a fix stops the release before anything is published
+
+2026/10/29 Release 5.0.0-rc2
+
+Includes the changes of 5.0.0-rc1, see below.
+
+- JMeter runbook: ch-elm 1.15.6 on the published `matchbox:v4.1.21` and `v5.0.0-rc1` images, 5.0.0-rc1 validates 2.1×
+  faster (median 43–44 vs 90–91 ms) with the same OperationOutcome; how to pull the images without credentials, see
+  `jmeter/claude-jmeter-check.md`
+- Searching ValueSets (`GET [base]/ValueSet`) in the `onlyOneEngine` mode failed with "This context is configured to
+  not allow Iterating ValueSet resources due to performance concerns"
+  ([#663](https://github.com/ahdis/matchbox/issues/663)). The search of conformance resources in this mode now loads
+  only the resources of the requested page (sorted by URL and version) instead of all resources of the type
+- The `onlyOneEngine` mode exposes the NamingSystems of the main engine (`GET [base]/NamingSystem`), e.g. to debug the
+  OID to URI mapping of `http://hl7.org/fhir/ConceptMap/special-oid2uri` in transformations
+  ([#664](https://github.com/ahdis/matchbox/issues/664))
+- Upgrade Guava to 33.7.2 to fix CVE-2026-102554 (HAPI FHIR brought 33.2.1 into `matchbox-server`, FHIR Core 32.0.1
+  into `matchbox-engine`), the version is now set in the root `pom.xml`. `graphql-java` is excluded, it shades Guava
+  32.1.2 and GraphQL isn't enabled in matchbox. The nullness annotations of `checker-qual`, which Guava doesn't bring
+  in anymore since 33.4.5, are replaced by `jakarta.annotation` (#669). Thanks @reva!
+- Security checks: Trivy no longer searches Rekor (sigstore) for SBOM attestations of the Docker image (#657). The
+  Maven dependencies are downloaded once (with the HAPI FHIR build from GitHub Packages) and shared with the CodeQL and
+  Trivy jobs, Trivy reads the dependencies from this local Maven repository, uses the `mirror.gcr.io` databases and
+  prints its results to the action log (#661)
+
+2026/10/20 Release 5.0.0-rc1
+
+- Validation is about twice as fast for profiles whose invariants resolve canonical resources, e.g. the ConceptMaps
+  of ch-elm (`'http://fhir.ch/ig/ch-elm/ConceptMap/…'.resolve()`): `MatchboxEngine` keeps the resources it converted
+  to the element model for `resolve()` instead of converting them on every call (ch-elm: 14 times per validation,
+  45% of the CPU time), the suppressed warning patterns are compiled once and matched without a parallel stream, and
+  the OID registry is loaded once instead of for every validation. The ch-elm load test (`jmeter/memory.jmx`) takes
+  45 instead of 95–102 ms per validation (median). A validation fetches each URL that FHIRPath expressions resolve
+  once (through the fetch cache of the validation, as references already were); each engine keeps the last 100
+  converted resources (`matchbox.fhir.context.fetchCacheSize`, `0` to keep none)
+- Upgrade to Spring Boot 4.0.8 and Spring Framework 7.0.9 to fix `spring-webmvc`
+  [CVE-2026-47884](https://github.com/ahdis/matchbox/security/dependabot/420), with Hibernate ORM 7.2, Jakarta EE 11
+  and JUnit 6. HAPI FHIR is a build of [hapifhir/hapi-fhir#8189](https://github.com/hapifhir/hapi-fhir/pull/8189)
+  (Spring Boot 4 support) until it is released, published as `8.13.15-pr8189-1` to the
+  [GitHub Packages](https://github.com/orgs/ahdis/packages?repo_name=matchbox) of matchbox: building matchbox needs a
+  GitHub token with `read:packages` in the Maven settings (server `github`). The overridden HAPI classes (`JpaConfig`,
+  `TermReadSvcImpl`, `JpaPackageCache`, `PackageLoaderSvc`) were updated to it, the `JsonParser` override was removed
+  (#625 is fixed in HAPI)
+- While HAPI FHIR is such a build, `matchbox-engine` isn't published to Maven Central (its users couldn't resolve
+  HAPI FHIR): the release workflow only starts the Maven Central workflow with a released HAPI FHIR version (`X.Y.Z`)
+- Matchbox runs on Tomcat instead of Undertow (Spring Boot 4 dropped the support for Undertow). The
+  `server.undertow.max-http-post-size` setting isn't needed anymore, Tomcat doesn't limit the size of FHIR request
+  bodies
+- Upgrade Tomcat from 11.0.24 to 11.0.27 to fix the authentication and security constraint bypasses
+  [CVE-2026-65182](https://github.com/ahdis/matchbox/security/code-scanning/529),
+  [CVE-2026-65905](https://github.com/ahdis/matchbox/security/code-scanning/530) and
+  [CVE-2026-68525](https://github.com/ahdis/matchbox/security/code-scanning/531)
+- Loading packages from `http(s)` URLs follows redirects with the redirect handling of HAPI FHIR (#75), which also
+  supports a package URL allow-list (`IPackageUrlAllowListProvider`, all URLs are allowed by default). Without an
+  allow-list HAPI FHIR would disable the SSRF protection of the core library for the whole JVM: matchbox keeps it as
+  configured with `matchbox.fhir.context.ssrfProtectionEnabled`
+- The Gazelle validation API uses the Jackson 3 mapper of Spring Boot
+- Upgrade org.hl7.fhir.core from 6.10.4 to [7.0.1](https://github.com/hapifhir/org.hl7.fhir.core/releases/tag/7.0.1):
+  the validator, the FHIR mapping language and the worker context are based on the versionless R6 modules
+  (`org.hl7.fhir.model`, `org.hl7.fhir.services`, `org.hl7.fhir.standalone`) instead of `org.hl7.fhir.r5`. The
+  matchbox patches of the r5 classes are applied to their R6 counterparts (see `updatehapi.sh`), the ones fixed in
+  7.0.1 were dropped (#538 copy of the master definitions and packages, #609, #618 memory-only terminology cache, the
+  `name[x]` and xhtml handling of `Element.setProperty`). The API of `MatchboxEngine` uses the R6 model
+  (`org.hl7.fhir.model.core`, `StructureMap` is `org.hl7.fhir.model.fml.StructureMap`), with overloads for the HAPI R5
+  model (`addCanonicalResource`, `createSnapshot`) and `R6Model` to convert between them. `parseMapR6` and
+  `getStructureDefinitionR6` return the R6 model, `parseMapR5` and `getStructureDefinitionR5` still the HAPI R5
+  model. `createSnapshot` adds the snapshot to the StructureDefinition it is given for the HAPI R4 and R5 models too
+  (it returned a new instance). `useTxCacheFolder(folder)` and `disableTxCache()` replace `initTxCache(folder)`,
+  which is deprecated: the terminology cache of a context is in memory before. HAPI FHIR is still built
+  with org.hl7.fhir.core 6: matchbox overrides `HapiWorkerContext` (DSTU3, R4, R4B, R5) and
+  `WorkerContextValidationSupportAdapter`, because `ILoggingService` moved to `org.hl7.fhir.utilities.logging`
+- Upgrade org.hl7.fhir.core to [7.0.2](https://github.com/hapifhir/org.hl7.fhir.core/releases/tag/7.0.2)
+  (performance improvements, snapshot generation and FHIRPath fixes, the Bundle and ConceptMap renderer fixes
+  contributed by matchbox). The matchbox patches were merged with the changes of 7.0.2, the copy of the resource
+  indexes per type of a worker context (#608) was dropped: 7.0.2 copies `allResourcesById` and `allResourcesByUrl`
+  itself. The `TermReadSvcImpl` override is adapted to the version convertors, which no longer track the conversion
+  path. A scan of the HAPI FHIR jars found no references to classes or members that 7.0.2 removed
+- A `MatchboxEngine` created from another one shared its suppressed warning/information patterns with it: the engine
+  for an IG cleared and replaced the suppressed warnings of all engines (`matchbox.fhir.context.suppressWarnInfo`), it
+  now has its own copy. Creating the engine for an IG also cleared the suppressed errors of the main engine
+  (`matchbox.fhir.context.suppressError`)
+- `HttpRequestWrapper` converts the resources of a search result without a parallel stream (ForkJoinPool overhead)
+- `Bundle/$get-profiles` (and the MCP tool `get-profiles-for-document-bundle`) matches the profiles of a document
+  with any of the type codings of its Composition, not only the first one, and with any of the codings of its
+  categories (a profile without a fixed category matches any categories, or none). A fixed category is only used
+  if it's mandatory (`Composition.category` and, for a fixed Coding, `Composition.category.coding` with a minimum
+  of 1): a profile with an optional fixed category also matches documents without a category
+
 2026/10/xx Release 4.1.22
 
+- Add the ITB (GITB REST) validation service `FHIRValidator` under `[server]/itb/fhir`, so the Interoperability Test Bed
+  1.30.0 can validate FHIR resources with matchbox; it follows the contract of the HL7 validator's ITB services
+  (hapifhir/org.hl7.fhir.core#2615) (#589). The types of the GITB REST API come from
+  `eu.europa.ec.itb:gitb-types-model` 1.30.3
+- Add the validation parameters `bpWarnings` and `resourceIdRule` (#589)
+- Share the validation logic of `$validate`, the Gazelle API and the ITB API (#589)
 - Remove the duplicate `opentelemetry-spring-boot-starter` entry in the `dependencyManagement` of the root `pom.xml`,
   which the Maven version of the GitHub runners rejects ("'dependencyManagement.dependencies.dependency' must be
   unique")

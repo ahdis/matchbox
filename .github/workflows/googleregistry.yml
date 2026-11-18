@@ -16,9 +16,14 @@ jobs:
   setup-build-publish-deploy:
     name: Setup, Build, Publish, and Deploy
     runs-on: ubuntu-latest
+    env:
+      # Read the HAPI FHIR build from GitHub Packages, see the 'github' repository in pom.xml
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      MAVEN_ARGS: --global-settings ${{ github.workspace }}/.github/maven-settings.xml
     environment: production
 
     permissions:
+      packages: read # HAPI FHIR from GitHub Packages
       contents: read
       id-token: write
       security-events: write

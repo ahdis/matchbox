@@ -18,18 +18,16 @@ public class HttpReadOnlyInterceptor {
 	public boolean incomingRequestPostProcessed(final RequestDetails theRequestDetails)
 		throws ForbiddenOperationException {
 
-		switch (theRequestDetails.getRestOperationType()) {
-			case CREATE, DELETE, UPDATE, PATCH, UPDATE_REWRITE_HISTORY,
-				TRANSACTION, BATCH,
-				ADD_TAGS, DELETE_TAGS,
-				META_ADD, META_DELETE:
-				throw new ForbiddenOperationException("This server is read-only");
-			default:
+		return switch (theRequestDetails.getRestOperationType()) {
+			case CREATE, DELETE, UPDATE, PATCH, UPDATE_REWRITE_HISTORY, TRANSACTION, BATCH, ADD_TAGS, DELETE_TAGS,
+			     META_ADD, META_DELETE -> throw new ForbiddenOperationException("This server is read-only");
+			default ->
 				// Everything else is authorized
-		}
-		// $validate is EXTENDED_OPERATION_TYPE, with theRequestDetails.getOperation() = '$validate'
-		// Same for $transform
+				// $validate is EXTENDED_OPERATION_TYPE, with theRequestDetails.getOperation() = '$validate'
+				// Same for $transform
 
-		return true;
+				true;
+		};
+
 	}
 }

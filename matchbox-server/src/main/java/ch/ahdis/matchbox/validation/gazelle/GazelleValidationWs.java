@@ -5,24 +5,23 @@ import ca.uhn.fhir.jpa.model.entity.MbInstalledStructureDefinitionEntity;
 import ca.uhn.fhir.rest.api.EncodingEnum;
 import ca.uhn.fhir.util.StopWatch;
 import ch.ahdis.matchbox.util.metrics.MatchboxMetrics;
-import ch.ahdis.matchbox.validation.ValidationProvider;
+import ch.ahdis.matchbox.validation.ValidationHelper;
 import ch.ahdis.matchbox.CliContext;
 import ch.ahdis.matchbox.util.MatchboxEngineSupport;
 import ch.ahdis.matchbox.engine.MatchboxEngine;
 import ch.ahdis.matchbox.engine.cli.VersionUtil;
-import ch.ahdis.matchbox.engine.exception.MatchboxEngineCreationException;
 import ch.ahdis.matchbox.validation.gazelle.models.metadata.Interface;
 import ch.ahdis.matchbox.validation.gazelle.models.metadata.RestBinding;
 import ch.ahdis.matchbox.validation.gazelle.models.metadata.Service;
 import ch.ahdis.matchbox.validation.gazelle.models.validation.*;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.commons.codec.digest.DigestUtils;
-import org.hl7.fhir.r5.model.StructureDefinition;
+import org.hl7.fhir.model.core.StructureDefinition;
 import org.hl7.fhir.utilities.validation.ValidationMessage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import tools.jackson.core.JacksonException;
+import tools.jackson.databind.json.JsonMapper;
 import org.springframework.http.CacheControl;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -78,6 +77,8 @@ public class GazelleValidationWs {
 
 	private final MatchboxEngineSupport matchboxEngineSupport;
 
+	private final ValidationHelper validationHelper;
+
 	private final Optional<MatchboxMetrics> matchboxMetrics;;
 
 	private final MbInstalledStructureDefinitionRepository installedStructureDefinitionRepository;
@@ -88,14 +89,16 @@ public class GazelleValidationWs {
 	private final GazelleApiV1Mapper v1Mapper;
 
 	// The mapper used by Spring for the v2 responses, to serialize the profile list exactly as it is sent
-	private final ObjectMapper objectMapper;
+	private final JsonMapper objectMapper;
 
 	public GazelleValidationWs(final MatchboxEngineSupport matchboxEngineSupport,
+										final ValidationHelper validationHelper,
 										final CliContext baseCliContext,
 										final Optional<MatchboxMetrics> matchboxMetrics,
 										final MbInstalledStructureDefinitionRepository installedStructureDefinitionRepository,
-										final ObjectMapper objectMapper) {
+										final JsonMapper objectMapper) {
 		this.matchboxEngineSupport = Objects.requireNonNull(matchboxEngineSupport);
+		this.validationHelper = Objects.requireNonNull(validationHelper);
 		this.baseCliContext = Objects.requireNonNull(baseCliContext);
 		this.matchboxMetrics = Objects.requireNonNull(matchboxMetrics);
 		this.installedStructureDefinitionRepository = Objects.requireNonNull(installedStructureDefinitionRepository);
@@ -107,7 +110,7 @@ public class GazelleValidationWs {
 	 * Returns the metadata of the validation service.
 	 */
 	@GetMapping(path = METADATA_PATH, produces = MediaType.APPLICATION_JSON_VALUE)
-	public ResponseEntity<String> getMetadata(final HttpServletRequest request) throws JsonProcessingException {
+	public ResponseEntity<String> getMetadata(final HttpServletRequest request) {
 		final var service = new Service();
 		service.setName("Matchbox");
 		service.setVersion(VersionUtil.getVersion());
@@ -148,7 +151,7 @@ public class GazelleValidationWs {
 	 * Returns the list of profiles supported by this server (v1).
 	 */
 	@GetMapping(path = V1_PROFILES_PATH, produces = MediaType.APPLICATION_JSON_VALUE)
-	public ResponseEntity<String> getProfilesV1(final WebRequest webRequest) throws JsonProcessingException {
+	public ResponseEntity<String> getProfilesV1(final WebRequest webRequest) {
 		return profileListResponse(this.v1Mapper.write(this.getProfiles()), webRequest);
 	}
 
@@ -157,11 +160,11 @@ public class GazelleValidationWs {
 	 */
 	@PostMapping(path = V1_VALIDATE_PATH, consumes = MediaType.APPLICATION_JSON_VALUE, produces =
 		MediaType.APPLICATION_JSON_VALUE)
-	public ResponseEntity<String> postValidateV1(@RequestBody final String body) throws JsonProcessingException {
+	public ResponseEntity<String> postValidateV1(@RequestBody final String body) {
 		final ValidationRequest validationRequest;
 		try {
 			validationRequest = this.v1Mapper.readRequest(body);
-		} catch (final JsonProcessingException exception) {
+		} catch (final JacksonException exception) {
 			return jsonResponse(HttpStatus.BAD_REQUEST, "{\"error\":\"Invalid validation request\"}");
 		}
 		final String requestError = checkRequest(validationRequest, "validationItems");
@@ -200,7 +203,7 @@ public class GazelleValidationWs {
 	 * Returns the list of profiles supported by this server (v2).
 	 */
 	@GetMapping(path = V2_PROFILES_PATH, produces = MediaType.APPLICATION_JSON_VALUE)
-	public ResponseEntity<String> getProfilesV2(final WebRequest webRequest) throws JsonProcessingException {
+	public ResponseEntity<String> getProfilesV2(final WebRequest webRequest) {
 		return profileListResponse(this.objectMapper.writeValueAsString(this.getProfiles()), webRequest);
 	}
 
@@ -298,8 +301,6 @@ public class GazelleValidationWs {
 		report.setReports(new ArrayList<>(validationRequest.getInputs().size()));
 		report.setDisclaimer("Matchbox disclaims");
 
-		String profileCanonical = validationRequest.getValidationProfileId();
-
 		// Response: create the validation method now, with the info we already have
 		final var method = new ValidationMethod();
 		method.setValidationProfileID(validationRequest.getValidationProfileId());
@@ -309,20 +310,15 @@ public class GazelleValidationWs {
 		report.setValidationMethod(method);
 
 		// Split the profile ID to get the specified version, if any
-		final int versionSeparator = profileCanonical.lastIndexOf('|');
-		if (versionSeparator != -1) {
-			final String version = profileCanonical.substring(versionSeparator + 1);
-			profileCanonical = profileCanonical.substring(0, versionSeparator);
-			method.setValidationProfileVersion(version);
-		} else {
-			method.setValidationProfileVersion("not determined yet");
-		}
+		final var profileReference = ValidationHelper.ProfileReference.parse(validationRequest.getValidationProfileId());
+		final String profileCanonical = profileReference.canonical();
+		method.setValidationProfileVersion(Objects.requireNonNullElse(profileReference.version(), "not determined yet"));
 
 		// Get the Matchbox engine for the requested profile
 		final MatchboxEngine engine;
 		try {
-			engine = this.getEngine(validationRequest.getValidationProfileId(), profileCanonical, cliContext);
-		} catch (final EngineNotInitializedException exception) {
+			engine = this.validationHelper.getEngine(validationRequest.getValidationProfileId(), cliContext, false);
+		} catch (final ValidationHelper.EngineNotInitializedException exception) {
 			// The engine may be ready later: answer with a well-formed report and a retryable status
 			report.addValidationSubReport(unexpectedError(exception.getMessage()));
 			return ValidationOutcome.unavailable(updateReportFields(report));
@@ -330,7 +326,7 @@ public class GazelleValidationWs {
 			report.addValidationSubReport(unexpectedError(exception.getMessage()));
 			return ValidationOutcome.ok(updateReportFields(report));
 		}
-		final StructureDefinition structDef = engine.getStructureDefinitionR5(profileCanonical);
+		final StructureDefinition structDef = engine.getStructureDefinitionR6(profileCanonical);
 
 		// Response: update the validation method
 		method.setValidationProfileVersion(structDef.getVersion());
@@ -421,52 +417,6 @@ public class GazelleValidationWs {
 	}
 
 	/**
-	 * Retrieves the Matchbox engine for the given profile.
-	 */
-	MatchboxEngine getEngine(final String canonicalWithVersion,
-									 final String canonical,
-									 final CliContext cliContext) {
-		final MatchboxEngine engine;
-		try {
-			engine = this.matchboxEngineSupport.getMatchboxEngine(canonicalWithVersion, cliContext, true, false);
-		} catch (final Exception e) {
-			log.error("Error while initializing the validation engine", e);
-			throw new MatchboxEngineCreationException("Error while initializing the validation engine: %s".formatted(e.getMessage()), e);
-		}
-		if (engine == null || engine.getStructureDefinitionR5(canonical) == null) {
-			// A reload may have been started in the meantime: the profile is then not unknown, the engine is only not
-			// ready yet, and the same request may succeed later.
-			this.requireInitializedEngine();
-			throw new MatchboxEngineCreationException(
-				"Validation for profile '%s' not supported by this validator instance".formatted(canonicalWithVersion));
-		}
-		this.requireInitializedEngine();
-		return engine;
-	}
-
-	/**
-	 * Throws if the validation engine is not (yet) initialized.
-	 *
-	 * @throws EngineNotInitializedException if the engine is not initialized.
-	 */
-	private void requireInitializedEngine() {
-		if (!this.matchboxEngineSupport.isInitialized()) {
-			throw new EngineNotInitializedException("Validation engine not initialized, please try again");
-		}
-	}
-
-	/**
-	 * Thrown when the validation engine is not (yet) initialized, i.e. during startup or while an implementation guide
-	 * is being (re)loaded. Unlike the other failures of {@link #getEngine(String, String, CliContext)}, the same
-	 * request may succeed later, so it is answered with a {@code 503} and a {@code Retry-After} header.
-	 */
-	static class EngineNotInitializedException extends RuntimeException {
-		EngineNotInitializedException(final String message) {
-			super(message);
-		}
-	}
-
-	/**
 	 * Performs the validation of the given item with the given engine.
 	 */
 	ValidationSubReport validateItem(final MatchboxEngine engine,
@@ -478,7 +428,7 @@ public class GazelleValidationWs {
 		final var subReport = new ValidationSubReport();
 		subReport.setName("Validation of item #%s".formatted(item.getItemId() != null ? item.getItemId() : item.getId()));
 		try {
-			final var messages = ValidationProvider.doValidate(engine, content, encoding, profile);
+			final var messages = ValidationHelper.doValidate(engine, content, encoding, profile);
 			messages.stream()
 				.map(message -> this.convertMessageToReport(message, engine, item.getId()))
 				.forEach(subReport::addAssertionReport);

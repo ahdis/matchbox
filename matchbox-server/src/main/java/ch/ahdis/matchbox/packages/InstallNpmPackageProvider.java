@@ -6,7 +6,7 @@ import ca.uhn.fhir.rest.annotation.Operation;
 import ca.uhn.fhir.rest.annotation.OperationParam;
 import ch.ahdis.matchbox.util.MatchboxPackageInstallerImpl;
 import jakarta.servlet.http.HttpServletRequest;
-import org.checkerframework.checker.nullness.qual.NonNull;
+import jakarta.annotation.Nonnull;
 import org.hl7.fhir.instance.model.api.IBaseOperationOutcome;
 import org.hl7.fhir.r4.model.OperationOutcome;
 import org.hl7.fhir.r4.model.StringType;
@@ -75,7 +75,7 @@ public class InstallNpmPackageProvider {
 		return oo;
 	}
 
-	private OperationOutcome getOoForError(final @NonNull String message) {
+	private OperationOutcome getOoForError(final @Nonnull String message) {
 		final var oo = new OperationOutcome();
 		final var issue = oo.addIssue();
 		issue.setSeverity(OperationOutcome.IssueSeverity.ERROR);

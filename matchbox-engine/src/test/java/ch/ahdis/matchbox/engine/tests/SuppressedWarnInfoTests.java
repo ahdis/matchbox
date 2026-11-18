@@ -1,8 +1,9 @@
 package ch.ahdis.matchbox.engine.tests;
 
+import org.hl7.fhir.model.utilities.formats.FhirFormat;
 import ch.ahdis.matchbox.engine.MatchboxEngine;
 import org.hl7.fhir.r4.model.OperationOutcome;
-import org.hl7.fhir.r5.elementmodel.Manager;
+import org.hl7.fhir.services.elementmodel.Manager;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 
@@ -38,7 +39,7 @@ class SuppressedWarnInfoTests {
 	void testNoSuppressedWarning() throws Exception {
 		this.engine.getSuppressedWarnInfoPatterns().clear();
 		final var oo = this.engine.validate(new ByteArrayInputStream(this.resource),
-														Manager.FhirFormat.XML,
+														FhirFormat.XML,
 														"http://hl7.org/fhir/StructureDefinition/Measure");
 
 		assertEquals(2, oo.getIssue().size());
@@ -51,7 +52,7 @@ class SuppressedWarnInfoTests {
 		this.engine.getSuppressedWarnInfoPatterns().clear();
 		this.engine.addSuppressedWarnInfo(WARN1);
 		final var oo = this.engine.validate(new ByteArrayInputStream(this.resource),
-														Manager.FhirFormat.XML,
+														FhirFormat.XML,
 														"http://hl7.org/fhir/StructureDefinition/Measure");
 
 		assertEquals(1, oo.getIssue().size());
@@ -63,7 +64,7 @@ class SuppressedWarnInfoTests {
 		this.engine.getSuppressedWarnInfoPatterns().clear();
 		this.engine.addSuppressedWarnInfoPattern("Constraint failed: dom-6");
 		final var oo = this.engine.validate(new ByteArrayInputStream(this.resource),
-														Manager.FhirFormat.XML,
+														FhirFormat.XML,
 														"http://hl7.org/fhir/StructureDefinition/Measure");
 
 		assertEquals(1, oo.getIssue().size());
@@ -75,7 +76,7 @@ class SuppressedWarnInfoTests {
 		this.engine.getSuppressedWarnInfoPatterns().clear();
 		this.engine.addSuppressedWarnInfoPattern(".+");
 		final var oo = this.engine.validate(new ByteArrayInputStream(this.resource),
-														Manager.FhirFormat.XML,
+														FhirFormat.XML,
 														"http://hl7.org/fhir/StructureDefinition/Measure");
 
 		assertEquals(0, oo.getIssue().size());

@@ -60,6 +60,8 @@ export class IgsComponent {
   registryVersions: PackageVersion[] = [];
   // The installed packages, as 'packageId#version'
   installedPackages = new Set<string>();
+  // The packages being installed, as 'packageId#version'
+  installingPackages = new Set<string>();
 
   constructor(
     data: FhirConfigService,
@@ -102,7 +104,19 @@ export class IgsComponent {
   }
 
   hasInstalledVersion(packageId: string): boolean {
-    for (const installed of this.installedPackages) {
+    return IgsComponent.hasVersion(this.installedPackages, packageId);
+  }
+
+  isInstalling(packageId: string, version: string): boolean {
+    return this.installingPackages.has(packageId + '#' + version);
+  }
+
+  hasInstallingVersion(packageId: string): boolean {
+    return IgsComponent.hasVersion(this.installingPackages, packageId);
+  }
+
+  private static hasVersion(packages: Set<string>, packageId: string): boolean {
+    for (const installed of packages) {
       if (installed.startsWith(packageId + '#')) {
         return true;
       }
@@ -144,7 +158,6 @@ export class IgsComponent {
           this.operationResult = OperationResult.fromMatchboxError(error.message);
         }
       });
-    this.update = false;
   }
 
   get hasPreviousPage(): boolean {
@@ -223,7 +236,8 @@ export class IgsComponent {
 
   installPackage(packageId: string, version: string, url: string) {
     this.errorMessage = null;
-    this.update = true;
+    const installing = packageId + '#' + version;
+    this.installingPackages.add(installing);
 
     this.client
       .create({
@@ -255,7 +269,9 @@ export class IgsComponent {
         } else {
           this.operationResult = OperationResult.fromMatchboxError(error.message);
         }
-        this.update = false;
+      })
+      .finally(() => {
+        this.installingPackages.delete(installing);
       });
   }
 
@@ -299,18 +315,20 @@ export class IgsComponent {
         } else {
           this.operationResult = OperationResult.fromMatchboxError(error.message);
         }
+      })
+      .finally(() => {
         this.update = false;
       });
   }
 
   onDelete() {
     this.errorMessage = null;
-    this.update = true;
     if (!this.selection) {
       this.errorMessage = 'No Implementation Guide selected';
       return;
     }
 
+    this.update = true;
     const selection = this.selection;
     this.client
       .delete({
@@ -337,6 +355,8 @@ export class IgsComponent {
         } else {
           this.operationResult = OperationResult.fromMatchboxError(error.message);
         }
+      })
+      .finally(() => {
         this.update = false;
       });
   }
