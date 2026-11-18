@@ -7,6 +7,8 @@ Includes the changes of 5.0.0-rc5, 5.0.0-rc4, 5.0.0-rc3, 5.0.0-rc2 and 5.0.0-rc1
   of the base image is fixed. The option is set in the entrypoint, so it also applies when `JDK_JAVA_OPTIONS` is
   replaced. Containers of an older image get the same with the environment variable
   `JAVA_TOOL_OPTIONS=-XX:-UseBASE64Intrinsics`
+- ci: Trivy doesn't search the registry for SBOM attestations of the image anymore, Docker Hub refuses the request for
+  the image built in the workflow and the scan failed
 
 2026/11/16 Release 5.0.0-rc5
 

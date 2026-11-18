@@ -7,10 +7,9 @@ scan:
     - misconfig
   skip-dirs:
     - /matchbox-frontend/node_modules
-  # Only the SBOM attestations of the image in its registry: Rekor (sigstore) is searched for each artifact of the
-  # image, which took the image scan over its timeout (262 searches of ~8 s, the matchbox jars have none)
-  sbom-sources:
-    - oci
+  # No search for SBOM attestations (sbom-sources): the images have none. Rekor (sigstore) is searched for each artifact
+  # of the image, which took the image scan over its timeout (262 searches of ~8 s), and the registry (oci) is asked
+  # for the image built in the workflow as docker.io/library/matchbox, which Docker Hub refuses (401) and fails the scan
 vulnerability:
   ignore-unfixed: false
 pkg:
