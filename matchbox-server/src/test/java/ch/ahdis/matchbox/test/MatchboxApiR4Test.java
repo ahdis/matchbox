@@ -6,12 +6,14 @@ import ca.uhn.fhir.context.RuntimeResourceDefinition;
 import ca.uhn.fhir.jpa.dao.data.MbInstalledStructureDefinitionRepository;
 import ca.uhn.fhir.jpa.packages.IHapiPackageCacheManager;
 import ca.uhn.fhir.jpa.starter.Application;
+import ca.uhn.fhir.rest.server.McpMatchboxBridge;
 import ch.ahdis.matchbox.engine.MatchboxEngine;
 import ch.ahdis.matchbox.util.MatchboxEngineSupport;
 import ch.ahdis.matchbox.validation.gazelle.models.validation.Input;
 import ch.ahdis.matchbox.validation.gazelle.models.validation.ValidationReport;
 import ch.ahdis.matchbox.validation.gazelle.models.validation.ValidationRequest;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import io.modelcontextprotocol.spec.McpSchema;
 import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
 import org.apache.commons.compress.archivers.tar.TarArchiveOutputStream;
 import org.apache.commons.compress.compressors.gzip.GzipCompressorOutputStream;
@@ -74,6 +76,9 @@ class MatchboxApiR4Test {
 	@Autowired
 	private IHapiPackageCacheManager packageCacheManager;
 
+	@Autowired
+	private McpMatchboxBridge mcpMatchboxBridge;
+
 	@BeforeAll
 	void waitUntilStartup() throws Exception {
 		ServerStartup.awaitServerReady(TARGET_SERVER, this.matchboxEngineSupport);
@@ -86,6 +91,34 @@ class MatchboxApiR4Test {
 		this.installedStructureDefinitionRepository = null;
 		this.matchboxEngineSupport = null;
 		this.packageCacheManager = null;
+		this.mcpMatchboxBridge = null;
+	}
+
+	/**
+	 * The MCP tool 'list-fhir-profiles-to-validate-for' used to issue a SEARCH on OperationDefinition and always
+	 * failed with HTTP 400 (https://github.com/ahdis/matchbox/issues/686).
+	 */
+	@Test
+	void mcpListFhirProfilesToValidateFor() {
+		McpSchema.CallToolResult result = this.mcpMatchboxBridge.getFhirProfilesToValidateFor(null, null);
+		assertNotEquals(Boolean.TRUE, result.isError(), () -> textOf(result));
+		assertTrue(textOf(result).contains("http://hl7.org/fhir/StructureDefinition/Patient"));
+
+		McpSchema.CallToolResult filtered = this.mcpMatchboxBridge.getFhirProfilesToValidateFor("Patient", "hl7.fhir.r4.core");
+		assertNotEquals(Boolean.TRUE, filtered.isError(), () -> textOf(filtered));
+		String filteredText = textOf(filtered);
+		assertTrue(filteredText.contains("http://hl7.org/fhir/StructureDefinition/Patient"));
+		assertFalse(filteredText.contains("http://hl7.org/fhir/StructureDefinition/Practitioner\""));
+	}
+
+	private static String textOf(McpSchema.CallToolResult result) {
+		StringBuilder sb = new StringBuilder();
+		for (McpSchema.Content content : result.content()) {
+			if (content instanceof McpSchema.TextContent textContent) {
+				sb.append(textContent.text());
+			}
+		}
+		return sb.toString();
 	}
 
 	@Test
