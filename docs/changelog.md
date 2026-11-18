@@ -1,3 +1,13 @@
+2026/11/xx Release 5.0.0-rc6
+
+Includes the changes of 5.0.0-rc5, 5.0.0-rc4, 5.0.0-rc3, 5.0.0-rc2 and 5.0.0-rc1, see below.
+
+- Docker image: start the JVM with `-XX:-UseBASE64Intrinsics`, the mitigation of CVE-2026-114938 ("Java4Shell", a heap
+  overflow in the hardware-accelerated Base64 decoder of the JDK on x86-64 processors with AVX-512 VBMI), until the JDK
+  of the base image is fixed. The option is set in the entrypoint, so it also applies when `JDK_JAVA_OPTIONS` is
+  replaced. Containers of an older image get the same with the environment variable
+  `JAVA_TOOL_OPTIONS=-XX:-UseBASE64Intrinsics`
+
 2026/11/16 Release 5.0.0-rc5
 
 Includes the changes of 5.0.0-rc4, 5.0.0-rc3, 5.0.0-rc2 and 5.0.0-rc1, see below.
