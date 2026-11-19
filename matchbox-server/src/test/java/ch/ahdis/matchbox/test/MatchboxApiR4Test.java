@@ -53,7 +53,7 @@ import java.util.concurrent.TimeUnit;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-@SpringBootTest(webEnvironment = WebEnvironment.DEFINED_PORT)
+@SpringBootTest(webEnvironment = WebEnvironment.DEFINED_PORT, properties = "spring.ai.mcp.server.enabled=true")
 @ContextConfiguration(classes = {Application.class})
 @ActiveProfiles({"tests", "test-r4"})
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
