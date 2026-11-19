@@ -25,6 +25,9 @@
 - The `onlyOneEngine` mode exposes the NamingSystems of the main engine (`GET [base]/NamingSystem`), e.g. to debug the
   OID to URI mapping of `http://hl7.org/fhir/ConceptMap/special-oid2uri` in transformations
   ([#664](https://github.com/ahdis/matchbox/issues/664))
+- MCP: the tool `list-fhir-profiles-to-validate-for` always failed with HTTP 400 ("does not know how to handle GET
+  operation[OperationDefinition]"), it now reads the OperationDefinition of `$validate` instead of searching for it
+  ([#686](https://github.com/ahdis/matchbox/issues/686))
 
 2026/10/05 Release 4.1.21
 
