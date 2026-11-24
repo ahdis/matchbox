@@ -59,8 +59,8 @@ New APIs
 
 Security
 
-- Docker image: the JVM starts with `-XX:-UseBASE64Intrinsics`, the mitigation of CVE-2026-114938 ("Java4Shell"), and
-  the base image is rebuilt for CVE-2026-109518 (`apt`)
+- Docker image: the base image is the latest Java 25 JRE, containing the mitigation of CVE-2026-114938 ("Java4Shell")
+  and CVE-2026-109518 (`apt`).
 - Tomcat 11.0.27 fixes [CVE-2026-65182](https://github.com/ahdis/matchbox/security/code-scanning/529),
   [CVE-2026-65905](https://github.com/ahdis/matchbox/security/code-scanning/530) and
   [CVE-2026-68525](https://github.com/ahdis/matchbox/security/code-scanning/531), Guava 33.7.2 fixes CVE-2026-102554
