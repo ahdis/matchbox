@@ -4,6 +4,36 @@ Some validation issues are known and not relevant for your use case (e.g. a warn
 itself). This guide shows how to remove them from the validation results. Suppressed issues are configured per
 implementation guide, with an optional version.
 
+## Choose the implementation guide
+
+The suppressed issues are listed under the package of an implementation guide, which can be given with or without a
+version:
+
+- `name#version` (e.g. `hl7.fhir.r4.core#4.0.1`): the issues are suppressed only when this version of the guide is
+  used;
+- `name` (e.g. `ch.fhir.ig.ch-elm`): the issues are suppressed whatever the version of the guide, so the configuration
+  doesn't have to be changed when a new version of the guide is installed.
+
+Both can be used for the same guide: the issues listed under the name and those listed under the name with the
+version of the guide are all suppressed.
+
+```yaml
+matchbox:
+  fhir:
+    context:
+      suppressWarnInfo:
+        ch.fhir.ig.ch-elm:          # all the versions of CH ELM
+          - "regex:Binding for path (.+) has no source, so can't be checked"
+        ch.fhir.ig.ch-elm#1.4.0:    # only version 1.4.0
+          - "Constraint failed: dom-6:"
+```
+
+The issues of a guide are suppressed in every validation that uses it, also as a dependency: the issues listed under
+`hl7.fhir.r4.core#4.0.1` are suppressed in all the validations against R4 guides. With
+[`onlyOneEngine`](../explanation/validation-engines.md#only-one-engine), all the issues of the configuration are
+suppressed, whatever the guide. If the `$validate` request gives its own suppressed issues (parameters `suppressWarnInfos`
+and `suppressErrors`), the configuration is not used for that validation.
+
 ## Suppress warnings and information messages
 
 List the messages in `matchbox.fhir.context.suppressWarnInfo`:

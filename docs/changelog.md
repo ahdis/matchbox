@@ -76,8 +76,7 @@ Other
   ([#686](https://github.com/ahdis/matchbox/issues/686))
 - Documentation: reorganized according to the [Diátaxis](https://diataxis.fr) framework into tutorials, how-to
   guides, reference and explanation. The existing pages were split and moved (the old addresses redirect to the new
-  ones, with `mkdocs-redirects`), new tutorials were added, and skeleton pages mark the content that still has to be
-  written
+  ones, with `mkdocs-redirects`), and new tutorials and how-to guides were added.
 - Documentation: how to provide implementation guides from files (`file:` URLs in `hapi.fhir.implementationguides`, in
   Docker with a volume, dependencies, reinstalling a package with the same version) and how to build an own docker
   image with preinstalled packages ([#643](https://github.com/ahdis/matchbox/issues/643))
