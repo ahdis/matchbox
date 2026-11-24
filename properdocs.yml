@@ -1,6 +1,9 @@
 site_name: Matchbox
+repo_url: https://github.com/ahdis/matchbox
 theme:
   name: materialx
+  # Template overrides: partials/source.html adds the links of extra.header_links next to the repository link
+  custom_dir: docs-overrides
   logo: assets/matchbox_logo_color.png
   favicon: assets/favicon-96x96.png
   topbar_style: primary
@@ -16,6 +19,17 @@ theme:
     - content.code.copy
 extra_css:
   - stylesheets/extra.css
+extra:
+  # Shown in the header before the repository link (see docs-overrides/partials/source.html)
+  header_links:
+    - name: Homepage
+      title: The Matchbox website
+      url: https://www.matchbox.health/
+      icon: material/web
+    - name: Blog
+      title: The Matchbox blog
+      url: https://www.matchbox.health/blog/
+      icon: material/post-outline
 # The documentation follows the Diátaxis framework (https://diataxis.fr): every page belongs to one of the four
 # sections (tutorials, how-to guides, reference, explanation).
 nav:

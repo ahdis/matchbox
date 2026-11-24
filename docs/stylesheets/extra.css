@@ -62,3 +62,35 @@ html {
 @media screen and (min-width: 125em) {
   html { font-size: 137.5%; }
 }
+
+/* Header links (docs-overrides/partials/source.html): the website and the blog next to the repository link, which
+ * the theme gives a fixed width of 11.5rem */
+@media screen and (min-width: 60em) {
+  .md-header__source {
+    display: flex;
+    align-items: center;
+    width: auto;
+    max-width: none;
+    gap: 0.4rem;
+  }
+
+  .md-header__source .md-source {
+    flex: none;
+  }
+
+  .md-header__source .md-source:not(.md-source--link) {
+    width: 11.5rem;
+  }
+
+  /* The theme limits the label to a percentage of the link, which has no fixed width here */
+  .md-header__source .md-source--link .md-source__repository {
+    max-width: none;
+  }
+}
+
+/* Between the tablet and the large desktop widths, only the icons of the extra links are shown */
+@media screen and (min-width: 60em) and (max-width: 76.2344em) {
+  .md-header__source .md-source--link .md-source__repository {
+    display: none;
+  }
+}
