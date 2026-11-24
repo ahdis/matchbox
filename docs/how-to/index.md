@@ -11,7 +11,7 @@ of Matchbox; if you don't, start with the [tutorials](../tutorials/index.md).
 - [Build an image with pre-installed packages](build-custom-image.md)
 - [Secure a production deployment](secure-production-deployment.md)
 - [Monitor Matchbox](monitor-matchbox.md)
-- [Upgrade Matchbox](upgrade-matchbox.md) _(skeleton)_
+- [Upgrade Matchbox](upgrade-matchbox.md)
 
 ## Validate
 
@@ -24,9 +24,9 @@ of Matchbox; if you don't, start with the [tutorials](../tutorials/index.md).
 
 ## Transform
 
-- [Transform resources with the FHIR mapping language](transform-with-fml.md) _(skeleton)_
-- [Transform CDA to FHIR](transform-cda-to-fhir.md) _(skeleton)_
-- [Extract data from a QuestionnaireResponse](extract-questionnaire-response.md) _(skeleton)_
+- [Transform resources with the FHIR mapping language](transform-with-fml.md)
+- [Transform CDA to FHIR](transform-cda-to-fhir.md)
+- [Extract data from a QuestionnaireResponse](extract-questionnaire-response.md)
 
 ## Develop
 

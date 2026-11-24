@@ -48,8 +48,54 @@ In all cases, the packages are loaded from the database. Which engines exist and
 
 ## Dependencies
 
-!!! abstract "To write"
-    How the dependencies of a package are resolved when it is installed and when an engine is created: version ranges
-    and `current` versions, the packages bundled with Matchbox that replace the declared core/terminology/extensions
-    dependencies, what happens with conflicting versions of a transitive dependency, and the cross-version packages
-    (`hl7.fhir.uv.xver-*`).
+A package declares its dependencies in `package.json` (`"dependencies": {"hl7.fhir.r4.core": "4.0.1", …}`), and an
+implementation guide can declare more in its `ImplementationGuide` resource (extension `ig-internal-dependency`).
+Matchbox follows both, twice: when a package is installed, and when an engine loads it.
+
+### When a package is installed
+
+The dependencies are installed recursively, before the package that needs them is used. A dependency that is already
+in the database is taken from there; otherwise it is downloaded from the FHIR package servers and installed too. A
+dependency that can't be found makes the installation fail (except an internal dependency, which is only logged).
+
+Some dependencies aren't installed, because Matchbox brings its own version or doesn't need them:
+
+- `hl7.fhir.r4.core`, which is bundled with Matchbox;
+- the packages in exactly the versions that are bundled with Matchbox: `hl7.terminology.r4#7.3.0`,
+  `hl7.fhir.uv.extensions.r4#5.3.0` (and their R5 variants), the cross-version packages `hl7.fhir.uv.xver#0.1.0` and
+  `hl7.fhir.uv.xver-r5.r4#0.1.0`, and the CDA logical model. Other versions of these packages are installed;
+- `hl7.fhir.cda`, the development version of the CDA logical model.
+
+A package that is installed again with a URL on `localhost` or `build.fhir.org` (a development or CI build) replaces
+the installed one, even with the same name and version.
+
+### When an engine is created
+
+An engine starts with the packages of its FHIR version from the classpath: the core package, the terminology and
+extensions packages, and the cross-version packages. Then it loads the implementation guide from the database, each
+dependency before the package that needs it:
+
+- the FHIR core packages and the core examples packages (e.g. `hl7.fhir.r4.examples`) in the dependencies are
+  skipped, because the engine has already loaded the core package of its FHIR version. Loading a second core package
+  would make the types ambiguous. An R5 engine also skips `hl7.fhir.uv.extensions.r4`.
+- a dependency on `hl7.terminology#7.3.0` or `hl7.fhir.uv.extensions#5.3.0` is replaced with the bundled package for
+  the FHIR version of the engine (e.g. `hl7.terminology.r4#7.3.0`), and `hl7.fhir.cda#dev` with the bundled CDA
+  logical model. Other versions of these packages are loaded as declared, from the database.
+- a version range such as `3.3.x` is resolved to the newest installed version that matches (e.g. `3.3.2`);
+- a package is loaded once per engine: a second dependency on the same package and version (or on a range that
+  resolves to a loaded version) is skipped.
+
+The dependencies of the dependencies are loaded in the same way, so an engine contains the whole tree of packages of
+its implementation guide. Different packages of the tree may require different versions of the same package (e.g.
+`hl7.terminology` 5.5.0 and 6.2.0): both versions are loaded. When a canonical URL is then referenced without a
+version, the resource of the newest version is used. To control which version is used, reference the canonical with
+its version (`url|version`) or make your implementation guide depend directly on the version you want.
+
+### Cross-version extensions
+
+Profiles can use the extensions of another FHIR version, e.g. an R5 element in an R4 resource
+(`http://hl7.org/fhir/5.0/StructureDefinition/extension-…`). These extensions are defined in the cross-version
+packages, which are bundled with Matchbox: `hl7.fhir.uv.xver` is loaded in every engine, and `hl7.fhir.uv.xver-r5.r4`
+(the R5 extensions for R4) in the R4 engines. The implementation guides don't need to depend on them, and the
+dependencies on these versions aren't installed. If an implementation guide depends on another version of a
+cross-version package, that version is installed and loaded like any other package.

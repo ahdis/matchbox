@@ -58,6 +58,25 @@ Unlike the analysis by Matchbox, this one isn't limited to validations with erro
   to the validation. That is why it can be requested per validation instead of always.
 - **Reliability**: the analysis is a help for humans, not a result to process automatically.
 
-!!! abstract "To write"
-    The prompt that Matchbox uses (`LlmConnector.PROMPT`: what it asks from the LLM and why), how the supported models
-    were chosen, and the experience gained with the quality of the analyses.
+## The prompt
+
+Both approaches use the same prompt, so that an analysis looks the same whichever LLM writes it. The prompt is sent
+as the system message (or, through MCP, before the validation result) and asks the LLM to:
+
+- act as a helper that analyzes FHIR resources and their validation results;
+- **focus on the issues of severity `fatal`, `error` and `warning`**, explain their underlying cause and give examples
+  of what has to be fixed. The `information` issues, e.g. the first issue that describes the validation, are noise
+  for this task;
+- **summarize the errors that have the same source**, because one mistake often produces many messages (a wrong slice,
+  a missing profile);
+- say so when it can't help with an issue, rather than invent an explanation;
+- answer only _The resource is valid_ if there is no such issue, and otherwise keep the answer as short as possible;
+- answer in Markdown, which the web interface renders.
+
+The analysis by Matchbox sends the validated resource and the `OperationOutcome` (in R5 JSON) after the prompt, as one
+user message. Each analysis is a new conversation: no previous request is kept.
+
+Matchbox talks to the LLM providers with [LangChain4j](https://docs.langchain4j.dev/), which makes the code independent
+of the provider. The supported providers are `openai`, `anthropic`, `google` (Gemini) and `huggingface` (through its
+OpenAI-compatible API); the model is any model of the provider, chosen with `llm.modelName` (see the
+[configuration](../reference/configuration.md#llm)).
