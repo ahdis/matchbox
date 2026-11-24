@@ -99,3 +99,10 @@ balancer, to handle more requests or to stay available during an upgrade. Each i
 caches, so each needs the memory described above, and the first validation against an implementation guide is slow on
 each of them. Install the implementation guides through the configuration (the same for all instances) rather than
 through the API of one instance.
+
+## Related
+
+- [Run Matchbox with Docker](../how-to/run-with-docker.md#set-the-memory)
+- [Monitor Matchbox](../how-to/monitor-matchbox.md)
+- Blog: [Matchbox: from 12 GB to 4 GB](https://www.matchbox.health/blog/2026/matchbox-memory/), how the memory needs
+  were reduced in Matchbox 4.1.18, measured with a reproducible load test

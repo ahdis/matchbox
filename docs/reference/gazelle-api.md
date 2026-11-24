@@ -3,7 +3,9 @@
 matchbox-server implements the Validation Service API of the
 [IHE Gazelle Testing Platform](https://www.ihe-europe.net/testing-IHE/gazelle). The API is specified in the
 [validation-service-api](https://gitlab.inria.fr/gazelle/library/validation-service-api) project. See
-[Integrate with Gazelle](../how-to/integrate-gazelle.md) to configure the Gazelle tools.
+[Integrate with Gazelle](../how-to/integrate-gazelle.md) to configure the Gazelle tools, and the blog post
+[How we implemented the Gazelle EVS Client's new validation API in Matchbox](https://www.ahdis.ch/en/blog/2024/matchbox-gazelle-integration)
+for the background of the implementation.
 
 ## Endpoints
 

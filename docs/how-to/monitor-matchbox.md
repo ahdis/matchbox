@@ -146,6 +146,10 @@ are sent every minute (`otel.metric.export.interval`, in milliseconds). All the 
 variables, e.g. `OTEL_SDK_DISABLED=false` and `OTEL_EXPORTER_OTLP_ENDPOINT`; they are listed in the
 [documentation of the starter](https://opentelemetry.io/docs/zero-code/java/spring-boot-starter/sdk-configuration/).
 
+The blog post [Monitoring Matchbox with OpenTelemetry](https://www.matchbox.health/blog/2026/matchbox-opentelemetry/)
+walks through a complete setup: the metrics, traces and logs sent to a monitoring platform, a dashboard, and alerts on
+the validation load, slow validations and memory.
+
 ### Collect the metrics with Prometheus
 
 Matchbox has no Prometheus endpoint: Prometheus can't scrape it directly. Send the metrics with OTLP instead, either:

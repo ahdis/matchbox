@@ -2,7 +2,9 @@
 
 Matchbox implements the validation service API of the
 [IHE Gazelle Testing Platform](https://www.ihe-europe.net/testing-IHE/gazelle), so that the Gazelle tools can use it to
-validate FHIR resources. The endpoints are listed in the [Gazelle API reference](../reference/gazelle-api.md).
+validate FHIR resources. The endpoints are listed in the [Gazelle API reference](../reference/gazelle-api.md); the
+blog post [How we implemented the Gazelle EVS Client's new validation API in Matchbox](https://www.ahdis.ch/en/blog/2024/matchbox-gazelle-integration)
+explains how the integration came about.
 
 ## Add Matchbox to the EVS Client
 
@@ -50,6 +52,9 @@ Gazelle Maestro uses version 2 of the validation service API.
 
 Matchbox sends the profile list with an `ETag`: Maestro only downloads it again when the installed implementation guides
 have changed. The request and the report are described in the [Gazelle API reference](../reference/gazelle-api.md).
+
+The tutorial [Testing FHIR implementations: from validation to test scenarios](https://www.ahdis.ch/en/blog/2026/fhir-testing-tutorial)
+has slides and hands-on exercises that use Matchbox with Gazelle Maestro, on the European Patient Summary.
 
 ## Configure Matchbox for Gazelle
 

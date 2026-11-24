@@ -85,3 +85,5 @@ them again when a new container starts. To keep them, either mount a volume at `
 - [Load implementation guides](load-implementation-guides.md)
 - [Monitor Matchbox](monitor-matchbox.md)
 - [Secure a production deployment](secure-production-deployment.md)
+- Blog: [Matchbox: from 12 GB to 4 GB](https://www.matchbox.health/blog/2026/matchbox-memory/), why 4 GB are enough
+  since Matchbox 4.1.18

@@ -63,3 +63,5 @@ written in the first issue of every validation result (`txServer=…`).
 
 - [Configure a terminology server](../how-to/configure-terminology-server.md)
 - [How the validator talks to a terminology server](terminology-server-interactions.md)
+- Blog: [Digital Health Terminology service in Switzerland](https://www.ahdis.ch/en/blog/2025/terminology), the
+  terminologies of the Swiss implementation guides and the planned national FHIR terminology server
