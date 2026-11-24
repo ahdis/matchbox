@@ -1,6 +1,7 @@
-2026/11/xx Release 5.0.0-rc7
+2026/11/xx Release 5.0.0
 
-Includes the changes of 5.0.0-rc6, 5.0.0-rc5, 5.0.0-rc4, 5.0.0-rc3, 5.0.0-rc2 and 5.0.0-rc1, see below.
+Includes the changes of the release candidates 5.0.0-rc6, 5.0.0-rc5, 5.0.0-rc4, 5.0.0-rc3, 5.0.0-rc2 and 5.0.0-rc1 and
+of 4.1.22, which isn't released on its own, see below.
 
 - Update HAPI FHIR to the release 9.0.0 from Maven Central (Spring Boot 4.0.9, Spring Framework 7.0.10, Hibernate ORM
   7.2.25, logback 1.6.5), instead of the build `8.13.15-pr8189-1` of hapifhir/hapi-fhir#8189 from GitHub Packages. The
@@ -173,7 +174,7 @@ Includes the changes of 5.0.0-rc1, see below.
   if it's mandatory (`Composition.category` and, for a fixed Coding, `Composition.category.coding` with a minimum
   of 1): a profile with an optional fixed category also matches documents without a category
 
-2026/10/xx Release 4.1.22
+2026/10/xx Release 4.1.22 (not released, included in 5.0.0)
 
 - Add the ITB (GITB REST) validation service `FHIRValidator` under `[server]/itb/fhir`, so the Interoperability Test Bed
   1.30.0 can validate FHIR resources with matchbox; it follows the contract of the HL7 validator's ITB services
