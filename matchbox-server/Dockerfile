@@ -1,4 +1,4 @@
-FROM bellsoft/liberica-openjdk-debian:26
+FROM bellsoft/liberica-openjdk-debian:25
 EXPOSE 8080
 
 # Apply latest Debian security patches to the base image
@@ -28,10 +28,7 @@ HEALTHCHECK --interval=10s --timeout=3s --start-period=30s --retries=3 \
 # The heap is sized relative to the memory limit of the container (70%), see docs/reference/docker-image.md
 ENV JDK_JAVA_OPTIONS="-XX:MaxRAMPercentage=70 -XX:+ExitOnOutOfMemoryError -XX:+UseStringDeduplication"
 
-# CVE-2026-114938 (Java4Shell): no hardware-accelerated Base64 decoder until the JDK of the base image is fixed. Set in
-# the entrypoint and not in JDK_JAVA_OPTIONS, so it also applies when JDK_JAVA_OPTIONS is replaced
 ENTRYPOINT ["java", \
-  "-XX:-UseBASE64Intrinsics", \
   "-Dfhir.settings.path=/config/fhir-settings.json", \
   "-Dspring.config.additional-location=optional:file:/config/application.yaml,optional:file:application.yaml", \
   "-jar", "/matchbox.jar"]
