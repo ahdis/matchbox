@@ -130,3 +130,15 @@ html {
   height: auto;
   margin: 0 auto 0.4rem;
 }
+
+/* Larger logo in the header (1.2rem in the theme). The vertical padding is reduced by the same amount, so that the
+ * header keeps its height. */
+.md-header__button.md-logo {
+  padding-top: 0.1rem;
+  padding-bottom: 0.1rem;
+}
+
+.md-header__button.md-logo img,
+.md-header__button.md-logo svg {
+  height: 2rem;
+}
