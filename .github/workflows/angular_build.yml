@@ -5,7 +5,6 @@ on:
   push:
     branches:
       - main
-      - matchbox_v5
     paths:
       - "matchbox-frontend/**"
 

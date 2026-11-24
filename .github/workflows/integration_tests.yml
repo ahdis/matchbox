@@ -3,9 +3,9 @@ name: Integration tests
 on:
   workflow_dispatch:
   push:
-    branches: [main, matchbox_v5]
+    branches: [main]
   pull_request:
-    branches: [main, matchbox_v5]
+    branches: [main]
 
 
 jobs:

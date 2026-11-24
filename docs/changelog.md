@@ -66,8 +66,9 @@ Security
   [CVE-2026-68525](https://github.com/ahdis/matchbox/security/code-scanning/531), Guava 33.7.2 fixes CVE-2026-102554
   (`graphql-java` is excluded)
 - The release workflow builds the Docker image and scans it with Trivy before the tag and the release are created, a
-  HIGH or CRITICAL vulnerability with a fix stops the release. Release candidates (`X.Y.Z-rcN`) are published as
-  GitHub pre-releases, without the Docker tag `latest` and without publishing to Maven Central
+  HIGH or CRITICAL vulnerability with a fix stops the release
+- The published Docker image of the newest release is scanned with Trivy every day (`scheduled_scans.yml`), a HIGH or
+  CRITICAL vulnerability with a fix is posted to Zulip
 
 Other
 
@@ -84,6 +85,8 @@ Other
 - The duplicate `opentelemetry-spring-boot-starter` entry in the `dependencyManagement` of the root `pom.xml` is
   removed, the Maven version of the GitHub runners rejects it
 - The workflows don't use `.github/maven-settings.xml` and the permission `packages: read` anymore
+- `main` is matchbox 5 and the only development branch: the branch `matchbox_v5` was merged into it, the workflows
+  don't run for `matchbox_v5` anymore and the release workflow no longer handles release candidates (`X.Y.Z-rcN`)
 
 2026/11/18 Release 5.0.0-rc6
 

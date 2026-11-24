@@ -9,7 +9,7 @@ on:
   workflow_dispatch:
     inputs:
       version:
-        description: "Version to release, without the 'v' (e.g. 4.1.19, or 5.0.0-rc1 for a release candidate). Must match the version in pom.xml."
+        description: "Version to release, without the 'v' (e.g. 5.0.0). Must match the version in pom.xml."
         required: true
         type: string
 
@@ -73,8 +73,8 @@ jobs:
         env:
           VERSION: ${{ inputs.version }}
         run: |
-          if ! [[ "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+(-rc[0-9]+)?$ ]]; then
-            echo "::error::The version '$VERSION' isn't of the form X.Y.Z or X.Y.Z-rcN"
+          if ! [[ "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "::error::The version '$VERSION' isn't of the form X.Y.Z"
             exit 1
           fi
           POM_VERSION=$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout --batch-mode --no-transfer-progress)
@@ -92,7 +92,7 @@ jobs:
           VERSION: ${{ inputs.version }}
         run: |
           # The section starts with the line 'YYYY/MM/DD Release X.Y.Z' and ends before the next release line, also one
-          # of a release that isn't dated yet ('YYYY/MM/xx Release', e.g. a 4.1.x release below 5.0.0-rc1)
+          # of a release that isn't dated yet ('YYYY/MM/xx Release')
           awk -v version="$VERSION" '
             /^[0-9]{4}\/[0-9x]{2}\/[0-9x]{2} Release / {
               if (found) exit
@@ -116,16 +116,10 @@ jobs:
           VERSION: ${{ inputs.version }}
           GH_TOKEN: ${{ github.token }}
         run: |
-          PRERELEASE=()
-          if [[ "$VERSION" == *-rc* ]]; then
-            # A release candidate is a pre-release, GitHub doesn't show it as the latest release
-            PRERELEASE=(--prerelease)
-          fi
           gh release create "v$VERSION" \
             --target "$GITHUB_SHA" \
             --title "Release v$VERSION" \
-            --notes-file release-notes.md \
-            "${PRERELEASE[@]}"
+            --notes-file release-notes.md
 
       - name: Start the Docker and Maven Central workflows
         env:
@@ -133,9 +127,4 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           gh workflow run googleregistry.yml --ref "v$VERSION"
-          # A release candidate (X.Y.Z-rcN) isn't published to Maven Central
-          if [[ "$VERSION" == *-rc* ]]; then
-            echo "::notice::Release candidate $VERSION: not published to Maven Central"
-          else
-            gh workflow run central_repository.yml --ref "v$VERSION"
-          fi
+          gh workflow run central_repository.yml --ref "v$VERSION"
