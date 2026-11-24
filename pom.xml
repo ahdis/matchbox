@@ -40,9 +40,7 @@
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
 
         <fhir.core.version>7.0.6</fhir.core.version>
-        <!-- TODO: build of https://github.com/hapifhir/hapi-fhir/pull/8189 (Spring Boot 4) at ab78b813154, published to
-             GitHub Packages (see the 'github' repository below), switch to the HAPI FHIR release containing it -->
-        <hapi.fhir.version>8.13.15-pr8189-1</hapi.fhir.version>
+        <hapi.fhir.version>9.0.0</hapi.fhir.version>
 
 
         <!-- The following section closely matches the one of HAPI-FHIR (for easier version comparison/upgrade).
@@ -55,18 +53,18 @@
         <guava_version>33.7.2-jre</guava_version>
         <jakarta_annotation_version>3.0.0</jakarta_annotation_version>
         <junit_version>6.0.3</junit_version>
-        <logback_version>1.6.3</logback_version>
+        <logback_version>1.6.5</logback_version>
         <gitb_types_version>1.30.3</gitb_types_version>
         <jackson2_version>2.22.3</jackson2_version>
         <jackson3_version>3.2.3</jackson3_version>
         <jackson_annotations_version>2.22</jackson_annotations_version>
         <okhttp_version>5.4.0</okhttp_version>
         <log4j_to_slf4j_version>2.26.1</log4j_to_slf4j_version>
-        <spring_version>7.0.9</spring_version>
-        <spring_context_version>7.0.9</spring_context_version>
-        <spring_boot_version>4.0.8</spring_boot_version>
+        <spring_version>7.0.10</spring_version>
+        <spring_context_version>7.0.10</spring_context_version>
+        <spring_boot_version>4.0.9</spring_boot_version>
         <!-- Hibernate ORM version of HAPI FHIR, spring-boot-hibernate would bring in a newer hibernate-core -->
-        <hibernate_version>7.2.19.Final</hibernate_version>
+        <hibernate_version>7.2.25.Final</hibernate_version>
         <!-- Tomcat version of Spring Boot, aligned for all embedded Tomcat modules -->
         <tomcat_version>11.0.27</tomcat_version>
                 <thymeleaf.version>3.1.5.RELEASE</thymeleaf.version>
@@ -122,20 +120,6 @@
     </scm>
 
     <repositories>
-        <!-- TODO: remove with hapi.fhir.version, HAPI FHIR snapshot build of https://github.com/hapifhir/hapi-fhir/pull/8189
-             published to GitHub Packages. GitHub Packages requires authentication also for reading: the workflows use
-             .github/maven-settings.xml, locally add a server 'github' with a token with 'read:packages' to your
-             ~/.m2/settings.xml -->
-        <repository>
-            <id>github</id>
-            <url>https://maven.pkg.github.com/ahdis/matchbox</url>
-            <releases>
-                <enabled>true</enabled>
-            </releases>
-            <snapshots>
-                <enabled>false</enabled>
-            </snapshots>
-        </repository>
         <repository>
             <id>oss-snapshots</id>
             <snapshots>

@@ -1,3 +1,16 @@
+2026/11/xx Release 5.0.0-rc7
+
+Includes the changes of 5.0.0-rc6, 5.0.0-rc5, 5.0.0-rc4, 5.0.0-rc3, 5.0.0-rc2 and 5.0.0-rc1, see below.
+
+- Update HAPI FHIR to the release 9.0.0 from Maven Central (Spring Boot 4.0.9, Spring Framework 7.0.10, Hibernate ORM
+  7.2.25, logback 1.6.5), instead of the build `8.13.15-pr8189-1` of hapifhir/hapi-fhir#8189 from GitHub Packages. The
+  patched HAPI FHIR classes are updated to 9.0.0 (`JpaConfig`, `PackageLoaderSvc`, `TermReadSvcImpl`,
+  `NpmPackageVersionResourceEntity`, `WorkerContextValidationSupportAdapter` and the `HapiWorkerContext` of R4, R4B
+  and R5)
+- The build doesn't need a GitHub token with `read:packages` anymore: the repository `github` is removed from the
+  `pom.xml`, and the workflows don't use `.github/maven-settings.xml` and the permission `packages: read` anymore.
+  The release workflow publishes `matchbox-engine` to Maven Central again
+
 2026/11/18 Release 5.0.0-rc6
 
 Includes the changes of 5.0.0-rc5, 5.0.0-rc4, 5.0.0-rc3, 5.0.0-rc2 and 5.0.0-rc1, see below.

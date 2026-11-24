@@ -30,6 +30,7 @@ import ca.uhn.fhir.util.ClasspathUtil;
 import jakarta.annotation.Nullable;
 import org.apache.commons.collections4.ListUtils;
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.Validate;
 import org.apache.http.Header;
 import org.apache.http.HttpHeaders;
@@ -59,6 +60,7 @@ import java.util.Base64;
 import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -73,8 +75,28 @@ public class PackageLoaderSvc extends BasePackageCacheManager {
 
 	private final PackageLoaderSettings mySettings;
 
-	public PackageLoaderSvc(PackageLoaderSettings theLoaderSettings) {
+	private final List<IPackageUrlContentFetcher> myFetchers;
+
+	/**
+	 * Creates a loader with no {@link IPackageUrlContentFetcher fetchers}; every remote package URL uses the
+	 * built-in HTTP fetch.
+	 *
+	 * @deprecated use {@link #PackageLoaderSvc(PackageLoaderSettings, List)}, passing an empty list for no fetchers
+	 */
+	@Deprecated(forRemoval = true, since = "8.14")
+	public PackageLoaderSvc(PackageLoaderSettings theSettings) {
+		this(theSettings, List.of());
+	}
+
+	/**
+	 * @param theLoaderSettings the allow-list and related settings for package URLs
+	 * @param theFetchers       fetchers consulted, in order, for remote package URLs that pass the allow-list;
+	 *                          the first whose {@link IPackageUrlContentFetcher#canFetch(java.net.URI)} returns
+	 *                          true fetches the package. May be empty. The list is copied.
+	 */
+	public PackageLoaderSvc(PackageLoaderSettings theLoaderSettings, List<IPackageUrlContentFetcher> theFetchers) {
 		mySettings = theLoaderSettings;
+		myFetchers = List.copyOf(Objects.requireNonNull(theFetchers));
 	}
 
 	/**
@@ -290,44 +312,56 @@ public class PackageLoaderSvc extends BasePackageCacheManager {
 	}
 
 	public byte[] loadPackageUrlContents(String thePackageUrl) {
+		String packageUrl = StringUtils.trim(thePackageUrl);
 		// MATCHBOX PATCH: support data URLs (inline packages), they don't access any server, so they are not
 		// subject to the package URL allow-list
-		if (thePackageUrl.startsWith("data:")) {
+		if (packageUrl.startsWith("data:")) {
 			// Data URL, RFC 2397. The MIME type is skipped. The data must be encoded as base64.
-			final var pos = thePackageUrl.indexOf(";base64,");
+			final var pos = packageUrl.indexOf(";base64,");
 			if (pos == -1) {
 				throw new IllegalArgumentException("The data URI is not base64-encoded");
 			}
-			final var base64data = thePackageUrl.substring(pos + 8);
+			final var base64data = packageUrl.substring(pos + 8);
 			return Base64.getDecoder().decode(base64data);
 		}
-		if (!mySettings.getPackageUrlAllowList().isAllowed(thePackageUrl)) {
+		if (!mySettings.getPackageUrlAllowList().isAllowed(packageUrl)) {
 			throw new InvalidRequestException(
-					Msg.code(3028) + "Attempting to request from non-whitelisted path " + thePackageUrl);
+					Msg.code(3028) + "Attempting to request from non-whitelisted path " + packageUrl);
 		}
 
-		PackageUrlScheme scheme = PackageUrlScheme.parseScheme(thePackageUrl);
+		PackageUrlScheme scheme = PackageUrlScheme.parseScheme(packageUrl);
+
+		if (scheme == null || !scheme.isLocalScheme()) {
+			// check the fetchers; maybe we have someone who will handle this URL
+			// it is on them to handle security (beyond the actual allow list)
+			URI uri = URI.create(packageUrl);
+			for (IPackageUrlContentFetcher fetcher : myFetchers) {
+				if (fetcher.canFetch(uri)) {
+					return fetcher.fetch(uri);
+				}
+			}
+		}
 
 		if (scheme != null) {
 			switch (scheme) {
 				case CLASSPATH -> {
-					return ClasspathUtil.loadResourceAsByteArray(thePackageUrl.substring("classpath:".length()));
+					return ClasspathUtil.loadResourceAsByteArray(packageUrl.substring("classpath:".length()));
 				}
 				case FILE -> {
 					try {
-						return Files.readAllBytes(Paths.get(new URI(thePackageUrl)));
+						return Files.readAllBytes(Paths.get(new URI(packageUrl)));
 					} catch (IOException | URISyntaxException e) {
 						throw new InternalErrorException(
-								Msg.code(2031) + "Error loading \"" + thePackageUrl + "\": " + e.getMessage());
+								Msg.code(2031) + "Error loading \"" + packageUrl + "\": " + e.getMessage());
 					}
 				}
 				case HTTPS, HTTP -> {
-					return fetchHttpPackageContents(thePackageUrl);
+					return fetchHttpPackageContents(packageUrl);
 				}
 			}
 		}
 
-		throw new InvalidRequestException(Msg.code(3029) + "Unrecognized scheme for whitelist URL: " + thePackageUrl);
+		throw new InvalidRequestException(Msg.code(3029) + "Unrecognized scheme for whitelist URL: " + packageUrl);
 	}
 
 	private byte[] fetchHttpPackageContents(String thePackageUrl) {

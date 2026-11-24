@@ -21,8 +21,9 @@ cp ../org.hl7.fhir.core/org.hl7.fhir.convertors/src/main/java/org/hl7/fhir/conve
 cp ../org.hl7.fhir.core/org.hl7.fhir.convertors/src/main/java/org/hl7/fhir/convertors/loaders/loaderRN/R4BToRNLoader.java matchbox-engine/src/main/java/org/hl7/fhir/convertors/loaders/loaderRN/
 cp ../org.hl7.fhir.core/org.hl7.fhir.convertors/src/main/java/org/hl7/fhir/convertors/loaders/loaderRN/R5ToRNLoader.java matchbox-engine/src/main/java/org/hl7/fhir/convertors/loaders/loaderRN/
 # cp ../org.hl7.fhir.core/org.hl7.fhir.validation.cli/src/main/java/org/hl7/fhir/validation/cli/param/Params.java matchbox-engine/src/main/java/org/hl7/fhir/validation/cli/param
-# HAPI FHIR is built with org.hl7.fhir.core 6: ILoggingService moved to org.hl7.fhir.utilities.logging in core 7,
-# remove once HAPI FHIR is built with org.hl7.fhir.core 7
+# HAPI FHIR (also 9.0.0) is built with org.hl7.fhir.core 6: ILoggingService moved to org.hl7.fhir.utilities.logging in
+# core 7, remove once HAPI FHIR is built with org.hl7.fhir.core 7. Copy them from the tag of the HAPI FHIR version in
+# pom.xml (e.g. v9.0.0)
 cp ../hapi-fhir/hapi-fhir-validation/src/main/java/org/hl7/fhir/common/hapi/validation/validator/WorkerContextValidationSupportAdapter.java matchbox-server/src/main/java/org/hl7/fhir/common/hapi/validation/validator/
 cp ../hapi-fhir/hapi-fhir-structures-r5/src/main/java/org/hl7/fhir/r5/hapi/ctx/HapiWorkerContext.java matchbox-server/src/main/java/org/hl7/fhir/r5/hapi/ctx/
 cp ../hapi-fhir/hapi-fhir-structures-r4b/src/main/java/org/hl7/fhir/r4b/hapi/ctx/HapiWorkerContext.java matchbox-server/src/main/java/org/hl7/fhir/r4b/hapi/ctx/

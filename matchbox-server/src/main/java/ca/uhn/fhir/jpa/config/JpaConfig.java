@@ -88,6 +88,7 @@ import ca.uhn.fhir.jpa.graphql.DaoRegistryGraphQLStorageServices;
 import ca.uhn.fhir.jpa.interceptor.CascadingDeleteInterceptor;
 import ca.uhn.fhir.jpa.interceptor.JpaConsentContextServices;
 import ca.uhn.fhir.jpa.interceptor.OverridePathBasedReferentialIntegrityForDeletesInterceptor;
+import ca.uhn.fhir.jpa.interceptor.PreResolveChainedSearchesInterceptor;
 import ca.uhn.fhir.jpa.interceptor.validation.RepositoryValidatingRuleBuilder;
 import ca.uhn.fhir.jpa.model.config.PartitionSettings;
 import ca.uhn.fhir.jpa.model.dao.JpaPid;
@@ -316,6 +317,17 @@ public class JpaConfig {
 			IInterceptorBroadcaster theInterceptorBroadcaster,
 			HapiTransactionService hapiTransactionService) {
 		return new ThreadSafeResourceDeleterSvc(theDaoRegistry, theInterceptorBroadcaster, hapiTransactionService);
+	}
+
+	@Lazy
+	@Bean
+	public PreResolveChainedSearchesInterceptor preResolveChainedSearchesInterceptor(
+			FhirContext theContext,
+			ISearchParamRegistry theSearchParamRegistry,
+			DaoRegistry theDaoRegistry,
+			IInterceptorService theInterceptorService) {
+		return new PreResolveChainedSearchesInterceptor(
+				theContext, theInterceptorService, theSearchParamRegistry, theDaoRegistry);
 	}
 
 	@Lazy
@@ -899,14 +911,16 @@ public class JpaConfig {
 			MatchUrlService theMatchUrlService,
 			FhirContext theFhirContext,
 			PartitionSettings thePartitionSettings,
-      PlatformTransactionManager theTxManager) {
+			JpaStorageSettings theStorageSettings,
+			PlatformTransactionManager theTxManager) {
 		return new ResourceSearchUrlSvc(
 				thePersistenceContextProvider.getEntityManager(),
 				theResourceSearchUrlDao,
 				theMatchUrlService,
 				theFhirContext,
 				thePartitionSettings,
-        theTxManager);
+				theStorageSettings,
+				theTxManager);
 	}
 
 	@Bean
