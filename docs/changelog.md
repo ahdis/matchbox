@@ -1,16 +1,86 @@
 2026/11/xx Release 5.0.0
 
-Includes the changes of the release candidates 5.0.0-rc6, 5.0.0-rc5, 5.0.0-rc4, 5.0.0-rc3, 5.0.0-rc2 and 5.0.0-rc1 and
-of 4.1.22, which isn't released on its own, see below.
+matchbox 5 is based on Spring Boot 4, HAPI FHIR 9 and org.hl7.fhir.core 7. The main changes since 4.1.21 are listed
+here, the details are in the sections of the release candidates 5.0.0-rc1 to 5.0.0-rc6 below.
 
-- Update HAPI FHIR to the release 9.0.0 from Maven Central (Spring Boot 4.0.9, Spring Framework 7.0.10, Hibernate ORM
-  7.2.25, logback 1.6.5), instead of the build `8.13.15-pr8189-1` of hapifhir/hapi-fhir#8189 from GitHub Packages. The
-  patched HAPI FHIR classes are updated to 9.0.0 (`JpaConfig`, `PackageLoaderSvc`, `TermReadSvcImpl`,
-  `NpmPackageVersionResourceEntity`, `WorkerContextValidationSupportAdapter` and the `HapiWorkerContext` of R4, R4B
-  and R5)
-- The build doesn't need a GitHub token with `read:packages` anymore: the repository `github` is removed from the
-  `pom.xml`, and the workflows don't use `.github/maven-settings.xml` and the permission `packages: read` anymore.
-  The release workflow publishes `matchbox-engine` to Maven Central again, except for release candidates
+Platform
+
+- Spring Boot 4.0.9 and Spring Framework 7.0.10 (fixes `spring-webmvc`
+  [CVE-2026-47884](https://github.com/ahdis/matchbox/security/dependabot/420)), with Hibernate ORM 7.2, Jakarta EE 11,
+  Jackson 3 and JUnit 6
+- HAPI FHIR 9.0.0 from Maven Central. The release candidates used the build `8.13.15-pr8189-1` of
+  hapifhir/hapi-fhir#8189 from GitHub Packages: building matchbox doesn't need a GitHub token with `read:packages`
+  anymore, and `matchbox-engine` is published to Maven Central again. The patched HAPI FHIR classes are updated to
+  9.0.0 (`JpaConfig`, `PackageLoaderSvc`, `TermReadSvcImpl`, `NpmPackageVersionResourceEntity`,
+  `WorkerContextValidationSupportAdapter` and the `HapiWorkerContext` of R4, R4B and R5)
+- Matchbox runs on Tomcat 11.0.27 instead of Undertow, which Spring Boot 4 doesn't support anymore. The
+  `server.undertow.max-http-post-size` setting isn't needed anymore
+- org.hl7.fhir.core [7.0.6](https://github.com/hapifhir/org.hl7.fhir.core/releases/tag/7.0.6) (from 6.10.4): the
+  validator, the FHIR mapping language and the worker context are based on the versionless R6 modules
+  (`org.hl7.fhir.model`, `org.hl7.fhir.services`, `org.hl7.fhir.standalone`) instead of `org.hl7.fhir.r5`, with new
+  checks of the validator and changes in the terminology handling, see 5.0.0-rc1 and 5.0.0-rc4
+
+Changes for the users of `matchbox-engine`
+
+- The API of `MatchboxEngine` uses the R6 model (`org.hl7.fhir.model.core`, `StructureMap` is
+  `org.hl7.fhir.model.fml.StructureMap`), with overloads for the HAPI R5 model (`addCanonicalResource`,
+  `createSnapshot`) and `R6Model` to convert between them. `parseMapR6` and `getStructureDefinitionR6` return the R6
+  model, `parseMapR5` and `getStructureDefinitionR5` still the HAPI R5 model
+- `createSnapshot` adds the snapshot to the StructureDefinition it is given (it returned a new instance).
+  `useTxCacheFolder(folder)` and `disableTxCache()` replace `initTxCache(folder)`, which is deprecated
+
+Validation
+
+- Validation is about twice as fast for profiles whose invariants resolve canonical resources, e.g. ch-elm (45 instead
+  of 95–102 ms per validation in the load test): each engine keeps the last 100 resources it converted for
+  `resolve()` (`matchbox.fhir.context.fetchCacheSize`, `0` to keep none)
+- New validation parameters `bpWarnings` and `resourceIdRule` ([#589](https://github.com/ahdis/matchbox/issues/589))
+- For a profile that no engine knows, `$validate` answers "Validation for profile '...' not supported by this validator
+  instance", like the Gazelle API
+- The engine for an IG no longer replaces the suppressed warnings and errors of the other engines
+  (`matchbox.fhir.context.suppressWarnInfo`, `matchbox.fhir.context.suppressError`)
+- The terminology ecosystem of HL7 (`https://ecosystem.hl7.org/tx-reg`, e.g. for the Swiss SNOMED CT edition on
+  tx.fhir.ch) is also used with `http://tx.fhir.org`, and not with other terminology servers
+- `Bundle/$get-profiles` (and the MCP tool `get-profiles-for-document-bundle`) matches the profiles of a document with
+  any of the type and category codings of its Composition
+
+New APIs
+
+- ITB (GITB REST) services for the Interoperability Test Bed (ITB 1.30.0 or later, with `handlerApiType="REST"`):
+  the validation service `FHIRValidator` under `[server]/itb/fhir`
+  ([#589](https://github.com/ahdis/matchbox/issues/589)) and the processing services `FHIRPathProcessor` under
+  `[server]/itb/fhirPath` and `IGManager` under `[server]/itb/igManager`
+  ([#681](https://github.com/ahdis/matchbox/issues/681))
+- `onlyOneEngine` mode: searching ValueSets (`GET [base]/ValueSet`) works again
+  ([#663](https://github.com/ahdis/matchbox/issues/663)), and the NamingSystems of the main engine are exposed (`GET
+  [base]/NamingSystem`, [#664](https://github.com/ahdis/matchbox/issues/664))
+- Loading packages from `http(s)` URLs follows redirects (#75) and supports a package URL allow-list
+  (`IPackageUrlAllowListProvider`)
+
+Security
+
+- Docker image: the JVM starts with `-XX:-UseBASE64Intrinsics`, the mitigation of CVE-2026-114938 ("Java4Shell"), and
+  the base image is rebuilt for CVE-2026-109518 (`apt`)
+- Tomcat 11.0.27 fixes [CVE-2026-65182](https://github.com/ahdis/matchbox/security/code-scanning/529),
+  [CVE-2026-65905](https://github.com/ahdis/matchbox/security/code-scanning/530) and
+  [CVE-2026-68525](https://github.com/ahdis/matchbox/security/code-scanning/531), Guava 33.7.2 fixes CVE-2026-102554
+  (`graphql-java` is excluded)
+- The release workflow builds the Docker image and scans it with Trivy before the tag and the release are created, a
+  HIGH or CRITICAL vulnerability with a fix stops the release. Release candidates (`X.Y.Z-rcN`) are published as
+  GitHub pre-releases, without the Docker tag `latest` and without publishing to Maven Central
+
+Other
+
+- Documentation: how to provide implementation guides from files (`file:` URLs in `hapi.fhir.implementationguides`, in
+  Docker with a volume, dependencies, reinstalling a package with the same version) and how to build an own docker
+  image with preinstalled packages ([#643](https://github.com/ahdis/matchbox/issues/643))
+- Frontend: Angular 22.2.3 and angular-eslint 22.6.0, `source-map-js` 1.2.2 (Dependabot alerts
+  [#418](https://github.com/ahdis/matchbox/security/dependabot/418),
+  [#419](https://github.com/ahdis/matchbox/security/dependabot/419) and
+  [#421](https://github.com/ahdis/matchbox/security/dependabot/421), all development dependencies)
+- The duplicate `opentelemetry-spring-boot-starter` entry in the `dependencyManagement` of the root `pom.xml` is
+  removed, the Maven version of the GitHub runners rejects it
+- The workflows don't use `.github/maven-settings.xml` and the permission `packages: read` anymore
 
 2026/11/18 Release 5.0.0-rc6
 
@@ -173,40 +243,6 @@ Includes the changes of 5.0.0-rc1, see below.
   categories (a profile without a fixed category matches any categories, or none). A fixed category is only used
   if it's mandatory (`Composition.category` and, for a fixed Coding, `Composition.category.coding` with a minimum
   of 1): a profile with an optional fixed category also matches documents without a category
-
-2026/10/xx Release 4.1.22 (not released, included in 5.0.0)
-
-- Add the ITB (GITB REST) validation service `FHIRValidator` under `[server]/itb/fhir`, so the Interoperability Test Bed
-  1.30.0 can validate FHIR resources with matchbox; it follows the contract of the HL7 validator's ITB services
-  (hapifhir/org.hl7.fhir.core#2615) (#589). The types of the GITB REST API come from
-  `eu.europa.ec.itb:gitb-types-model` 1.30.3
-- Add the validation parameters `bpWarnings` and `resourceIdRule` (#589)
-- Share the validation logic of `$validate`, the Gazelle API and the ITB API (#589)
-- Remove the duplicate `opentelemetry-spring-boot-starter` entry in the `dependencyManagement` of the root `pom.xml`,
-  which the Maven version of the GitHub runners rejects ("'dependencyManagement.dependencies.dependency' must be
-  unique")
-- Documentation: how to provide implementation guides from files (`file:` URLs in `hapi.fhir.implementationguides`, in
-  Docker with a volume, dependencies, reinstalling a package with the same version) and how to build an own docker
-  image with preinstalled packages ([#643](https://github.com/ahdis/matchbox/issues/643))
-- Frontend: update Angular to 22.2.3 and angular-eslint to 22.6.0. The Angular CLI uses
-  `@modelcontextprotocol/server` instead of `@modelcontextprotocol/sdk` 1.30.0 (and with it express and proxy-addr),
-  `source-map-js` is updated to 1.2.2 (Dependabot alerts
-  [#418](https://github.com/ahdis/matchbox/security/dependabot/418) proxy-addr,
-  [#419](https://github.com/ahdis/matchbox/security/dependabot/419) source-map-js,
-  [#421](https://github.com/ahdis/matchbox/security/dependabot/421) @modelcontextprotocol/sdk, all development
-  dependencies)
-- Release workflow: release candidates `X.Y.Z-rcN` (e.g. `5.0.0-rc1`) are published as GitHub pre-releases and their
-  Docker image doesn't get the tag `latest`. The release notes end before the next release section, also one that
-  isn't dated yet
-- Security checks: Trivy no longer searches Rekor (sigstore) for SBOM attestations of the Docker image, these searches
-  took the image scan over its 35 min timeout
-- Searching ValueSets (`GET [base]/ValueSet`) in the `onlyOneEngine` mode failed with "This context is configured to
-  not allow Iterating ValueSet resources due to performance concerns"
-  ([#663](https://github.com/ahdis/matchbox/issues/663)). The search of conformance resources in this mode now loads
-  only the resources of the requested page (sorted by URL and version) instead of all resources of the type
-- The `onlyOneEngine` mode exposes the NamingSystems of the main engine (`GET [base]/NamingSystem`), e.g. to debug the
-  OID to URI mapping of `http://hl7.org/fhir/ConceptMap/special-oid2uri` in transformations
-  ([#664](https://github.com/ahdis/matchbox/issues/664))
 
 2026/10/05 Release 4.1.21
 
