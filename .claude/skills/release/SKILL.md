@@ -1,6 +1,6 @@
 ---
 name: release
-description: Make a new matchbox release (e.g. 4.1.19) - bump the version in the POMs and package.json, date the changelog, open and merge the release PR, run the release workflow and follow the Docker and Maven Central publishing. Use when the user asks to release, cut or publish a new matchbox version.
+description: Make a new matchbox release (e.g. 5.0.1) - bump the version in the POMs and package.json, date the changelog, open and merge the release PR, run the release workflow and follow the Docker and Maven Central publishing. Use when the user asks to release, cut or publish a new matchbox version.
 ---
 
 # Making a matchbox release
@@ -23,7 +23,7 @@ Always work against `origin` (`ahdis/matchbox`), never `upstream` (the HAPI FHIR
 git switch main && git pull --ff-only origin main && git fetch origin --tags
 git tag --sort=-v:refname | head -3                      # last release
 mvn -q help:evaluate -Dexpression=project.version -DforceStdout --batch-mode --no-transfer-progress; echo
-head -1 docs/changelog.md                                # e.g. "2026/10/xx Release 4.1.19"
+head -1 docs/changelog.md                                # e.g. "2026/11/xx Release 5.0.0"
 gh run list --repo ahdis/matchbox --commit $(git rev-parse HEAD)   # all green?
 gh pr list --repo ahdis/matchbox --state open            # anything the user may want in the release?
 ```
@@ -62,30 +62,9 @@ the background).
    started.
 3. Run the release workflow:
    `gh workflow run release.yml --repo ahdis/matchbox --ref main -f version=X.Y.Z`
-   A matchbox 5 release (Spring Boot 4) is made from the branch `matchbox_v5` instead of `main` (`--ref matchbox_v5`,
-   the release PR targets `matchbox_v5`). Its Docker image also gets the tag `latest`, like every release.
 4. Follow the release run and then the two runs it starts on the tag (`googleregistry.yml`, `central_repository.yml`)
    until they complete: `gh run list --repo ahdis/matchbox --limit 5`, `gh run watch <id> --repo ahdis/matchbox`.
-   `central_repository.yml` is only started if `hapi.fhir.version` in `pom.xml` is a released HAPI FHIR version
-   (`X.Y.Z`): with a HAPI FHIR build from GitHub Packages (e.g. `8.13.15-pr8189-1`) the release run has the warning
-   "Not published to Maven Central" and only the Docker image is published (`central_repository.yml` itself fails
-   with this version, e.g. when started by a tag created by hand).
 5. Check the release: `gh release view vX.Y.Z --repo ahdis/matchbox`.
 
 Report the release URL and the outcome of the Docker and Maven Central workflows. Creating the tag and release by hand
 in GitHub also starts these two workflows, if the release workflow can't be used.
-
-## Release candidates
-
-A release candidate `X.Y.Z-rcN` (e.g. `5.0.0-rc1`) is made like a release, with `NEW=X.Y.Z-rcN`:
-
-- The POMs and `package.json` get the version `X.Y.Z-rcN`, which the GUI, the CapabilityStatement and the log show.
-  Maven sorts it before `X.Y.Z`.
-- The top changelog section `YYYY/MM/xx Release X.Y.Z` becomes the section of the release candidate:
-  `sed -i '' "1s#^[0-9x/]* Release ${NEW%-rc*}\$#$(date +%Y/%m/%d) Release $NEW#" docs/changelog.md`
-- The release workflow accepts `X.Y.Z-rcN` and creates the GitHub release as a pre-release (not shown as the latest
-  release). The Docker image only gets the tag `vX.Y.Z-rcN`, not `latest`.
-- After the release candidate, a new top section `YYYY/MM/xx Release X.Y.Z` collects the changes. It stays short: the
-  changes since the last release candidate, and a pointer to the release candidate sections for the other changes of
-  `X.Y.Z` (e.g. "Includes the changes of 5.0.0-rc1, see below"). The `Full Changelog` link of the release compares
-  with the previous tag, i.e. the last release candidate.

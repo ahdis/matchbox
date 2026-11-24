@@ -481,10 +481,9 @@ GitHub Actions workflows (`.github/workflows/`):
 
 The `upstream` remote points to `hapifhir/hapi-fhir-jpaserver-starter`, which is the upstream HAPI FHIR starter project. The `origin` remote points to `ahdis/matchbox`. **Always create PRs against `ahdis/matchbox`** — use `gh pr create --repo ahdis/matchbox` to ensure the PR targets the correct repository.
 
-**Branches**: `main` is matchbox 4.x (Spring Boot 3, org.hl7.fhir.core 6, HAPI FHIR releases from Maven Central).
-`matchbox_v5` is matchbox 5 (Spring Boot 4, Spring Framework 7, Tomcat, org.hl7.fhir.core 7, HAPI FHIR 9 from Maven
-Central). Spring Boot 4 work targets `matchbox_v5` (`gh pr create --base matchbox_v5`), everything else `main`; merge
-`main` into `matchbox_v5` to keep it current. `matchbox_v5` replaces `main` with the 5.0.0 release.
+**Branches**: `main` is matchbox 5 (Spring Boot 4, Spring Framework 7, Tomcat, org.hl7.fhir.core 7, HAPI FHIR 9 from
+Maven Central) and the only development branch, all PRs target it. matchbox 4.x (Spring Boot 3, org.hl7.fhir.core 6)
+ended with 4.1.21 (tag `v4.1.21`), the former branch `matchbox_v5` was merged into `main`.
 
 **Every PR must include an update to `docs/changelog.md`** — add a summary of the changes under the appropriate release version at the top of the file.
 

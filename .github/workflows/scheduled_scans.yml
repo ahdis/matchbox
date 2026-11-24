@@ -1,8 +1,8 @@
-name: Scheduled scans of the release candidate
+name: Scheduled scan of the released image
 
-# GitHub starts scheduled workflows only from the default branch, so the daily scans of matchbox_v5 and of its latest
-# image start here. A finding in the image, or a failure of this workflow, is posted to Zulip.
-# Remove this workflow when matchbox_v5 is merged into main.
+# Scans the published Docker image of the newest release every day: vulnerabilities that are found after a release
+# don't show up in the security checks of the branch (security.yml), which scan a new build with the latest OS updates.
+# A finding in the image, or a failure of this workflow, is posted to Zulip.
 
 on:
   workflow_dispatch:
@@ -10,21 +10,8 @@ on:
     - cron: '30 8 * * *' # Every day at 8h30
 
 jobs:
-  scan-branch:
-    name: Start the security checks on matchbox_v5
-    runs-on: ubuntu-latest
-    permissions:
-      actions: write
-
-    steps:
-      # The results are in the Security tab, with the filter branch:matchbox_v5
-      - name: Start security.yml on matchbox_v5
-        run: gh workflow run security.yml --repo "$GITHUB_REPOSITORY" --ref matchbox_v5
-        env:
-          GH_TOKEN: ${{ github.token }}
-
   scan-image:
-    name: Scan the image of the newest release candidate
+    name: Scan the image of the newest release
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -33,10 +20,11 @@ jobs:
       findings: ${{ steps.findings.outputs.findings }}
 
     steps:
-      - name: Find the newest release candidate
+      # The newest release, also a pre-release (5.0.0-rc6 until 5.0.0 is released)
+      - name: Find the newest release
         id: release
         run: |
-          TAG=$(gh api "repos/$GITHUB_REPOSITORY/releases?per_page=30" --jq '[.[] | select(.prerelease)][0].tag_name')
+          TAG=$(gh api "repos/$GITHUB_REPOSITORY/releases?per_page=30" --jq '[.[] | select(.draft | not)][0].tag_name')
           echo "tag=$TAG" >> "$GITHUB_OUTPUT"
         env:
           GH_TOKEN: ${{ github.token }}
@@ -68,7 +56,7 @@ jobs:
 
   zulip:
     name: Post to Zulip
-    needs: [scan-branch, scan-image]
+    needs: [scan-image]
     if: ${{ failure() }}
     runs-on: ubuntu-latest
     permissions: {}
@@ -82,8 +70,8 @@ jobs:
           organization-url: "https://chat.fhir.org"
           to: "ahdis"
           type: "stream"
-          topic: "matchbox release candidate scan"
+          topic: "matchbox release scan"
           content: |
-              ${{ needs.scan-image.outputs.findings != '' && format('HIGH or CRITICAL vulnerabilities with a fix in matchbox {0}: {1}', needs.scan-image.outputs.tag, needs.scan-image.outputs.findings) || 'the scheduled scan of the release candidate failed, without a list of findings' }}
+              ${{ needs.scan-image.outputs.findings != '' && format('HIGH or CRITICAL vulnerabilities with a fix in matchbox {0}: {1}', needs.scan-image.outputs.tag, needs.scan-image.outputs.findings) || 'the scheduled scan of the released image failed, without a list of findings' }}
 
               see https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}
