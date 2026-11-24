@@ -94,3 +94,39 @@ html {
     display: none;
   }
 }
+
+/* Icons of the main features in the left sidebar of the home page (docs-overrides/main.html). Below 76.25em, the
+ * sidebar is the navigation drawer, where they would be in the way. */
+.mb-home-features {
+  display: none;
+}
+
+@media screen and (min-width: 76.25em) {
+  .mb-home-features {
+    display: flex;
+    flex-direction: column;
+    gap: 1.2rem;
+    padding: 0.6rem 0.6rem 0 0;
+  }
+}
+
+.mb-home-feature {
+  display: block;
+  color: var(--md-default-fg-color--light);
+  font-size: 0.7rem;
+  line-height: 1.3;
+  text-align: center;
+}
+
+.mb-home-feature:hover,
+.mb-home-feature:focus {
+  color: var(--md-accent-fg-color);
+}
+
+.mb-home-feature img {
+  display: block;
+  width: 100%;
+  max-width: 9rem;
+  height: auto;
+  margin: 0 auto 0.4rem;
+}
