@@ -30,8 +30,8 @@ matchbox/
 
 **Technology Stack**:
 - Java 17 (compiled for release 17, as org.hl7.fhir.core 7)
-- Spring Framework 7.0.9
-- HAPI FHIR 8.13.15-pr8189-1 (a build of hapifhir/hapi-fhir#8189, see Branches)
+- Spring Framework 7.0.10
+- HAPI FHIR 9.0.0
 - HL7 FHIR Core 7.0.6 (official FHIR validator), based on the versionless R6 modules (`org.hl7.fhir.model`,
   `org.hl7.fhir.services`, `org.hl7.fhir.standalone`) instead of `org.hl7.fhir.r5`
 
@@ -70,8 +70,8 @@ mvn clean install
 
 **Technology Stack**:
 - Java 21
-- Spring Boot 4.0.8
-- HAPI FHIR JPA Server 8.13.15-pr8189-1
+- Spring Boot 4.0.9
+- HAPI FHIR JPA Server 9.0.0
 - Embedded Tomcat 11.0.27
 - Hibernate ORM 7.2
 - H2 (default) / PostgreSQL (production)
@@ -482,11 +482,9 @@ GitHub Actions workflows (`.github/workflows/`):
 The `upstream` remote points to `hapifhir/hapi-fhir-jpaserver-starter`, which is the upstream HAPI FHIR starter project. The `origin` remote points to `ahdis/matchbox`. **Always create PRs against `ahdis/matchbox`** — use `gh pr create --repo ahdis/matchbox` to ensure the PR targets the correct repository.
 
 **Branches**: `main` is matchbox 4.x (Spring Boot 3, org.hl7.fhir.core 6, HAPI FHIR releases from Maven Central).
-`matchbox_v5` is matchbox 5 (Spring Boot 4, Spring Framework 7, Tomcat, org.hl7.fhir.core 7) on a HAPI FHIR build of
-[hapifhir/hapi-fhir#8189](https://github.com/hapifhir/hapi-fhir/pull/8189) from the GitHub Packages of `ahdis/matchbox`
-(needs a GitHub token with `read:packages` in `~/.m2/settings.xml`, server id `github`). Spring Boot 4 work targets
-`matchbox_v5` (`gh pr create --base matchbox_v5`), everything else `main`; merge `main` into `matchbox_v5` to keep it
-current. Once HAPI FHIR releases Spring Boot 4 support, `matchbox_v5` replaces `main`.
+`matchbox_v5` is matchbox 5 (Spring Boot 4, Spring Framework 7, Tomcat, org.hl7.fhir.core 7, HAPI FHIR 9 from Maven
+Central). Spring Boot 4 work targets `matchbox_v5` (`gh pr create --base matchbox_v5`), everything else `main`; merge
+`main` into `matchbox_v5` to keep it current. `matchbox_v5` replaces `main` with the 5.0.0 release.
 
 **Every PR must include an update to `docs/changelog.md`** — add a summary of the changes under the appropriate release version at the top of the file.
 
@@ -499,9 +497,9 @@ Use the `release` skill (`.claude/skills/release/SKILL.md`).
 ### Major Dependencies
 
 **Backend**:
-- HAPI FHIR 8.13.15-pr8189-1 - FHIR server framework (build of hapifhir/hapi-fhir#8189)
+- HAPI FHIR 9.0.0 - FHIR server framework
 - HL7 FHIR Core 7.0.6 - Official validator
-- Spring Boot 4.0.8 - Application framework
+- Spring Boot 4.0.9 - Application framework
 - Jackson 2.22.3 and 3.2.3 - JSON processing (Jackson 3 for Spring Boot 4)
 - Hibernate ORM 7.2 - JPA/ORM
 - LangChain4j 1.19.0 - AI/LLM integration
