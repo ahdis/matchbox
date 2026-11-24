@@ -19,7 +19,7 @@ created):
 - FHIR API: [http://localhost:8080/matchboxv3/fhir/metadata](http://localhost:8080/matchboxv3/fhir/metadata)
 - web interface: [http://localhost:8080/matchboxv3/](http://localhost:8080/matchboxv3/)
 
-Use a version tag (e.g. `v4.1.21`) instead of `latest` for a reproducible setup.
+Use a version tag (e.g. `v5.0.0`) instead of `latest` for a reproducible setup.
 
 ## Provide the configuration
 

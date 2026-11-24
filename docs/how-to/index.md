@@ -21,6 +21,7 @@ of Matchbox; if you don't, start with the [tutorials](../tutorials/index.md).
 - [Enable the AI analysis of validation results](enable-ai-analysis.md)
 - [Connect an MCP client](connect-mcp-client.md)
 - [Integrate with Gazelle](integrate-gazelle.md)
+- [Integrate with ITB](integrate-itb.md)
 
 ## Transform
 

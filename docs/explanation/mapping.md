@@ -29,7 +29,7 @@ a CDA document can be parsed, validated and used as source or target of a map, l
 A logical model carries what a parser needs to read its instances: the XML namespace and name of each element
 (extensions `xml-namespace` and `xml-name` of the FHIR tools), whether an element is an XML attribute or the text
 content of its parent (`xmlText`), and the types of its children. The parser of `org.hl7.fhir.core` uses this
-information to read a CDA document into the same internal element model (`org.hl7.fhir.r5.elementmodel.Element`) that
+information to read a CDA document into the same internal element model (`org.hl7.fhir.services.elementmodel.Element`) that
 it uses for FHIR resources, and to write that model back as XML. From then on, the validator, the FHIRPath engine and
 the mapping engine don't see a difference between a CDA document and a FHIR resource.
 

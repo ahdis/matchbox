@@ -57,6 +57,7 @@ nav:
           - Enable the AI analysis of validation results: how-to/enable-ai-analysis.md
           - Connect an MCP client: how-to/connect-mcp-client.md
           - Integrate with Gazelle: how-to/integrate-gazelle.md
+          - Integrate with ITB: how-to/integrate-itb.md
       - Transform:
           - Transform with the FHIR mapping language: how-to/transform-with-fml.md
           - Transform CDA to FHIR: how-to/transform-cda-to-fhir.md
@@ -70,6 +71,7 @@ nav:
       - FHIR operations: reference/operations.md
       - Web interface: reference/web-interface.md
       - Gazelle validation API: reference/gazelle-api.md
+      - ITB API: reference/itb-api.md
       - MCP server: reference/mcp-server.md
       - Docker image: reference/docker-image.md
       - matchbox-engine: reference/matchbox-engine-api.md

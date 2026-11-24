@@ -40,9 +40,10 @@ implementation guide is validated with its own dependencies. See [Validation eng
 
 ## Limit the request size
 
-Matchbox accepts request bodies up to 100 MB. Lower or raise the limit with `server.undertow.max-http-post-size` (or the
-environment variable `SERVER_UNDERTOW_MAX_HTTP_POST_SIZE`). A reverse proxy in front of Matchbox may enforce its own,
-smaller limit.
+Matchbox 5 doesn't limit the size of the FHIR request bodies: its embedded Tomcat only limits form posts
+(`server.tomcat.max-http-form-post-size`). Limit the size in the [reverse proxy](#put-matchbox-behind-a-reverse-proxy)
+instead, to the size of the largest resources you validate. The setting `server.undertow.max-http-post-size` of
+Matchbox 4 isn't used anymore.
 
 ## Put Matchbox behind a reverse proxy
 
@@ -91,8 +92,8 @@ minutes, and large documents take a while to validate too. Raise the read timeou
 `proxy_read_timeout`, 60 seconds by default), or create the engines at startup with `igsPreloaded` (see
 [Validation engines](../explanation/validation-engines.md)).
 
-**Allow large requests.** The proxy has its own limit of the request size, often much lower than the 100 MB of
-Matchbox (nginx: `client_max_body_size`, 1 MB by default). Raise it to the size of the largest resources you validate.
+**Limit the request size.** The limit of the proxy is the only one, as Matchbox has none, and it is often low (nginx:
+`client_max_body_size`, 1 MB by default). Set it to the size of the largest resources you validate.
 
 An example for nginx:
 
@@ -125,6 +126,7 @@ certificates, an authenticating proxy, IP allow lists).
 | `/` (other paths)           | The [web interface](../reference/web-interface.md)                        | To the people who use it, if any                             |
 | `/tx`                       | The internal terminology server                                            | Only if used externally (what you probably shouldn't do)   |
 | `/gazelle`                  | The [Gazelle validation API](../reference/gazelle-api.md)                  | To the Gazelle tools, if any                                 |
+| `/itb`                      | The [ITB test services](../reference/itb-api.md)                          | To the Interoperability Test Bed, if any                     |
 | `/mcp`                      | The [MCP server](../reference/mcp-server.md), when enabled                 | To the MCP clients, if any                                   |
 | `/actuator`                 | The Spring Boot Actuator endpoints                                         | Never publicly                                               |
 

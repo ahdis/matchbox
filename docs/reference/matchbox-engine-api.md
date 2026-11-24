@@ -10,7 +10,7 @@ complete API is in the [Javadoc](https://ahdis.github.io/matchbox/apidocs/).
 <dependency>
     <groupId>health.matchbox</groupId>
     <artifactId>matchbox-engine</artifactId>
-    <version>4.1.21</version>
+    <version>5.0.0</version>
 </dependency>
 ```
 
@@ -74,17 +74,38 @@ The main methods of `ch.ahdis.matchbox.engine.MatchboxEngine`:
 | `transform(String input, boolean inputJson, String mapUri, boolean outputJson)` | Transforms the input with the StructureMap; returns the result as JSON or XML.           |
 | `transformToFhir(String input, boolean inputJson, String mapUri)`              | Transforms the input with the StructureMap; returns an R4 `Resource`.                    |
 | `parseMap(String content)`                                                     | Parses a map in the FHIR mapping language; returns an R4 `StructureMap`.                 |
-| `parseMapR5(String content)`                                                   | Parses a map in the FHIR mapping language; returns an R5 `StructureMap`.                 |
-| `addCanonicalResource(Resource resource)`                                      | Adds a conformance resource (e.g. a `StructureMap`) to the engine.                       |
+| `parseMapR5(String content)`                                                   | Parses a map in the FHIR mapping language; returns a HAPI R5 `StructureMap`.             |
+| `parseMapR6(String content)`                                                   | Parses a map in the FHIR mapping language; returns an R6 `StructureMap` (`org.hl7.fhir.model.fml`). |
+| `addCanonicalResource(Resource resource)`                                      | Adds a conformance resource (e.g. a `StructureMap`) to the engine; with overloads for the R4B, HAPI R5 and R6 models. |
 | `loadPackage(String id, String version)`                                       | Loads a package and its dependencies from the package cache or the FHIR package servers. |
 | `loadPackage(InputStream inputStream)`                                         | Loads a package from its content (`package.tgz`); its dependencies aren't fetched.       |
-| `createSnapshot(StructureDefinition sd)`                                       | Creates the snapshot of a profile.                                                       |
+| `createSnapshot(StructureDefinition sd)`                                       | Adds the snapshot to the profile it is given and returns it; for the R4, HAPI R5 and R6 models. |
+| `getStructureDefinitionR6(String profile)` / `getStructureDefinitionR5(String profile)` | Returns a profile of the engine, in the R6 or the HAPI R5 model.                  |
 | `evaluateFhirPath(String input, boolean inputJson, String expression)`         | Evaluates a FHIRPath expression on a resource.                                           |
 | `getCanonicalResource(String canonical, String fhirVersion)`                   | Returns a conformance resource of the engine.                                            |
 | `addSuppressedWarnInfo(String text)` / `addSuppressedWarnInfoPattern(String pattern)` | Suppresses warning and information messages in the validation results.            |
 | `addSuppressedError(String messageId, String regexPath)`                       | Suppresses errors in the validation results.                                             |
+| `useTxCacheFolder(String folder)` / `disableTxCache()`                         | Stores the cache of the terminology server in a folder, or disables it (`initTxCache(folder)` is deprecated). |
+| `setFetchCacheMaxSize(int size)`                                               | Sets the number of resources kept converted for `resolve()` in FHIRPath expressions (default 100, `0` for none). |
 
-An engine contains at most one version of an implementation guide.
+`FhirFormat` is `org.hl7.fhir.model.utilities.formats.FhirFormat` (`org.hl7.fhir.r5.elementmodel.Manager.FhirFormat`
+before Matchbox 5). An engine contains at most one version of an implementation guide.
+
+## Model classes {: #model-classes}
+
+The API accepts and returns resources of the HAPI FHIR R4 model (`org.hl7.fhir.r4.model`), e.g. the `OperationOutcome`
+of `validate`, the `StructureMap` of `parseMap` and the result of `transformToFhir`. Where the API uses the model of the
+validator, it is the versionless R6 model of `org.hl7.fhir.core` 7 (`org.hl7.fhir.model.core`, and
+`org.hl7.fhir.model.fml` for `StructureMap`) since Matchbox 5, instead of `org.hl7.fhir.r5.model`:
+
+- `getStructureDefinitionR6()` and `parseMapR6()` return the R6 model; `getStructureDefinitionR5()` and `parseMapR5()`
+  still return the HAPI R5 model (`org.hl7.fhir.r5.model`);
+- `createSnapshot` and `addCanonicalResource` have overloads for the R6 model, the HAPI R4 model and the HAPI R5
+  model;
+- `transform(...)` with the element model works with `org.hl7.fhir.services.elementmodel.Element`;
+- `validate(FhirFormat, InputStream, String)` returns the `ValidationMessage`s of the validator.
+
+`ch.ahdis.matchbox.engine.R6Model` converts between the HAPI R5 model and the R6 model (`R6Model.toR5`, `R6Model.fromR5`).
 
 ## Package cache {: #package-cache}
 

@@ -30,7 +30,7 @@ Create a directory `matchbox-demo` with the following `pom.xml`. Use the
     <dependency>
       <groupId>health.matchbox</groupId>
       <artifactId>matchbox-engine</artifactId>
-      <version>4.1.21</version>
+      <version>5.0.0</version>
     </dependency>
   </dependencies>
 </project>
@@ -45,7 +45,7 @@ package example;
 
 import ch.ahdis.matchbox.engine.MatchboxEngine;
 import org.hl7.fhir.r4.model.OperationOutcome;
-import org.hl7.fhir.r5.elementmodel.Manager.FhirFormat;
+import org.hl7.fhir.model.utilities.formats.FhirFormat;
 
 import java.io.ByteArrayInputStream;
 import java.nio.charset.StandardCharsets;

@@ -7,7 +7,7 @@ matchbox-server is published as a Docker image. See [Run Matchbox with Docker](.
 | Property       | Value                                                                                   |
 |----------------|-----------------------------------------------------------------------------------------|
 | Image          | `europe-west6-docker.pkg.dev/ahdis-ch/ahdis/matchbox`                                   |
-| Tags           | `vX.Y.Z` for each release (e.g. `v4.1.21`), `vX.Y.Z-rcN` for release candidates, `latest` for the latest release (not for release candidates) |
+| Tags           | `vX.Y.Z` for each release (e.g. `v5.0.0`), `vX.Y.Z-rcN` for release candidates, `latest` for the latest release (not for release candidates) |
 | Platforms      | `linux/amd64`, `linux/arm64`                                                            |
 | Exposed port   | `8080`                                                                                  |
 | User           | `matchbox` (not root)                                                                   |

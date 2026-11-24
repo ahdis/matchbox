@@ -60,7 +60,8 @@ duration and the validation parameters (in the `http://matchbox.health/validatio
 itself is not stored, but the messages of the validator often quote values of it (codes, identifiers, texts): treat
 the statistics as data as sensitive as the validated resources.
 
-The validations of the [Gazelle API](../reference/gazelle-api.md) are not stored.
+The validations of the [Gazelle API](../reference/gazelle-api.md) and of the [ITB API](../reference/itb-api.md) are
+not stored.
 
 **Where to see them.** The _Statistics_ page of the web interface (`/matchboxv3/statistics`) appears when the
 statistics are enabled. It lists the stored results, the latest first, and filters them by date, severity of the issues,

@@ -79,6 +79,7 @@ The parameters are listed in the [web interface reference](../reference/web-inte
 
 - From Java code, without a server: [Use matchbox-engine](use-matchbox-engine.md).
 - From the IHE Gazelle EVS Client: [Integrate with Gazelle](integrate-gazelle.md).
+- From the Interoperability Test Bed: [Integrate with ITB](integrate-itb.md).
 - From an AI assistant: [Connect an MCP client](connect-mcp-client.md).
 - From your own web application: the blog post
   [One verdict for IPS and ODH](https://www.matchbox.health/blog/2026/matchbox-ihe-na-connectathon/) shows a

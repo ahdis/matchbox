@@ -60,12 +60,13 @@ matchbox-server is a Spring Boot application, which serves several entry points 
 ├── /tx/*         HAPI FHIR façade: the internal terminology server ($validate-code)
 ├── /tx-reg       Spring controller: the terminology server registry
 ├── /gazelle      Spring controller: the Gazelle validation API
+├── /itb/*        Spring controllers: the ITB (GITB REST) test services
 ├── /mcp/message  MCP server (if enabled)
 ├── /actuator     Spring Boot Actuator: health, metrics
 └── /*            the web interface (static files of matchbox-frontend)
 ```
 
-The FHIR API, the Gazelle API and the MCP server are different doors to the same validation: they all end in
+The FHIR API, the Gazelle API, the ITB API and the MCP server are different doors to the same validation: they all end in
 `MatchboxEngineSupport`, which provides the engines, and in the same validation code. A `$validate` request goes through
 these steps:
 
@@ -113,7 +114,7 @@ sequenceDiagram
 6. The `OperationOutcome` is converted to the FHIR version of the server, and serialized in the format that the
    client asked for.
 
-The Gazelle API (`GazelleValidationWs`) and the MCP tool `validate-fhir-resource` take the same path from step 3 (the
+The Gazelle API (`GazelleValidationWs`), the ITB validation service (`ItbValidationWs`) and the MCP tool `validate-fhir-resource` take the same path from step 3 (the
 MCP tool even calls the `$validate` operation of the FHIR server internally); only the format of the request and of the
 result differ.
 

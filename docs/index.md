@@ -12,7 +12,7 @@ FHIR implementation guides. It is also used in production to validate messages w
 Matchbox comes in two forms:
 
 - **matchbox-server**: a FHIR server, distributed as a Docker image, that you run in your own infrastructure. It offers
-  the FHIR API (`$validate`, `$transform`, …), a web interface, the Gazelle EVS API and an MCP server.
+  the FHIR API (`$validate`, `$transform`, …), a web interface, the Gazelle EVS and ITB APIs and an MCP server.
 - **matchbox-engine**: a Java library that you embed in your own application, with the same validation and
   transformation features.
 
@@ -32,7 +32,7 @@ A [public test server](https://test.ahdis.ch/matchboxv3/) is available to try it
 - **Structured Data Capture**: `QuestionnaireResponse/$extract` based on the FHIR mapping language, and
   `Questionnaire/$assemble` for modular questionnaires.
 - **AI support**: analysis of validation results by an LLM, and an MCP server for AI assistants.
-- **Integration** with the IHE Gazelle EVS Client and Gazelle Maestro.
+- **Integration** with the IHE Gazelle EVS Client, Gazelle Maestro and the Interoperability Test Bed (ITB).
 
 ## How this documentation is organized
 

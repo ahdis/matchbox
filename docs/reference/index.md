@@ -9,6 +9,7 @@ while you work, not read from start to end.
 - [FHIR operations](operations.md): `$validate`, `$transform`, `$extract`, `$install-npm-package`, …
 - [Web interface](web-interface.md): the pages and the URL parameters of the validation page
 - [Gazelle validation API](gazelle-api.md): the endpoints for the IHE Gazelle tools
+- [ITB API](itb-api.md): the test services for the Interoperability Test Bed
 - [MCP server](mcp-server.md): the endpoint and the tools for AI assistants
 - [Docker image](docker-image.md): tags, paths, environment variables, JVM options, sample configurations
 

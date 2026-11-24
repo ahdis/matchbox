@@ -11,7 +11,7 @@ create engines, load implementation guides, validate and transform. If you have 
 <dependency>
     <groupId>health.matchbox</groupId>
     <artifactId>matchbox-engine</artifactId>
-    <version>4.1.21</version>
+    <version>5.0.0</version>
 </dependency>
 ```
 
@@ -33,6 +33,9 @@ from an existing one with `new MatchboxEngine(existingEngine)`.
 ## Validate a resource
 
 ```java
+import org.hl7.fhir.model.utilities.formats.FhirFormat;
+import org.hl7.fhir.r4.model.OperationOutcome;
+
 InputStream in = getClass().getResourceAsStream("/pat.json");
 OperationOutcome outcome = engine.validate(in, FhirFormat.JSON, "http://hl7.org/fhir/StructureDefinition/Patient");
 ```
@@ -73,6 +76,14 @@ builder.setTxServer("http://tx.fhir.org");
 
 Without a terminology server, codes of code systems that aren't loaded in the engine aren't checked; see
 [Terminology in validation](../explanation/terminology.md).
+
+The answers of the terminology server are cached in memory. To keep them between runs, store the cache in a folder;
+to always ask the server, disable the cache:
+
+```java
+engine.useTxCacheFolder("/var/cache/fhir-tx");
+// or: engine.disableTxCache();
+```
 
 ## Transform with the FHIR mapping language
 

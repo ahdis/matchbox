@@ -112,7 +112,7 @@ warnings don't fail the validation. It is `UNDEFINED` if the item couldn't be va
   "disclaimer": "Matchbox disclaims",
   "validationMethod": {
     "validationServiceName": "Matchbox",
-    "validationServiceVersion": "4.1.22",
+    "validationServiceVersion": "5.0.0",
     "validationProfileID": "http://fhir.ch/ig/ch-core/StructureDefinition/ch-core-patient|5.0.0",
     "validationProfileVersion": "5.0.0",
     "validationProfileName": "FHIR http://fhir.ch/ig/ch-core/StructureDefinition/ch-core-patient|5.0.0"

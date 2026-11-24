@@ -31,6 +31,23 @@ Read every section of the [changelog](../changelog.md) between your version and 
 - **breaking changes** for your use case, e.g. a new version of the CDA logical model that requires changes to existing
   CDA maps.
 
+### Upgrade to Matchbox 5
+
+Matchbox 5 is based on Spring Boot 4, HAPI FHIR 9 and `org.hl7.fhir.core` 7. Coming from Matchbox 4:
+
+- **The server runs on Tomcat instead of Undertow.** The `server.undertow.*` settings aren't used anymore: remove them
+  from your configuration. Matchbox doesn't limit the size of the requests anymore, set the limit in your reverse proxy
+  (see [Limit the request size](secure-production-deployment.md#limit-the-request-size)).
+- **HAPI FHIR 9** (from 8.12.1): if you keep the database,
+  [migrate the HAPI FHIR schema](#migrate-the-hapi-fhir-schema).
+- **`org.hl7.fhir.core` 7** (from 6.10.4) brings new checks of the validator and changes in the terminology handling:
+  [check the validation results](#check-the-validation-results).
+- **matchbox-engine** uses the R6 model of `org.hl7.fhir.core` 7 instead of `org.hl7.fhir.r5.model` (see
+  [Model classes](../reference/matchbox-engine-api.md#model-classes)). `FhirFormat` is now
+  `org.hl7.fhir.model.utilities.formats.FhirFormat`, `createSnapshot` adds the snapshot to the StructureDefinition it
+  is given instead of returning a new one, and `useTxCacheFolder(folder)` and `disableTxCache()` replace
+  `initTxCache(folder)`.
+
 ## Back up the database
 
 If your server keeps its database (a volume for the H2 database, or [PostgreSQL](use-postgresql.md)), back it up before
@@ -45,11 +62,11 @@ with the changed database: the backup is your way back.
 Change the tag of the image and start a new container with it:
 
 ```bash
-docker pull europe-west6-docker.pkg.dev/ahdis-ch/ahdis/matchbox:v4.1.22
+docker pull europe-west6-docker.pkg.dev/ahdis-ch/ahdis/matchbox:v5.0.0
 docker rm -f matchbox
 docker run -d --name matchbox -p 8080:8080 -m 4g \
   -v ${PWD}/config:/config \
-  europe-west6-docker.pkg.dev/ahdis-ch/ahdis/matchbox:v4.1.22
+  europe-west6-docker.pkg.dev/ahdis-ch/ahdis/matchbox:v5.0.0
 ```
 
 With docker-compose, change the `image` of the `matchbox` service, then run `docker-compose pull` and
@@ -76,7 +93,7 @@ If you [built an image with pre-installed packages](build-custom-image.md), chan
 build it again. The packages are installed during the build by the new version:
 
 ```dockerfile
-FROM europe-west6-docker.pkg.dev/ahdis-ch/ahdis/matchbox:v4.1.22
+FROM europe-west6-docker.pkg.dev/ahdis-ch/ahdis/matchbox:v5.0.0
 ```
 
 ## Upgrade matchbox-engine
@@ -87,7 +104,7 @@ Change the version of the dependency:
 <dependency>
     <groupId>health.matchbox</groupId>
     <artifactId>matchbox-engine</artifactId>
-    <version>4.1.22</version>
+    <version>5.0.0</version>
 </dependency>
 ```
 
@@ -152,7 +169,7 @@ Then:
 
 1. **Get the CLI of the new HAPI FHIR version.** Download `hapi-fhir-<version>-cli.zip` (or `.tar.bz2`) of the HAPI
    FHIR version of the new Matchbox from the [HAPI FHIR releases](https://github.com/hapifhir/hapi-fhir/releases),
-   e.g. `hapi-fhir-8.12.1-cli.zip`, and unpack it. It needs a Java runtime (Java 17 or newer for HAPI FHIR 8). The
+   e.g. `hapi-fhir-9.0.0-cli.zip` for Matchbox 5, and unpack it. It needs a Java runtime (Java 17 or newer). The
    CLI only knows the migrations up to its own version: use the version of the new Matchbox, not the latest one.
 2. **Stop Matchbox** and [back up the database](#back-up-the-database). No server may use the database during the
    migration; with H2, the database file can only be opened by one process anyway.
