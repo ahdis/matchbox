@@ -9,7 +9,7 @@ Includes the changes of 5.0.0-rc6, 5.0.0-rc5, 5.0.0-rc4, 5.0.0-rc3, 5.0.0-rc2 an
   and R5)
 - The build doesn't need a GitHub token with `read:packages` anymore: the repository `github` is removed from the
   `pom.xml`, and the workflows don't use `.github/maven-settings.xml` and the permission `packages: read` anymore.
-  The release workflow publishes `matchbox-engine` to Maven Central again
+  The release workflow publishes `matchbox-engine` to Maven Central again, except for release candidates
 
 2026/11/18 Release 5.0.0-rc6
 

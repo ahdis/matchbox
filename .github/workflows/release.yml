@@ -133,4 +133,9 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           gh workflow run googleregistry.yml --ref "v$VERSION"
-          gh workflow run central_repository.yml --ref "v$VERSION"
+          # A release candidate (X.Y.Z-rcN) isn't published to Maven Central
+          if [[ "$VERSION" == *-rc* ]]; then
+            echo "::notice::Release candidate $VERSION: not published to Maven Central"
+          else
+            gh workflow run central_repository.yml --ref "v$VERSION"
+          fi
