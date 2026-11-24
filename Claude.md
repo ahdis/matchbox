@@ -460,8 +460,8 @@ docker run -d \
 | File/Directory | Purpose |
 |----------------|---------|
 | `README.md` | Project overview |
-| `docs/` | MkDocs documentation |
-| `mkdocs.yml` | Documentation configuration |
+| `docs/` | ProperDocs documentation |
+| `properdocs.yml` | Documentation configuration |
 | `docs/tutorials/` | Tutorials: lessons to get started |
 | `docs/how-to/` | How-to guides: steps to reach a specific goal |
 | `docs/reference/` | Reference: configuration, FHIR operations, Docker image, Java API |
@@ -469,8 +469,8 @@ docker run -d \
 | `docs/changelog.md` | Changelog |
 
 The documentation follows the [Diátaxis](https://diataxis.fr) framework: every page belongs to exactly one of the
-four sections above, and new pages must be added to the `nav` of `mkdocs.yml`. When a page is moved, add a redirect
-from its old address in `mkdocs.yml` (`redirects` plugin).
+four sections above, and new pages must be added to the `nav` of `properdocs.yml`. When a page is moved, add a redirect
+from its old address in `properdocs.yml` (`redirects` plugin).
 
 ## CI/CD Pipeline
 
