@@ -1,5 +1,144 @@
-[data-md-color-scheme="matchbox"] {
-    --md-primary-fg-color:        #97D6BA;
-    --md-primary-fg-color--light: #97D6BA;
-    --md-primary-fg-color--dark:  #97D6BA;
+/*
+ * Matchbox colors.
+ *
+ * The Matchbox mint (#97D6BA) is too light to be used as a text color on white, so it is only used as the topbar
+ * background and as a tint. The theme's primary color (used for texts such as the active navigation link and the
+ * links) is a darker green.
+ */
+[data-md-color-scheme="matchbox"][data-mx-topbar="primary"] {
+  --matchbox-mint:                     #97D6BA;
+  --matchbox-green:                    #17694B; /* 6.7:1 on white */
+  --matchbox-green-dark:               #264760; /* 7.5:1 on the mint */
+
+  --md-primary-fg-color:               var(--matchbox-green);
+  --md-primary-fg-color--light:        #1F8A62;
+  --md-primary-fg-color--dark:         var(--matchbox-green-dark);
+  /* Background of the active navigation link: a light mint tint (5.7:1 with the green text) */
+  --md-primary-fg-color--transparent:  rgba(151, 214, 186, 0.2);
+  --md-primary-bg-color:               #FFFFFF;
+  --md-primary-bg-color--light:        rgba(255, 255, 255, 0.7);
+
+  /* Hover and focus color, instead of the default indigo */
+  --md-accent-fg-color:                #12805A; /* 4.9:1 on white */
+  --md-accent-fg-color--transparent:   rgba(18, 128, 90, 0.1);
+  --md-accent-bg-color:                #FFFFFF;
+  --md-accent-bg-color--light:         rgba(255, 255, 255, 0.7);
+
+  --md-typeset-a-color:                var(--md-primary-fg-color);
+
+  --md-code-fg-color:                  #2a3940;
+
+  --mx-topbar-bg:                      var(--matchbox-mint);
+  --mx-topbar-fg:                      var(--matchbox-green-dark);
+  --mx-topbar-fg-muted:                rgba(11, 59, 42, 0.85);
+  --mx-search-outline:                 rgba(11, 59, 42, 0.35);
+  --mx-search-hover-bg:                rgba(11, 59, 42, 0.12);
+  /* The active tab is otherwise only distinguished by its opacity */
+  --mx-tabs-active-underline:          var(--mx-topbar-fg);
+}
+
+/* Navigation tabs (Home / Tutorials / ...): the theme dims the inactive ones to 70% */
+[data-md-color-scheme="matchbox"] .md-tabs__link {
+  opacity: 0.85;
+}
+
+[data-md-color-scheme="matchbox"] .md-tabs__item--active .md-tabs__link,
+[data-md-color-scheme="matchbox"] .md-tabs__link:hover,
+[data-md-color-scheme="matchbox"] .md-tabs__link:focus {
+  opacity: 1;
+}
+
+.md-typeset code {
+  padding: 2px 0.3em;
+  margin: 0 0.1em;
+}
+
+html {
+  font-size: 112.5%;
+}
+@media screen and (min-width: 100em) {
+  html { font-size: 125%; }
+}
+@media screen and (min-width: 125em) {
+  html { font-size: 137.5%; }
+}
+
+/* Header links (docs-overrides/partials/source.html): the website and the blog next to the repository link, which
+ * the theme gives a fixed width of 11.5rem */
+@media screen and (min-width: 60em) {
+  .md-header__source {
+    display: flex;
+    align-items: center;
+    width: auto;
+    max-width: none;
+    gap: 0.4rem;
   }
+
+  .md-header__source .md-source {
+    flex: none;
+  }
+
+  .md-header__source .md-source:not(.md-source--link) {
+    width: 11.5rem;
+  }
+
+  /* The theme limits the label to a percentage of the link, which has no fixed width here */
+  .md-header__source .md-source--link .md-source__repository {
+    max-width: none;
+  }
+}
+
+/* Between the tablet and the large desktop widths, only the icons of the extra links are shown */
+@media screen and (min-width: 60em) and (max-width: 76.2344em) {
+  .md-header__source .md-source--link .md-source__repository {
+    display: none;
+  }
+}
+
+/* Icons of the main features in the left sidebar of the home page (docs-overrides/main.html). Below 76.25em, the
+ * sidebar is the navigation drawer, where they would be in the way. */
+.mb-home-features {
+  display: none;
+}
+
+@media screen and (min-width: 76.25em) {
+  .mb-home-features {
+    display: flex;
+    flex-direction: column;
+    gap: 1.2rem;
+    padding: 0.6rem 0.6rem 0 0;
+  }
+}
+
+.mb-home-feature {
+  display: block;
+  color: var(--md-default-fg-color--light);
+  font-size: 0.7rem;
+  line-height: 1.3;
+  text-align: center;
+}
+
+.mb-home-feature:hover,
+.mb-home-feature:focus {
+  color: var(--md-accent-fg-color);
+}
+
+.mb-home-feature img {
+  display: block;
+  width: 100%;
+  max-width: 9rem;
+  height: auto;
+  margin: 0 auto 0.4rem;
+}
+
+/* Larger logo in the header (1.2rem in the theme). The vertical padding is reduced by the same amount, so that the
+ * header keeps its height. */
+.md-header__button.md-logo {
+  padding-top: 0.1rem;
+  padding-bottom: 0.1rem;
+}
+
+.md-header__button.md-logo img,
+.md-header__button.md-logo svg {
+  height: 2rem;
+}

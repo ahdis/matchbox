@@ -1,0 +1,36 @@
+{#-
+  On the home page, the left sidebar only holds the navigation of the Home tab, which is empty: the icons of the two
+  main features (from www.matchbox.health) are shown below it. The other pages use the sidebars of the theme.
+-#}
+{% extends "base.html" %}
+
+{% block site_nav %}
+  {% if page.is_homepage %}
+    <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation">
+      <div class="md-sidebar__scrollwrap">
+        <div class="md-sidebar__inner">
+          {% include "partials/nav.html" %}
+          <div class="mb-home-features">
+            <a href="{{ 'tutorials/first-validation/' | url }}" class="mb-home-feature">
+              <img src="{{ 'assets/icon-validation.webp' | url }}" alt="" width="720" height="720">
+              <span>Validation of FHIR implementations</span>
+            </a>
+            <a href="{{ 'tutorials/first-mapping/' | url }}" class="mb-home-feature">
+              <img src="{{ 'assets/icon-mapping.webp' | url }}" alt="" width="720" height="720">
+              <span>Mapping health data to and from FHIR using the FHIR mapping language</span>
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc">
+      <div class="md-sidebar__scrollwrap">
+        <div class="md-sidebar__inner">
+          {% include "partials/toc.html" %}
+        </div>
+      </div>
+    </div>
+  {% else %}
+    {{ super() }}
+  {% endif %}
+{% endblock %}

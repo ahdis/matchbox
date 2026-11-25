@@ -75,6 +75,9 @@ Other
 - MCP: the tool `list-fhir-profiles-to-validate-for` always failed with HTTP 400 ("does not know how to handle GET
   operation[OperationDefinition]"), it now reads the OperationDefinition of `$validate` instead of searching for it
   ([#686](https://github.com/ahdis/matchbox/issues/686))
+- Documentation: reorganized according to the [Diátaxis](https://diataxis.fr) framework into tutorials, how-to
+  guides, reference and explanation. The existing pages were split and moved (the old addresses redirect to the new
+  ones, with `mkdocs-redirects`), and new tutorials and how-to guides were added.
 - Documentation: how to provide implementation guides from files (`file:` URLs in `hapi.fhir.implementationguides`, in
   Docker with a volume, dependencies, reinstalling a package with the same version) and how to build an own docker
   image with preinstalled packages ([#643](https://github.com/ahdis/matchbox/issues/643))

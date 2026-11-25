@@ -1,0 +1,126 @@
+site_name: Matchbox
+repo_url: https://github.com/ahdis/matchbox
+theme:
+  name: materialx
+  # Template overrides: partials/source.html adds the links of extra.header_links next to the repository link
+  custom_dir: docs-overrides
+  logo: assets/matchbox_logo_color.png
+  favicon: assets/favicon-96x96.png
+  topbar_style: primary
+  palette:
+    scheme: matchbox
+    # The colors are defined in docs/stylesheets/extra.css
+    primary: custom
+    accent: custom
+  features:
+    - navigation.tabs
+    - navigation.indexes
+    - navigation.top
+    - content.code.copy
+extra_css:
+  - stylesheets/extra.css
+extra:
+  # Shown in the header before the repository link (see docs-overrides/partials/source.html)
+  header_links:
+    - name: Homepage
+      title: The Matchbox website
+      url: https://www.matchbox.health/
+      icon: material/web
+    - name: Blog
+      title: The Matchbox blog
+      url: https://www.matchbox.health/blog/
+      icon: material/post-outline
+# The documentation follows the Diátaxis framework (https://diataxis.fr): every page belongs to one of the four
+# sections (tutorials, how-to guides, reference, explanation).
+nav:
+  - Home: index.md
+  - Tutorials:
+      - tutorials/index.md
+      - Validate your first FHIR resource: tutorials/first-validation.md
+      - Run your own Matchbox: tutorials/run-your-own-matchbox.md
+      - Transform data with the FHIR mapping language: tutorials/first-mapping.md
+      - Embed matchbox-engine in a Java application: tutorials/embed-matchbox-engine.md
+  - How-to guides:
+      - how-to/index.md
+      - Install and operate:
+          - Run Matchbox with Docker: how-to/run-with-docker.md
+          - Use a PostgreSQL database: how-to/use-postgresql.md
+          - Load implementation guides: how-to/load-implementation-guides.md
+          - Build an image with pre-installed packages: how-to/build-custom-image.md
+          - Secure a production deployment: how-to/secure-production-deployment.md
+          - Monitor Matchbox: how-to/monitor-matchbox.md
+          - Upgrade Matchbox: how-to/upgrade-matchbox.md
+      - Validate:
+          - Validate resources: how-to/validate-resources.md
+          - Configure a terminology server: how-to/configure-terminology-server.md
+          - Suppress validation issues: how-to/suppress-validation-issues.md
+          - Enable the AI analysis of validation results: how-to/enable-ai-analysis.md
+          - Connect an MCP client: how-to/connect-mcp-client.md
+          - Integrate with Gazelle: how-to/integrate-gazelle.md
+          - Integrate with ITB: how-to/integrate-itb.md
+      - Transform:
+          - Transform with the FHIR mapping language: how-to/transform-with-fml.md
+          - Transform CDA to FHIR: how-to/transform-cda-to-fhir.md
+          - Extract data from a QuestionnaireResponse: how-to/extract-questionnaire-response.md
+      - Develop:
+          - Use matchbox-engine in a Java application: how-to/use-matchbox-engine.md
+          - Build Matchbox from source: how-to/build-from-source.md
+  - Reference:
+      - reference/index.md
+      - Configuration: reference/configuration.md
+      - FHIR operations: reference/operations.md
+      - Web interface: reference/web-interface.md
+      - Gazelle validation API: reference/gazelle-api.md
+      - ITB API: reference/itb-api.md
+      - MCP server: reference/mcp-server.md
+      - Docker image: reference/docker-image.md
+      - matchbox-engine: reference/matchbox-engine-api.md
+      - CDA logical model: reference/cda-logical-model.md
+      - Changelog: changelog.md
+  - Explanation:
+      - explanation/index.md
+      - Architecture: explanation/architecture.md
+      - Validation engines: explanation/validation-engines.md
+      - Package management: explanation/package-management.md
+      - Memory and performance: explanation/memory-and-performance.md
+      - Understanding validation errors: explanation/validation-errors.md
+      - Terminology in validation: explanation/terminology.md
+      - Terminology server interactions: explanation/terminology-server-interactions.md
+      - AI-assisted validation: explanation/ai-assisted-validation.md
+      - Comparison with the HAPI FHIR validation: explanation/comparison-with-hapi-fhir.md
+      - Mapping and transformation: explanation/mapping.md
+plugins:
+  - search
+  - redirects:
+      # The addresses of the pages before the reorganization of the documentation
+      redirect_maps:
+        'features.md': 'index.md'
+        'api.md': 'reference/operations.md'
+        'matchbox-engine.md': 'how-to/use-matchbox-engine.md'
+        'matchbox-server.md': 'reference/configuration.md'
+        'validation.md': 'how-to/validate-resources.md'
+        'docker.md': 'how-to/run-with-docker.md'
+        'cda.md': 'reference/cda-logical-model.md'
+        'packages.md': 'explanation/package-management.md'
+        'validation-investigations.md': 'explanation/terminology-server-interactions.md'
+        'validation-tutorial.md': 'explanation/validation-errors.md'
+        'validation-with-ai-tutorial.md': 'how-to/enable-ai-analysis.md'
+markdown_extensions:
+  - admonition
+  - attr_list
+  - md_in_html
+  - pymdownx.highlight:
+      anchor_linenums: true
+      line_spans: __span
+      pygments_lang_class: true
+  - pymdownx.inlinehilite
+  - pymdownx.snippets
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
+  - pymdownx.magiclink:
+      repo_url_shorthand: true
+      user: ahdis
+      repo: matchbox

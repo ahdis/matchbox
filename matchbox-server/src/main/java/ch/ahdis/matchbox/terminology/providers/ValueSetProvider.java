@@ -27,8 +27,6 @@ import java.util.*;
 import java.util.regex.Pattern;
 
 import static ch.ahdis.matchbox.terminology.TerminologyUtils.*;
-import static ch.ahdis.matchbox.terminology.TerminologyUtils.createErrorResponseParameters;
-import static ch.ahdis.matchbox.terminology.TerminologyUtils.createSuccessfulResponseParameters;
 import static java.util.Objects.requireNonNull;
 
 public class ValueSetProvider extends AbstractMatchboxResourceProvider {

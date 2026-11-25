@@ -1,19 +1,14 @@
-# Investigation of the FHIR validator
+# How the validator talks to a terminology server
 
-## Setup
+This page describes the requests that the validator sends to an external terminology server, at startup and during a
+validation. It helps to understand what a terminology server has to support to be used with Matchbox, what data leaves
+Matchbox, and how the terminology cache works. The observations come from an investigation of the HL7 validator with
+Matchbox 3.4.5 and the ch-elm implementation guide, configured with the terminology server
+`http://host.docker.internal:18002/eprik-cara/camel/tx/r4/`; details may differ in newer versions.
 
-To build Matchbox and matchbox-ch-elm:
-```bash
-cd matchbox
-mvn --batch-mode --update-snapshots package -DskipTests -P release
-docker build --tag "matchbox:3.4.5.2" --platform=linux/amd64 --progress=plain --no-cache -f matchbox-server/Dockerfile matchbox-server
-cd ../matchbox-ch-elm
-docker build --tag "matchbox-ch-elm:3.4.5.1" --platform=linux/amd64 --progress=plain --no-cache -f ./Dockerfile .
-```
+For the role of the terminology server in validation, see [Terminology in validation](terminology.md).
 
-matchbox-ch-elm is configured with `txServer: http://host.docker.internal:18002/eprik-cara/camel/tx/r4/`.
-
-## Start up
+## At startup
 
 At startup, Matchbox makes two HTTP requests to the terminology server:
 ```http
@@ -26,7 +21,7 @@ GET http://host.docker.internal:18002/eprik-cara/camel/tx/r4/metadata?mode=termi
 ```
 which returns a TerminologyCapabilities that seems to contain the list of supported code systems, and expansion parameters.
 
-The responsible is `SimpleWorkerContext.connectToTSServer()`, both resources are put in the `txCache`.
+The code responsible for this is `SimpleWorkerContext.connectToTSServer()`, both resources are put in the `txCache`.
 
 ## During validation
 

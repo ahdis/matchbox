@@ -1,0 +1,23 @@
+{#-
+  Override of the theme's partials/source.html: the links of extra.header_links (properdocs.yml) are shown before the
+  link to the repository, in the same style, in the header and in the navigation drawer.
+-#}
+{% for link in config.extra.header_links %}
+  <a href="{{ link.url }}" title="{{ link.title | d(link.name) | e }}" class="md-source md-source--link">
+    <div class="md-source__icon md-icon">
+      {% include ".icons/" ~ link.icon ~ ".svg" %}
+    </div>
+    <div class="md-source__repository">
+      {{ link.name }}
+    </div>
+  </a>
+{% endfor %}
+<a href="{{ config.repo_url }}" title="{{ lang.t('source') }}" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    {% set icon = config.theme.icon.repo or "fontawesome/brands/git-alt" %}
+    {% include ".icons/" ~ icon ~ ".svg" %}
+  </div>
+  <div class="md-source__repository">
+    {{ config.repo_name }}
+  </div>
+</a>
