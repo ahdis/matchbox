@@ -283,10 +283,10 @@ public final class HapiWorkerContext extends I18nBase implements IWorkerContext 
 
 	@Override
 	public long getDefinitionsVersion() {
-		/* 	This is not called in 6.8.2 of org.hl7.fhir.core except within implementations of
-		storeAnalysis/retrieveAnalysis, which we do not implement in HAPI -dotasek
-		*/
-		throw new UnsupportedOperationException(Msg.code(2861));
+		// matchbox patch: since org.hl7.fhir.core 7.0.7 the constructor of FHIRPathEngine asks for the definitions version
+		// before it works out its analysis (to pass it to storeAnalysis(Class, Object, long)), it threw HAPI-2861. The
+		// analysis isn't stored (see storeAnalysis/retrieveAnalysis), so the version doesn't matter
+		return 0;
 	}
 
 	@Override

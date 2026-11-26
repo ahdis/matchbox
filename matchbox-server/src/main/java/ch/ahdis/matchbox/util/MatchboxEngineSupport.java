@@ -29,7 +29,6 @@ import org.hl7.fhir.services.conformance.R5ExtensionsLoader;
 import org.hl7.fhir.standalone.terminology.client.TerminologyClientContext;
 import org.hl7.fhir.services.validation.constants.ReferenceValidationPolicy;
 import org.hl7.fhir.utilities.FhirPublication;
-import org.hl7.fhir.utilities.validation.ValidationOptions.R5BundleRelativeReferencePolicy;
 import org.hl7.fhir.validation.service.DisabledValidationPolicyAdvisor;
 import org.hl7.fhir.validation.service.StandAloneValidatorFetcher;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -815,7 +814,6 @@ public class MatchboxEngineSupport {
 				validator.getDefaultInstanceValidatorParameters().getBundleValidationRules().add(new org.hl7.fhir.services.validation.BundleValidationRule().setRule(rule).setProfile(profile));
 			}
 		}
-		validator.getDefaultInstanceValidatorParameters().setR5BundleRelativeReferencePolicy(R5BundleRelativeReferencePolicy.fromCode(cli.getR5BundleRelativeReferencePolicy()));
 		try {
 			if (cli.getBestPracticeWarningLevel() != null) {
 				validator.getDefaultInstanceValidatorParameters().setBestPracticeLevel(cli.getBestPracticeWarningLevel());
