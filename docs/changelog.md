@@ -108,7 +108,8 @@ Other
 - MCP: the tool `list-fhir-igs` had an inverted logic for the `includeVersions` parameter, and the MCP
   searches (`list-fhir-igs`, `search-fhir-resources`) ignored their search parameters, as they were not in the query
   string of the request
-  ([#684](https://github.com/ahdis/matchbox/issues/684))
+  ([#684](https://github.com/ahdis/matchbox/issues/684)). Its test `MatchboxApiR4Test.mcpListFhirIgs` compares the
+  number of IGs with the number before the test instead of a fixed number, which failed on `main`
 - MCP: the tools `conditional-update-fhir-resource` and `conditional-patch-fhir-resource` failed without an `id` and
   ignored their `query`, the `headers` of the tools (e.g. `If-None-Exist`, `If-Match`) were ignored, the patch tools
   rejected their `resource` and `search-fhir-resources` ignored its `query` string

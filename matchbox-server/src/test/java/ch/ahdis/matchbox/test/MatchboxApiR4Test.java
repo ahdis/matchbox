@@ -120,7 +120,10 @@ class MatchboxApiR4Test {
 	 */
 	@Test
 	void mcpListFhirIgs() throws Exception {
-		// the test profile has only one version of each IG: install two versions of another one
+		// the IGs that are already installed (the ones of the test profile and their dependencies, which other tests may
+		// have installed in further versions): the test installs two versions of another one
+		final int currentIgs = totalOf(textOf(this.mcpMatchboxBridge.getFhirImplementationGuides(false)));
+		final int igVersions = totalOf(textOf(this.mcpMatchboxBridge.getFhirImplementationGuides(true)));
 		final String packageId = "matchbox.health.test.issue684";
 		this.packageCacheManager.addPackageToCache(packageId, "0.1.0",
 																 new ByteArrayInputStream(createEmptyPackage(packageId, "0.1.0")), "test");
@@ -133,7 +136,7 @@ class MatchboxApiR4Test {
 				assertTrue(text.contains("matchbox.health.test.ig.r4-" + this.matchboxTestIgVersion), text);
 				assertTrue(text.contains(packageId + "-0.2.0"), text);
 				assertFalse(text.contains(packageId + "-0.1.0"), text);
-				assertTrue(text.contains("\"total\":4"), text);
+				assertEquals(currentIgs + 1, totalOf(text), text);
 			}
 
 			final String text = textOf(this.mcpMatchboxBridge.getFhirImplementationGuides(true));
@@ -141,7 +144,7 @@ class MatchboxApiR4Test {
 			assertTrue(text.contains("matchbox.health.test.ig.r4-" + this.matchboxTestIgVersion), text);
 			assertTrue(text.contains(packageId + "-0.2.0"), text);
 			assertTrue(text.contains(packageId + "-0.1.0"), text);
-			assertTrue(text.contains("\"total\":5"), text);
+			assertEquals(igVersions + 2, totalOf(text), text);
 		} finally {
 			this.packageCacheManager.uninstallPackage(packageId, "0.2.0");
 			this.packageCacheManager.uninstallPackage(packageId, "0.1.0");
@@ -161,6 +164,15 @@ class MatchboxApiR4Test {
 				""".formatted(packageId, version));
 		}
 		return out.toByteArray();
+	}
+
+	/**
+	 * The total of the search result (Bundle) that an MCP tool returned as JSON.
+	 */
+	private static int totalOf(final String bundleJson) {
+		final var matcher = java.util.regex.Pattern.compile("\"total\"\\s*:\\s*(\\d+)").matcher(bundleJson);
+		assertTrue(matcher.find(), bundleJson);
+		return Integer.parseInt(matcher.group(1));
 	}
 
 	private static String textOf(McpSchema.CallToolResult result) {
