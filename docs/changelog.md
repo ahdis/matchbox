@@ -24,6 +24,7 @@ Platform
   validator, the FHIR mapping language and the worker context are based on the versionless R6 modules
   (`org.hl7.fhir.model`, `org.hl7.fhir.services`, `org.hl7.fhir.standalone`) instead of `org.hl7.fhir.r5`, with new
   checks of the validator and changes in the terminology handling, see 5.0.0-rc1 and 5.0.0-rc4
+- Update hl7.fhir.uv.extensions to 5.4.1.
 
 Changes for the users of `matchbox-engine`
 

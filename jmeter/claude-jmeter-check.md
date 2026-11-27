@@ -545,7 +545,7 @@ slower than usual here, the machine was busy):
 
 **Main engine alone** (`new MatchboxEngineBuilder().getEngineR4()` 6 times in one JVM, 2 runs each, engine jar
 without / with the loader patch): 4.55–4.60 → 3.55–3.68 s once warm, 7.0 → 6.1 s for the first. The core loaders parse
-the classpath packages (R4 core, extensions 5.3.0, xver-r5.r4; 4,259 resources) in 1.37 instead of 2.24 s, here
+the classpath packages (R4 core, extensions 5.4.1, xver-r5.r4; 4,259 resources) in 1.37 instead of 2.24 s, here
 mostly because of Gson, as these packages have no narrative.
 
 ### Engine lock and IG lookup (#616)
