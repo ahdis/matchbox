@@ -8,7 +8,7 @@ environment variables and its JVM options are described in the [Docker image ref
 ```bash
 docker run -d --name matchbox -p 8080:8080 -m 4g \
   -v ${PWD}/config:/config \
-  europe-west6-docker.pkg.dev/ahdis-ch/ahdis/matchbox:latest
+  ghcr.io/ahdis/matchbox:latest
 docker logs --follow matchbox
 ```
 
@@ -58,7 +58,7 @@ is sized from it. 4 GB is enough for a typical setup of implementation guides. S
 ```bash
 docker run -d --name matchbox -p 8080:8080 -m 4g \
   -e JDK_JAVA_OPTIONS="-Xmx2g -XX:+ExitOnOutOfMemoryError -XX:+UseStringDeduplication" \
-  europe-west6-docker.pkg.dev/ahdis-ch/ahdis/matchbox:latest
+  ghcr.io/ahdis/matchbox:latest
 ```
 
 If the container is killed during the startup or under load (`Exited (137)`, `OOMKilled`), the memory limit is higher
@@ -69,7 +69,7 @@ than the memory that Docker itself has (e.g. the Docker Desktop VM), or too low 
 With the default JVM options, Matchbox exits on an `OutOfMemoryError`. Let Docker restart it:
 
 ```bash
-docker run -d --name matchbox --restart unless-stopped -p 8080:8080 -m 4g europe-west6-docker.pkg.dev/ahdis-ch/ahdis/matchbox:latest
+docker run -d --name matchbox --restart unless-stopped -p 8080:8080 -m 4g ghcr.io/ahdis/matchbox:latest
 ```
 
 In Kubernetes, use liveness and readiness probes on the [health endpoints](monitor-matchbox.md#health-checks).

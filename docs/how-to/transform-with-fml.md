@@ -11,7 +11,7 @@ To create and change maps through the API, start Matchbox in the
 [`onlyOneEngine` mode](../explanation/validation-engines.md#only-one-engine) (development mode):
 
 ```bash
-docker run -d --name matchbox -p 8080:8080 -m 4g europe-west6-docker.pkg.dev/ahdis-ch/ahdis/matchbox:latest \
+docker run -d --name matchbox -p 8080:8080 -m 4g ghcr.io/ahdis/matchbox:latest \
   --matchbox.fhir.context.onlyOneEngine=true
 ```
 

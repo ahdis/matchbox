@@ -15,7 +15,7 @@ You need:
 Start a container from the Matchbox image:
 
 ```bash
-docker run -d --name matchbox -p 8080:8080 -m 4g europe-west6-docker.pkg.dev/ahdis-ch/ahdis/matchbox:latest
+docker run -d --name matchbox -p 8080:8080 -m 4g ghcr.io/ahdis/matchbox:latest
 ```
 
 Follow its logs:
@@ -69,7 +69,7 @@ Remove the first container and start a new one, with your `config` directory mou
 
 ```bash
 docker rm -f matchbox
-docker run -d --name matchbox -p 8080:8080 -m 4g -v "${PWD}/config:/config" europe-west6-docker.pkg.dev/ahdis-ch/ahdis/matchbox:latest
+docker run -d --name matchbox -p 8080:8080 -m 4g -v "${PWD}/config:/config" ghcr.io/ahdis/matchbox:latest
 docker logs --follow matchbox
 ```
 

@@ -14,7 +14,7 @@ To create and change maps through the API, Matchbox has to run with a single eng
 [Validation engines](../explanation/validation-engines.md) for why). Start it with `onlyOneEngine` enabled:
 
 ```bash
-docker run -d --name matchbox -p 8080:8080 -m 4g europe-west6-docker.pkg.dev/ahdis-ch/ahdis/matchbox:latest --matchbox.fhir.context.onlyOneEngine=true
+docker run -d --name matchbox -p 8080:8080 -m 4g ghcr.io/ahdis/matchbox:latest --matchbox.fhir.context.onlyOneEngine=true
 docker logs --follow matchbox
 ```
 

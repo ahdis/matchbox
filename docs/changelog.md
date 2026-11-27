@@ -5,6 +5,11 @@ here, the details are in the sections of the release candidates 5.0.0-rc1 to 5.0
 
 Platform
 
+- The Docker images are published to the GitHub container registry only: `ghcr.io/ahdis/matchbox`
+  ([#659](https://github.com/ahdis/matchbox/issues/659)). Use `ghcr.io/ahdis/matchbox:v5.0.0` (or `:latest`) instead
+  of `europe-west6-docker.pkg.dev/ahdis-ch/ahdis/matchbox`: the Google Artifact Registry keeps the images up to
+  4.1.21, but doesn't get the images from 5.0.0 on. The `latest` tag is only moved by a release (`vX.Y.Z`), not by a
+  pre-release (e.g. `v5.1.0-alpha1`, `v5.1.0-rc1`)
 - Spring Boot 4.0.9 and Spring Framework 7.0.10 (fixes `spring-webmvc`
   [CVE-2026-47884](https://github.com/ahdis/matchbox/security/dependabot/420)), with Hibernate ORM 7.2, Jakarta EE 11,
   Jackson 3 and JUnit 6
@@ -69,6 +74,10 @@ Security
   HIGH or CRITICAL vulnerability with a fix stops the release
 - The published Docker image of the newest release is scanned with Trivy every day (`scheduled_scans.yml`), a HIGH or
   CRITICAL vulnerability with a fix is posted to Zulip
+- Software Bill of Materials (SBOM, CycloneDX) of the server in `matchbox.jar`, provided by the Spring Boot actuator
+  as `/actuator/sbom/application` and uploaded to the GitHub release (`matchbox-server-<version>.cdx.json`), the
+  Docker images have an SBOM attestation, `matchbox-engine` is published with its SBOM
+  (`matchbox-engine-<version>-cyclonedx.json`)
 
 Other
 

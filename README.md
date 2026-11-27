@@ -32,7 +32,7 @@ The easiest way to run this server entirely depends on your environment requirem
 ## using prebuilt image
 
 ```bash
-docker run -d --name matchbox -p 8080:8080 -v /Users/oegger/Documents/github/matchbox/matchbox-server/with-settings:/config europe-west6-docker.pkg.dev/ahdis-ch/ahdis/matchbox:latest
+docker run -d --name matchbox -p 8080:8080 -v /Users/oegger/Documents/github/matchbox/matchbox-server/with-settings:/config ghcr.io/ahdis/matchbox:latest
 ```
 
 Docker options (`-v`, `-e`, ...) go before the image name: arguments after it are passed to Matchbox as Spring Boot

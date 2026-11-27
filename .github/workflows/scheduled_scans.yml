@@ -20,7 +20,8 @@ jobs:
       findings: ${{ steps.findings.outputs.findings }}
 
     steps:
-      # The newest release, also a pre-release (5.0.0-rc6 until 5.0.0 is released)
+      # The newest release, also a pre-release. Its image is in ghcr.io from 5.0.0 on (the release candidates are only in
+      # the Google Artifact Registry): the scan fails until 5.0.0 is released
       - name: Find the newest release
         id: release
         run: |
@@ -34,7 +35,7 @@ jobs:
         uses: aquasecurity/trivy-action@8f28faec26515256b6d22074d1d2a8986f4cbd87
         with:
           scan-type: 'image'
-          image-ref: europe-west6-docker.pkg.dev/ahdis-ch/ahdis/matchbox:${{ steps.release.outputs.tag }}
+          image-ref: ghcr.io/ahdis/matchbox:${{ steps.release.outputs.tag }}
           ignore-unfixed: true
           severity: 'CRITICAL,HIGH'
           exit-code: '1'

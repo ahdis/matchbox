@@ -19,6 +19,7 @@ complete API is in the [Javadoc](https://ahdis.github.io/matchbox/apidocs/).
 | Repository   | [Maven Central](https://central.sonatype.com/artifact/health.matchbox/matchbox-engine)  |
 | Java version | 17 or newer (matchbox-server requires 21)                                               |
 | License      | Apache License 2.0                                                                      |
+| SBOM         | CycloneDX, published with the library as `matchbox-engine-<version>-cyclonedx.json`     |
 
 ## Bundled packages {: #bundled-packages}
 
