@@ -61,6 +61,11 @@ Security
 
 - Docker image: the base image is the latest Java 25 JRE, containing the mitigation of CVE-2026-114938 ("Java4Shell")
   and CVE-2026-109518 (`apt`).
+- Docker image: `libpam` 1.5.2-6+deb12u3 of Debian 12 fixes
+  [CVE-2025-6020](https://nvd.nist.gov/vuln/detail/cve-2025-6020) (HIGH, local privilege escalation in
+  `pam_namespace`), which Trivy reports for the images of 5.0.0-rc6 and before. The image build installs it with the
+  Debian security updates (`apt-get upgrade`). matchbox isn't exploitable: the image doesn't enable `pam_namespace`
+  and matchbox opens no PAM sessions
 - Tomcat 11.0.27 fixes [CVE-2026-65182](https://github.com/ahdis/matchbox/security/code-scanning/529),
   [CVE-2026-65905](https://github.com/ahdis/matchbox/security/code-scanning/530) and
   [CVE-2026-68525](https://github.com/ahdis/matchbox/security/code-scanning/531), Guava 33.7.2 fixes CVE-2026-102554
