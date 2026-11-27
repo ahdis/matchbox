@@ -28,13 +28,13 @@ The following FHIR packages are part of the library and are loaded from the clas
 |--------------------------------------------------|--------------|
 | `hl7.fhir.r4.core#4.0.1`                         | R4 engines   |
 | `hl7.terminology.r4#7.3.0`                       | R4 engines   |
-| `hl7.fhir.uv.extensions.r4#5.3.0`                | R4 engines   |
+| `hl7.fhir.uv.extensions.r4#5.4.1`                | R4 engines   |
 | `hl7.fhir.uv.xver#0.1.0`                         | R4 engines   |
 | `hl7.fhir.uv.xver-r5.r4#0.1.0`                   | R4 engines   |
 | `hl7.fhir.r4b.core#4.3.0`                        | R4B engines  |
 | `hl7.fhir.r5.core#5.0.0`                         | R5 engines   |
 | `hl7.terminology.r5#7.3.0`                       | R5 engines   |
-| `hl7.fhir.uv.extensions.r5#5.3.0`                | R5 engines   |
+| `hl7.fhir.uv.extensions.r5#5.4.1`                | R5 engines   |
 | `hl7.cda.uv.core#2.0.1-sd-202510-matchbox-patch` | CDA engines  |
 
 The versions are the ones of the current release; they are defined by the `PACKAGE_*` constants of `MatchboxEngine`.
