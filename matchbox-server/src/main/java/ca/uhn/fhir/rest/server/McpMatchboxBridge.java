@@ -14,12 +14,12 @@ import ch.ahdis.matchbox.validation.ValidationProvider;
 import io.modelcontextprotocol.server.McpSyncServerExchange;
 import io.modelcontextprotocol.spec.McpSchema;
 
-import jakarta.annotation.Nullable;
 import org.hl7.fhir.r5.model.Bundle;
 import org.hl7.fhir.r5.model.OperationDefinition.OperationDefinitionParameterComponent;
 import org.hl7.fhir.r5.model.Enumerations.OperationParameterUse;
 import org.hl7.fhir.r5.model.OperationDefinition;
 import org.hl7.fhir.r5.model.Resource;
+import org.jspecify.annotations.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.ai.mcp.annotation.McpTool;
@@ -163,14 +163,14 @@ public class McpMatchboxBridge {
   @McpTool(name = "list-fhir-igs",
     description = "List FHIR Implementation Guides available for validation",
     annotations = @McpTool.McpAnnotations(readOnlyHint = true, destructiveHint = false, idempotentHint = true, openWorldHint = false))
-	private McpSchema.CallToolResult getFhirImplementationGuides(
+	public McpSchema.CallToolResult getFhirImplementationGuides(
     @McpToolParam(description = "include older versions of the installed FHIR Implementation Guides, defaults to false", required = false)
     final @Nullable Boolean includeVersions
   ) {
     final HashMap<String, Object> arguments = HashMap.newHashMap(2);
 		var response = new MockHttpServletResponse();
 		arguments.put("resourceType", "ImplementationGuide");
-		if (includeVersions == null || includeVersions) {
+		if (includeVersions == null || !includeVersions) {
 				arguments.put("query", Map.of("_tag", "http://matchbox.health/fhir/CodeSystem/tag|current"));
 		}
     final var interaction = Interaction.SEARCH;
