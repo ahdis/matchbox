@@ -114,6 +114,55 @@ class MatchboxApiR4Test {
 		assertFalse(filteredText.contains("http://hl7.org/fhir/StructureDefinition/Practitioner\""));
 	}
 
+	/**
+	 * The MCP tool 'list-fhir-igs' lists only the current version of each IG, unless 'includeVersions' is true
+	 * (https://github.com/ahdis/matchbox/issues/684).
+	 */
+	@Test
+	void mcpListFhirIgs() throws Exception {
+		// the test profile has only one version of each IG: install two versions of another one
+		final String packageId = "matchbox.health.test.issue684";
+		this.packageCacheManager.addPackageToCache(packageId, "0.1.0",
+																 new ByteArrayInputStream(createEmptyPackage(packageId, "0.1.0")), "test");
+		this.packageCacheManager.addPackageToCache(packageId, "0.2.0",
+																 new ByteArrayInputStream(createEmptyPackage(packageId, "0.2.0")), "test");
+		try {
+			for (final Boolean includeVersions : new Boolean[]{null, false}) {
+				final String text = textOf(this.mcpMatchboxBridge.getFhirImplementationGuides(includeVersions));
+				assertTrue(text.contains("hl7.fhir.r4.core-4.0.1"), text);
+				assertTrue(text.contains("matchbox.health.test.ig.r4-" + this.matchboxTestIgVersion), text);
+				assertTrue(text.contains(packageId + "-0.2.0"), text);
+				assertFalse(text.contains(packageId + "-0.1.0"), text);
+				assertTrue(text.contains("\"total\":4"), text);
+			}
+
+			final String text = textOf(this.mcpMatchboxBridge.getFhirImplementationGuides(true));
+			assertTrue(text.contains("hl7.fhir.r4.core-4.0.1"), text);
+			assertTrue(text.contains("matchbox.health.test.ig.r4-" + this.matchboxTestIgVersion), text);
+			assertTrue(text.contains(packageId + "-0.2.0"), text);
+			assertTrue(text.contains(packageId + "-0.1.0"), text);
+			assertTrue(text.contains("\"total\":5"), text);
+		} finally {
+			this.packageCacheManager.uninstallPackage(packageId, "0.2.0");
+			this.packageCacheManager.uninstallPackage(packageId, "0.1.0");
+		}
+	}
+
+	private static byte[] createEmptyPackage(final String packageId, final String version) throws IOException {
+		final var out = new ByteArrayOutputStream();
+		try (final var tar = new TarArchiveOutputStream(new GzipCompressorOutputStream(out))) {
+			addTarEntry(tar, "package/package.json", """
+				{
+				  "name": "%s",
+				  "version": "%s",
+				  "fhirVersions": ["4.0.1"],
+				  "dependencies": { "hl7.fhir.r4.core": "4.0.1" }
+				}
+				""".formatted(packageId, version));
+		}
+		return out.toByteArray();
+	}
+
 	private static String textOf(McpSchema.CallToolResult result) {
 		StringBuilder sb = new StringBuilder();
 		for (McpSchema.Content content : result.content()) {

@@ -104,6 +104,13 @@ Other
 - The workflows don't use `.github/maven-settings.xml` and the permission `packages: read` anymore
 - `main` is matchbox 5 and the only development branch: the branch `matchbox_v5` was merged into it, the workflows
   don't run for `matchbox_v5` anymore and the release workflow no longer handles release candidates (`X.Y.Z-rcN`)
+- MCP: the tool `list-fhir-igs` had an inverted logic for the `includeVersions` parameter, and the MCP
+  searches (`list-fhir-igs`, `search-fhir-resources`) ignored their search parameters, as they were not in the query
+  string of the request
+  ([#684](https://github.com/ahdis/matchbox/issues/684))
+- MCP: the tools `conditional-update-fhir-resource` and `conditional-patch-fhir-resource` failed without an `id` and
+  ignored their `query`, the `headers` of the tools (e.g. `If-None-Exist`, `If-Match`) were ignored, the patch tools
+  rejected their `resource` and `search-fhir-resources` ignored its `query` string
 
 2026/11/18 Release 5.0.0-rc6
 
