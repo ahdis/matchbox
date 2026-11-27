@@ -12,7 +12,7 @@ and install the packages during the build with `--hapi.fhir.only_install_package
 into the database and stops):
 
 ```dockerfile
-FROM europe-west6-docker.pkg.dev/ahdis-ch/ahdis/matchbox:v5.0.0
+FROM ghcr.io/ahdis/matchbox:v5.0.0
 
 COPY ./application.yaml /config/
 COPY ./packages/*.tgz /packages/

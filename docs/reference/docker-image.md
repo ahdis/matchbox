@@ -6,12 +6,16 @@ matchbox-server is published as a Docker image. See [Run Matchbox with Docker](.
 
 | Property       | Value                                                                                   |
 |----------------|-----------------------------------------------------------------------------------------|
-| Image          | `europe-west6-docker.pkg.dev/ahdis-ch/ahdis/matchbox`                                   |
-| Tags           | `vX.Y.Z` for each release (e.g. `v5.0.0`), `vX.Y.Z-rcN` for release candidates, `latest` for the latest release (not for release candidates) |
+| Image          | `ghcr.io/ahdis/matchbox`                                                                |
+| Tags           | `vX.Y.Z` for each release (e.g. `v5.0.0`), `latest` for the latest release, not moved by a pre-release (e.g. `v5.1.0-rc1`) |
 | Platforms      | `linux/amd64`, `linux/arm64`                                                            |
 | Exposed port   | `8080`                                                                                  |
 | User           | `matchbox` (not root)                                                                   |
 | Application    | `/matchbox.jar`                                                                         |
+
+The images are published to the GitHub container registry from Matchbox 5.0.0 on. The earlier releases (before
+5.0.0) are in the Google Artifact Registry, `europe-west6-docker.pkg.dev/ahdis-ch/ahdis/matchbox`, which doesn't get 
+new releases.
 
 The image contains no implementation guide besides the packages [bundled with Matchbox](matchbox-engine-api.md#bundled-packages).
 
@@ -68,6 +72,22 @@ The recommended memory limit and the reasons for these defaults are in
 The image declares a `HEALTHCHECK` that calls `HEALTHCHECK_URL` every 10 seconds (timeout 3 seconds, start period
 30 seconds, 3 retries). Kubernetes ignores it: use probes on the
 [health endpoints](../how-to/monitor-matchbox.md#health-checks) instead.
+
+## Software Bill of Materials (SBOM) {: #sbom}
+
+The image has an SBOM attestation (SPDX, the operating system packages and the Java libraries) for each platform:
+
+```bash
+docker buildx imagetools inspect ghcr.io/ahdis/matchbox:<tag> --format '{{ json .SBOM }}'
+```
+
+The SBOM of the server (CycloneDX, the Java libraries in `matchbox.jar`) is
+
+- provided by a running server: `/matchboxv3/actuator/sbom/application`
+- an asset of each [GitHub release](https://github.com/ahdis/matchbox/releases): `matchbox-server-<version>.cdx.json`
+
+The SBOM of matchbox-engine is published to Maven Central with the library
+(`matchbox-engine-<version>-cyclonedx.json`).
 
 ## Sample configurations
 

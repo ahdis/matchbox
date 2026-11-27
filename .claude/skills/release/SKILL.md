@@ -68,3 +68,8 @@ the background).
 
 Report the release URL and the outcome of the Docker and Maven Central workflows. Creating the tag and release by hand
 in GitHub also starts these two workflows, if the release workflow can't be used.
+
+The Docker workflow (`googleregistry.yml`, named after the Google Artifact Registry used up to 5.0.0-rc6) publishes
+the image to `ghcr.io/ahdis/matchbox` (check it with `docker buildx imagetools inspect ghcr.io/ahdis/matchbox:vX.Y.Z`),
+builds it with an SBOM attestation and uploads the SBOM of the server to the release (asset
+`matchbox-server-X.Y.Z.cdx.json`, check it with `gh release view`).

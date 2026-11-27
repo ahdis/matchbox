@@ -35,7 +35,7 @@ The repository contains two docker-compose setups with PostgreSQL:
 1. Check out the [repository](https://github.com/ahdis/matchbox) and change to one of the directories, e.g.
    `matchbox-server/with-postgres`. The compose file uses the image `matchbox:latest`: build it first (see
    [Build Matchbox from source](build-from-source.md)) or change the image to
-   `europe-west6-docker.pkg.dev/ahdis-ch/ahdis/matchbox:latest`.
+   `ghcr.io/ahdis/matchbox:latest`.
 2. Create the directory for the database and start the database alone the first time, so that it is initialized
    before Matchbox connects to it:
 

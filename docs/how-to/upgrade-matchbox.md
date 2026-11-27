@@ -35,6 +35,10 @@ Read every section of the [changelog](../changelog.md) between your version and 
 
 Matchbox 5 is based on Spring Boot 4, HAPI FHIR 9 and `org.hl7.fhir.core` 7. Coming from Matchbox 4:
 
+- **The Docker image is in another registry**: `ghcr.io/ahdis/matchbox` instead of
+  `europe-west6-docker.pkg.dev/ahdis-ch/ahdis/matchbox`. Change the image in your `docker run` commands, docker-compose
+  files, Kubernetes manifests and the `FROM` line of your own images. The Google Artifact Registry doesn't get the
+  releases from 5.0.0 on (see [Upgrade the Docker image](#upgrade-the-docker-image)).
 - **The server runs on Tomcat instead of Undertow.** The `server.undertow.*` settings aren't used anymore: remove them
   from your configuration. Matchbox doesn't limit the size of the requests anymore, set the limit in your reverse proxy
   (see [Limit the request size](secure-production-deployment.md#limit-the-request-size)).
@@ -59,14 +63,16 @@ with the changed database: the backup is your way back.
 
 ## Upgrade the Docker image
 
-Change the tag of the image and start a new container with it:
+Change the tag of the image and start a new container with it. From Matchbox 5.0.0 on, the image is only published to
+`ghcr.io/ahdis/matchbox`: coming from an earlier release, change the registry too (the older images are in
+`europe-west6-docker.pkg.dev/ahdis-ch/ahdis/matchbox`).
 
 ```bash
-docker pull europe-west6-docker.pkg.dev/ahdis-ch/ahdis/matchbox:v5.0.0
+docker pull ghcr.io/ahdis/matchbox:v5.0.0
 docker rm -f matchbox
 docker run -d --name matchbox -p 8080:8080 -m 4g \
   -v ${PWD}/config:/config \
-  europe-west6-docker.pkg.dev/ahdis-ch/ahdis/matchbox:v5.0.0
+  ghcr.io/ahdis/matchbox:v5.0.0
 ```
 
 With docker-compose, change the `image` of the `matchbox` service, then run `docker-compose pull` and
@@ -93,7 +99,7 @@ If you [built an image with pre-installed packages](build-custom-image.md), chan
 build it again. The packages are installed during the build by the new version:
 
 ```dockerfile
-FROM europe-west6-docker.pkg.dev/ahdis-ch/ahdis/matchbox:v5.0.0
+FROM ghcr.io/ahdis/matchbox:v5.0.0
 ```
 
 ## Upgrade matchbox-engine

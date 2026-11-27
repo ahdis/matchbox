@@ -57,7 +57,7 @@ The path is the path inside the container: mount the directory with the packages
 docker run -d --name matchbox -p 8080:8080 -m 4g \
   -v ${PWD}/config:/config \
   -v ${PWD}/packages:/packages \
-  europe-west6-docker.pkg.dev/ahdis-ch/ahdis/matchbox:latest
+  ghcr.io/ahdis/matchbox:latest
 ```
 
 with `config/application.yaml`:
