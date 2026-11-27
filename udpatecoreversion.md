@@ -53,7 +53,7 @@ All matchbox-specific patches are marked with `matchbox patch` comments in the s
 
 ### Patched files and their patches
 
-The following files have matchbox-specific patches (as of the 7.0.6 update, versionless R6 modules):
+The following files have matchbox-specific patches (as of the 7.0.8 update, versionless R6 modules):
 
 | File | Patch Description | Issue |
 |------|------------------|-------|
@@ -67,7 +67,6 @@ The following files have matchbox-specific patches (as of the 7.0.6 update, vers
 | `BaseWorkerContext.java` | fhirVersioned URL stripping in fetchResourceWithExceptionByVersion | #265 |
 | `CanonicalResourceManager.java` | `getVersion()`, `getMasterVersion()` without parsing proxies | #627 |
 | `ValueSetValidator.java` | No error for an include with an unknown code system when inferring the system of a code, if the include lists its concepts (UCUM `units-of-time` without a terminology server, since 7.0.5) | offline validation |
-| `CanonicalResourceProxy.java` | `getResource()` synchronized, proxies are shared between contexts | concurrency |
 | `BaseLoaderRN.java`, `R3/R4/R4B/R5ToRNLoader.java` | `skipNarrative`: don't parse the narrative | #614 |
 | `FilesystemPackageCacheManager.java` | Core, terminology, extensions and xver packages from the classpath | packages |
 | `ProfileUtilities.java` | findProfile | #424 |
@@ -82,7 +81,9 @@ The following files have matchbox-specific patches (as of the 7.0.6 update, vers
 
 matchbox-server overrides HAPI FHIR classes that HAPI builds with an older core: `HapiWorkerContext` (DSTU3, R4, R4B,
 R5), `WorkerContextValidationSupportAdapter` and `TermReadSvcImpl` (the version convertors have no conversion path
-since 7.0.2).
+since 7.0.2). The R5 `HapiWorkerContext` has a `matchbox patch`: `getDefinitionsVersion()` returns 0 instead of
+throwing HAPI-2861, the R5 `FHIRPathEngine` asks for it in its constructor since 7.0.7. Compiling and the bytecode scan
+don't find this kind of break, only starting a server of that FHIR version does (`MatchboxApiR5Test`).
 
 ### Strategy for re-applying patches
 
@@ -100,6 +101,10 @@ git merge-file -p $MATCHBOX_FILE /tmp/base.java /tmp/theirs.java > /tmp/merged.j
 - A patch that is done upstream is either merged without a difference to the new release or shows up as a conflict
   (take the upstream side and drop the patch).
 - Some core files have CRLF line endings, the matchbox copies LF: strip the CRs of base and theirs before merging.
+  With `core.autocrlf=true` (Windows) the working copies of the matchbox files are CRLF too: take ours from the index
+  (`git show HEAD:$MATCHBOX_FILE | tr -d '\r'`), otherwise every line conflicts.
+- A file whose patches are all done upstream is removed from matchbox and from `updatehapi.sh` (e.g.
+  `CanonicalResourceProxy.java` in 7.0.7).
 - Count the `matchbox patch` markers per file before and after, and check the new core release notes for changes in
   the same files that make a patch obsolete although the code differs.
 - Compiling isn't enough for the HAPI FHIR jars: scan their bytecode for references to core classes and members that

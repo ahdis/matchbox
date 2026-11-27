@@ -426,7 +426,6 @@ public class MatchboxService {
       validator.setForPublication(validationContext.isForPublication());
       validator.setShowTimes(validationContext.isShowTimes());
       validator.setAllowExampleUrls(validationContext.isAllowExampleUrls());
-      validator.setR5BundleRelativeReferencePolicy(validationContext.getR5BundleRelativeReferencePolicy());
       ReferenceValidationPolicy refpol = ReferenceValidationPolicy.CHECK_VALID;
       if (!validationContext.isDisableDefaultResourceFetcher()) {
           StandAloneValidatorFetcher fetcher = new StandAloneValidatorFetcher(validator.getPcm(), validator.getContext(), validator);

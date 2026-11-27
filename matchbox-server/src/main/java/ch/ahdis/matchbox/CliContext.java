@@ -227,9 +227,6 @@ public class CliContext {
     return this;
   }
 
-  @JsonProperty("r5-bundle-relative-reference-policy")
-  private String r5BundleRelativeReferencePolicy = "default";
-
   // @JsonProperty("showTimes")
   // private boolean showTimes = false;
 
@@ -694,14 +691,6 @@ public class CliContext {
     this.bundle = bundle;
   }
 
-  public String getR5BundleRelativeReferencePolicy() {
-    return r5BundleRelativeReferencePolicy;
-  }
-
-  public void setR5BundleRelativeReferencePolicy(String r5BundleRelativeReferencePolicy) {
-    this.r5BundleRelativeReferencePolicy = r5BundleRelativeReferencePolicy;
-  }
-
 	@Override
   public boolean equals(final Object o) {
     if (this == o)
@@ -754,7 +743,6 @@ public class CliContext {
         && Arrays.equals(suppressErrors, that.suppressErrors)
         && Arrays.equals(suppressWarnInfos, that.suppressWarnInfos)
         && Arrays.equals(igs, that.igs)
-        && Objects.equals(r5BundleRelativeReferencePolicy, that.r5BundleRelativeReferencePolicy)
         && Objects.equals(bpWarnings, that.bpWarnings)
         && Objects.equals(resourceIdRule, that.resourceIdRule);
   }
@@ -802,7 +790,6 @@ public class CliContext {
         disableDefaultResourceFetcher,
         checkIpsCodes,
         bundle,
-        r5BundleRelativeReferencePolicy,
         bpWarnings,
         resourceIdRule);
     result = 31 * result + Arrays.hashCode(extensions);
@@ -857,7 +844,6 @@ public class CliContext {
         ", jurisdiction='" + jurisdiction + '\'' +
         ", checkReferences=" + checkReferences +
         ", resolutionContext=" + resolutionContext +
-        ", r5-bundle-relative-reference-policy='" + r5BundleRelativeReferencePolicy + '\'' +
         ", disableDefaultResourceFetcher=" + disableDefaultResourceFetcher +
         ", checkIpsCodes='" + checkIpsCodes + '\'' +
         ", bundle='" + bundle  + '\'' +
@@ -922,7 +908,6 @@ public class CliContext {
       }    
     }
     addExtension(ext, "resolution-context", new StringType(this.resolutionContext));
-    addExtension(ext, "r5-bundle-relative-reference-policy", new StringType(this.r5BundleRelativeReferencePolicy));
     addExtension(ext, "disableDefaultResourceFetcher", new BooleanType(this.disableDefaultResourceFetcher));
     addExtension(ext, "check-ips-codes", new BooleanType(this.checkIpsCodes));
     addExtension(ext, "bundle", new StringType(this.bundle));

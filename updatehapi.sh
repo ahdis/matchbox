@@ -7,7 +7,6 @@ cp ../org.hl7.fhir.core/org.hl7.fhir.services/src/main/java/org/hl7/fhir/service
 cp ../org.hl7.fhir.core/org.hl7.fhir.services/src/main/java/org/hl7/fhir/services/fml/StructureMapTools.java matchbox-engine/src/main/java/org/hl7/fhir/services/fml/
 cp ../org.hl7.fhir.core/org.hl7.fhir.services/src/main/java/org/hl7/fhir/services/conformance/profile/ProfileUtilities.java matchbox-engine/src/main/java/org/hl7/fhir/services/conformance/profile/
 cp ../org.hl7.fhir.core/org.hl7.fhir.services/src/main/java/org/hl7/fhir/services/testfactory/TestDataFactory.java matchbox-engine/src/main/java/org/hl7/fhir/services/testfactory/
-cp ../org.hl7.fhir.core/org.hl7.fhir.services/src/main/java/org/hl7/fhir/services/context/CanonicalResourceProxy.java matchbox-engine/src/main/java/org/hl7/fhir/services/context/
 cp ../org.hl7.fhir.core/org.hl7.fhir.standalone/src/main/java/org/hl7/fhir/standalone/context/BaseWorkerContext.java matchbox-engine/src/main/java/org/hl7/fhir/standalone/context/
 cp ../org.hl7.fhir.core/org.hl7.fhir.standalone/src/main/java/org/hl7/fhir/standalone/context/CanonicalResourceManager.java matchbox-engine/src/main/java/org/hl7/fhir/standalone/context/
 cp ../org.hl7.fhir.core/org.hl7.fhir.standalone/src/main/java/org/hl7/fhir/standalone/terminology/validation/ValueSetValidator.java matchbox-engine/src/main/java/org/hl7/fhir/standalone/terminology/validation/
