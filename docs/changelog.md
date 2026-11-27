@@ -15,7 +15,7 @@ Platform
   `WorkerContextValidationSupportAdapter` and the `HapiWorkerContext` of R4, R4B and R5)
 - Matchbox runs on Tomcat 11.0.27 instead of Undertow, which Spring Boot 4 doesn't support anymore. The
   `server.undertow.max-http-post-size` setting isn't needed anymore
-- org.hl7.fhir.core [7.0.7](https://github.com/hapifhir/org.hl7.fhir.core/releases/tag/7.0.7) (from 6.10.4): the
+- org.hl7.fhir.core [7.0.8](https://github.com/hapifhir/org.hl7.fhir.core/releases/tag/7.0.8) (from 6.10.4): the
   validator, the FHIR mapping language and the worker context are based on the versionless R6 modules
   (`org.hl7.fhir.model`, `org.hl7.fhir.services`, `org.hl7.fhir.standalone`) instead of `org.hl7.fhir.r5`, with new
   checks of the validator and changes in the terminology handling, see 5.0.0-rc1, 5.0.0-rc4 and below
