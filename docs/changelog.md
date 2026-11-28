@@ -65,6 +65,10 @@ Validation
   which could give two different sets of parameters the same engine. Requests with the same `check-references-to`
   values share an engine (a new engine was created for every request)
 - The validation parameter `showMessageIds` of a request is applied (the setting of the server was used)
+- The `extensions` setting of the server (`matchbox.fhir.context.extensions`, default `any`) applies to the validation
+  engines of all implementation guides, and not only to the engine of the FHIR core package: it was dropped from the
+  validation parameters of a request, which then had to send `extensions` itself. `check-references-to` was dropped in
+  the same way, and `matchbox.fhir.context.checkReferencesTo` was not read
 
 New APIs
 

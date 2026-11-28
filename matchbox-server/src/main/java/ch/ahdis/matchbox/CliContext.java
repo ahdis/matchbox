@@ -259,6 +259,18 @@ public class CliContext {
     // check for each cliContextProperties if it is in the request parameter
     for (Field field : cliContextProperties) {
       String cliContextProperty = field.getName();
+      if (field.getType() == String[].class) {
+        // BeanUtils doesn't set the array properties: their setters return the context, so they aren't seen as
+        // properties. 'extensions' is read above with its default; the suppressed messages have their own settings
+        // per IG (suppressWarnInfo, suppressError) and the IGs are selected per request
+        if ("checkReferencesTo".equals(cliContextProperty)) {
+          final String[] values = environment.getProperty("matchbox.fhir.context." + cliContextProperty, String[].class);
+          if (values != null && values.length > 0) {
+            setArray(field, values);
+          }
+        }
+        continue;
+      }
       String value = environment.getProperty("matchbox.fhir.context." + cliContextProperty);
       if (value != null && value.length() > 0) {
         try {
@@ -278,6 +290,17 @@ public class CliContext {
     List<Field> cliContextProperties = getValidateEngineParameters();
     // check for each cliContextProperties if it is in the request parameter
     for (Field field : cliContextProperties) {
+      if (field.getType() == String[].class) {
+        // BeanUtils reads only the first value of an array, and doesn't set the array properties (see above)
+        try {
+          field.setAccessible(true);
+          final String[] values = (String[]) field.get(other);
+          setArray(field, values == null ? null : values.clone());
+        } catch (IllegalAccessException e) {
+          log.error("error setting property " + field.getName());
+        }
+        continue;
+      }
       try {
         String value = BeanUtils.getProperty(other, field.getName());
         if (value != null) {
@@ -287,9 +310,15 @@ public class CliContext {
         log.error("error setting property " + field.getName());
       }
     }
-    this.suppressErrors = other.suppressErrors;
-    this.suppressWarnInfos = other.suppressWarnInfos;
-    this.igs = other.igs;
+  }
+
+  private void setArray(final Field field, final String[] values) {
+    try {
+      field.setAccessible(true);
+      field.set(this, values);
+    } catch (IllegalAccessException e) {
+      log.error("error setting property " + field.getName());
+    }
   }
 
   public String getIg() {
