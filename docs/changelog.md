@@ -69,14 +69,22 @@ Validation
   engines of all implementation guides, and not only to the engine of the FHIR core package: it was dropped from the
   validation parameters of a request, which then had to send `extensions` itself. `check-references-to` was dropped in
   the same way, and `matchbox.fhir.context.checkReferencesTo` was not read
+- An implementation guide of the validation parameter `ig` that is not installed is installed from the package
+  registry before the validation (`id#version`), if the server is not read-only (`httpReadOnly`), for `$validate`, the
+  ITB API and the HL7 validator API alike ([#702](https://github.com/ahdis/matchbox/issues/702)). This brings back the
+  auto-installation of `$validate` for the `ig` parameter; a profile of an implementation guide that is not installed
+  doesn't install it. If the implementation guide cannot be installed (read-only server, no exact version, not in the
+  registry), the request gets an error instead of a validation without the implementation guide
 
 New APIs
 
 - The validation API of the HL7 validator, as validator.fhir.org has it: `POST [server]/core/validate` with the
   `ValidationRequest` and `ValidationResponse` of org.hl7.fhir.core, so that a client of the HL7 validator can use
   matchbox with only the address changed ([#702](https://github.com/ahdis/matchbox/issues/702)). The implementation
-  guides are given as `igs` or `ig` and have to be installed (HTTP 400 otherwise); the same set of implementation
-  guides always gives the same validation engine, which is shared with `$validate`. Only the parameters that are in
+  guides are given as `igs` or `ig`; the same set of implementation guides always gives the same validation engine,
+  which is shared with `$validate`. An implementation guide that is not installed is installed from the package
+  registry (`id#version`), as the `loadIG` operation of the ITB API does; a read-only server (`httpReadOnly`) installs
+  nothing and answers with HTTP 400. Only the parameters that are in
   the request override the validation parameters of the server. See the
   [HL7 validator API reference](reference/core-api.md)
 - ITB (GITB REST) services for the Interoperability Test Bed (ITB 1.30.0 or later, with `handlerApiType="REST"`):

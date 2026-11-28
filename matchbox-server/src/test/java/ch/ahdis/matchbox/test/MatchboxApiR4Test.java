@@ -496,6 +496,24 @@ class MatchboxApiR4Test {
 		assertEquals(sessionIdFirst, sessionIdFifth);
 	}
 
+	/**
+	 * The server of the tests is read-only: an implementation guide of the parameter 'ig' that is not installed is not
+	 * installed, and the validation is not done without it. See {@code LoadIgOnDemandR4Test} for a server that is not
+	 * read-only.
+	 */
+	@Test
+	void validateWithIgNotInstalled() {
+		final String resource = "{\"resourceType\": \"Patient\"}";
+		final Parameters parameters = new Parameters();
+		parameters.addParameter("ig", "matchbox.health.test.ig.r4#9.9.9");
+		final var operationOutcome = (OperationOutcome) validationClient.validate(
+			resource, "http://hl7.org/fhir/StructureDefinition/Patient", parameters);
+		assertEquals(1, operationOutcome.getIssue().size());
+		assertEquals(OperationOutcome.IssueSeverity.ERROR, operationOutcome.getIssueFirstRep().getSeverity());
+		assertEquals("The package matchbox.health.test.ig.r4#9.9.9 is not installed and the server is read-only, add it "
+							 + "to the configuration of matchbox", operationOutcome.getIssueFirstRep().getDiagnostics());
+	}
+
 	@Test
 	void verifyIgVersioningGazelle() throws Exception {
 		String resource = """

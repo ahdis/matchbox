@@ -193,17 +193,19 @@ public class CoreApiR4Test {
 	}
 
 	/**
-	 * An implementation guide that is not installed is an error: the server of the tests is read-only.
+	 * An implementation guide that is not installed is an error, and is not installed: the server of the tests is
+	 * read-only. See {@code LoadIgOnDemandR4Test} for a server that is not.
 	 */
 	@Test
 	void igNotInstalled() throws Exception {
-		for (final String ig : List.of("hl7.fhir.us.core#6.1.0", TEST_IG + "#0.0.1")) {
+		for (final String ig : List.of("hl7.fhir.us.core#6.1.0", TEST_IG + "#0.0.1", "hl7.fhir.us.core")) {
 			final HttpResponse<String> response = this.post(this.gson.toJson(
 				request(Map.of("validationContext", Map.of("igs", List.of(this.testIg(), ig))),
 						  file("patient.json", PATIENT, "json"))));
 			assertEquals(400, response.statusCode());
 			assertTrue(response.headers().firstValue("Content-Type").orElse("").startsWith("text/plain"));
-			assertEquals("Implementation guide not installed on this server: " + ig, response.body());
+			assertEquals("The package %s is not installed and the server is read-only, add it to the configuration of matchbox"
+								 .formatted(ig), response.body());
 		}
 	}
 

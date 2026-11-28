@@ -3,6 +3,7 @@ package ch.ahdis.matchbox.validation;
 import ca.uhn.fhir.rest.api.EncodingEnum;
 import ca.uhn.fhir.util.StopWatch;
 import ch.ahdis.matchbox.CliContext;
+import ch.ahdis.matchbox.packages.OnDemandIgInstaller;
 import ch.ahdis.matchbox.config.MatchboxFhirVersion;
 import ch.ahdis.matchbox.config.property.MatchboxFhirProperties;
 import ch.ahdis.matchbox.engine.MatchboxEngine;
@@ -25,6 +26,7 @@ import org.hl7.fhir.r5.model.OperationOutcome;
 import org.hl7.fhir.r5.model.StringType;
 import org.hl7.fhir.r5.model.UriType;
 import org.hl7.fhir.r5.utils.OperationOutcomeUtilities;
+import org.hl7.fhir.utilities.VersionUtilities;
 import org.hl7.fhir.utilities.validation.ValidationMessage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -36,6 +38,7 @@ import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
@@ -82,6 +85,10 @@ public class MatchboxValidationService {
 
 	@Autowired(required = false)
 	private MatchboxFhirVersion matchboxFhirVersion;
+
+	// Installs the implementation guides that a request names and that are not installed
+	@Autowired(required = false)
+	private OnDemandIgInstaller igInstaller;
 
 	/**
 	 * @param baseCliContext the validation parameters of the server, the defaults of every request.
@@ -153,12 +160,26 @@ public class MatchboxValidationService {
 	/**
 	 * Selects the implementation guides that a request asks for by name, see {@link IgSelection}. An API that lets
 	 * the profile choose the implementation guide doesn't need it.
+	 * <p>
+	 * An implementation guide that is not installed is installed from the package registry, unless the server is
+	 * read-only, see {@link OnDemandIgInstaller}.
 	 *
 	 * @param requested the implementation guides of the request, {@code id#version} or {@code id}.
-	 * @throws IgSelection.IgNotInstalledException if one of them is not installed.
+	 * @throws OnDemandIgInstaller.IgInstallationException if one of them is not installed and cannot be installed.
+	 * @throws IgSelection.IgNotInstalledException         if one of them is not installed, and there is no installer.
 	 */
 	public IgSelection selectIgs(final @Nonnull Collection<String> requested) {
-		return IgSelection.of(requested, this.matchboxEngineSupport::findInstalledPackage);
+		try {
+			return IgSelection.of(requested, this.matchboxEngineSupport::findInstalledPackage);
+		} catch (final IgSelection.IgNotInstalledException e) {
+			if (this.igInstaller == null) {
+				throw e;
+			}
+			for (final String ig : e.getIgs()) {
+				this.igInstaller.ensureInstalled(ig);
+			}
+			return IgSelection.of(requested, this.matchboxEngineSupport::findInstalledPackage);
+		}
 	}
 
 	/**
@@ -197,6 +218,7 @@ public class MatchboxValidationService {
 												 final boolean reload) throws MatchboxEngineCreationException {
 		this.matchboxMetrics.ifPresent(MatchboxMetrics::addValidation);
 		final String canonical = ProfileReference.parse(profile).canonical();
+		this.installRequestedIgs(cliContext);
 
 		final MatchboxEngine engine;
 		try {
@@ -222,6 +244,43 @@ public class MatchboxValidationService {
 												structureDefinition,
 												this.matchboxEngineSupport.getSessionId(engine),
 												List.copyOf(otherMetaProfiles));
+	}
+
+	/**
+	 * Installs the implementation guides that the validation parameters name ({@code ig}, {@code igs}) and that are
+	 * not installed, see {@link OnDemandIgInstaller}: the engine would otherwise be created without them. This is the
+	 * same for every validation API.
+	 *
+	 * @throws MatchboxEngineCreationException if one of them is not installed and cannot be installed, e.g. because
+	 *                                         the server is read-only.
+	 */
+	private void installRequestedIgs(final CliContext cliContext) throws MatchboxEngineCreationException {
+		if (this.igInstaller == null) {
+			return;
+		}
+		final List<String> requested = new ArrayList<>();
+		if (cliContext.getIg() != null) {
+			requested.add(cliContext.getIg());
+		}
+		if (cliContext.getIgs() != null) {
+			requested.addAll(Arrays.asList(cliContext.getIgs()));
+		}
+		for (final String requestedIg : requested) {
+			if (requestedIg == null || requestedIg.isBlank()) {
+				continue;
+			}
+			final String ig = requestedIg.strip();
+			// The FHIR core package is given by the FHIR version
+			if (VersionUtilities.isCorePackage(ig.contains("#") ? ig.substring(0, ig.indexOf('#')) : ig)
+				|| this.matchboxEngineSupport.findInstalledPackage(ig).isPresent()) {
+				continue;
+			}
+			try {
+				this.igInstaller.ensureInstalled(ig);
+			} catch (final OnDemandIgInstaller.IgInstallationException e) {
+				throw new MatchboxEngineCreationException(e.getMessage(), e);
+			}
+		}
 	}
 
 	/**

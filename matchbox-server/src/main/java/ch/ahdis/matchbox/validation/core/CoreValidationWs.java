@@ -3,6 +3,7 @@ package ch.ahdis.matchbox.validation.core;
 import ca.uhn.fhir.rest.api.EncodingEnum;
 import ch.ahdis.matchbox.CliContext;
 import ch.ahdis.matchbox.engine.exception.MatchboxEngineCreationException;
+import ch.ahdis.matchbox.packages.OnDemandIgInstaller;
 import ch.ahdis.matchbox.validation.IgSelection;
 import ch.ahdis.matchbox.validation.MatchboxValidationService;
 import ch.ahdis.matchbox.validation.PreparedValidation;
@@ -74,7 +75,8 @@ public class CoreValidationWs {
 			return ResponseEntity.ok()
 				.contentType(MediaType.APPLICATION_JSON)
 				.body(GSON.toJson(this.doValidate(request)));
-		} catch (final CoreBadRequestException | IgSelection.IgNotInstalledException e) {
+		} catch (final CoreBadRequestException | IgSelection.IgNotInstalledException
+							| OnDemandIgInstaller.IgInstallationException e) {
 			return error(HttpStatus.BAD_REQUEST, e.getMessage());
 		} catch (final MatchboxValidationService.EngineNotInitializedException e) {
 			return error(HttpStatus.SERVICE_UNAVAILABLE, e.getMessage());
@@ -100,7 +102,8 @@ public class CoreValidationWs {
 			throw new CoreBadRequestException(e.getMessage());
 		}
 
-		// The requested implementation guides select the engine. Without them, the profile does, as for $validate
+		// The requested implementation guides select the engine, and are installed if they are not and the server is
+		// not read-only. Without them, the profile selects the engine, as for $validate
 		final IgSelection igSelection = this.validationService.selectIgs(request.igs());
 		igSelection.applyTo(cliContext);
 		if (request.fhirVersion() != null) {
