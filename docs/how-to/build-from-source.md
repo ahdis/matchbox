@@ -179,8 +179,14 @@ implementation guide, so that they don't depend on the content of external packa
    `matchbox-server/src/test/resources` and `matchbox-engine/src/test/resources`, and removes the old package.
 4. Update the references to the version, e.g. in `application-test-r4.yaml`: search for `matchbox.health.test.ig.r4`.
 
-The test IG depends on `hl7.terminology.r4` and `hl7.fhir.uv.extensions.r4` in the versions that are bundled with
-matchbox-engine (`PACKAGE_R4_TERMINOLOGY` and `PACKAGE_R4_UV_EXTENSIONS` in `MatchboxEngine`). With another version,
-the test server downloads the packages and their dependencies from the registry when it starts. If you update one of
-the two bundled packages, build a new version of the test IG with the same dependency (`dist.sh` checks it) and add
-it to the same pull request.
+The test IG and matchbox-engine both use the latest version of `hl7.terminology.r4` and `hl7.fhir.uv.extensions.r4`
+(`PACKAGE_R4_TERMINOLOGY` and `PACKAGE_R4_UV_EXTENSIONS` in `MatchboxEngine`), and it has to be the same one: with
+another version, the test server downloads the packages and their dependencies from the registry when it starts.
+
+When a new version of one of the two packages is released, update both in the same pull request:
+
+1. Replace the bundled packages for R4 and R5 in `matchbox-engine/src/main/resources` with the new ones from
+   `https://packages2.fhir.org/packages/<package>/<version>`, and update the constants in `MatchboxEngine` and the
+   other references to the old version (search for it, e.g. `hl7.terminology#` in `IgLoaderFromJpaPackageCache`).
+2. Build a new version of the test IG with the same dependency and add it as described above (`dist.sh` checks that
+   the dependencies are the bundled versions).

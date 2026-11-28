@@ -200,7 +200,7 @@ public class IgLoaderFromJpaPackageCache extends IgLoader {
 
 		switch (FhirVersionEnum.forVersionString(this.getVersion())) {
 			case R4, R4B -> {
-				if (src.startsWith("hl7.terminology#7.3.0")) {
+				if (src.startsWith("hl7.terminology#7.5.0")) {
 					log.info("Requesting to load '{}', loading '{}' instead", src, PACKAGE_R4_TERMINOLOGY);
 					loadIg(igs, binaries, PACKAGE_R4_TERMINOLOGY, recursive);
 					return;
@@ -212,7 +212,7 @@ public class IgLoaderFromJpaPackageCache extends IgLoader {
 				}
 			}
 			case R5 -> {
-				if (src.startsWith("hl7.terminology#7.3.0")) {
+				if (src.startsWith("hl7.terminology#7.5.0")) {
 					log.info("Requesting to load '{}', loading '{}' instead", src, PACKAGE_R5_TERMINOLOGY);
 					loadIg(igs, binaries, PACKAGE_R5_TERMINOLOGY, recursive);
 					return;

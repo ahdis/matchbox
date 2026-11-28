@@ -38,7 +38,7 @@ import ch.ahdis.matchbox.engine.packages.PackageResourceParser;
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class Issue614Test {
 
-	// A CodeSystem of hl7.terminology.r4#7.3.0 with 55 kB of narrative in the package
+	// A CodeSystem of hl7.terminology.r4#7.5.0 with 55 kB of narrative in the package
 	private static final String CODE_SYSTEM_URL = "http://terminology.hl7.org/CodeSystem/v2-0203";
 	private static final String CODE_SYSTEM_VERSION = "5.0.0";
 

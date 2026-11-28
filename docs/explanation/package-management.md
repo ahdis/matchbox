@@ -61,7 +61,7 @@ dependency that can't be found makes the installation fail (except an internal d
 Some dependencies aren't installed, because Matchbox brings its own version or doesn't need them:
 
 - `hl7.fhir.r4.core`, which is bundled with Matchbox;
-- the packages in exactly the versions that are bundled with Matchbox: `hl7.terminology.r4#7.3.0`,
+- the packages in exactly the versions that are bundled with Matchbox: `hl7.terminology.r4#7.5.0`,
   `hl7.fhir.uv.extensions.r4#5.4.1` (and their R5 variants), the cross-version packages `hl7.fhir.uv.xver#0.1.0` and
   `hl7.fhir.uv.xver-r5.r4#0.1.0`, and the CDA logical model. Other versions of these packages are installed;
 - `hl7.fhir.cda`, the development version of the CDA logical model.
@@ -78,8 +78,8 @@ dependency before the package that needs it:
 - the FHIR core packages and the core examples packages (e.g. `hl7.fhir.r4.examples`) in the dependencies are
   skipped, because the engine has already loaded the core package of its FHIR version. Loading a second core package
   would make the types ambiguous. An R5 engine also skips `hl7.fhir.uv.extensions.r4`.
-- a dependency on `hl7.terminology#7.3.0` or `hl7.fhir.uv.extensions#5.4.1` is replaced with the bundled package for
-  the FHIR version of the engine (e.g. `hl7.terminology.r4#7.3.0`), and `hl7.fhir.cda#dev` with the bundled CDA
+- a dependency on `hl7.terminology#7.5.0` or `hl7.fhir.uv.extensions#5.4.1` is replaced with the bundled package for
+  the FHIR version of the engine (e.g. `hl7.terminology.r4#7.5.0`), and `hl7.fhir.cda#dev` with the bundled CDA
   logical model. Other versions of these packages are loaded as declared, from the database.
 - a version range such as `3.3.x` is resolved to the newest installed version that matches (e.g. `3.3.2`);
 - a package is loaded once per engine: a second dependency on the same package and version (or on a range that
