@@ -10,6 +10,7 @@ while you work, not read from start to end.
 - [Web interface](web-interface.md): the pages and the URL parameters of the validation page
 - [Gazelle validation API](gazelle-api.md): the endpoints for the IHE Gazelle tools
 - [ITB API](itb-api.md): the test services for the Interoperability Test Bed
+- [HL7 validator API](core-api.md): the validation API of validator.fhir.org, `POST /core/validate`
 - [MCP server](mcp-server.md): the endpoint and the tools for AI assistants
 - [Docker image](docker-image.md): tags, paths, environment variables, JVM options, sample configurations
 

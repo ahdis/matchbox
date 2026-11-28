@@ -36,6 +36,7 @@ import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -53,6 +54,8 @@ import static ch.ahdis.matchbox.util.MatchboxServerUtils.addExtension;
  * <ol>
  *    <li>{@link #newContext(Function)}: the validation parameters of the request;</li>
  *    <li>{@link ProfileSelection#select}: the profile, if the request doesn't have to give one;</li>
+ *    <li>{@link #selectIgs}: the implementation guides, if the request names them instead of leaving the choice to
+ *    the profile;</li>
  *    <li>{@link #prepare}: the validation engine for the profile and the parameters, from the engine cache;</li>
  *    <li>{@link #validate}: the validation of a resource, as often as there are resources;</li>
  * </ol>
@@ -145,6 +148,17 @@ public class MatchboxValidationService {
 				log.error("error setting property %s to %s".formatted(name, String.join(",", values)));
 			}
 		}
+	}
+
+	/**
+	 * Selects the implementation guides that a request asks for by name, see {@link IgSelection}. An API that lets
+	 * the profile choose the implementation guide doesn't need it.
+	 *
+	 * @param requested the implementation guides of the request, {@code id#version} or {@code id}.
+	 * @throws IgSelection.IgNotInstalledException if one of them is not installed.
+	 */
+	public IgSelection selectIgs(final @Nonnull Collection<String> requested) {
+		return IgSelection.of(requested, this.matchboxEngineSupport::findInstalledPackage);
 	}
 
 	/**

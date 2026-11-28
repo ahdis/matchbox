@@ -72,6 +72,13 @@ Validation
 
 New APIs
 
+- The validation API of the HL7 validator, as validator.fhir.org has it: `POST [server]/core/validate` with the
+  `ValidationRequest` and `ValidationResponse` of org.hl7.fhir.core, so that a client of the HL7 validator can use
+  matchbox with only the address changed ([#702](https://github.com/ahdis/matchbox/issues/702)). The implementation
+  guides are given as `igs` or `ig` and have to be installed (HTTP 400 otherwise); the same set of implementation
+  guides always gives the same validation engine, which is shared with `$validate`. Only the parameters that are in
+  the request override the validation parameters of the server. See the
+  [HL7 validator API reference](reference/core-api.md)
 - ITB (GITB REST) services for the Interoperability Test Bed (ITB 1.30.0 or later, with `handlerApiType="REST"`):
   the validation service `FHIRValidator` under `[server]/itb/fhir`
   ([#589](https://github.com/ahdis/matchbox/issues/589)) and the processing services `FHIRPathProcessor` under
