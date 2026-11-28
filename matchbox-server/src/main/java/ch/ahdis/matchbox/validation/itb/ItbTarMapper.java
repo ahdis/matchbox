@@ -1,7 +1,7 @@
 package ch.ahdis.matchbox.validation.itb;
 
 import ch.ahdis.matchbox.engine.MatchboxEngine;
-import ch.ahdis.matchbox.validation.ValidationHelper;
+import ch.ahdis.matchbox.validation.MatchboxValidationService;
 import com.gitb.model.core.AnyContent;
 import com.gitb.model.tr.ReportItem;
 import com.gitb.model.tr.SeverityLevel;
@@ -103,7 +103,7 @@ final class ItbTarMapper {
 									 final @Nullable String contentName) {
 		final var item = new ReportItem();
 		item.setLevel(toLevel(message.getLevel()));
-		item.setDescription(ValidationHelper.getMessageWithSliceInfo(message, engine));
+		item.setDescription(MatchboxValidationService.getMessageWithSliceInfo(message, engine));
 
 		// ITB links a location '<context item name>:<line>:<column>' to that point in the content, and shows the text
 		// after a '|' as the location, here the FHIRPath of the element

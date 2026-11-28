@@ -146,6 +146,35 @@ public class ItbApiR4Test {
 		assertEquals("application/fhir+json", getContext(tar, "content").getMimeType());
 	}
 
+	/**
+	 * Without the input 'profiles', the first meta.profile of the resource is the profile, as for the type-level
+	 * $validate.
+	 */
+	@Test
+	void validateWithoutProfileUsesMetaProfile() throws Exception {
+		final String profile = "http://matchbox.health/ig/test/r4/StructureDefinition/practitioner-identifier-required";
+		final String practitioner = """
+			<Practitioner xmlns="http://hl7.org/fhir">
+				<meta>
+					<profile value="%s"/>
+				</meta>
+				<identifier>
+					<system value="urn:oid:2.51.1.3"/>
+					<value value="7610000050719"/>
+				</identifier>
+			</Practitioner>""".formatted(profile);
+
+		TAR tar = this.client.validate(practitioner, Map.of());
+		assertEquals(TestResultType.SUCCESS, tar.getResult());
+		assertTrue(tar.getOverview().getProfileID().startsWith(profile + "|"), tar.getOverview().getProfileID());
+		assertTrue(getContext(tar, "operationOutcome").getValue()
+					  .contains("matchbox.health.test.ig.r4#" + this.matchboxTestIgVersion));
+
+		// The input 'profiles' takes precedence over meta.profile
+		tar = this.client.validate(practitioner, Map.of("profiles", "http://hl7.org/fhir/StructureDefinition/Practitioner"));
+		assertEquals("http://hl7.org/fhir/StructureDefinition/Practitioner|4.0.1", tar.getOverview().getProfileID());
+	}
+
 	@Test
 	void validatePatientAgainstBundle() throws Exception {
 		TAR tar = this.client.validate(PATIENT, Map.of("profiles", BUNDLE_PROFILE));

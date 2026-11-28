@@ -62,6 +62,55 @@ public record ValidationContent(String content,
 		return encoding == EncodingEnum.XML ? resolveXml(body, type) : resolveJson(body, type);
 	}
 
+	/**
+	 * What a resource says about itself, read without a resource type to expect.
+	 *
+	 * @param resourceType the resource type, or {@code null} if the content can't be read or has none.
+	 * @param metaProfiles the {@code meta.profile} values of the resource.
+	 */
+	public record Inspection(@Nullable String resourceType, List<String> metaProfiles) {
+	}
+
+	/**
+	 * Reads the resource type and the {@code meta.profile} values of a resource, for the APIs where the resource is
+	 * sent as is and the profile is optional. Content that can't be read gives an empty inspection: the validator
+	 * reports what's wrong with it.
+	 */
+	public static Inspection inspect(final String content, final EncodingEnum encoding) {
+		if (encoding == EncodingEnum.XML) {
+			final Element root = parseXml(content);
+			return root == null
+				? new Inspection(null, List.of())
+				: new Inspection(root.getLocalName(), metaProfilesXml(root));
+		}
+		try {
+			final JsonNode root = OBJECT_MAPPER.readTree(withoutBom(content));
+			if (root == null || !root.path("resourceType").isTextual()) {
+				return new Inspection(null, List.of());
+			}
+			return new Inspection(root.path("resourceType").asText(), metaProfilesJson(root));
+		} catch (final IOException e) {
+			return new Inspection(null, List.of());
+		}
+	}
+
+	/**
+	 * Parses the XML, without DOCTYPE and entities; {@code null} if it can't be parsed.
+	 */
+	private static @Nullable Element parseXml(final String body) {
+		try {
+			final var factory = XMLUtil.newXXEProtectedDocumentBuilderFactory();
+			// Already set by the core factory, stated here so that it doesn't depend on it: no DOCTYPE, no entities
+			factory.setFeature("http://apache.org/xml/features/disallow-doctype-decl", true);
+			factory.setNamespaceAware(true);
+			final var builder = factory.newDocumentBuilder();
+			builder.setErrorHandler(new DefaultHandler()); // don't print the parsing errors to stderr
+			return builder.parse(new InputSource(new StringReader(withoutBom(body)))).getDocumentElement();
+		} catch (final Exception e) {
+			return null;
+		}
+	}
+
 	private static ValidationContent resolveJson(final String body, final String type) throws ValidationContentException {
 		final JsonNode root;
 		try {
@@ -164,16 +213,8 @@ public record ValidationContent(String content,
 	}
 
 	private static ValidationContent resolveXml(final String body, final String type) throws ValidationContentException {
-		final Element root;
-		try {
-			final var factory = XMLUtil.newXXEProtectedDocumentBuilderFactory();
-			// Already set by the core factory, stated here so that it doesn't depend on it: no DOCTYPE, no entities
-			factory.setFeature("http://apache.org/xml/features/disallow-doctype-decl", true);
-			factory.setNamespaceAware(true);
-			final var builder = factory.newDocumentBuilder();
-			builder.setErrorHandler(new DefaultHandler()); // don't print the parsing errors to stderr
-			root = builder.parse(new InputSource(new StringReader(withoutBom(body)))).getDocumentElement();
-		} catch (final Exception e) {
+		final Element root = parseXml(body);
+		if (root == null) {
 			return asIs(body);
 		}
 		final String rootType = root.getLocalName();

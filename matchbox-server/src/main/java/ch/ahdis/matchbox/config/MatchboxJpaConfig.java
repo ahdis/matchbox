@@ -69,7 +69,7 @@ import ch.ahdis.matchbox.util.MatchboxEngineCache;
 import ch.ahdis.matchbox.util.MatchboxEngineSupport;
 import ch.ahdis.matchbox.util.MatchboxPackageInstallerImpl;
 import ch.ahdis.matchbox.util.metrics.MatchboxMetrics;
-import ch.ahdis.matchbox.validation.ValidationHelper;
+import ch.ahdis.matchbox.validation.MatchboxValidationService;
 import ch.ahdis.matchbox.validation.ValidationProvider;
 import jakarta.persistence.EntityManager;
 
@@ -625,9 +625,11 @@ public class MatchboxJpaConfig extends StarterJpaConfig {
 	}
 
 	@Bean
-	public ValidationHelper validationHelper(final MatchboxEngineSupport matchboxEngineSupport,
-														  final MatchboxFhirProperties matchboxFhirProperties) {
-		return new ValidationHelper(matchboxEngineSupport, matchboxFhirProperties);
+	public MatchboxValidationService matchboxValidationService(final MatchboxEngineSupport matchboxEngineSupport,
+																				  final MatchboxFhirProperties matchboxFhirProperties,
+																				  final CliContext cliContext,
+																				  final Optional<MatchboxMetrics> matchboxMetrics) {
+		return new MatchboxValidationService(matchboxEngineSupport, matchboxFhirProperties, cliContext, matchboxMetrics);
 	}
 
 	@Bean

@@ -799,7 +799,7 @@ public class MatchboxEngineSupport {
 		validator.getDefaultInstanceValidatorParameters().setWantInvariantsInMessages(cli.isWantInvariantsInMessages());
 		validator.getDefaultInstanceValidatorParameters().setSecurityChecks(cli.isSecurityChecks());
 		validator.getDefaultInstanceValidatorParameters().setCrumbTrails(cli.isCrumbTrails());
-		validator.getDefaultInstanceValidatorParameters().setShowMessageIds(cliContext.isShowMessageIds());
+		validator.getDefaultInstanceValidatorParameters().setShowMessageIds(cli.isShowMessageIds());
 		validator.getDefaultInstanceValidatorParameters().setForPublication(cli.isForPublication());
 		validator.setShowTimes(true);
 		validator.getDefaultInstanceValidatorParameters().setAllowExampleUrls(cli.isAllowExampleUrls());
