@@ -322,16 +322,23 @@ a real IG, so they don't depend on the content of external packages:
 
 - **Source**: https://github.com/ahdis/matchbox-test-ig (usually checked out next to this repository, as
   `../matchbox-test-ig`), FSH/SUSHI + IG Publisher, canonical `http://matchbox.health/ig/test/r4`, FHIR 4.0.1,
-  depends on `hl7.fhir.uv.xver-r5.r4#0.1.0`
-- **Package**: `matchbox.health.test.ig.r4-0.3.1.tgz` (the `output/package.tgz` of the IG Publisher build), copied to
+  depends on `hl7.fhir.uv.xver-r5.r4#0.1.0`, `hl7.terminology.r4` and `hl7.fhir.uv.extensions.r4`
+- **Package**: `matchbox.health.test.ig.r4-0.3.2.tgz` (the `output/package.tgz` of the IG Publisher build), copied to
   - `matchbox-server/src/test/resources/`: loaded in `application-test-r4.yaml` (`classpath:/…`), used by
     `MatchboxApiR4Test`, `GazelleApiR4Test`, `MbInstalledStructureDefinitionIsCurrentTest`
   - `matchbox-engine/src/test/resources/`: loaded with `MatchboxEngine.loadPackage(InputStream)`, see `Issue608Test`
 - **Content**: profiles `practitioner-identifier-required`, `practitioner-identifier-version-different-then-ig`,
-  `encounter-ext-r5` (R5 extensions in R4), `document-bundle` and `document-composition`, examples and TestScripts
-- **Changes**: add what the test needs to the test IG, raise the version in `sushi-config.yaml`, build it, copy the
-  new package to both test resource folders (remove the old one) and update the references to the version (e.g. grep
-  for `matchbox.health.test.ig.r4`)
+  `encounter-ext-r5` (R5 extensions in R4), `document-bundleA`/`B`/`C` and `document-compositionA`/`B`/`C`, examples
+  and TestScripts
+- **Dependencies**: the test IG and matchbox-engine (`PACKAGE_R4_TERMINOLOGY`, `PACKAGE_R4_UV_EXTENSIONS` in
+  `MatchboxEngine`) both use the latest version of `hl7.terminology.r4` and `hl7.fhir.uv.extensions.r4`, and it has
+  to be the same one: with another version the test server downloads the packages from the registry at startup.
+  When a new version of one of the two packages is released, update the bundled package and the test IG (new
+  version with the same dependency) in the same pull request
+- **Changes**: add what the test needs to the test IG, raise the version in `sushi-config.yaml` (every build that
+  goes into this repository has its own version, see the README and `CHANGELOG.md` of the test IG), build it, run
+  its `dist.sh` (checks the dependencies, copies the new package to both test resource folders and removes the old
+  one) and update the references to the version (e.g. grep for `matchbox.health.test.ig.r4`)
 
 ## Configuration
 
