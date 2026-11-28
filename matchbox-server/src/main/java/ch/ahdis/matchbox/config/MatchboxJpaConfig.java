@@ -78,6 +78,7 @@ import org.hl7.fhir.utilities.http.ManagedWebAccess;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.*;
 import org.springframework.core.env.Environment;
@@ -630,6 +631,13 @@ public class MatchboxJpaConfig extends StarterJpaConfig {
 																				  final CliContext cliContext,
 																				  final Optional<MatchboxMetrics> matchboxMetrics) {
 		return new MatchboxValidationService(matchboxEngineSupport, matchboxFhirProperties, cliContext, matchboxMetrics);
+	}
+
+	@Bean
+	public OnDemandIgInstaller onDemandIgInstaller(final MatchboxImplementationGuideProvider igProvider,
+																  final MatchboxFhirProperties matchboxFhirProperties,
+																  final ApplicationEventPublisher eventPublisher) {
+		return new OnDemandIgInstaller(igProvider, matchboxFhirProperties, eventPublisher);
 	}
 
 	@Bean

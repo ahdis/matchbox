@@ -3,6 +3,7 @@ package ch.ahdis.matchbox.validation;
 import ca.uhn.fhir.rest.api.EncodingEnum;
 import ca.uhn.fhir.util.StopWatch;
 import ch.ahdis.matchbox.CliContext;
+import ch.ahdis.matchbox.packages.OnDemandIgInstaller;
 import ch.ahdis.matchbox.config.MatchboxFhirVersion;
 import ch.ahdis.matchbox.config.property.MatchboxFhirProperties;
 import ch.ahdis.matchbox.engine.MatchboxEngine;
@@ -83,6 +84,10 @@ public class MatchboxValidationService {
 	@Autowired(required = false)
 	private MatchboxFhirVersion matchboxFhirVersion;
 
+	// Installs the implementation guides that a request names and that are not installed
+	@Autowired(required = false)
+	private OnDemandIgInstaller igInstaller;
+
 	/**
 	 * @param baseCliContext the validation parameters of the server, the defaults of every request.
 	 */
@@ -153,12 +158,26 @@ public class MatchboxValidationService {
 	/**
 	 * Selects the implementation guides that a request asks for by name, see {@link IgSelection}. An API that lets
 	 * the profile choose the implementation guide doesn't need it.
+	 * <p>
+	 * An implementation guide that is not installed is installed from the package registry, unless the server is
+	 * read-only, see {@link OnDemandIgInstaller}.
 	 *
 	 * @param requested the implementation guides of the request, {@code id#version} or {@code id}.
-	 * @throws IgSelection.IgNotInstalledException if one of them is not installed.
+	 * @throws OnDemandIgInstaller.IgInstallationException if one of them is not installed and cannot be installed.
+	 * @throws IgSelection.IgNotInstalledException         if one of them is not installed, and there is no installer.
 	 */
 	public IgSelection selectIgs(final @Nonnull Collection<String> requested) {
-		return IgSelection.of(requested, this.matchboxEngineSupport::findInstalledPackage);
+		try {
+			return IgSelection.of(requested, this.matchboxEngineSupport::findInstalledPackage);
+		} catch (final IgSelection.IgNotInstalledException e) {
+			if (this.igInstaller == null) {
+				throw e;
+			}
+			for (final String ig : e.getIgs()) {
+				this.igInstaller.ensureInstalled(ig);
+			}
+			return IgSelection.of(requested, this.matchboxEngineSupport::findInstalledPackage);
+		}
 	}
 
 	/**

@@ -50,7 +50,7 @@ not in the request has the value of the server configuration, and not the defaul
 
 | Parameter           | Description                                                                                                                                                                                                                |
 |---------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `igs`, `ig`         | The implementation guides, `id#version` or `id` (the installed current version), as a list or a single value. They must be installed: an implementation guide that is not installed gives HTTP 400.                         |
+| `igs`, `ig`         | The implementation guides, `id#version` or `id` (the installed current version), as a list or a single value. One that is not installed is installed first, unless the server is read-only, see [below](#implementation-guides). |
 | `profiles`, `profile` | One profile, `canonical` or `canonical\|version`. Defaults to the first `meta.profile` of the resource, then to the base profile of its resource type. Matchbox validates against one profile per call: more than one gives HTTP 400. |
 | `sv`                | The FHIR version: `4.0.1`, `4.3.0` or `5.0.0` (also `4.0`, `R4`, …). Defaults to the FHIR version of the first implementation guide, then to the one of the server.                                                          |
 | `displayWarnings`   | Same as `displayIssuesAreWarnings`.                                                                                                                                                                                        |
@@ -62,12 +62,23 @@ not in the request has the value of the server configuration, and not the defaul
 The other parameters of the HL7 validator (e.g. `showTimes`, `level`, `questionnaireMode`, `htmlInMarkdownCheck`) are
 ignored.
 
-### Implementation guides and profile
+### Implementation guides and profile {: #implementation-guides}
 
 - With `igs`, the resource is validated with an engine that has these implementation guides loaded. The profile has to
   be in one of them, or in the FHIR core package.
 - Without `igs`, the profile selects the implementation guide, as for `$validate`: the current version of the
   implementation guide that has the profile, or the version given with `canonical|version`.
+
+An implementation guide of `igs` that is not installed in Matchbox is installed from the package registry with its
+dependencies, as the `loadIG` operation of the [ITB API](itb-api.md#igmanager) does, and the request is answered when
+it is installed: the first request for a large implementation guide takes time. The request gets HTTP 400 with the
+reason instead, if
+
+- the server is [read-only](../how-to/secure-production-deployment.md#read-only-mode): its implementation guides are
+  the ones of its [configuration](../how-to/load-implementation-guides.md);
+- the implementation guide is given without an exact version (`id`, `id#latest`, `id#1.0.x`): only `id#version` can
+  be installed;
+- the installation fails, e.g. the package registry doesn't have the package.
 
 ## Response
 
@@ -114,7 +125,7 @@ ignored.
 
 | Status | Body (text)                                                                                                    |
 |--------|----------------------------------------------------------------------------------------------------------------|
-| 400    | The request is not valid: malformed JSON, no file, an implementation guide that is not installed, more than one profile, an unsupported FHIR version or parameter value |
+| 400    | The request is not valid: malformed JSON, no file, an implementation guide that is not installed and cannot be installed, more than one profile, an unsupported FHIR version or parameter value |
 | 503    | The validation engine is not initialized yet (startup, or an implementation guide is being loaded)             |
 | 500    | Internal error                                                                                                 |
 
@@ -133,7 +144,9 @@ uses for the profiles of this implementation guide.
 
 ## Differences to the HL7 validator
 
-- The implementation guides are not downloaded: they have to be installed in Matchbox.
+- An implementation guide that is not installed is installed in Matchbox and stays installed, if the server is not
+  read-only. A read-only server only has the implementation guides of its configuration.
+- An implementation guide is a package, `id#version` or `id`: not a URL or a file.
 - One profile per request.
 - The parameters that are not in the request have the values of the server configuration.
 - Only `POST /validate` is provided, and not the other endpoints of validator.fhir.org (`/ig`, `/versions`,

@@ -93,5 +93,5 @@ collection. An expression or a content that can't be parsed gives HTTP 400 with 
 `loadIG` confirms a package that is installed in Matchbox. A package that isn't installed is installed from the package
 registry with its dependencies, unless the server is [read-only](../how-to/secure-production-deployment.md#read-only-mode):
 then, or if the installation fails, the answer has no `output` but a `report` with the result `FAILURE`, which fails the
-test step. The validation picks the implementation guide from the profile: a test case doesn't have to call `loadIG`
+test step. The package needs an exact version: `id#latest` or `id#1.0.x` is an invalid request. The validation picks the implementation guide from the profile: a test case doesn't have to call `loadIG`
 before `validate`.
