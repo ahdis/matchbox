@@ -19,8 +19,9 @@ In read-only mode:
 1. The following FHIR interactions are rejected: `CREATE`, `DELETE`, `UPDATE`, `PATCH`, `UPDATE_REWRITE_HISTORY`,
    `TRANSACTION`, `BATCH`, `ADD_TAGS`, `DELETE_TAGS`, `META_ADD`, `META_DELETE`.
 2. The operation [`$install-npm-package`](../reference/operations.md#install-npm-package) is disabled.
-3. The [auto-installation of implementation guides](../reference/operations.md#auto-install-ig) in `$validate` is
-   disabled.
+3. The [auto-installation of implementation guides](../reference/operations.md#auto-install-ig) is disabled, in
+   `$validate` and in the other validation APIs: a request for an implementation guide that isn't installed gets an
+   error.
 
 The implementation guides can then only be installed through the configuration, see
 [Load implementation guides](load-implementation-guides.md).

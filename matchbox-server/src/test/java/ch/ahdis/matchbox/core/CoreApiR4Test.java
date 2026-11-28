@@ -194,7 +194,7 @@ public class CoreApiR4Test {
 
 	/**
 	 * An implementation guide that is not installed is an error, and is not installed: the server of the tests is
-	 * read-only. See {@link CoreApiLoadIgR4Test} for a server that is not.
+	 * read-only. See {@code LoadIgOnDemandR4Test} for a server that is not.
 	 */
 	@Test
 	void igNotInstalled() throws Exception {

@@ -373,6 +373,19 @@ public class ItbApiR4Test {
 		assertEquals(204, this.fhirPathClient.post("endTransaction", "{}", Map.of()).status());
 	}
 
+	/**
+	 * The server of the tests is read-only: an implementation guide of the input 'ig' that is not installed is not
+	 * installed, and the step fails.
+	 */
+	@Test
+	void validateWithIgNotInstalled() throws Exception {
+		final TAR tar = this.client.validate(PATIENT, Map.of("profiles", PATIENT_PROFILE,
+																			  "ig", "matchbox.health.test.ig.r4#9.9.9"));
+		assertEquals(TestResultType.FAILURE, tar.getResult());
+		assertTrue(getFirstError(tar).getDescription().contains("is not installed and the server is read-only"),
+					  getFirstError(tar).getDescription());
+	}
+
 	@Test
 	void igManagerModuleDefinition() throws Exception {
 		final var response = this.igManagerClient.get("getModuleDefinition");

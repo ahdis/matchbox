@@ -69,6 +69,12 @@ Validation
   engines of all implementation guides, and not only to the engine of the FHIR core package: it was dropped from the
   validation parameters of a request, which then had to send `extensions` itself. `check-references-to` was dropped in
   the same way, and `matchbox.fhir.context.checkReferencesTo` was not read
+- An implementation guide of the validation parameter `ig` that is not installed is installed from the package
+  registry before the validation (`id#version`), if the server is not read-only (`httpReadOnly`), for `$validate`, the
+  ITB API and the HL7 validator API alike ([#702](https://github.com/ahdis/matchbox/issues/702)). This brings back the
+  auto-installation of `$validate` for the `ig` parameter; a profile of an implementation guide that is not installed
+  doesn't install it. If the implementation guide cannot be installed (read-only server, no exact version, not in the
+  registry), the request gets an error instead of a validation without the implementation guide
 
 New APIs
 

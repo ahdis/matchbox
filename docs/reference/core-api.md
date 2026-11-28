@@ -70,7 +70,8 @@ ignored.
   implementation guide that has the profile, or the version given with `canonical|version`.
 
 An implementation guide of `igs` that is not installed in Matchbox is installed from the package registry with its
-dependencies, as the `loadIG` operation of the [ITB API](itb-api.md#igmanager) does, and the request is answered when
+dependencies, as for the `ig` parameter of [`$validate`](operations.md#auto-install-ig) and the `loadIG` operation
+of the [ITB API](itb-api.md#igmanager), and the request is answered when
 it is installed: the first request for a large implementation guide takes time. The request gets HTTP 400 with the
 reason instead, if
 

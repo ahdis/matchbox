@@ -121,13 +121,18 @@ Content-Type: application/fhir+json
 
 ### Auto-installation of implementation guides {: #auto-install-ig}
 
-If the server isn't in read-only mode (`httpReadOnly: false`), `$validate` tries to install the implementation guide
-when it isn't installed yet. The package to install is determined by, in this order:
+If the server isn't in read-only mode (`httpReadOnly: false`), an implementation guide of the `ig` parameter that
+isn't installed yet is installed from the package registry with its dependencies, before the validation. It needs an
+exact version (`id#version`, not `id`, `id#latest` or `id#1.0.x`). The first request for a large implementation guide
+takes time.
 
-1. the `ig` parameter, if present;
-2. the `profile` parameter: Matchbox searches the implementation guides that contain that canonical with the
-   [Simplifier API](https://app.swaggerhub.com/apis-docs/firely/Simplifier.net_FHIR_Package_API/1.0.1) and installs the
-   first result.
+If the implementation guide isn't installed and can't be installed (the server is in read-only mode, no exact version,
+or the package registry doesn't have the package), the `OperationOutcome` has one error with the reason, and the
+resource isn't validated.
+
+Only the `ig` parameter installs an implementation guide: a `profile` that no installed implementation guide has is
+an error. The other validation APIs do the same for their `ig` parameter: the
+[ITB API](itb-api.md) and the [HL7 validator API](core-api.md#implementation-guides).
 
 ## $transform {: #transform}
 
