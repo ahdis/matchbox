@@ -110,6 +110,10 @@ Other
   string of the request
   ([#684](https://github.com/ahdis/matchbox/issues/684)). Its test `MatchboxApiR4Test.mcpListFhirIgs` compares the
   number of IGs with the number before the test instead of a fixed number, which failed on `main`
+- Tests: the test IG `matchbox.health.test.ig.r4` 0.3.2 depends on the bundled `hl7.terminology.r4#7.3.0` and
+  `hl7.fhir.uv.extensions.r4#5.4.1`. With 0.3.1 the test server downloaded `hl7.terminology.r4#7.4.0`, and since the
+  update of the extensions to 5.4.1 also `hl7.fhir.uv.extensions.r4#5.3.0` with its dependencies, from the registry
+  ([#701](https://github.com/ahdis/matchbox/pull/701))
 - MCP: the tools `conditional-update-fhir-resource` and `conditional-patch-fhir-resource` failed without an `id` and
   ignored their `query`, the `headers` of the tools (e.g. `If-None-Exist`, `If-Match`) were ignored, the patch tools
   rejected their `resource` and `search-fhir-resources` ignored its `query` string

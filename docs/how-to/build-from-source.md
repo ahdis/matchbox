@@ -173,7 +173,14 @@ implementation guide, so that they don't depend on the content of external packa
 
 1. Check out [matchbox-test-ig](https://github.com/ahdis/matchbox-test-ig) next to the Matchbox repository, and add
    the profiles or examples (in FSH) to it.
-2. Raise the version in its `sushi-config.yaml`, and build it with SUSHI and the IG Publisher.
-3. Copy `output/package.tgz` as `matchbox.health.test.ig.r4-<version>.tgz` to both `matchbox-server/src/test/resources`
-   and `matchbox-engine/src/test/resources`, and remove the old package.
+2. Raise the version in its `sushi-config.yaml`, add the entry to its `CHANGELOG.md`, build it with SUSHI and the IG
+   Publisher and commit. Every package that goes into the Matchbox repository has its own version.
+3. Run its `dist.sh`: it copies `output/package.tgz` as `matchbox.health.test.ig.r4-<version>.tgz` to both
+   `matchbox-server/src/test/resources` and `matchbox-engine/src/test/resources`, and removes the old package.
 4. Update the references to the version, e.g. in `application-test-r4.yaml`: search for `matchbox.health.test.ig.r4`.
+
+The test IG depends on `hl7.terminology.r4` and `hl7.fhir.uv.extensions.r4` in the versions that are bundled with
+matchbox-engine (`PACKAGE_R4_TERMINOLOGY` and `PACKAGE_R4_UV_EXTENSIONS` in `MatchboxEngine`). With another version,
+the test server downloads the packages and their dependencies from the registry when it starts. If you update one of
+the two bundled packages, build a new version of the test IG with the same dependency (`dist.sh` checks it) and add
+it to the same pull request.
