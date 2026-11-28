@@ -48,6 +48,7 @@ import ca.uhn.fhir.jpa.dao.data.INpmPackageVersionResourceDao;
 import ca.uhn.fhir.jpa.model.entity.NpmPackageVersionEntity;
 import ca.uhn.fhir.jpa.model.entity.NpmPackageVersionResourceEntity;
 import ca.uhn.fhir.jpa.packages.IHapiPackageCacheManager;
+import ca.uhn.fhir.jpa.packages.JpaPackageCache;
 import ch.ahdis.matchbox.engine.MatchboxEngine;
 import ch.ahdis.matchbox.engine.MatchboxEngine.MatchboxEngineBuilder;
 import ch.ahdis.matchbox.engine.ValidationPolicyAdvisor;
@@ -679,6 +680,42 @@ public class MatchboxEngineSupport {
 													  npm.getFhirVersion().getFhirVersionString()));
 		igsOfCanonicals.put(key, igOfCanonical);
 		return igOfCanonical;
+	}
+
+	/**
+	 * An installed package.
+	 *
+	 * @param id          the package id.
+	 * @param version     the installed version.
+	 * @param fhirVersion the FHIR version of the package, e.g. {@code 4.0.1}.
+	 */
+	public record InstalledPackage(String id, String version, String fhirVersion) {
+		/**
+		 * Returns the package as {@code id#version}, as the IG of a {@link CliContext}.
+		 */
+		public String ig() {
+			return this.id + "#" + this.version;
+		}
+	}
+
+	/**
+	 * Returns the installed package for an IG given as {@code id#version} or {@code id}, or empty if it is not
+	 * installed. Without a version (or with {@code latest}) it is the current version of the package, a version like
+	 * {@code 3.3.x} is the latest installed 3.3 version.
+	 */
+	public Optional<InstalledPackage> findInstalledPackage(final @Nonnull String ig) {
+		final int separator = ig.indexOf('#');
+		final String id = (separator < 0 ? ig : ig.substring(0, separator)).strip();
+		final String requestedVersion = separator < 0 ? "" : ig.substring(separator + 1).strip();
+		if (id.isEmpty()) {
+			return Optional.empty();
+		}
+		final String version = requestedVersion.isEmpty() ? "latest" : requestedVersion;
+		return new TransactionTemplate(this.myTxManager).execute(
+			tx -> ((JpaPackageCache) this.myPackageCacheManager).findPackageVersionFromCacheOnly(id, version)
+				.map(entity -> new InstalledPackage(entity.getPackageId(),
+																entity.getVersionId(),
+																entity.getFhirVersion().getFhirVersionString())));
 	}
 
 	public MatchboxEngineCache getSessionCache() {

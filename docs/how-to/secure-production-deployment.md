@@ -127,6 +127,7 @@ certificates, an authenticating proxy, IP allow lists).
 | `/tx`                       | The internal terminology server                                            | Only if used externally (what you probably shouldn't do)   |
 | `/gazelle`                  | The [Gazelle validation API](../reference/gazelle-api.md)                  | To the Gazelle tools, if any                                 |
 | `/itb`                      | The [ITB test services](../reference/itb-api.md)                          | To the Interoperability Test Bed, if any                     |
+| `/core`                     | The [HL7 validator API](../reference/core-api.md)                          | To the clients of the HL7 validator API, if any              |
 | `/mcp`                      | The [MCP server](../reference/mcp-server.md), when enabled                 | To the MCP clients, if any                                   |
 | `/actuator`                 | The Spring Boot Actuator endpoints                                         | Never publicly                                               |
 

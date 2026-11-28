@@ -72,6 +72,7 @@ nav:
       - Web interface: reference/web-interface.md
       - Gazelle validation API: reference/gazelle-api.md
       - ITB API: reference/itb-api.md
+      - HL7 validator API: reference/core-api.md
       - MCP server: reference/mcp-server.md
       - Docker image: reference/docker-image.md
       - matchbox-engine: reference/matchbox-engine-api.md
