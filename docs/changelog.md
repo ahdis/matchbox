@@ -49,6 +49,26 @@ Validation
   tx.fhir.ch) is also used with `http://tx.fhir.org`, and not with other terminology servers
 - `Bundle/$get-profiles` (and the MCP tool `get-profiles-for-document-bundle`) matches the profiles of a document with
   any of the type and category codings of its Composition
+- `$validate`, the Gazelle API and the ITB API share one validation service (`MatchboxValidationService`), so that
+  they select the profile, get the engine, validate, count and report in the same way
+  ([#702](https://github.com/ahdis/matchbox/issues/702)):
+    - ITB API: without the input `profiles`, the first `meta.profile` of the resource is the profile (then the base
+      profile of its resource type), as for the type-level `$validate`. If the validation engine is not yet
+      initialized, the report is `UNDEFINED` instead of `FAILURE`
+    - Gazelle API: the validation duration is recorded in the metrics, and the validation parameters with several
+      values are listed with their values in the report metadata
+    - Validation statistics (`matchbox.validation.save-statistics`): the validations of the Gazelle API and the ITB
+      API are saved as well
+    - The duration in the OperationOutcome and in the metrics is the duration of the validation, without the time to
+      get or create the validation engine
+- The `sessionId` of a validation engine is a digest of its validation parameters instead of their 32-bit hash code,
+  which could give two different sets of parameters the same engine. Requests with the same `check-references-to`
+  values share an engine (a new engine was created for every request)
+- The validation parameter `showMessageIds` of a request is applied (the setting of the server was used)
+- The `extensions` setting of the server (`matchbox.fhir.context.extensions`, default `any`) applies to the validation
+  engines of all implementation guides, and not only to the engine of the FHIR core package: it was dropped from the
+  validation parameters of a request, which then had to send `extensions` itself. `check-references-to` was dropped in
+  the same way, and `matchbox.fhir.context.checkReferencesTo` was not read
 
 New APIs
 

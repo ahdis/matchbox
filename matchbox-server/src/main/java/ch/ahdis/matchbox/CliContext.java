@@ -9,6 +9,7 @@ import java.util.Objects;
 import java.util.stream.Collectors;
 
 import org.apache.commons.beanutils.BeanUtils;
+import org.apache.commons.codec.digest.DigestUtils;
 import org.hl7.fhir.r5.model.*;
 import org.hl7.fhir.model.utilities.JurisdictionUtilities;
 import org.hl7.fhir.services.validation.constants.BestPracticeWarningLevel;
@@ -258,6 +259,18 @@ public class CliContext {
     // check for each cliContextProperties if it is in the request parameter
     for (Field field : cliContextProperties) {
       String cliContextProperty = field.getName();
+      if (field.getType() == String[].class) {
+        // BeanUtils doesn't set the array properties: their setters return the context, so they aren't seen as
+        // properties. 'extensions' is read above with its default; the suppressed messages have their own settings
+        // per IG (suppressWarnInfo, suppressError) and the IGs are selected per request
+        if ("checkReferencesTo".equals(cliContextProperty)) {
+          final String[] values = environment.getProperty("matchbox.fhir.context." + cliContextProperty, String[].class);
+          if (values != null && values.length > 0) {
+            setArray(field, values);
+          }
+        }
+        continue;
+      }
       String value = environment.getProperty("matchbox.fhir.context." + cliContextProperty);
       if (value != null && value.length() > 0) {
         try {
@@ -277,6 +290,17 @@ public class CliContext {
     List<Field> cliContextProperties = getValidateEngineParameters();
     // check for each cliContextProperties if it is in the request parameter
     for (Field field : cliContextProperties) {
+      if (field.getType() == String[].class) {
+        // BeanUtils reads only the first value of an array, and doesn't set the array properties (see above)
+        try {
+          field.setAccessible(true);
+          final String[] values = (String[]) field.get(other);
+          setArray(field, values == null ? null : values.clone());
+        } catch (IllegalAccessException e) {
+          log.error("error setting property " + field.getName());
+        }
+        continue;
+      }
       try {
         String value = BeanUtils.getProperty(other, field.getName());
         if (value != null) {
@@ -286,9 +310,15 @@ public class CliContext {
         log.error("error setting property " + field.getName());
       }
     }
-    this.suppressErrors = other.suppressErrors;
-    this.suppressWarnInfos = other.suppressWarnInfos;
-    this.igs = other.igs;
+  }
+
+  private void setArray(final Field field, final String[] values) {
+    try {
+      field.setAccessible(true);
+      field.set(this, values);
+    } catch (IllegalAccessException e) {
+      log.error("error setting property " + field.getName());
+    }
   }
 
   public String getIg() {
@@ -730,7 +760,6 @@ public class CliContext {
         && clearTxCache == that.clearTxCache
         && allowExampleUrls == that.allowExampleUrls
         && htmlInMarkdownCheck == that.htmlInMarkdownCheck
-        && Objects.equals(extensions, that.extensions)
         && Objects.equals(txServer, that.txServer)
         && txServerCache == that.txServerCache
         && Objects.equals(txLog, that.txLog)
@@ -761,7 +790,15 @@ public class CliContext {
 
   @Override
   public int hashCode() {
-    int result = Objects.hash(doNative,
+    return this.identity().hashCode();
+  }
+
+  /**
+   * The values that {@link #equals(Object)} compares, with the arrays as lists so that they are compared, hashed and
+   * printed by their content.
+   */
+  private List<Object> identity() {
+    return Arrays.asList(doNative,
         hintAboutNonMustSupport,
         recursive,
         showMessagesFromReferences,
@@ -794,26 +831,34 @@ public class CliContext {
         level,
         mode,
         locale,
-        locations,
+        locations == null ? null : new java.util.TreeMap<>(locations),
         jurisdiction,
         checkReferences,
-        checkReferencesTo,
+        asList(checkReferencesTo),
         resolutionContext,
         disableDefaultResourceFetcher,
         checkIpsCodes,
         bundle,
         r5BundleRelativeReferencePolicy,
         bpWarnings,
-        resourceIdRule);
-    result = 31 * result + Arrays.hashCode(extensions);
-    result = 31 * result + Arrays.hashCode(suppressErrors);
-    result = 31 * result + Arrays.hashCode(suppressWarnInfos);
-    result = 31 * result + Arrays.hashCode(igs);    
-    return result;
+        resourceIdRule,
+        asList(extensions),
+        asList(suppressErrors),
+        asList(suppressWarnInfos),
+        asList(igs));
   }
 
+  private static List<String> asList(final String[] values) {
+    return values == null ? null : Arrays.asList(values);
+  }
+
+  /**
+   * The id of the validation engine for these parameters: two contexts have the same id if and only if they are
+   * equal. It is a digest of the values and not their {@link #hashCode()}, whose 32 bits could give two different
+   * contexts the same engine.
+   */
   public String sessionId() {
-	 return String.valueOf(this.hashCode());
+    return DigestUtils.sha256Hex(this.identity().toString()).substring(0, 32);
   }
 
   @Override

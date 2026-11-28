@@ -21,25 +21,16 @@ package ch.ahdis.matchbox.validation;
  */
 
 import ca.uhn.fhir.context.FhirContext;
-import ca.uhn.fhir.jpa.dao.data.INpmPackageVersionResourceDao;
 import ca.uhn.fhir.rest.annotation.Operation;
 import ca.uhn.fhir.rest.annotation.OperationParam;
 import ca.uhn.fhir.rest.api.EncodingEnum;
 import ca.uhn.fhir.rest.api.server.RequestDetails;
 import ca.uhn.fhir.rest.server.exceptions.BaseServerResponseException;
-import ca.uhn.fhir.util.StopWatch;
 import ch.ahdis.matchbox.CliContext;
 import ch.ahdis.matchbox.config.MatchboxFhirVersion;
 import ch.ahdis.matchbox.config.property.MatchboxFhirProperties;
-import ch.ahdis.matchbox.statistics.OperationOutcomeResourceProviderR4;
-import ch.ahdis.matchbox.statistics.OperationOutcomeResourceProviderR4B;
-import ch.ahdis.matchbox.statistics.OperationOutcomeResourceProviderR5;
-import ch.ahdis.matchbox.util.MatchboxEngineSupport;
-import ch.ahdis.matchbox.util.metrics.MatchboxMetrics;
 import ch.ahdis.matchbox.validation.matchspark.LlmConnector;
-import ch.ahdis.matchbox.engine.MatchboxEngine;
 import ch.ahdis.matchbox.engine.exception.MatchboxEngineCreationException;
-import ch.ahdis.matchbox.packages.MatchboxImplementationGuideProvider;
 import dev.langchain4j.model.chat.listener.ChatModelListener;
 import org.apache.commons.codec.digest.DigestUtils;
 import jakarta.annotation.Nonnull;
@@ -48,11 +39,7 @@ import org.hl7.fhir.instance.model.api.IBase;
 import org.hl7.fhir.instance.model.api.IBaseOperationOutcome;
 import org.hl7.fhir.instance.model.api.IBaseResource;
 import org.hl7.fhir.r5.model.*;
-import org.hl7.fhir.model.utilities.formats.FhirFormat;
 import org.hl7.fhir.model.extensions.ExtensionDefinitions;
-import org.hl7.fhir.model.utilities.EOperationOutcome;
-import org.hl7.fhir.r5.utils.OperationOutcomeUtilities;
-import org.hl7.fhir.utilities.validation.ValidationMessage;
 import org.springframework.beans.factory.annotation.Autowired;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import ch.ahdis.matchbox.validation.matchspark.LlmErrorMessage;
@@ -60,13 +47,8 @@ import ch.ahdis.matchbox.validation.matchspark.LlmErrorMessage;
 import jakarta.servlet.http.HttpServletRequest;
 
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
 
-import static ch.ahdis.matchbox.config.MatchboxFhirVersion.convertToR4;
-import static ch.ahdis.matchbox.config.MatchboxFhirVersion.convertToR4B;
 
 /**
  * The HAPI provider of the operation $validate
@@ -79,39 +61,15 @@ public class ValidationProvider {
 	public static final String PARAM_LLM_MODEL_NAME = "llmModelName";
 	public static final String PARAM_LLM_API_KEY = "llmApiKey";
 	public static final String OPERATION_VALIDATE = "$validate";
-	private static final String BASE_DEFINITION_PREFIX = "http://hl7.org/fhir/StructureDefinition/";
-
-	@Autowired
-	protected MatchboxEngineSupport matchboxEngineSupport;
 
 	@Autowired
 	protected MatchboxFhirProperties matchboxProps;
 
 	@Autowired
-	protected CliContext cliContext;
-
-	@Autowired
-	private ValidationHelper validationHelper;
+	private MatchboxValidationService validationService;
 
 	@Autowired
 	private MatchboxFhirVersion matchboxFhirVersion;
-
-	@Autowired
-	private MatchboxImplementationGuideProvider igProvider;
-	@Autowired
-	private INpmPackageVersionResourceDao myPackageVersionResourceDao;
-
-	@Autowired(required = false)
-	private Optional<OperationOutcomeResourceProviderR4> operationOutcomeResourceProviderR4;
-
-	@Autowired(required = false)
-	private Optional<OperationOutcomeResourceProviderR4B> operationOutcomeResourceProviderR4B;
-
-	@Autowired(required = false)
-	private Optional<OperationOutcomeResourceProviderR5> operationOutcomeResourceProviderR5;
-
-	@Autowired(required = false)
-	private Optional<MatchboxMetrics> matchboxMetrics;
 
 	/**
 	 * The langchain4j {@link ChatModelListener} beans (e.g. Micrometer/Observation listeners registered in
@@ -157,7 +115,7 @@ public class ValidationProvider {
 
 			// check if validation response is an OperationOutcome and store it
 			if (response instanceof final OperationOutcome operationOutcome) {
-				this.saveOperationOutcome(operationOutcome);
+				this.validationService.saveForStatistics(operationOutcome);
 			}
 
 			// returns response in correct FHIR version
@@ -168,7 +126,7 @@ public class ValidationProvider {
 
 			// store OperationOutcome
 			if (operationOutcome != null) {
-				this.saveOperationOutcome(MatchboxFhirVersion.convertToR5(operationOutcome, OperationOutcome.class));
+				this.validationService.saveForStatistics(MatchboxFhirVersion.convertToR5(operationOutcome, OperationOutcome.class));
 			}
 
 			// rethrow the exception
@@ -181,18 +139,12 @@ public class ValidationProvider {
 	 */
 	private OperationOutcome getValidation(final HttpServletRequest theRequest, final @Nullable String type) {
 		log.debug("$validate");
-		this.matchboxMetrics.ifPresent(MatchboxMetrics::addValidation);
-
-		final var sw = new StopWatch();
-		sw.startTask("Total");
 
 		// we extract here all config
-		final CliContext cliContext = new CliContext(this.cliContext);
+		final CliContext cliContext = this.validationService.newContext(theRequest::getParameterValues);
 
-		ValidationHelper.applyValidationParameters(cliContext, theRequest::getParameterValues);
-
-		String profile = theRequest.getParameter("profile");
-		if (profile == null && type == null) {
+		final String requestedProfile = theRequest.getParameter("profile");
+		if (requestedProfile == null && type == null) {
 			return this.getOoForError("The 'profile' parameter must be provided");
 		}
 
@@ -220,7 +172,7 @@ public class ValidationProvider {
 		}
 
 		// On the type level, the resource may be wrapped in a Parameters and the profile is optional
-		final List<String> otherMetaProfiles = new ArrayList<>();
+		final ProfileSelection selection;
 		if (type != null) {
 			final ValidationContent content;
 			try {
@@ -229,51 +181,28 @@ public class ValidationProvider {
 				return this.getOoForError(e.getMessage());
 			}
 			contentString = content.content();
-			if (profile == null) {
-				profile = content.envelopeProfile();
-			}
-			if (profile == null && !content.metaProfiles().isEmpty()) {
-				profile = content.metaProfiles().getFirst();
-				otherMetaProfiles.addAll(content.metaProfiles().subList(1, content.metaProfiles().size()));
-			}
-			if (profile == null) {
-				profile = BASE_DEFINITION_PREFIX + type;
-			}
+			selection = ProfileSelection.select(requestedProfile, content.envelopeProfile(), content.metaProfiles(), type);
+		} else {
+			selection = ProfileSelection.select(requestedProfile, null, List.of(), null);
+		}
+		if (selection == null) {
+			return this.getOoForError("The 'profile' parameter must be provided");
 		}
 
-		final MatchboxEngine engine;
+		final PreparedValidation prepared;
 		try {
-			engine = this.validationHelper.getEngine(profile, cliContext, reload);
+			prepared = this.validationService.prepare(selection, cliContext, reload);
 		} catch (final MatchboxEngineCreationException e) {
 			return this.getOoForError(e.getMessage());
 		}
-		profile = ValidationHelper.ProfileReference.parse(profile).canonical();
 
-		final String sha3Hex = new DigestUtils("SHA3-256").digestAsHex(contentString + profile);
-
-		final List<ValidationMessage> messages;
-		try {
-			messages = ValidationHelper.doValidate(engine, contentString, encoding, profile);
-		} catch (final Exception e) {
-			sw.endCurrentTask();
-			log.debug("Validation time: {}", sw);
-			log.error("Error during validation", e);
-			return this.getOoForError("Error during validation: %s".formatted(e.getMessage()));
+		final ValidationResult result = this.validationService.validate(prepared, contentString, encoding);
+		if (!result.isValidated()) {
+			return this.getOoForError(result.failure());
 		}
 
-		long millis = sw.getMillis();
-		log.debug("Validation time: {}", sw);
-		this.matchboxMetrics.ifPresent(m -> m.addValidationDuration(java.time.Duration.ofMillis(millis)));
-
-		final OperationOutcome oo = this.validationHelper.getOperationOutcome(sha3Hex, messages, profile, engine, millis, cliContext);
-		if (!otherMetaProfiles.isEmpty()) {
-			oo.addIssue()
-				.setSeverity(OperationOutcome.IssueSeverity.INFORMATION)
-				.setCode(OperationOutcome.IssueType.INFORMATIONAL)
-				.setDiagnostics(
-					"The resource declares several profiles in meta.profile, the validation engine was selected for the first one, '%s'. The other ones are only validated if this engine knows them: %s".formatted(
-						profile, String.join(", ", otherMetaProfiles)));
-		}
+		final String sha3Hex = new DigestUtils("SHA3-256").digestAsHex(contentString + prepared.profile());
+		final OperationOutcome oo = this.validationService.toOperationOutcome(sha3Hex, result);
 
 		// Check if we should analyze errors with LLM, either from the request parameter or from the configuration
 		boolean analyzeErrorsWithLlm = this.matchboxProps.getValidation().isAnalyzeErrorsWithLlm();
@@ -375,29 +304,6 @@ public class ValidationProvider {
 			.setSeverity(OperationOutcome.IssueSeverity.ERROR)
 			.setCode(OperationOutcome.IssueType.EXCEPTION)
 			.setDiagnostics(message);
-	}
-
-	public void saveOperationOutcome(final OperationOutcome operationOutcome) {
-		// checks if all operationOutcomeResourceProviders are empty (indicating that save-statistics = false
-		// and operationOutcome is valid)
-		boolean hasNoOperationOutcomeResourceProvider = operationOutcomeResourceProviderR4.isEmpty()
-																&& operationOutcomeResourceProviderR4B.isEmpty()
-																&& operationOutcomeResourceProviderR5.isEmpty();
-
-		if (hasNoOperationOutcomeResourceProvider || operationOutcome == null) {
-			return;
-		}
-
-		operationOutcome.setId(UUID.randomUUID().toString());
-		operationOutcome.getMeta().setSource("matchbox-validation");
-
-		// uses the correct ResourceProvider for the server version. Gets the dao from the rp and stores the
-		// OperationOutcome. Converts to R4 or R4B first if needed.
-		this.matchboxFhirVersion.execute(
-			() -> this.operationOutcomeResourceProviderR4.ifPresent(rp -> rp.getDao().create(convertToR4(operationOutcome, org.hl7.fhir.r4.model.OperationOutcome.class))),
-			() -> this.operationOutcomeResourceProviderR4B.ifPresent(rp -> rp.getDao().create(convertToR4B(operationOutcome, org.hl7.fhir.r4b.model.OperationOutcome.class))),
-			() -> this.operationOutcomeResourceProviderR5.ifPresent(rp -> rp.getDao().create(operationOutcome))
-		);
 	}
 
 	private boolean hasError(final OperationOutcome operationOutcome) {

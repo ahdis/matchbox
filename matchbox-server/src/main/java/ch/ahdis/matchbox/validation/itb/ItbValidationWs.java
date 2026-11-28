@@ -1,14 +1,16 @@
 package ch.ahdis.matchbox.validation.itb;
 
 import ca.uhn.fhir.rest.api.EncodingEnum;
-import ca.uhn.fhir.util.StopWatch;
 import ch.ahdis.matchbox.CliContext;
 import ch.ahdis.matchbox.config.MatchboxFhirVersion;
 import ch.ahdis.matchbox.engine.MatchboxEngine;
 import ch.ahdis.matchbox.engine.cli.VersionUtil;
 import ch.ahdis.matchbox.engine.exception.MatchboxEngineCreationException;
-import ch.ahdis.matchbox.util.metrics.MatchboxMetrics;
-import ch.ahdis.matchbox.validation.ValidationHelper;
+import ch.ahdis.matchbox.validation.MatchboxValidationService;
+import ch.ahdis.matchbox.validation.PreparedValidation;
+import ch.ahdis.matchbox.validation.ProfileSelection;
+import ch.ahdis.matchbox.validation.ValidationContent;
+import ch.ahdis.matchbox.validation.ValidationResult;
 import com.gitb.model.core.AnyContent;
 import com.gitb.model.core.ConfigurationType;
 import com.gitb.model.vs.GetModuleDefinitionResponse;
@@ -21,11 +23,8 @@ import com.gitb.model.vs.ValidationModule;
 import com.gitb.model.tr.ValidationOverview;
 import com.gitb.model.vs.ValidationResponse;
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonNode;
 import jakarta.servlet.http.HttpServletRequest;
 import org.checkerframework.checker.nullness.qual.Nullable;
-import org.hl7.fhir.model.core.StructureDefinition;
-import org.hl7.fhir.utilities.validation.ValidationMessage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
@@ -38,10 +37,6 @@ import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import javax.xml.stream.XMLInputFactory;
-import javax.xml.stream.XMLStreamException;
-import javax.xml.stream.XMLStreamReader;
-import java.io.StringReader;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -49,7 +44,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Optional;
 import java.util.Set;
 
 /**
@@ -79,23 +73,13 @@ public class ItbValidationWs {
 	static final String INPUT_RESOURCE_ID_RULE = "resourceIdRule";
 	static final String INPUT_DISPLAY_WARNINGS = "displayWarnings";
 
-	private static final String BASE_PROFILE_PREFIX = "http://hl7.org/fhir/StructureDefinition/";
-
-	private final ValidationHelper validationHelper;
+	private final MatchboxValidationService validationService;
 	private final MatchboxFhirVersion matchboxFhirVersion;
-	private final Optional<MatchboxMetrics> matchboxMetrics;
 
-	// The base CLI context, with the default parameters
-	private final CliContext baseCliContext;
-
-	public ItbValidationWs(final ValidationHelper validationHelper,
-								  final CliContext baseCliContext,
-								  final MatchboxFhirVersion matchboxFhirVersion,
-								  final Optional<MatchboxMetrics> matchboxMetrics) {
-		this.validationHelper = Objects.requireNonNull(validationHelper);
-		this.baseCliContext = Objects.requireNonNull(baseCliContext);
+	public ItbValidationWs(final MatchboxValidationService validationService,
+								  final MatchboxFhirVersion matchboxFhirVersion) {
+		this.validationService = Objects.requireNonNull(validationService);
 		this.matchboxFhirVersion = Objects.requireNonNull(matchboxFhirVersion);
-		this.matchboxMetrics = Objects.requireNonNull(matchboxMetrics);
 	}
 
 	/**
@@ -121,7 +105,8 @@ public class ItbValidationWs {
 									 "application/fhir+json or application/fhir+xml. Detected from the content if missing."));
 		module.getInputs().add(input(INPUT_PROFILES, "string", false,
 									 "One profile, 'canonical' or 'canonical|version'. The version selects the implementation guide " +
-										 "version. Defaults to the base profile of the resource type."));
+										 "version. Defaults to the first meta.profile of the resource, then to the base profile of its " +
+											 "resource type."));
 		module.getInputs().add(input(INPUT_FAIL_ON, "string", false,
 									 "The severity from which the result is FAILURE: error (default), warning or information."));
 		module.getInputs().add(input(INPUT_INCLUDE_CONTENT, "boolean", false,
@@ -135,7 +120,7 @@ public class ItbValidationWs {
 
 		// The matchbox validation parameters, as for $validate
 		final Set<String> declared = new HashSet<>(Arrays.asList(INPUT_BP_WARNINGS, INPUT_RESOURCE_ID_RULE));
-		for (final Field field : this.baseCliContext.getValidateEngineParameters()) {
+		for (final Field field : this.validationService.getBaseContext().getValidateEngineParameters()) {
 			if (!declared.add(field.getName())) {
 				continue;
 			}
@@ -199,9 +184,7 @@ public class ItbValidationWs {
 		final boolean includeContent = inputs.optionalBoolean(INPUT_INCLUDE_CONTENT, true);
 		final String requestedProfile = getProfile(inputs.optional(INPUT_PROFILES));
 
-		// Use a dedicated instance of the CLI context for this request, to avoid reusing wrong information (as the IGs)
-		final CliContext cliContext = new CliContext(this.baseCliContext);
-		ValidationHelper.applyValidationParameters(cliContext, inputs::values);
+		final CliContext cliContext = this.validationService.newContext(inputs::values);
 		if (inputs.optional(INPUT_DISPLAY_WARNINGS) != null) {
 			cliContext.setDisplayIssuesAreWarnings(inputs.optionalBoolean(INPUT_DISPLAY_WARNINGS, true));
 		}
@@ -212,45 +195,43 @@ public class ItbValidationWs {
 			throw new ItbBadRequestException(e.getMessage());
 		}
 
-		this.matchboxMetrics.ifPresent(MatchboxMetrics::addValidation);
-		final var sw = new StopWatch();
-
-		final String profile = requestedProfile != null ? requestedProfile : getBaseProfile(content, encoding);
-		if (profile == null) {
+		final ProfileSelection selection;
+		if (requestedProfile != null) {
+			selection = ProfileSelection.select(requestedProfile, null, List.of(), null);
+		} else {
+			final var inspection = ValidationContent.inspect(content, encoding);
+			selection = ProfileSelection.select(null, null, inspection.metaProfiles(), inspection.resourceType());
+		}
+		if (selection == null) {
 			return withOverview(ItbTarMapper.failure(
 				"The resource type of '%s' could not be determined, set the input '%s'".formatted(INPUT_CONTENT,
 																												  INPUT_PROFILES)), null, note);
 		}
 
-		final MatchboxEngine engine;
+		final PreparedValidation prepared;
 		try {
-			engine = this.validationHelper.getEngine(profile, cliContext, false);
+			prepared = this.validationService.prepare(selection, cliContext, false);
+		} catch (final MatchboxValidationService.EngineNotInitializedException e) {
+			// Nothing was validated, and the same request may succeed later: neither SUCCESS nor FAILURE
+			return withOverview(ItbTarMapper.undefined(e.getMessage()), selection.profile(), note);
 		} catch (final MatchboxEngineCreationException e) {
-			return withOverview(ItbTarMapper.failure(e.getMessage()), profile, note);
+			return withOverview(ItbTarMapper.failure(e.getMessage()), selection.profile(), note);
 		}
-		final String canonical = ValidationHelper.ProfileReference.parse(profile).canonical();
-		final StructureDefinition structDef = engine.getStructureDefinitionR6(canonical);
-		final String profileId = "%s|%s".formatted(structDef.getUrl(), structDef.getVersion());
+		final String profileId = prepared.profileId();
 
-		final List<ValidationMessage> messages;
-		try {
-			messages = ValidationHelper.doValidate(engine, content, encoding, canonical);
-		} catch (final Exception e) {
-			log.error("Error during validation", e);
-			return withOverview(ItbTarMapper.undefined("Error during validation: %s".formatted(e.getMessage())),
-									  profileId, note);
+		final ValidationResult result = this.validationService.validate(prepared, content, encoding);
+		if (!result.isValidated()) {
+			return withOverview(ItbTarMapper.undefined(result.failure()), profileId, note);
 		}
-		final long millis = sw.getMillis();
-		this.matchboxMetrics.ifPresent(m -> m.addValidationDuration(java.time.Duration.ofMillis(millis)));
 
-		final TAR tar = ItbTarMapper.toTar(messages, engine, failOn, includeContent ? ItbTarMapper.CONTEXT_CONTENT : null);
+		final TAR tar = ItbTarMapper.toTar(result.messages(), prepared.engine(), failOn,
+													  includeContent ? ItbTarMapper.CONTEXT_CONTENT : null);
 
 		// How the validation was done, readable in the step report
-		tar.getContext().getItem().add(this.getValidationContextItem(engine, structDef, cliContext, millis));
+		tar.getContext().getItem().add(getValidationContextItem(prepared, result.millis()));
 
 		// The OperationOutcome that $validate returns, in the FHIR version of the server
-		final var operationOutcome = this.validationHelper.getOperationOutcome(tar.getId(), messages, canonical,
-																										  engine, millis, cliContext);
+		final var operationOutcome = this.validationService.toOperationOutcome(tar.getId(), result);
 		try {
 			tar.getContext().getItem().add(ItbTarMapper.contextItem(ItbTarMapper.CONTEXT_OPERATION_OUTCOME,
 																			  this.matchboxFhirVersion.serializeForResponse(operationOutcome),
@@ -259,6 +240,7 @@ public class ItbValidationWs {
 		} catch (final Exception e) {
 			log.error("Error while serializing the OperationOutcome", e);
 		}
+		this.validationService.saveForStatistics(operationOutcome);
 		if (includeContent) {
 			tar.getContext().getItem().add(ItbTarMapper.contextItem(ItbTarMapper.CONTEXT_CONTENT,
 																			  content,
@@ -273,32 +255,23 @@ public class ItbValidationWs {
 	 * and the validation parameters. It is the information of the first issue of the OperationOutcome, as a map that
 	 * ITB shows in the step report (short values inline, the lists as collapsed groups).
 	 */
-	AnyContent getValidationContextItem(final MatchboxEngine engine,
-													final StructureDefinition structDef,
-													final CliContext cliContext,
-													final long millis) {
+	static AnyContent getValidationContextItem(final PreparedValidation prepared, final long millis) {
+		final MatchboxEngine engine = prepared.engine();
 		final List<AnyContent> items = new ArrayList<>();
-		items.add(ItbTarMapper.contextItem("profile", "%s|%s".formatted(structDef.getUrl(), structDef.getVersion()),
-													  "text/plain", true));
-		if (structDef.hasDate()) {
-			items.add(ItbTarMapper.contextItem("profileDate", structDef.getDateElement().asStringValue(),
-																	  "text/plain", true));
+		items.add(ItbTarMapper.contextItem("profile", prepared.profileId(), "text/plain", true));
+		if (prepared.profileDate() != null) {
+			items.add(ItbTarMapper.contextItem("profileDate", prepared.profileDate(), "text/plain", true));
 		}
 		items.add(ItbTarMapper.contextItem("validator", VersionUtil.getPoweredBy(), "text/plain", true));
 		items.add(ItbTarMapper.contextItem("duration", millis + " ms", "text/plain", true));
-		final String sessionId = this.validationHelper.getSessionId(engine);
-		if (sessionId != null) {
-			items.add(ItbTarMapper.contextItem("sessionId", sessionId, "text/plain", true));
+		if (prepared.sessionId() != null) {
+			items.add(ItbTarMapper.contextItem("sessionId", prepared.sessionId(), "text/plain", true));
 		}
 		items.add(listItem("packages", engine.getContext().getLoadedPackages()));
 
 		final var parameters = AnyContent.builder().withName("parameters").withType("map").build();
-		for (final Field field : cliContext.getValidateEngineParameters()) {
-			final String value = getValue(field, cliContext);
-			if (value != null) {
-				parameters.getItem().add(ItbTarMapper.contextItem(field.getName(), value, "text/plain", true));
-			}
-		}
+		prepared.parameters().forEach(
+			(name, value) -> parameters.getItem().add(ItbTarMapper.contextItem(name, value, "text/plain", true)));
 		items.add(parameters);
 
 		if (!engine.getSuppressedWarnInfoPatterns().isEmpty()) {
@@ -318,22 +291,6 @@ public class ItbValidationWs {
 			list.getItem().add(ItbTarMapper.contextItem(null, value, "text/plain", true));
 		}
 		return list;
-	}
-
-	/**
-	 * Returns the value of a validation parameter as text, or {@code null} if it is not set.
-	 */
-	private static @Nullable String getValue(final Field field, final CliContext cliContext) {
-		try {
-			field.setAccessible(true);
-			final Object value = field.get(cliContext);
-			if (value instanceof final String[] values) {
-				return values.length == 0 ? null : String.join(", ", values);
-			}
-			return value == null ? null : String.valueOf(value);
-		} catch (final IllegalAccessException e) {
-			return null;
-		}
 	}
 
 	/**
@@ -366,47 +323,6 @@ public class ItbValidationWs {
 		return list.isEmpty() ? null : list.getFirst();
 	}
 
-	/**
-	 * Returns the base profile of the resource type of the content, or {@code null} if it cannot be determined.
-	 */
-	@Nullable String getBaseProfile(final String content, final EncodingEnum encoding) {
-		final String resourceType = encoding == EncodingEnum.XML ? getXmlRootName(content) : this.getJsonResourceType(content);
-		if (resourceType == null || !resourceType.matches("[A-Z][A-Za-z]+")) {
-			return null;
-		}
-		return BASE_PROFILE_PREFIX + resourceType;
-	}
-
-	private @Nullable String getJsonResourceType(final String content) {
-		try {
-			final JsonNode resourceType = ItbJson.mapper().readTree(content.replace("﻿", "")).get("resourceType");
-			return (resourceType != null && resourceType.isTextual()) ? resourceType.asText() : null;
-		} catch (final Exception e) {
-			return null;
-		}
-	}
-
-	private static @Nullable String getXmlRootName(final String content) {
-		final var factory = XMLInputFactory.newFactory();
-		factory.setProperty(XMLInputFactory.SUPPORT_DTD, false);
-		factory.setProperty(XMLInputFactory.IS_SUPPORTING_EXTERNAL_ENTITIES, false);
-		XMLStreamReader reader = null;
-		try {
-			reader = factory.createXMLStreamReader(new StringReader(content.replace("﻿", "")));
-			return reader.nextTag() == XMLStreamReader.START_ELEMENT ? reader.getLocalName() : null;
-		} catch (final XMLStreamException e) {
-			return null;
-		} finally {
-			if (reader != null) {
-				try {
-					reader.close();
-				} catch (final XMLStreamException ignored) {
-					// nothing to do
-				}
-			}
-		}
-	}
-
 	private static TAR withOverview(final TAR tar, final @Nullable String profileId, final @Nullable String note) {
 		tar.setOverview(ValidationOverview.builder()
 								 .withProfileID(profileId)
@@ -431,7 +347,7 @@ public class ItbValidationWs {
 	}
 
 	private String getDefaultValue(final Field field) {
-		return Objects.requireNonNullElse(getValue(field, this.baseCliContext), "not set");
+		return Objects.requireNonNullElse(PreparedValidation.parameterValue(field, this.validationService.getBaseContext()), "not set");
 	}
 
 	/**
